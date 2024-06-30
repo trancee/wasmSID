@@ -1,0 +1,6 @@
+{
+  "is-main": true,
+  "import": [
+    "trancee/wasmSID/lib/mos6502"
+  ]
+}
