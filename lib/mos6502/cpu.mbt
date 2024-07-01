@@ -538,8 +538,7 @@ fn opSBC(self : CPU, addr : Int) -> Unit {
   let a = self.a
   let b = self.read(addr)
   let c = U8::u8(self.c)
-  // self.a = u8(a.0 - b.0 - (1 - c.0)) // capped at 0xff
-  self.a = a - b - (u8(1) - c) // capped at 0xff
+  self.a = u8(a.0 - b.0 - (1 - c.0)) // capped at 0xff
   self.setZN(self.a)
   self.c = a.0 - b.0 - (1 - c.0) >= 0 // not capped at 0xff
   self.v = a.lxor(b.0).land(0x80) != 0 && a.lxor(self.a.0).land(0x80) != 0
