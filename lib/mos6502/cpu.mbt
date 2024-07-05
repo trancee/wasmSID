@@ -1,79 +1,36 @@
 struct CPU {
   mem : Memory
   mut cycles : UInt16
-  // Registers
   mut pc : UInt16 // Program Counter
-  mut sp : UInt8 // Stack Pointer
-  mut a : UInt8 // Accumulator
-  mut x : UInt8 // Index Register X
-  mut y : UInt8 // Index Register Y
+  // Registers
+  mut registers : Registers
   // Flags
-  mut c : Bool // Carry Flag
-  mut z : Bool // Zero Flag
-  mut i : Bool // Interrupt Disable Flag
-  mut d : Bool // Decimal Mode Flag
-  mut b : Bool // Break Command Flag
-  mut u : Bool // Unused Flag
-  mut v : Bool // Overflow Flag
-  mut n : Bool // Negative Flag
-  //
+  mut flags : Flags
+  // Mode
   mut mode : Mode
 }
 
-fn flags(self : CPU) -> UInt8 {
-  to_byte(self.c, self.z, self.i, self.d, self.b, self.u, self.v, self.n)
-}
-
-fn set_flags(self : CPU, flags : UInt8) -> Unit {
-  self.c = flags.bit(0)
-  self.z = flags.bit(1)
-  self.i = flags.bit(2)
-  self.d = flags.bit(3)
-  self.b = flags.bit(4)
-  self.u = flags.bit(5)
-  self.v = flags.bit(6)
-  self.n = flags.bit(7)
-}
-
-pub fn cpu_new(~pc : UInt16 = 0x0000) -> CPU {
+pub fn CPU::new(~pc : UInt16 = 0x0000) -> CPU {
   let mem = Memory::new()
-  let cpu : CPU = {
-    mem,
-    cycles: 0,
-    // Registers
-    pc,
-    sp: 0xFF,
-    a: 0,
-    x: 0,
-    y: 0,
-    // Flags
-    c: false,
-    z: false,
-    i: false,
-    d: false,
-    b: false,
-    u: false,
-    v: false,
-    n: false,
-    //
-    mode: Absolute,
-  }
+  let registers = Registers::new()
+  let flags = Flags::new()
+  let cpu : CPU = { mem, cycles: 0, pc, registers, flags, mode: Absolute }
   cpu
 }
 
 // Load a program into memory
-fn cpu_load(cpu : CPU, program : Array[UInt8]) -> CPU {
-  for i = 0; i < program.length(); i = i + 1 {
-    cpu.mem[i] = program[i]
+fn load(cpu : CPU, data : Array[UInt8], ~offset : Int = 0) -> CPU {
+  for i = 0; i < data.length(); i = i + 1 {
+    cpu.mem[i + offset] = data[i]
   }
   cpu
 }
 
-fn read(self : CPU, addr : Int, ~log : Bool = true) -> UInt8 {
+fn read(self : CPU, addr : Int, ~log : Bool = true) -> Int {
   // if log {
   //   println("$" + u16(addr).to_hex() + " → " + self.mem[addr].to_hex())
   // }
-  self.mem[addr]
+  self.mem[addr].0
 }
 
 fn read16(self : CPU, addr : Int, ~log : Bool = true) -> UInt16 {
@@ -82,7 +39,7 @@ fn read16(self : CPU, addr : Int, ~log : Bool = true) -> UInt16 {
   //     "$" + u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   //   )
   // }
-  u16(self.read(addr + 1, log=false)).lsl(8).lor(self.read(addr, log=false).0)
+  u16(self.read(addr + 1, log=false)).lsl(8).lor(self.read(addr, log=false))
 }
 
 fn read16bug(self : CPU, addr : Int, ~log : Bool = true) -> UInt16 {
@@ -93,7 +50,7 @@ fn read16bug(self : CPU, addr : Int, ~log : Bool = true) -> UInt16 {
   //   )
   // }
   u16(self.read(addr.land(0xFF00).lor(addr + 1), log=false)).lsl(8).lor(
-    self.read(addr, log=false).0,
+    self.read(addr, log=false),
   )
 }
 
@@ -105,13 +62,13 @@ fn write(self : CPU, addr : Int, value : UInt8, ~log : Bool = true) -> Unit {
 }
 
 // fn push(self : CPU, value : UInt8) -> Unit {
-//   self.write(0x0100 + self.sp.0, value)
-//   self.sp = self.sp - 1
+//   self.write(0x0100 + self.registers[SP].0, value)
+//   self.registers[SP] = self.registers[SP] - 1
 // }
 
 fn push(self : CPU, value : UInt8) -> Unit {
-  self.write(u16(self.sp).lor(0x0100).0, value)
-  self.sp = self.sp - 1
+  self.write(u16(self.registers[SP]).lor(0x0100).0, value)
+  self.registers[SP] = self.registers[SP] - 1
 }
 
 fn push16(self : CPU, value : UInt16) -> Unit {
@@ -120,37 +77,24 @@ fn push16(self : CPU, value : UInt16) -> Unit {
 }
 
 // fn pop(self : CPU) -> UInt8 {
-//   self.sp = self.sp + 1
-//   self.read(0x0100 + self.sp.0)
+//   self.registers[SP] = self.registers[SP] + 1
+//   self.read(0x0100 + self.registers[SP].0)
 // }
 
 fn pop(self : CPU) -> UInt8 {
-  self.sp = self.sp + 1
-  self.read(u16(self.sp).lor(0x0100).0)
+  self.registers[SP] = self.registers[SP] + 1
+  self.read(u16(self.registers[SP]).lor(0x0100).0)
 }
 
 fn pop16(self : CPU) -> UInt16 {
   u16(self.pop()).lor(u16(self.pop()).lsl(8).0)
 }
 
-fn setZ(self : CPU, value : UInt8) -> Unit {
-  self.z = value == 0
-}
-
-fn setN(self : CPU, value : UInt8) -> Unit {
-  self.n = value.land(0b10000000) != 0
-}
-
-fn setZN(self : CPU, value : UInt8) -> Unit {
-  self.setZ(value)
-  self.setN(value)
-}
-
 fn step(self : CPU) -> Int {
   let cycles = self.cycles
   let opcode = self.read(self.pc.0)
   //
-  let ins = instructions[opcode.0]
+  let ins = instructions[opcode]
   let (name, _, mode, _size, _cycles, pagecycles) = ins
   //
   let addr = self.get_addr(mode)
@@ -170,14 +114,16 @@ fn step(self : CPU) -> Int {
 fn get_addr(self : CPU, mode : Mode) -> UInt16 {
   match mode {
     Absolute => self.read16(self.pc + 1)
-    AbsoluteX => self.read16(self.pc + 1) + u16(self.x)
-    AbsoluteY => self.read16(self.pc + 1) + u16(self.y)
-    IndexedIndirect => self.read16bug(self.read(self.pc + 1).0 + self.x.0)
+    AbsoluteX => self.read16(self.pc + 1) + u16(self.registers[X])
+    AbsoluteY => self.read16(self.pc + 1) + u16(self.registers[Y])
+    IndexedIndirect =>
+      self.read16bug(self.read(self.pc + 1) + self.registers[X])
     Indirect => self.read16bug(self.read16(self.pc + 1).0)
-    IndirectIndexed => self.read16bug(self.read(self.pc + 1).0) + self.y.0
+    IndirectIndexed =>
+      self.read16bug(self.read(self.pc + 1)) + self.registers[Y]
     ZeroPage => u16(self.read(self.pc + 1))
-    ZeroPageX => u16(self.read(self.pc + 1) + self.x) // CHECKME
-    ZeroPageY => u16(self.read(self.pc + 1) + self.y)
+    ZeroPageX => u16(self.read(self.pc + 1) + self.registers[X]) // CHECKME
+    ZeroPageY => u16(self.read(self.pc + 1) + self.registers[Y])
     Immediate => self.pc + 1
     Accumulator | Implicit => 0
     Relative => {
@@ -207,8 +153,8 @@ fn branch(self : CPU, addr : Int) -> Unit {
 }
 
 fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
-  self.setZN(a - b)
-  self.c = a >= b
+  self.flags.setZN(a - b)
+  self.flags[C] = a >= b
 }
 
 //
@@ -217,58 +163,60 @@ fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
 
 // ADC - Add with carry
 fn opADC(self : CPU, addr : Int) -> Unit {
-  let a = self.a
+  let a = self.registers[A]
   let b = self.read(addr)
-  let c = U8::u8(self.c)
-  self.a = u8(a.0 + b.0 + c.0) // capped at 0xff
-  self.setZN(self.a)
-  self.c = a.0 + b.0 + c.0 > 0xff // not capped at 0xff
+  let c = self.flags[C].to_int()
+  self.registers[A] = a + b + c // capped at 0xff
+  self.flags.setZN(self.registers[A])
+  self.flags[C] = a + b + c > 0xff // not capped at 0xff
   // (a^b)&0x80 == 0 && (a^self.a)&0x80 != 0
-  self.v = a.lxor(b.0).land(0x80) == 0 && a.lxor(self.a.0).land(0x80) != 0
+  self.flags[V] = a.lxor(b).land(0x80) == 0 && a.lxor(self.registers[A]).land(
+      0x80,
+    ) != 0
 }
 
 // AND - Logical and
 // ** opcode name changed
 fn opAND(self : CPU, addr : Int) -> Unit {
-  self.a = self.a.land(self.read(addr)) // self.a & self.mem[info.address]
-  self.setZN(self.a)
+  self.registers[A] = self.registers[A].land(self.read(addr)) // self.a & self.mem[info.address]
+  self.flags.setZN(self.registers[A])
 }
 
 // ASL - Arithmetic shift left
 fn opASL(self : CPU, addr : Int) -> Unit {
   match self.mode {
     Accumulator => {
-      self.c = self.a.lsr(7).land(1) != 0 // (self.a >> 7) & 1
-      self.a = self.a.lsl(1)
-      self.setZN(self.a)
+      self.flags[C] = self.registers[A].lsr(7).land(1) != 0 // (self.registers[A] >> 7) & 1
+      self.registers[A] = self.registers[A].lsl(1)
+      self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
-      self.c = value.lsr(7).land(1) != 0 // (val >> 7) & 1
+      self.flags[C] = value.lsr(7).land(1) != 0 // (val >> 7) & 1
       value = value.lsl(1)
       self.write(addr, value)
-      self.setZN(value)
+      self.flags.setZN(value)
     }
   }
 }
 
 // BCC - Branch if carry clear
 fn opBCC(self : CPU, addr : Int) -> Unit {
-  if self.c.not() {
+  if not(self.flags[C]) {
     self.branch(addr)
   }
 }
 
 // BCS - Branch if carry set
 fn opBCS(self : CPU, addr : Int) -> Unit {
-  if self.c {
+  if self.flags[C] {
     self.branch(addr)
   }
 }
 
 // BEQ - Branch if equal
 fn opBEQ(self : CPU, addr : Int) -> Unit {
-  if self.z {
+  if self.flags[Z] {
     self.branch(addr)
   }
 }
@@ -276,28 +224,28 @@ fn opBEQ(self : CPU, addr : Int) -> Unit {
 // BIT - Bit test
 fn opBIT(self : CPU, addr : Int) -> Unit {
   let value = self.read(addr) // :- same as go!
-  self.v = value.lsr(6).land(1) != 0 // (val >> 6) & 1
-  self.setZ(value.land(self.a)) // val & self.A
-  self.setN(value)
+  self.flags[V] = value.lsr(6).land(1) != 0 // (val >> 6) & 1
+  self.flags.setZ(value.land(self.registers[A])) // val & self.A
+  self.flags.setN(value)
 }
 
 // BMI - Branch if minus
 fn opBMI(self : CPU, addr : Int) -> Unit {
-  if self.n {
+  if self.flags[N] {
     self.branch(addr)
   }
 }
 
 // BNE - Branch if minus
 fn opBNE(self : CPU, addr : Int) -> Unit {
-  if not(self.z) {
+  if not(self.flags[Z]) {
     self.branch(addr)
   }
 }
 
 // BPL - Branch if positive
 fn opBPL(self : CPU, addr : Int) -> Unit {
-  if not(self.n) {
+  if not(self.flags[N]) {
     self.branch(addr)
   }
 }
@@ -312,51 +260,51 @@ fn opBRK(self : CPU, addr : Int) -> Unit {
 
 // BVC - Branch if overflow clear
 fn opBVC(self : CPU, addr : Int) -> Unit {
-  if not(self.v) {
+  if not(self.flags[V]) {
     self.branch(addr)
   }
 }
 
 // BVS - Branch if overflow set
 fn opBVS(self : CPU, addr : Int) -> Unit {
-  if self.v {
+  if self.flags[V] {
     self.branch(addr)
   }
 }
 
 // CLC - Clear carry flag
 fn opCLC(self : CPU, addr : Int) -> Unit {
-  self.c = false
+  self.flags[V] = false
 }
 
 // CLD - Clear decimal mode
 fn opCLD(self : CPU, addr : Int) -> Unit {
-  self.d = false
+  self.flags[D] = false
 }
 
 // CLI - Clear interrupt disable
 fn opCLI(self : CPU, addr : Int) -> Unit {
-  self.i = false
+  self.flags[I] = false
 }
 
 // CLV - Clear overflow flag
 fn opCLV(self : CPU, addr : Int) -> Unit {
-  self.v = false
+  self.flags[V] = false
 }
 
 // CMP - Compare
 fn opCMP(self : CPU, addr : Int) -> Unit {
-  self.compare(self.a, self.read(addr))
+  self.compare(self.registers[A], self.read(addr))
 }
 
 // CPX - Compare x register
 fn opCPX(self : CPU, addr : Int) -> Unit {
-  self.compare(self.x, self.read(addr))
+  self.compare(self.registers[X], self.read(addr))
 }
 
 // CPY - Compare y register
 fn opCPY(self : CPU, addr : Int) -> Unit {
-  self.compare(self.y, self.read(addr))
+  self.compare(self.registers[Y], self.read(addr))
 }
 
 // DEC - Decrement memory
@@ -364,25 +312,25 @@ fn opCPY(self : CPU, addr : Int) -> Unit {
 fn opDEC(self : CPU, addr : Int) -> Unit {
   let value = self.read(addr) - 1
   self.write(addr, value)
-  self.setZN(value)
+  self.flags.setZN(value)
 }
 
 // DEX - Decrement x register
 fn opDEX(self : CPU, addr : Int) -> Unit {
-  self.x = self.x - 1 // self.x--
-  self.setZN(self.x)
+  self.registers[X] = self.registers[X] - 1
+  self.flags.setZN(self.registers[X])
 }
 
 // DEY - Decrement y register
 fn opDEY(self : CPU, addr : Int) -> Unit {
-  self.y = self.y - 1 // self.y--
-  self.setZN(self.y)
+  self.registers[Y] = self.registers[Y] - 1
+  self.flags.setZN(self.registers[Y])
 }
 
 // EOR - Exclusive or
 fn opEOR(self : CPU, addr : Int) -> Unit {
-  self.a = self.a.lxor(self.read(addr).0)
-  self.setZN(self.a)
+  self.registers[A] = self.registers[A].lxor(self.read(addr))
+  self.flags.setZN(self.registers[A])
 }
 
 // INC - Increment memory
@@ -390,19 +338,19 @@ fn opEOR(self : CPU, addr : Int) -> Unit {
 fn opINC(self : CPU, addr : Int) -> Unit {
   let value = self.read(addr) + 1
   self.write(addr, value)
-  self.setZN(value)
+  self.flags.setZN(value)
 }
 
 // INX - Increment x register
 fn opINX(self : CPU, addr : Int) -> Unit {
-  self.x = self.x + 1 //self.x++
-  self.setZN(self.x)
+  self.registers[X] = self.registers[X] + 1
+  self.flags.setZN(self.registers[X])
 }
 
 // INY - Increment y register
 fn opINY(self : CPU, addr : Int) -> Unit {
-  self.y = self.y + 1 // self.y++
-  self.setZN(self.y)
+  self.registers[Y] = self.registers[Y] + 1
+  self.flags.setZN(self.registers[Y])
 }
 
 // JMP - Jump
@@ -418,36 +366,36 @@ fn opJSR(self : CPU, addr : Int) -> Unit {
 
 // LDA - Load accumulator
 fn opLDA(self : CPU, addr : Int) -> Unit {
-  self.a = self.read(addr)
-  self.setZN(self.a)
+  self.registers[A] = self.read(addr)
+  self.flags.setZN(self.registers[A])
 }
 
 // LDX - Load x register
 fn opLDX(self : CPU, addr : Int) -> Unit {
-  self.x = self.read(addr)
-  self.setZN(self.x)
+  self.registers[X] = self.read(addr)
+  self.flags.setZN(self.registers[X])
 }
 
 // LDY - Load y register
 fn opLDY(self : CPU, addr : Int) -> Unit {
-  self.y = self.read(addr)
-  self.setZN(self.y)
+  self.registers[Y] = self.read(addr)
+  self.flags.setZN(self.registers[Y])
 }
 
 // LSR - Logical shift right
 fn opLSR(self : CPU, addr : Int) -> Unit {
   match self.mode {
     Accumulator => {
-      self.c = self.a.land(1) != 0 // self.A & 1
-      self.a = self.a.lsr(1) // self.A >>= 1
-      self.setZN(self.a)
+      self.flags[C] = self.registers[A].land(1) != 0 // self.A & 1
+      self.registers[A] = self.registers[A].lsr(1) // self.A >>= 1
+      self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
-      self.c = value.land(1) != 0 // value & 1
+      self.flags[C] = value.land(1) != 0 // value & 1
       value = value.lsr(1) // val >>= 1
       self.write(addr, value)
-      self.setZN(value)
+      self.flags.setZN(value)
     }
   }
 }
@@ -459,72 +407,72 @@ fn opNOP(self : CPU, addr : Int) -> Unit {
 
 // ORA - Logical inclusive or
 fn opORA(self : CPU, addr : Int) -> Unit {
-  self.a = self.a.lor(self.read(addr).0)
-  self.setZN(self.a)
+  self.registers[A] = self.registers[A].lor(self.read(addr))
+  self.flags.setZN(self.registers[A])
 }
 
 // PHA - Push accumulator
 fn opPHA(self : CPU, addr : Int) -> Unit {
-  self.push(self.a)
+  self.push(self.registers[A])
 }
 
 // PHP - Push processor status
 fn opPHP(self : CPU, addr : Int) -> Unit {
-  self.push(self.flags().lor(0x10))
+  self.push(self.flags.get().lor(0x10))
 }
 
 // PLA - Pull accumulator
 fn opPLA(self : CPU, addr : Int) -> Unit {
-  self.a = self.pop()
-  self.setZN(self.a)
+  self.registers[A] = self.pop()
+  self.flags.setZN(self.registers[A])
 }
 
 // PLP - Pull processor status
 fn opPLP(self : CPU, addr : Int) -> Unit {
-  self.set_flags(self.pop().land(0xEF).lor(0x20)) // pull() & 0xEF | 0x20
+  self.flags.set(self.pop().land(0xEF).lor(0x20)) // pull() & 0xEF | 0x20
 }
 
 // ROL - Rotate left
 fn opROL(self : CPU, addr : Int) -> Unit {
-  let c = if self.c { 1 } else { 0 }
+  let c = self.flags[C].to_int()
   match self.mode {
     Accumulator => {
-      self.c = self.a.lsr(7).land(1) != 0 // (self.A >> 7) & 1
-      self.a = self.a.lsl(1).lor(c) // (self.A << 1) | c
-      self.setZN(self.a)
+      self.flags[C] = self.registers[A].lsr(7).land(1) != 0 // (self.A >> 7) & 1
+      self.registers[A] = self.registers[A].lsl(1).lor(c) // (self.A << 1) | c
+      self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
-      self.c = value.lsr(7).land(1) != 0 // (val >> 7) & 1
+      self.flags[C] = value.lsr(7).land(1) != 0 // (val >> 7) & 1
       value = value.lsl(1).lor(c) // (val << 1) | c
       self.write(addr, value)
-      self.setZN(value)
+      self.flags.setZN(value)
     }
   }
 }
 
 // ROR - Rotate right
 fn opROR(self : CPU, addr : Int) -> Unit {
-  let c = if self.c { 1 } else { 0 }
+  let c = self.flags[C].to_int()
   match self.mode {
     Accumulator => {
-      self.c = self.a.land(1) != 0 // self.A & 1
-      self.a = self.a.lsr(1).lor(c.lsl(7)) // (self.A >> 1) | (c << 7)
-      self.setZN(self.a)
+      self.flags[C] = self.registers[A].land(1) != 0 // self.A & 1
+      self.registers[A] = self.registers[A].lsr(1).lor(c.lsl(7)) // (self.A >> 1) | (c << 7)
+      self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
-      self.c = value.land(1) != 0 // val & 1
+      self.flags[C] = value.land(1) != 0 // val & 1
       value = value.lsr(1).lor(c.lsl(7)) // (val >> 1) | (c << 7)
       self.write(addr, value)
-      self.setZN(value)
+      self.flags.setZN(value)
     }
   }
 }
 
 // RTI - Return from interrupt
 fn opRTI(self : CPU, addr : Int) -> Unit {
-  self.set_flags(self.pop().land(0xEF).lor(0x20)) // pull() & 0xEF | 0x20
+  self.flags.set(self.pop().land(0xEF).lor(0x20)) // pull() & 0xEF | 0x20
   self.pc = self.pop16()
 }
 
@@ -535,78 +483,80 @@ fn opRTS(self : CPU, addr : Int) -> Unit {
 
 // SBC - Subtract with carry
 fn opSBC(self : CPU, addr : Int) -> Unit {
-  let a = self.a
+  let a = self.registers[A]
   let b = self.read(addr)
-  let c = U8::u8(self.c)
-  self.a = u8(a.0 - b.0 - (1 - c.0)) // capped at 0xff
-  self.setZN(self.a)
-  self.c = a.0 - b.0 - (1 - c.0) >= 0 // not capped at 0xff
-  self.v = a.lxor(b.0).land(0x80) != 0 && a.lxor(self.a.0).land(0x80) != 0
+  let c = self.flags[C].to_int()
+  self.registers[A] = a - b - (1 - c) // capped at 0xff
+  self.flags.setZN(self.registers[A])
+  self.flags[C] = a - b - (1 - c) >= 0 // not capped at 0xff
+  self.flags[V] = a.lxor(b).land(0x80) != 0 && a.lxor(self.registers[A]).land(
+      0x80,
+    ) != 0
 }
 
 // SEC - Set carry flag
 fn opSEC(self : CPU, addr : Int) -> Unit {
-  self.c = true
+  self.flags[C] = true
 }
 
 // SED - Set decimal flag
 fn opSED(self : CPU, addr : Int) -> Unit {
-  self.d = true
+  self.flags[D] = true
 }
 
 // SEI - Set interrupt disable
 fn opSEI(self : CPU, addr : Int) -> Unit {
-  self.i = true
+  self.flags[I] = true
 }
 
 // STA - Store accumulator
 fn opSTA(self : CPU, addr : Int) -> Unit {
-  self.write(addr, self.a)
+  self.write(addr, self.registers[A])
 }
 
 // STX - Store x register
 fn opSTX(self : CPU, addr : Int) -> Unit {
-  self.write(addr, self.x)
+  self.write(addr, self.registers[X])
 }
 
 // STY - Store y register
 fn opSTY(self : CPU, addr : Int) -> Unit {
-  self.write(addr, self.y)
+  self.write(addr, self.registers[Y])
 }
 
 // TAX - Transfer accumulator to x
 fn opTAX(self : CPU, addr : Int) -> Unit {
-  self.x = self.a
-  self.setZN(self.x)
+  self.registers[X] = self.registers[A]
+  self.flags.setZN(self.registers[X])
 }
 
 // TAY - Transfer accumulator to y
 fn opTAY(self : CPU, addr : Int) -> Unit {
-  self.y = self.a
-  self.setZN(self.y)
+  self.registers[Y] = self.registers[A]
+  self.flags.setZN(self.registers[Y])
 }
 
 // TSX - Transfer stack pointer to x
 fn opTSX(self : CPU, addr : Int) -> Unit {
-  self.x = self.sp
-  self.setZN(self.x)
+  self.registers[X] = self.registers[SP]
+  self.flags.setZN(self.registers[X])
 }
 
 // TXA - Transfer x to accumulator
 fn opTXA(self : CPU, addr : Int) -> Unit {
-  self.a = self.x
-  self.setZN(self.a)
+  self.registers[A] = self.registers[X]
+  self.flags.setZN(self.registers[A])
 }
 
 // TXS - Transfer x to stack pointer
 fn opTXS(self : CPU, addr : Int) -> Unit {
-  self.sp = self.x
+  self.registers[SP] = self.registers[X]
 }
 
 // TYA - Transfer y to accumulator
 fn opTYA(self : CPU, addr : Int) -> Unit {
-  self.a = self.y
-  self.setZN(self.a)
+  self.registers[A] = self.registers[Y]
+  self.flags.setZN(self.registers[A])
 }
 
 //
@@ -688,7 +638,7 @@ fn opRRA(self : CPU, addr : Int) -> Unit {
 
 fn opSAX(self : CPU, addr : Int) -> Unit {
   // Stores the bitwise AND of A and X. As with STA and STX, no flags are affected.
-  self.write(addr, self.a.land(self.x))
+  self.write(addr, self.registers[A].land(self.registers[X]))
 }
 
 fn opSHX(self : CPU, addr : Int) -> Unit {

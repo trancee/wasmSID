@@ -1,0 +1,45 @@
+package trancee/wasmSID/lib/mos6502
+
+// Values
+
+// Types and methods
+type CPU
+impl CPU {
+  new(~pc : UInt16 = ..) -> Self
+}
+
+type Flag
+
+type Flags
+
+type Instruction
+
+type Memory
+
+type Mode
+impl Mode {
+  op_equal(Self, Self) -> Bool
+}
+
+type Register
+
+type Registers
+
+type UInt16
+impl UInt16 {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type UInt8
+impl UInt8 {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+// Traits
+
+// Extension Methods
+

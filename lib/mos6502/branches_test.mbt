@@ -23,7 +23,7 @@ test "BEQCanBranchForwardsWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
@@ -49,7 +49,7 @@ test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
@@ -75,7 +75,7 @@ test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BEQCanBranchBackwardsWhenZeroIsSet" {
@@ -101,7 +101,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
@@ -127,7 +127,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BNECanBranchForwardsWhenZeroIsNotSet" {
@@ -153,7 +153,7 @@ test "BNECanBranchForwardsWhenZeroIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
@@ -179,7 +179,7 @@ test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
@@ -205,7 +205,7 @@ test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
@@ -231,7 +231,7 @@ test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
     expectV: false,
     expectN: true,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
@@ -257,7 +257,7 @@ test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
@@ -283,7 +283,7 @@ test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
     expectV: true,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
@@ -309,7 +309,7 @@ test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)?
+  testBEQ(t)!
 }
 
 // Test
@@ -337,26 +337,24 @@ struct BEQTestData {
   expectN : Bool
 }
 
-fn testBEQ(t : BEQTestData) -> Result[Unit, String] {
-  let cpu = cpu_new(pc=t.pc)
+fn testBEQ(t : BEQTestData) -> Unit!String {
+  let cpu = CPU::new(pc=t.pc)
+
+  // let c = cpu.flags[C]
+  // let z = cpu.flags[Z]
+  let i = cpu.flags[I]
+  let d = cpu.flags[D]
+  let b = cpu.flags[B]
+  let u = cpu.flags[U]
+  // let v = cpu.flags[V]
+  // let n = cpu.flags[N]
+
+  cpu.flags[C] = t.c
+  cpu.flags[Z] = t.z
+  cpu.flags[V] = t.v
+  cpu.flags[N] = t.n
 
   //
-  // let c = cpu.c
-  // let z = cpu.z
-  let i = cpu.i
-  let d = cpu.d
-  let b = cpu.b
-  let u = cpu.u
-  // let v = cpu.v
-  // let n = cpu.n
-  //
-
-  cpu.c = t.c
-  cpu.z = t.z
-  cpu.v = t.v
-  cpu.n = t.n
-  //
-
   if t.expectCycles == 5 {
     cpu.write(t.pc + 0, U8::u8(INS_LDA_IM))
     cpu.write(t.pc + 1, t.op)
@@ -368,25 +366,25 @@ fn testBEQ(t : BEQTestData) -> Result[Unit, String] {
     cycles += cpu.step()
 
     //
-    @assertion.assert_eq(cycles, t.expectCycles)?
+    @test.eq(cycles, t.expectCycles)!
   } else {
     cpu.write(t.pc + 0, U8::u8(t.ins))
     cpu.write(t.pc + 1, t.op)
 
     //
-    @assertion.assert_eq(cpu.step(), t.expectCycles)?
+    @test.eq(cpu.step(), t.expectCycles)!
   }
 
   //
-  @assertion.assert_eq(cpu.pc, t.expectPC)?
+  @test.eq(cpu.pc, t.expectPC)!
 
   //
-  @assertion.assert_eq(cpu.c, t.expectC)?
-  @assertion.assert_eq(cpu.z, t.expectZ)?
-  @assertion.assert_eq(cpu.i, i)?
-  @assertion.assert_eq(cpu.d, d)?
-  @assertion.assert_eq(cpu.b, b)?
-  @assertion.assert_eq(cpu.u, u)?
-  @assertion.assert_eq(cpu.v, t.expectV)?
-  @assertion.assert_eq(cpu.n, t.expectN)
+  @test.eq(cpu.flags[C], t.expectC)!
+  @test.eq(cpu.flags[Z], t.expectZ)!
+  @test.eq(cpu.flags[I], i)!
+  @test.eq(cpu.flags[D], d)!
+  @test.eq(cpu.flags[B], b)!
+  @test.eq(cpu.flags[U], u)!
+  @test.eq(cpu.flags[V], t.expectV)!
+  @test.eq(cpu.flags[N], t.expectN)!
 }
