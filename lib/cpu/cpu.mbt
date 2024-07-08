@@ -24,6 +24,10 @@ pub fn CPU::new(
   cpu
 }
 
+pub fn mem(self : CPU) -> Memory {
+  self.mem
+}
+
 pub fn pc(self : CPU) -> Int {
   self.pc.0
 }
@@ -66,13 +70,12 @@ fn read16(self : CPU, addr : Int, ~log : Bool = true) -> UInt16 {
 fn read16zp(self : CPU, addr : Int) -> UInt16 {
   // println(
   //   "read16zp $" + UInt16(addr).to_hex() + " [" + UInt8(self.read(addr)).to_hex() +
-  //   "] $" + UInt16((addr + 1).land(0x02FF)).to_hex() + " [" + UInt8(
-  //     self.read((addr + 1).land(0x02FF)),
-  //   ).to_hex() + "]",
+  //   "] $" + UInt16((addr + 1).land(0x00FF).lor(addr.land(0xFF00))).to_hex() + " [" +
+  //   UInt8(self.read((addr + 1).land(0x00FF).lor(addr.land(0xFF00)))).to_hex() + "]",
   // )
-  u16(self.read((addr + 1).land(0x02FF), log=false)).lsl(8).lor(
-    self.read(addr.land(0x02FF), log=false),
-  )
+  u16(self.read((addr + 1).land(0x00FF).lor(addr.land(0xFF00)), log=false)).lsl(
+    8,
+  ).lor(self.read(addr.land(0x00FF).lor(addr.land(0xFF00)), log=false))
 }
 
 pub fn write(self : CPU, addr : Int, value : UInt8, ~log : Bool = true) -> Unit {
@@ -87,12 +90,12 @@ pub fn write(self : CPU, addr : Int, value : UInt8, ~log : Bool = true) -> Unit 
 //   self.registers[SP] = self.registers[SP] - 1
 // }
 
-fn push(self : CPU, value : UInt8) -> Unit {
+pub fn push(self : CPU, value : UInt8) -> Unit {
   self.write(self.registers[SP].lor(0x0100), value)
   self.registers[SP] = self.registers[SP] - 1
 }
 
-fn push16(self : CPU, value : UInt16) -> Unit {
+pub fn push16(self : CPU, value : UInt16) -> Unit {
   self.push(u8(value.lsr(8)))
   self.push(u8(value))
 }
@@ -126,79 +129,121 @@ pub fn step(self : CPU) -> Int {
   }
   let unofficial = if illegal { "*" } else { " " }
   let addr_mode = match mode {
-    Implied => ""
-    Accumulator => " A"
-    Immediate => " #" + read8()
-    // Absolute-Indirect Addressing
-    // https://www.c64-wiki.com/wiki/Absolute-indirect_addressing
-    //
-    // The given address is a vector to the effective address.
+    Implied =>
+      // Implied Addressing
+      // https://www.c64-wiki.com/wiki/Implied_addressing
+      //
+      // Does not require the specification of any additional information.
+      // BRK, CLC, CLD, CLI, CLV, DEX, DEY, INX, INY, NOP, PHA, PHP, PLA, PLP, RTI, RTS, SEC, SED, SEI, TAX, TAY, TSX, TXA, TXS, and TYA.
+      ""
+    Accumulator =>
+      // Accumulator Addressing
+      // https://www.c64-wiki.com/wiki/Accumulator_addressing
+      //
+      // The input for the shift operation is picked up from the CPU's accumulator, and the output is stored back into the accumulator.
+      // ASL, LSR, ROL, and ROR.
+      " A"
+    Immediate =>
+      // Immediate Addressing
+      // https://www.c64-wiki.com/wiki/Immediate_addressing
+      //
+      // The byte value to be used or retrieved in the instruction, located immediately after the opcode for the instruction itself.
+      // ADC, AND, CMP, CPX, CPY, EOR, LDA, LDX, LDY, ORA, and SBC.
+      " #" + read8()
     Indirect =>
+      // Absolute-Indirect Addressing
+      // https://www.c64-wiki.com/wiki/Absolute-indirect_addressing
+      //
+      // The given address is a vector to the effective address.
+      // JMP
       " (" + read16() + ")" + " = " + self.read16zp(self.read16(self.pc + 1).0).to_hex()
     IndexedIndirect =>
-      " (" + read8() + ",X) @ " + (self.mem[self.pc + 1] + self.registers[X]).to_hex() +
-      " = " + self.read16zp(self.mem[self.pc + 1].0 + self.registers[X]).to_hex() +
-      " = " + self.mem[self.read16zp(
-        self.mem[self.pc + 1].0 + self.registers[X],
+      // Indexed-Indirect Addressing
+      // https://www.c64-wiki.com/wiki/Indexed-indirect_addressing
+      //
+      // The X index register is used to offset the zero page vector used to determine the effective address.
+      // ADC, AND, CMP, EOR, LDA, ORA, SBC, STA.
+      " (" + read8() + ",X) @ " + (self.mem[self.pc + 1] + self.registers[X]).land(
+        0xFF,
+      ).to_hex() + " = " + self.read16zp(
+        (self.mem[self.pc + 1].0 + self.registers[X]).land(0xFF),
+      ).to_hex() + " = " + self.mem[self.read16zp(
+        (self.mem[self.pc + 1].0 + self.registers[X]).land(0xFF),
       ).0].to_hex()
-    // Indirect-Indexed Addressing
-    // https://www.c64-wiki.com/wiki/Indirect-indexed_addressing
-    //
-    // The Y Index Register is used as an offset from the given zero page vector.
-    // The effective address is calculated as the vector plus the value in Y.
     IndirectIndexed =>
+      // Indirect-Indexed Addressing
+      // https://www.c64-wiki.com/wiki/Indirect-indexed_addressing
+      //
+      // The Y Index Register is used as an offset from the given zero page vector.
+      // The effective address is calculated as the vector plus the value in Y.
+      // ADC, AND, CMP, EOR, LDA, ORA, SBC, and STA.
       " (" + read8() + "),Y = " + self.read16zp(self.mem[self.pc + 1].0).to_hex() +
       " @ " + UInt16(self.read16zp(self.mem[self.pc + 1].0) + self.registers[Y]).to_hex() +
       " = " + self.mem[self.read16zp(self.mem[self.pc + 1].0) + self.registers[Y]].to_hex()
     Absolute =>
+      // Absolute Addressing
+      // https://www.c64-wiki.com/wiki/Absolute_addressing
+      //
+      // Specifies an address in memory which is to be the "object" of the instruction.
+      // ADC, AND, ASL, BIT, CMP, CPX, CPY, DEC, EOR, INC, JMP, JSR, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, and STY.
       " " + read16() + match name {
         "JMP" | "JSR" => ""
         _ => " = " + self.mem[self.read16(self.pc + 1).0].to_hex()
       }
-    // Indexed Absolute Addressing
-    // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
-    //
-    // The contents of the X index register is added to a given base address.
     AbsoluteX =>
+      // Indexed Absolute Addressing
+      // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
+      //
+      // The contents of the X index register is added to a given base address.
+      // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA.
       " " + read16() + ",X @ " + UInt16(
         self.read16(self.pc + 1) + self.registers[X],
       ).to_hex() + " = " + self.mem[self.read16(self.pc + 1) + self.registers[X]].to_hex()
-    // Indexed Absolute Addressing
-    // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
-    //
-    // The contents of the Y index register is added to a given base address.
     AbsoluteY =>
+      // Indexed Absolute Addressing
+      // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
+      //
+      // The contents of the Y index register is added to a given base address.
+      // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA.
       " " + read16() + ",Y @ " + UInt16(
         self.read16(self.pc + 1) + self.registers[Y],
       ).to_hex() + " = " + self.mem[self.read16(self.pc + 1) + self.registers[Y]].to_hex()
     ZeroPage =>
+      // Zeropage Addressing
+      // https://www.c64-wiki.com/wiki/Zeropage_addressing
+      //
+      // Specifies an address in zero-page which is to be the "object" of the instruction.
+      // ADC, AND, ASL, BIT, CMP, CPX, CPY, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, and STY.
       " " + read8() + " = " + self.mem[self.mem[self.pc + 1].0].to_hex()
-    // Indexed Zeropage Addressing
-    // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
-    //
-    // The contents of the X index register is added to a given base address in zero-page.
     ZeroPageX =>
+      // Indexed Zeropage Addressing
+      // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
+      //
+      // The contents of the X index register is added to a given base address in zero-page.
+      // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, STY.
       " " + read8() + ",X @ " + UInt8(
-        self.read(self.pc + 1) + self.registers[X],
+        (self.read(self.pc + 1) + self.registers[X]).land(0xFF),
       ).to_hex() + " = " + self.mem[(self.read(self.pc + 1) + self.registers[X]).land(
         0xFF,
       )].to_hex()
-    // Indexed Zeropage Addressing
-    // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
-    //
-    // The contents of the Y index register is added to a given base address in zero-page.
     ZeroPageY =>
+      // Indexed Zeropage Addressing
+      // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
+      //
+      // The contents of the Y index register is added to a given base address in zero-page.
+      // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, STY.
       " " + read8() + ",Y @ " + UInt8(
-        self.read(self.pc + 1) + self.registers[Y],
+        (self.read(self.pc + 1) + self.registers[Y]).land(0xFF),
       ).to_hex() + " = " + self.mem[(self.read(self.pc + 1) + self.registers[Y]).land(
         0xFF,
       )].to_hex()
-    // Relative Addressing
-    // https://www.c64-wiki.com/wiki/Relative_addressing
-    //
-    // A single, signed-integer byte that specifies, in relative terms, how far "up" or "down" to jump if the required conditions are met.
-    // This signed 8-bit figure is called the offset.
     Relative =>
+      // Relative Addressing
+      // https://www.c64-wiki.com/wiki/Relative_addressing
+      //
+      // A single, signed-integer byte that specifies, in relative terms, how far "up" or "down" to jump if the required conditions are met.
+      // This signed 8-bit figure is called the offset.
+      // BCC, BCS, BEQ, BMI, BNE, BPL, BVC, and BVS.
       " $" + UInt16(self.pc + 2 + self.mem[self.pc + 1].to_signed()).to_hex()
   }
   let mut instr = ""
@@ -251,7 +296,8 @@ fn get_addr(self : CPU, mode : Mode) -> UInt16 {
     Absolute => self.read16(self.pc + 1)
     AbsoluteX => self.read16(self.pc + 1) + self.registers[X]
     AbsoluteY => self.read16(self.pc + 1) + self.registers[Y]
-    IndexedIndirect => self.read16zp(self.read(self.pc + 1) + self.registers[X])
+    IndexedIndirect =>
+      self.read16zp((self.read(self.pc + 1) + self.registers[X]).land(0xFF))
     Indirect => self.read16zp(self.read16(self.pc + 1).0)
     IndirectIndexed => self.read16zp(self.read(self.pc + 1)) + self.registers[Y]
     ZeroPage => self.read(self.pc + 1).land(0xFF)

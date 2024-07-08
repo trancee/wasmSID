@@ -4,23 +4,23 @@ fn to_hex_digit(n : UInt8) -> String {
 }
 
 // fn to_hex(self : Int) -> String {
-//   (self.lsr(8) |> to_u8).to_hex() + (self.land(0xff) |> to_u8).to_hex()
+//   (self.lsr(8) |> to_u8).to_hex() + (self.land(0xFF) |> to_u8).to_hex()
 // }
 
 //
 // UInt8
 //
 
-type UInt8 Int derive(Eq, Compare, Debug)
+pub type UInt8 Int derive(Eq, Compare, Debug)
 
 trait U8 {
   u8(Self) -> UInt8
 }
 
 fn U8::u8(self : Int) -> UInt8 {
-  // let x = self.land(0xff)
+  // let x = self.land(0xFF)
   // println("U8::Int(\(x))")
-  UInt8(self.land(0xff))
+  UInt8(self.land(0xFF))
 }
 
 fn U8::u8(self : Instruction) -> UInt8 {
@@ -38,7 +38,7 @@ fn U8::u8(self : Bool) -> UInt8 {
 
 fn u8(self : UInt16) -> UInt8 {
   // println("u8(\(self))")
-  self.0.land(0xff)
+  self.0.land(0xFF)
 }
 
 fn to_u8[T : U8](t : T) -> UInt8 {
@@ -99,8 +99,8 @@ fn to_byte(
   ).lor((b7 |> to_u8).lsl(7).0)
 }
 
-fn to_hex(self : UInt8) -> String {
-  (u8(self.0).lsr(4) |> to_hex_digit) + (u8(self.0).land(0xf) |> to_hex_digit())
+pub fn to_hex(self : UInt8) -> String {
+  (u8(self.0).lsr(4) |> to_hex_digit) + (u8(self.0).land(0x0F) |> to_hex_digit())
 }
 
 fn to_string(self : UInt8) -> String {
@@ -115,7 +115,7 @@ fn to_signed(self : UInt8) -> Int {
 // UInt16
 //
 
-type UInt16 Int derive(Eq, Compare, Debug)
+pub type UInt16 Int derive(Eq, Compare, Debug)
 
 trait U16 {
   u16(Self) -> UInt16
@@ -162,7 +162,7 @@ fn lsr(self : UInt16, bit : Int) -> UInt16 {
 }
 
 fn to_hex(self : UInt16) -> String {
-  u8(self.lsr(8)).to_hex() + u8(self.land(0xff)).to_hex()
+  u8(self.lsr(8)).to_hex() + u8(self.land(0xFF)).to_hex()
 }
 
 fn to_string(self : UInt16) -> String {

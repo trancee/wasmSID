@@ -29,7 +29,7 @@ fn dump(
   }
 }
 
-fn op_get(self : Memory, addr : Int) -> UInt8 {
+pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   // if addr > 0xFFFF {
   //   self.dump()
   //   abort("Memory::get out of bounds")

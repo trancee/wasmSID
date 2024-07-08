@@ -13,7 +13,7 @@ fn to_hex_digit(n : UInt8) -> String {
 
 pub type UInt8 Int derive(Eq, Compare, Debug)
 
-pub trait U8 {
+trait U8 {
   u8(Self) -> UInt8
 }
 
