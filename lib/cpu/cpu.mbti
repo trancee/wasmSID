@@ -1,16 +1,26 @@
-package trancee/wasmSID/lib/mos6502
+package trancee/wasmSID/lib/cpu
 
 // Values
 
 // Types and methods
 type CPU
 impl CPU {
-  new(~pc : UInt16 = ..) -> Self
+  load(Self, Array[Int], ~offset : Int = ..) -> Unit
+  new(~pc : Int = .., ~data : Array[Int] = ..) -> Self
+  step(Self) -> Int
 }
 
 type Flag
+impl Flag {
+  debug_write(Self, Buffer) -> Unit
+  to_string(Self) -> String
+}
 
 type Flags
+impl Flags {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
 
 type Instruction
 

@@ -5,7 +5,7 @@ test "BEQCanBranchForwardsWhenZeroIsSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BEQ,
+    ins: BEQ,
 
     //
     c: false,
@@ -31,7 +31,7 @@ test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BEQ,
+    ins: BEQ,
 
     //
     c: false,
@@ -57,7 +57,7 @@ test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
     // Input
     pc: 0xFEFD,
     op: 1,
-    ins: INS_BEQ,
+    ins: BEQ,
 
     //
     c: false,
@@ -83,7 +83,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSet" {
     // Input
     pc: 0xFFCC,
     op: -2,
-    ins: INS_BEQ,
+    ins: BEQ,
 
     //
     c: false,
@@ -109,7 +109,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
     // Input
     pc: 0xFFCC,
     op: 0x00,
-    ins: INS_BEQ,
+    ins: BEQ,
 
     //
     c: false,
@@ -135,7 +135,7 @@ test "BNECanBranchForwardsWhenZeroIsNotSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BNE,
+    ins: BNE,
 
     //
     c: false,
@@ -161,7 +161,7 @@ test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BCS,
+    ins: BCS,
 
     //
     c: true,
@@ -187,7 +187,7 @@ test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BCC,
+    ins: BCC,
 
     //
     c: false,
@@ -213,7 +213,7 @@ test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BMI,
+    ins: BMI,
 
     //
     c: false,
@@ -239,7 +239,7 @@ test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BPL,
+    ins: BPL,
 
     //
     c: false,
@@ -265,7 +265,7 @@ test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BVS,
+    ins: BVS,
 
     //
     c: false,
@@ -291,7 +291,7 @@ test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
     // Input
     pc: 0xFF00,
     op: 1,
-    ins: INS_BVC,
+    ins: BVC,
 
     //
     c: false,
@@ -316,7 +316,7 @@ test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
 
 struct BEQTestData {
   // Input
-  pc : UInt16
+  pc : Int
   op : UInt8
   ins : Instruction
 
@@ -356,7 +356,7 @@ fn testBEQ(t : BEQTestData) -> Unit!String {
 
   //
   if t.expectCycles == 5 {
-    cpu.write(t.pc + 0, U8::u8(INS_LDA_IM))
+    cpu.write(t.pc + 0, U8::u8(LDA_IM))
     cpu.write(t.pc + 1, t.op)
     cpu.write(t.pc + 2, U8::u8(t.ins))
     cpu.write(t.pc + 3, -4)

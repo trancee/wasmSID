@@ -1,1 +1,3 @@
-{}
+{
+  "import": ["trancee/wasmSID/lib/cpu"]
+}

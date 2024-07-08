@@ -7,30 +7,62 @@ enum Flag {
   U // Unused Flag
   V // Overflow Flag
   N // Negative Flag
+} derive(Debug, Show, Eq)
+
+fn op_add(self : Flag, flag : Flag) -> Int {
+  println(
+    "Flag::" + UInt8(self.bits()).to_hex() + " : " + UInt8(flag.bits()).to_hex(),
+  )
+  self.bits().lor(flag.bits())
+}
+
+fn bits(self : Flag) -> Int {
+  match self {
+    C => 0b00000001 // Carry Flag
+    Z => 0b00000010 // Zero Flag
+    I => 0b00000100 // Interrupt Disable Flag
+    D => 0b00001000 // Decimal Mode Flag
+    B => 0b00010000 // Break Command Flag
+    U => 0b00100000 // Unused Flag
+    V => 0b01000000 // Overflow Flag
+    N => 0b10000000 // Negative Flag
+  }
 }
 
 struct Flags {
-  mut c : Bool // Carry Flag
-  mut z : Bool // Zero Flag
-  mut i : Bool // Interrupt Disable Flag
-  mut d : Bool // Decimal Mode Flag
-  mut b : Bool // Break Command Flag
-  mut u : Bool // Unused Flag
-  mut v : Bool // Overflow Flag
-  mut n : Bool // Negative Flag
+  mut c : Bool // 0: Carry Flag
+  mut z : Bool // 1: Zero Flag
+  mut i : Bool // 2: Interrupt Disable Flag
+  mut d : Bool // 3: Decimal Mode Flag
+  mut b : Bool // 4: Break Command Flag
+  mut u : Bool // 5: Unused Flag
+  mut v : Bool // 6: Overflow Flag
+  mut n : Bool // 7: Negative Flag
+} derive(Debug, Eq)
+
+fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
+  {
+    c: flags.bit(0),
+    z: flags.bit(1),
+    i: flags.bit(2),
+    d: flags.bit(3),
+    b: flags.bit(4),
+    u: flags.bit(5),
+    v: flags.bit(6),
+    n: flags.bit(7),
+  }
 }
 
-fn Flags::new() -> Flags {
-  {
-    c: false,
-    z: false,
-    i: false,
-    d: false,
-    b: false,
-    u: false,
-    v: false,
-    n: false,
-  }
+fn Flags::to_string(self : Flags) -> String {
+  if self[N] { "N" } else { "n" } + if self[V] { "V" } else { "v" } + "-" + if self[B] {
+    "B"
+  } else {
+    "b"
+  } + if self[D] { "D" } else { "d" } + if self[I] { "I" } else { "i" } + if self[Z] {
+    "Z"
+  } else {
+    "z"
+  } + if self[C] { "C" } else { "c" }
 }
 
 fn op_get(self : Flags, flag : Flag) -> Bool {
@@ -70,15 +102,31 @@ fn reset(self : Flags) -> Unit {
   self[N] = false
 }
 
+fn clear(self : Flags, flag : Flag) -> Unit {
+  self[flag] = false
+}
+
+fn is_clear(self : Flags, flag : Flag) -> Bool {
+  self[flag] == false
+}
+
+fn set(self : Flags, flag : Flag) -> Unit {
+  self[flag] = true
+}
+
+fn is_set(self : Flags, flag : Flag) -> Bool {
+  self[flag] == true
+}
+
 // Get status register value.
-fn get(self : Flags) -> UInt8 {
+fn get_flags(self : Flags) -> UInt8 {
   self.getC().lor(self.getZ()).lor(self.getI()).lor(self.getD()).lor(
     self.getB(),
   ).lor(self.getU()).lor(self.getV()).lor(self.getN())
 }
 
 // Set status register value.
-fn set(self : Flags, flags : UInt8) -> Unit {
+fn set_flags(self : Flags, flags : UInt8) -> Unit {
   self[C] = flags.bit(0)
   self[Z] = flags.bit(1)
   self[I] = flags.bit(2)
@@ -122,7 +170,8 @@ fn getN(self : Flags) -> Int {
 }
 
 fn setN(self : Flags, value : UInt8) -> Unit {
-  self[N] = value.land(0b10000000) != 0
+  // self[N] = value.land(0b10000000) != 0
+  self[N] = value.bit(7)
 }
 
 fn setC(self : Flags, value : UInt8) -> Unit {
@@ -130,7 +179,7 @@ fn setC(self : Flags, value : UInt8) -> Unit {
 }
 
 fn setZ(self : Flags, value : UInt8) -> Unit {
-  self[Z] = value == 0
+  self[Z] = value.land(0b11111111) == 0
 }
 
 // Set N and Z flag values.

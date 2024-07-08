@@ -12,8 +12,8 @@ struct Registers {
   mut y : UInt8 // Index Register Y
 }
 
-fn Registers::new() -> Registers {
-  { sp: 0xFF, a: 0, x: 0, y: 0 }
+fn Registers::new(~sp : UInt8 = 0xFF) -> Registers {
+  { sp, a: 0, x: 0, y: 0 }
 }
 
 fn op_get(self : Registers, register : Register) -> Int {
@@ -27,9 +27,9 @@ fn op_get(self : Registers, register : Register) -> Int {
 
 fn op_set(self : Registers, register : Register, value : UInt8) -> Unit {
   match register {
-    SP => self.sp = value
-    A => self.a = value
-    X => self.x = value
-    Y => self.y = value
+    SP => self.sp = value.land(0xFF)
+    A => self.a = value.land(0xFF)
+    X => self.x = value.land(0xFF)
+    Y => self.y = value.land(0xFF)
   }
 }

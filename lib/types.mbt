@@ -11,9 +11,9 @@ fn to_hex_digit(n : UInt8) -> String {
 // UInt8
 //
 
-type UInt8 Int derive(Eq, Compare, Debug)
+pub type UInt8 Int derive(Eq, Compare, Debug)
 
-trait U8 {
+pub trait U8 {
   u8(Self) -> UInt8
 }
 
@@ -21,10 +21,6 @@ fn U8::u8(self : Int) -> UInt8 {
   // let x = self.land(0xff)
   // println("U8::Int(\(x))")
   UInt8(self.land(0xff))
-}
-
-fn U8::u8(self : Instruction) -> UInt8 {
-  get_opcode(self)
 }
 
 fn U8::u8(self : Bool) -> UInt8 {
@@ -43,6 +39,10 @@ fn u8(self : UInt16) -> UInt8 {
 
 fn to_u8[T : U8](t : T) -> UInt8 {
   t.u8()
+}
+
+fn to_int[T : U8](t : T) -> Int {
+  t.u8().0
 }
 
 fn op_add(self : UInt8, other : UInt8) -> UInt8 {
@@ -99,7 +99,7 @@ fn to_byte(
   ).lor((b7 |> to_u8).lsl(7).0)
 }
 
-fn to_hex(self : UInt8) -> String {
+pub fn to_hex(self : UInt8) -> String {
   (u8(self.0).lsr(4) |> to_hex_digit) + (u8(self.0).land(0xf) |> to_hex_digit())
 }
 
@@ -111,7 +111,7 @@ fn to_string(self : UInt8) -> String {
 // UInt16
 //
 
-type UInt16 Int derive(Eq, Compare, Debug)
+pub type UInt16 Int derive(Eq, Compare, Debug)
 
 trait U16 {
   u16(Self) -> UInt16

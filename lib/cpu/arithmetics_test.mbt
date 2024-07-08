@@ -94,7 +94,7 @@ test "ADCAbsCanAddOneToFFAndItWillCauseACarry" {
     expectA: 0,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: true,
     expectN: false,
     expectV: false,
@@ -110,7 +110,7 @@ test "ADCAbsWillSetTheNegativeFlagWhenTheResultIsNegative" {
     op: -1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -134,7 +134,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionFails" {
     op: -1,
 
     // Output
-    expectA: -129, // 127,
+    expectA: 127,
 
     //
     expectC: false, // true,
@@ -159,7 +159,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionPassedDueToInitalCarr
     op: -1,
 
     // Output
-    expectA: -128,
+    expectA: 128, // -128,
 
     //
     expectC: false, // true,
@@ -538,7 +538,7 @@ test "SBCAbsCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -557,7 +557,7 @@ test "SBCAbsCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -576,7 +576,7 @@ test "SBCAbsCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -595,10 +595,10 @@ test "SBCAbsCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA: 127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -652,10 +652,10 @@ test "SBCAbsCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -692,7 +692,7 @@ test "SBCZeroPageCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -711,7 +711,7 @@ test "SBCZeroPageCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -730,7 +730,7 @@ test "SBCZeroPageCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -749,10 +749,10 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA: 127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -806,10 +806,10 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -850,7 +850,7 @@ test "SBCImmediateCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -869,7 +869,7 @@ test "SBCImmediateCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -888,7 +888,7 @@ test "SBCImmediateCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -907,10 +907,10 @@ test "SBCImmediateCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA: 127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -964,10 +964,10 @@ test "SBCImmediateCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1004,7 +1004,7 @@ test "SBCZeroPageXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1023,7 +1023,7 @@ test "SBCZeroPageXCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1042,7 +1042,7 @@ test "SBCZeroPageXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -1061,10 +1061,10 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA: 127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -1118,10 +1118,10 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1158,7 +1158,7 @@ test "SBCAbsoluteXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1177,7 +1177,7 @@ test "SBCAbsoluteXCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1196,7 +1196,7 @@ test "SBCAbsoluteXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -1215,10 +1215,10 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA:  127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -1272,10 +1272,10 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1312,7 +1312,7 @@ test "SBCAbsoluteYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1331,7 +1331,7 @@ test "SBCAbsoluteYCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1350,7 +1350,7 @@ test "SBCAbsoluteYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -1369,10 +1369,10 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA:  127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -1426,10 +1426,10 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1466,7 +1466,7 @@ test "SBCIndirectXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1485,7 +1485,7 @@ test "SBCIndirectXCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1504,7 +1504,7 @@ test "SBCIndirectXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -1523,10 +1523,10 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA:  127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -1580,10 +1580,10 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1620,7 +1620,7 @@ test "SBCIndirectYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     op: 0,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1639,7 +1639,7 @@ test "SBCIndirectYCanSubtractOneFromZeroAndGetMinusOne" {
     op: 1,
 
     // Output
-    expectA: -1,
+    expectA: 255, // -1,
 
     //
     expectC: false,
@@ -1658,7 +1658,7 @@ test "SBCIndirectYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     op: 1,
 
     // Output
-    expectA: -2,
+    expectA: 254, // -2,
 
     //
     expectC: false,
@@ -1677,10 +1677,10 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA: -129, // 127,
+    expectA:  127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: true,
@@ -1734,10 +1734,10 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbers" {
     op: -17,
 
     // Output
-    expectA: -3,
+    expectA: 253, // -3,
 
     //
-    expectC: false,
+    expectC: true, // false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1765,7 +1765,7 @@ struct ADCTestData {
 
 fn testADCAbsolute(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_ABS
+  ~ins : Instruction = ADC_ABS
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1812,12 +1812,12 @@ fn testADCAbsolute(
 }
 
 fn testSBCAbsolute(t : ADCTestData) -> Unit!String {
-  testADCAbsolute(t, ins=INS_SBC_ABS)!
+  testADCAbsolute(t, ins=SBC_ABS)!
 }
 
 fn testADCImmediate(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC
+  ~ins : Instruction = ADC
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1860,12 +1860,12 @@ fn testADCImmediate(
 }
 
 fn testSBCImmediate(t : ADCTestData) -> Unit!String {
-  testADCImmediate(t, ins=INS_SBC)!
+  testADCImmediate(t, ins=SBC)!
 }
 
 fn testADCZeroPage(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_ZP
+  ~ins : Instruction = ADC_ZP
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1911,12 +1911,12 @@ fn testADCZeroPage(
 }
 
 fn testSBCZeroPage(t : ADCTestData) -> Unit!String {
-  testADCZeroPage(t, ins=INS_SBC_ZP)!
+  testADCZeroPage(t, ins=SBC_ZP)!
 }
 
 fn testADCZeroPageX(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_ZPX
+  ~ins : Instruction = ADC_ZPX
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1963,12 +1963,12 @@ fn testADCZeroPageX(
 }
 
 fn testSBCZeroPageX(t : ADCTestData) -> Unit!String {
-  testADCZeroPageX(t, ins=INS_SBC_ZPX)!
+  testADCZeroPageX(t, ins=SBC_ZPX)!
 }
 
 fn testADCAbsoluteX(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_ABSX
+  ~ins : Instruction = ADC_ABSX
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2016,12 +2016,12 @@ fn testADCAbsoluteX(
 }
 
 fn testSBCAbsoluteX(t : ADCTestData) -> Unit!String {
-  testADCAbsoluteX(t, ins=INS_SBC_ABSX)!
+  testADCAbsoluteX(t, ins=SBC_ABSX)!
 }
 
 fn testADCAbsoluteY(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_ABSY
+  ~ins : Instruction = ADC_ABSY
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2069,12 +2069,12 @@ fn testADCAbsoluteY(
 }
 
 fn testSBCAbsoluteY(t : ADCTestData) -> Unit!String {
-  testADCAbsoluteY(t, ins=INS_SBC_ABSY)!
+  testADCAbsoluteY(t, ins=SBC_ABSY)!
 }
 
 fn testADCIndirectX(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_INDX
+  ~ins : Instruction = ADC_INDX
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2125,12 +2125,12 @@ fn testADCIndirectX(
 }
 
 fn testSBCIndirectX(t : ADCTestData) -> Unit!String {
-  testADCIndirectX(t, ins=INS_SBC_INDX)!
+  testADCIndirectX(t, ins=SBC_INDX)!
 }
 
 fn testADCIndirectY(
   t : ADCTestData,
-  ~ins : Instruction = INS_ADC_INDY
+  ~ins : Instruction = ADC_INDY
 ) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2181,5 +2181,5 @@ fn testADCIndirectY(
 }
 
 fn testSBCIndirectY(t : ADCTestData) -> Unit!String {
-  testADCIndirectY(t, ins=INS_SBC_INDY)!
+  testADCIndirectY(t, ins=SBC_INDY)!
 }

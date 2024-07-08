@@ -380,7 +380,7 @@ fn testCompareTwoValuesThatResultInANegativeFlagSet() -> CMPTestData {
 
 struct CMPTestData {
   // Input
-  pc : UInt16
+  pc : Int
   r : UInt8 // a, x, y
   op : UInt8
 
@@ -418,9 +418,9 @@ fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!String {
 
   //
   match r {
-    A => cpu.write(t.pc + 0, U8::u8(INS_CMP))
-    X => cpu.write(t.pc + 0, U8::u8(INS_CPX))
-    Y => cpu.write(t.pc + 0, U8::u8(INS_CPY))
+    A => cpu.write(t.pc + 0, U8::u8(CMP))
+    X => cpu.write(t.pc + 0, U8::u8(CPX))
+    Y => cpu.write(t.pc + 0, U8::u8(CPY))
   }
   cpu.write(t.pc + 1, t.op)
 
@@ -476,9 +476,9 @@ fn testCompareZeroPage(t : CMPTestData, ~r : Register = A) -> Unit!String {
 
   //
   match r {
-    A => cpu.write(t.pc + 0, U8::u8(INS_CMP_ZP))
-    X => cpu.write(t.pc + 0, U8::u8(INS_CPX_ZP))
-    Y => cpu.write(t.pc + 0, U8::u8(INS_CPY_ZP))
+    A => cpu.write(t.pc + 0, U8::u8(CMP_ZP))
+    X => cpu.write(t.pc + 0, U8::u8(CPX_ZP))
+    Y => cpu.write(t.pc + 0, U8::u8(CPY_ZP))
   }
   cpu.write(t.pc + 1, 0x42)
 
@@ -532,7 +532,7 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!String {
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(t.pc + 0, U8::u8(INS_CMP_ZPX))
+  cpu.write(t.pc + 0, U8::u8(CMP_ZPX))
   cpu.write(t.pc + 1, 0x42)
 
   //
@@ -586,9 +586,9 @@ fn testCompareAbsolute(t : CMPTestData, ~r : Register = A) -> Unit!String {
 
   //
   match r {
-    A => cpu.write(t.pc + 0, U8::u8(INS_CMP_ABS))
-    X => cpu.write(t.pc + 0, U8::u8(INS_CPX_ABS))
-    Y => cpu.write(t.pc + 0, U8::u8(INS_CPY_ABS))
+    A => cpu.write(t.pc + 0, U8::u8(CMP_ABS))
+    X => cpu.write(t.pc + 0, U8::u8(CPX_ABS))
+    Y => cpu.write(t.pc + 0, U8::u8(CPY_ABS))
   }
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)
@@ -643,7 +643,7 @@ fn testCompareAbsoluteX(t : CMPTestData) -> Unit!String {
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(t.pc + 0, U8::u8(INS_CMP_ABSX))
+  cpu.write(t.pc + 0, U8::u8(CMP_ABSX))
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)
 
@@ -693,7 +693,7 @@ fn testCompareAbsoluteY(t : CMPTestData) -> Unit!String {
   cpu.registers[Y] = 0x04
 
   //
-  cpu.write(t.pc + 0, U8::u8(INS_CMP_ABSY))
+  cpu.write(t.pc + 0, U8::u8(CMP_ABSY))
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)
 
@@ -743,7 +743,7 @@ fn testCompareIndirectX(t : CMPTestData) -> Unit!String {
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(t.pc + 0, U8::u8(INS_CMP_INDX))
+  cpu.write(t.pc + 0, U8::u8(CMP_INDX))
   cpu.write(t.pc + 1, 0x42)
 
   //
@@ -796,7 +796,7 @@ fn testCompareIndirectY(t : CMPTestData) -> Unit!String {
   cpu.registers[Y] = 0x04
 
   //
-  cpu.write(t.pc + 0, U8::u8(INS_CMP_INDY))
+  cpu.write(t.pc + 0, U8::u8(CMP_INDY))
   cpu.write(t.pc + 1, 0x42)
 
   //

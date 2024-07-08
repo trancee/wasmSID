@@ -1,8 +1,39 @@
 package trancee/wasmSID/lib
 
+alias @trancee/wasmSID/lib/cpu as @cpu
+
 // Values
 
 // Types and methods
+pub struct C64 {
+  pub baseaddress : UInt16
+  pub cpu : @cpu.CPU
+  pub vic : VIC
+}
+impl C64 {
+  load(Self, Array[Int], ~offset : Int = ..) -> Unit
+  new(~baseaddress : Int = .., ~data : Array[Int] = ..) -> Self
+  step(Self) -> Int
+}
+
+pub type UInt16 Int
+impl UInt16 {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type UInt8
+impl UInt8 {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type VIC
+impl VIC {
+  new(~baseaddress : UInt16) -> Self
+}
 
 // Traits
 
