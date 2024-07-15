@@ -75,7 +75,7 @@ test "ADCAbsCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -137,7 +137,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionFails" {
     expectA: 127,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectV: true,
     expectN: false,
@@ -162,7 +162,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionPassedDueToInitalCarr
     expectA: 128, // -128,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectV: false,
     expectN: true,
@@ -231,7 +231,7 @@ test "ADCImmediateCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -276,7 +276,7 @@ test "ADCZeroPageCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -321,7 +321,7 @@ test "ADCZeroPageXCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -366,7 +366,7 @@ test "ADCAbsXCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -411,7 +411,7 @@ test "ADCAbsYCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -456,7 +456,7 @@ test "ADCIndXCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -501,7 +501,7 @@ test "ADCIndYCanAddAPositiveAndNegativeNumber" {
     expectA: 4,
 
     //
-    expectC: false, // true,
+    expectC: true,
     expectZ: false,
     expectN: false,
     expectV: false,
@@ -617,7 +617,7 @@ test "SBCAbsCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -655,7 +655,7 @@ test "SBCAbsCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -771,7 +771,7 @@ test "SBCZeroPageCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -809,7 +809,7 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -929,7 +929,7 @@ test "SBCImmediateCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -967,7 +967,7 @@ test "SBCImmediateCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1083,7 +1083,7 @@ test "SBCZeroPageXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -1121,7 +1121,7 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1215,7 +1215,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA:  127,
+    expectA: 127,
 
     //
     expectC: true,
@@ -1237,7 +1237,7 @@ test "SBCAbsoluteXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -1275,7 +1275,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1369,7 +1369,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA:  127,
+    expectA: 127,
 
     //
     expectC: true,
@@ -1391,7 +1391,7 @@ test "SBCAbsoluteYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -1429,7 +1429,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1523,7 +1523,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA:  127,
+    expectA: 127,
 
     //
     expectC: true,
@@ -1545,7 +1545,7 @@ test "SBCIndirectXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -1583,7 +1583,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1677,7 +1677,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     op: 1,
 
     // Output
-    expectA:  127,
+    expectA: 127,
 
     //
     expectC: true,
@@ -1699,7 +1699,7 @@ test "SBCIndirectYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectA: 128,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: true,
@@ -1737,7 +1737,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbers" {
     expectA: 253, // -3,
 
     //
-    expectC: true, // false,
+    expectC: false,
     expectZ: false,
     expectN: true,
     expectV: false,
@@ -1815,10 +1815,7 @@ fn testSBCAbsolute(t : ADCTestData) -> Unit!String {
   testADCAbsolute(t, ins=SBC_ABS)!
 }
 
-fn testADCImmediate(
-  t : ADCTestData,
-  ~ins : Instruction = ADC
-) -> Unit!String {
+fn testADCImmediate(t : ADCTestData, ~ins : Instruction = ADC) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
@@ -1863,10 +1860,7 @@ fn testSBCImmediate(t : ADCTestData) -> Unit!String {
   testADCImmediate(t, ins=SBC)!
 }
 
-fn testADCZeroPage(
-  t : ADCTestData,
-  ~ins : Instruction = ADC_ZP
-) -> Unit!String {
+fn testADCZeroPage(t : ADCTestData, ~ins : Instruction = ADC_ZP) -> Unit!String {
   let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
@@ -1943,7 +1937,7 @@ fn testADCZeroPageX(
   cpu.write(0xFF01, 0x42)
 
   //
-  cpu.write(0x0042 + cpu.registers[X], t.op)
+  cpu.write(0x0042 + cpu.registers[X].0, t.op)
 
   //
   @test.eq(cpu.step(), 4)!
@@ -1996,7 +1990,7 @@ fn testADCAbsoluteX(
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[X], t.op)
+  cpu.write(0x8000 + cpu.registers[X].0, t.op)
 
   //
   @test.eq(cpu.step(), 4)!
@@ -2049,7 +2043,7 @@ fn testADCAbsoluteY(
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y], t.op)
+  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
   @test.eq(cpu.step(), 4)!
@@ -2101,8 +2095,8 @@ fn testADCIndirectX(
   cpu.write(0xFF01, 0x02)
 
   //
-  cpu.write(0x0002 + cpu.registers[X], 0x00)
-  cpu.write(0x0003 + cpu.registers[X], 0x80)
+  cpu.write(0x0002 + cpu.registers[X].0, 0x00)
+  cpu.write(0x0003 + cpu.registers[X].0, 0x80)
 
   //
   cpu.write(0x8000, t.op)
@@ -2161,7 +2155,7 @@ fn testADCIndirectY(
   cpu.write(0x0003, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y], t.op)
+  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
   @test.eq(cpu.step(), 5)!

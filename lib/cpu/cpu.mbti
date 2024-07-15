@@ -5,49 +5,85 @@ package trancee/wasmSID/lib/cpu
 // Types and methods
 type CPU
 impl CPU {
-  load(Self, Array[Int], ~offset : Int = ..) -> Unit
-  new(~pc : Int = .., ~data : Array[Int] = ..) -> Self
+  get_flags(Self) -> UInt8
+  load(Self, UInt16, Array[Int], ~length : Int = ..) -> Unit
+  mem(Self) -> Memory
+  new(~pc : Int = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = ..) -> Self
+  pc(Self) -> Int
+  push(Self, UInt8) -> Unit
+  push16(Self, UInt16) -> Unit
+  read(Self, UInt16) -> UInt8
+  reset(Self) -> Unit
+  set_flags(Self, UInt8) -> Unit
   step(Self) -> Int
+  write(Self, UInt16, UInt8) -> Unit
+  write16(Self, UInt16, UInt16) -> Unit
 }
 
-type Flag
+pub enum Flag {
+  C
+  Z
+  I
+  D
+  B
+  U
+  V
+  N
+}
 impl Flag {
   debug_write(Self, Buffer) -> Unit
+  op_add(Self, Self) -> Int
+  op_equal(Self, Self) -> Bool
   to_string(Self) -> String
 }
 
 type Flags
 impl Flags {
   debug_write(Self, Buffer) -> Unit
+  get(Self) -> UInt8
   op_equal(Self, Self) -> Bool
+  set(Self, UInt8) -> Unit
 }
 
 type Instruction
+impl Instruction {
+  debug_write(Self, Buffer) -> Unit
+  to_string(Self) -> String
+}
 
 type Memory
+impl Memory {
+  op_get(Self, UInt16) -> UInt8
+}
 
 type Mode
 impl Mode {
+  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
 }
 
 type Register
 
 type Registers
 
-type UInt16
+pub type UInt16 Int
 impl UInt16 {
   compare(Self, Self) -> Int
   debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  to_hex(Self) -> String
 }
 
-type UInt8
+pub type UInt8 Int
 impl UInt8 {
   compare(Self, Self) -> Int
   debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  to_hex(Self) -> String
 }
+
+type Vector
 
 // Traits
 

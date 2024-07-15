@@ -6,9 +6,13 @@ fn Memory::new() -> Memory {
   { mem: Array::make(0x10000, 0x00) }
 }
 
+fn clear(self : Memory) -> Unit {
+  self.mem = Array::make(0x10000, 0x00)
+}
+
 fn dump(
   self : Memory,
-  ~addr : Int = 0x0000,
+  ~addr : UInt16 = 0x0000,
   ~cols : Int = 0x10,
   ~rows : Int = 0x10
 ) -> Unit {
@@ -22,19 +26,19 @@ fn dump(
   while i <= cols * rows {
     if i % cols == 0 {
       println(str)
-      str = UInt16(addr + i).to_hex() + "|"
+      str = (addr + i).to_hex() + "|"
     }
-    str += self.mem[addr + i].to_hex() + " "
+    str += self.mem[(addr + i).0].to_hex() + " "
     i = i + 1
   }
 }
 
-pub fn op_get(self : Memory, addr : Int) -> UInt8 {
-  // if addr > 0xFFFF {
-  //   self.dump()
-  //   abort("Memory::get out of bounds")
-  // }
-  self.mem[addr.land(0xFFFF)]
+pub fn op_get(self : Memory, addr : UInt16) -> UInt8 {
+  if addr > 0xFFFF {
+    self.dump()
+    abort("Memory::get out of bounds")
+  }
+  self.mem[addr.0]
   // if addr.0 >= 0x0000 && addr.0 <= 0x1FFF {
   // self.mem[addr % 0x0800]
   // } else if addr >= (0x2000 |> to_u16) && addr <= (0x3FFF |> to_u16) {
@@ -55,12 +59,12 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   // }
 }
 
-fn op_set(self : Memory, addr : Int, value : UInt8) -> Unit {
+fn op_set(self : Memory, addr : UInt16, value : Int) -> Unit {
   if addr > 0xFFFF {
     self.dump()
     abort("Memory::set out of bounds")
   }
-  self.mem[addr.land(0xFFFF)] = value
+  self.mem[addr.0] = value |> u8
   // if addr >= 0x0000 && addr <= 0x1FFF {
   // self.mem[addr % 0x0800] = value
   // } else if addr >= 0x2000 && addr <= 0x3FFF {

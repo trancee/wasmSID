@@ -9,3 +9,7 @@ pub fn VIC::new(~baseaddress : UInt16) -> VIC {
   let vic : VIC = { baseaddress, }
   vic
 }
+
+fn baseaddress(self : VIC) -> UInt16 {
+  self.baseaddress
+}

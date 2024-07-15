@@ -1,12 +1,13 @@
 pub fn nestest() -> Unit {
-  let c64 = @lib.C64::new(
+  let nes = @lib.NES::new(
     baseaddress=0xC000,
     ~data,
     offset=0x8000,
     length=0x4000,
   )
-  c64.load(data, offset=0xC000, length=0x4000)
-  c64.load(
+  nes.set_flags(@cpu.U + @cpu.I) // UNUSED + INTERRUPT
+  nes.load(data, offset=0xC000, length=0x4000)
+  nes.load(
     [
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -14,23 +15,22 @@ pub fn nestest() -> Unit {
     ],
     offset=0x4000,
   )
-  // c64.load([0x20, 0x00, 0xC0], offset=0x0800)
-  c64.push16(@cpu.UInt16(0x07FF))
-  let mut i = 0
-  while c64.pc() != 0x0800 {
-    let _ = c64.step()
-    i += 1
+  // nes.load([0x20, 0x00, 0xC0], offset=0x0800)
+  nes.push16(@cpu.UInt16(0x07FF))
+  while nes.pc() != 0x0800 {
+    let _ = nes.step()
+    if nes.pc() == 0xC7EB { break }
   }
   println("---")
   println(
-    "$02 #" + c64.mem[0x02].to_hex() + " " + if c64.mem[0x02] == @cpu.UInt8(0x00) {
+    "$02 #" + nes.mem[0x02].to_hex() + " " + if nes.mem[0x02] == @cpu.UInt8(0x00) {
       "OK"
     } else {
       "FAIL"
     },
   )
   println(
-    "$03 #" + c64.mem[0x03].to_hex() + " " + if c64.mem[0x03] == @cpu.UInt8(0x00) {
+    "$03 #" + nes.mem[0x03].to_hex() + " " + if nes.mem[0x03] == @cpu.UInt8(0x00) {
       "OK"
     } else {
       "FAIL"
