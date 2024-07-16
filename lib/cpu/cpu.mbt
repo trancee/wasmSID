@@ -351,13 +351,13 @@ fn dump_step(
     spaces = spaces + " "
   }
   // let mut stack = ""
-  // let mut i = 0x01FF
-  // while i > 0x01F8 {
+  // for i = 0x01FF; i > 0x01F8; i = i - 1 {
   //   if self.registers[SP] + 0x0100 == i {
   //     stack += "➛"
+  //   } else {
+  //     stack += " "
   //   }
   //   stack += self.mem[i].to_hex()
-  //   i = i - 1
   // }
   println(
     self.pc.to_hex() + " " + instr + " " + unofficial + if opcode == 0xE3 || opcode ==
@@ -740,7 +740,7 @@ fn opPHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// The `PHP` instruction affects no registers or flags in the micropro­cessor.
 fn opPHP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   // self.push(self.flags.get()|(B.bits())) // FIXME: really needs B?
-  self.push(self.flags.get() | U.bits()) // FIXME: really needs U?
+  self.push(self.flags.get() | B.bits() | U.bits()) // FIXME: really needs U?
 }
 
 // PLA - Pull accumulator

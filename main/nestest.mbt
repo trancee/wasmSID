@@ -19,7 +19,7 @@ pub fn nestest() -> Unit {
   nes.push16(@cpu.UInt16(0x07FF))
   while nes.pc() != 0x0800 {
     let _ = nes.step()
-    if nes.pc() == 0xC7EB { break }
+    // if nes.pc() == 0xC7EB { break }
   }
   println("---")
   println(
