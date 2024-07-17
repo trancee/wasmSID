@@ -3,7 +3,15 @@ package trancee/wasmSID/lib/cpu
 // Values
 
 // Types and methods
-type CPU
+pub struct CPU {
+  pub mem : Memory
+  pub cycles : Int
+  pub pc : UInt16
+  pub registers : Registers
+  pub flags : Flags
+  pub decimal_mode : Bool
+  pub needs_interrupt : Vector
+}
 impl CPU {
   get_flags(Self) -> UInt8
   load(Self, UInt16, Array[Int], ~length : Int = ..) -> Unit
@@ -32,7 +40,7 @@ pub enum Flag {
 }
 impl Flag {
   debug_write(Self, Buffer) -> Unit
-  op_add(Self, Self) -> Int
+  lor(Self, Self) -> Int
   op_equal(Self, Self) -> Bool
   to_string(Self) -> String
 }

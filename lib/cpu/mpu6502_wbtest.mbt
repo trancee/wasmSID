@@ -8,7 +8,7 @@ test "reset_sets_registers_to_initial_states" {
   @test.eq(cpu.registers[A], 0)!
   @test.eq(cpu.registers[X], 0)!
   @test.eq(cpu.registers[Y], 0)!
-  @test.eq(cpu.flags.get(), B + U)!
+  @test.eq(cpu.flags.get(), B | U)!
 }
 
 test "reset_sets_pc_to_0_by_default" {
@@ -1996,9 +1996,9 @@ test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
   @test.eq(cpu.pc, 0xABCD)!
   @test.eq(cpu.mem[0x1FF], 0xC1)! // PCH
   @test.eq(cpu.mem[0x1FE], 0x23)! // PCL
-  @test.eq(cpu.mem[0x1FD], U.bits())! // Status
+  @test.eq(cpu.mem[0x1FD], B | U)! // Status
   @test.eq(cpu.registers[SP], 0xFC)!
-  @test.eq(cpu.flags.get(), U + I)!
+  @test.eq(cpu.flags.get(), U | I)!
   @test.eq(cpu.cycles, 7)!
 }
 
@@ -2012,9 +2012,9 @@ test "nmi_pushes_pc_and_correct_status_then_sets_pc_to_nmi_vector" {
   @test.eq(cpu.pc, 0x7788)!
   @test.eq(cpu.mem[0x1FF], 0xC1)! // PCH
   @test.eq(cpu.mem[0x1FE], 0x23)! // PCL
-  @test.eq(cpu.mem[0x1FD], U.bits())! // Status
+  @test.eq(cpu.mem[0x1FD], B | U)! // Status
   @test.eq(cpu.registers[SP], 0xFC)!
-  @test.eq(cpu.flags.get(), U + I)!
+  @test.eq(cpu.flags.get(), U | I)!
   @test.eq(cpu.cycles, 7)!
 }
 
@@ -3871,12 +3871,12 @@ test "php_pushes_processor_status_and_updates_sp" {
   let mut flags = 0x00
   while flags < 0x100 {
     let cpu = CPU::new()
-    cpu.flags.set(flags | (B + U))
+    cpu.flags.set(flags | (B | U))
     // $0000 PHP
     cpu.mem[0x0000] = 0x08
     @test.eq(cpu.step(), 3)!
     @test.eq(cpu.pc, 0x0001)!
-    @test.eq(cpu.mem[0x1FF], flags | (B + U))!
+    @test.eq(cpu.mem[0x1FF], flags | (B | U))!
     @test.eq(cpu.registers[SP], 0xFE)!
     flags += 1
   }

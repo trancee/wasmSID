@@ -1,4 +1,4 @@
-struct CPU {
+pub struct CPU {
   mem : Memory
   mut cycles : Int
   mut pc : UInt16 // Program Counter
@@ -268,9 +268,12 @@ fn dump_step(
       // The X index register is used to offset the zero page vector used to determine the effective address.
       // ADC, AND, CMP, EOR, LDA, ORA, SBC, STA.
       " (" + read8() + ",X) @ " + (self.read(self.pc + 1) + self.registers[X]).to_hex() +
-      " = " + self.read16zp(self.read(self.pc + 1) + self.registers[X] |> u16).to_hex() +
-      " = " + self.read(
-        self.read16zp(self.read(self.pc + 1) + self.registers[X] |> u16),
+      " = " + self.read16zp(
+        (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
+      ).to_hex() + " = " + self.read(
+        self.read16zp(
+          (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
+        ),
       ).to_hex()
     IndirectIndexed =>
       // Indirect-Indexed Addressing
@@ -316,23 +319,27 @@ fn dump_step(
       //
       // Specifies an address in zero-page which is to be the "object" of the instruction.
       // ADC, AND, ASL, BIT, CMP, CPX, CPY, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, and STY.
-      " " + read8() + " = " + self.read(self.read(self.pc + 1) |> u16).to_hex()
+      " " + read8() + " = " + self.read(self.read(self.pc + 1) & 0xFF |> u16).to_hex()
     ZeroPageX =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
       //
       // The contents of the X index register is added to a given base address in zero-page.
       // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, STY.
-      " " + read8() + ",X @ " + (self.read(self.pc + 1) + self.registers[X]).to_hex() +
-      " = " + self.read(self.read(self.pc + 1) + self.registers[X] |> u16).to_hex()
+      " " + read8() + ",X @ " + ((self.read(self.pc + 1) + self.registers[X]) & 0xFF).to_hex() +
+      " = " + self.read(
+        (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
+      ).to_hex()
     ZeroPageY =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
       //
       // The contents of the Y index register is added to a given base address in zero-page.
       // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, STY.
-      " " + read8() + ",Y @ " + (self.read(self.pc + 1) + self.registers[Y]).to_hex() +
-      " = " + self.read(self.read(self.pc + 1) + self.registers[Y] |> u16).to_hex()
+      " " + read8() + ",Y @ " + ((self.read(self.pc + 1) + self.registers[Y]) & 0xFF).to_hex() +
+      " = " + self.read(
+        (self.read(self.pc + 1) + self.registers[Y]) & 0xFF |> u16,
+      ).to_hex()
     Relative =>
       // Relative Addressing
       // https://www.c64-wiki.com/wiki/Relative_addressing

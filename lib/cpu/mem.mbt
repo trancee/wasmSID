@@ -38,25 +38,31 @@ pub fn op_get(self : Memory, addr : UInt16) -> UInt8 {
     self.dump()
     abort("Memory::get out of bounds")
   }
+  // VIC-II
+  if addr >= 0xD000 && addr <= 0xD3FF {
+    // return vic2.onReadByte(address);
+  }
+
+  // SID
+  if addr >= 0xD400 && addr <= 0xD7FF {
+
+  }
+
+  // Color ram
+  if addr >= 0xD800 && addr <= 0xDBFF {
+    // return memoryManager.ram.onReadByte(address);
+  }
+
+  // CIA 1
+  if addr >= 0xDC00 && addr <= 0xDCFF {
+    // return memoryManager.cia1.onReadByte(address);
+  }
+
+  // CIA 2
+  if addr >= 0xDD00 && addr <= 0xDDFF {
+    // return memoryManager.cia2.onReadByte(address);
+  }
   self.mem[addr.0]
-  // if addr.0 >= 0x0000 && addr.0 <= 0x1FFF {
-  // self.mem[addr % 0x0800]
-  // } else if addr >= (0x2000 |> to_u16) && addr <= (0x3FFF |> to_u16) {
-  //   n.ppu.readRegister((0x2000 |> to_u16) + (addr.0 % 8 |> to_u16))
-  // } else if addr.0 == 0x4014 {
-  //   n.ppu.readRegister(addr)
-  // } else if addr.0 == 0x4015 {
-  //   n.apu.readRegister(addr)
-  // } else if addr.0 == 0x4016 {
-  //   n.controllers[0].read()
-  // } else if addr.0 == 0x4017 {
-  //   n.controllers[1].read()
-  // } else if addr.0 >= 0x6000 && addr.0 <= 0xFFFF {
-  //   let m = n.mapper.unwrap()
-  //   m[addr]
-  // } else {
-  //   0 |> to_u8()
-  // }
 }
 
 fn op_set(self : Memory, addr : UInt16, value : Int) -> Unit {
@@ -64,20 +70,34 @@ fn op_set(self : Memory, addr : UInt16, value : Int) -> Unit {
     self.dump()
     abort("Memory::set out of bounds")
   }
+  // VIC-II
+  if addr >= 0xD000 && addr <= 0xD3FF {
+    // vic2.onWriteByte(address, data)
+  }
+  // SID
+  if addr >= 0xD400 && addr <= 0xD7FF {
+    // sid.play()
+    // sidPlayer.synth.poke(address & 0x1f, data);
+    if addr > 0xD418 {
+      // console.log("attempted digi poke:", address, data);
+      // sidPlayer.synth.pokeDigi(address, data);
+      // println("attempted digi poke")
+      // abort("digi")
+    }
+  }
+  // Color ram
+  if addr >= 0xD800 && addr <= 0xDBFF {
+    // memoryManager.ram.onWriteByte(address, data);
+  }
+
+  // CIA 1
+  if addr >= 0xDC00 && addr <= 0xDCFF {
+    // memoryManager.cia1.onWriteByte(address, data);
+  }
+
+  // CIA 2
+  if addr >= 0xDD00 && addr <= 0xDDFF {
+    // memoryManager.cia2.onWriteByte(address, data);
+  }
   self.mem[addr.0] = value |> u8
-  // if addr >= 0x0000 && addr <= 0x1FFF {
-  // self.mem[addr % 0x0800] = value
-  // } else if addr >= 0x2000 && addr <= 0x3FFF {
-  //   // n.ppu.writeRegister((0x2000 |> to_u16) + (addr.0 % 8 |> to_u16), value)
-  // } else if addr == 0x4014 {
-  //   // n.ppu.writeRegister(addr, value)
-  // } else if addr >= 0x4000 && addr <= 0x4013 || addr == 0x4015 || addr == 0x4017 {
-  //   //   n.apu.writeRegister(addr, value)
-  // } else if addr == 0x4016 {
-  //   //   n.controllers[0].write(value)
-  //   //   n.controllers[1].write(value)
-  // } else if addr >= 0x6000 && addr <= 0xFFFF {
-  //   let m = n.mapper.unwrap()
-  //   m[addr] = value
-  // }
 }

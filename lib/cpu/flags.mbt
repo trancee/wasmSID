@@ -9,11 +9,7 @@ pub enum Flag {
   N // Negative Flag
 } derive(Debug, Show, Eq)
 
-pub fn op_add(self : Flag, flag : Flag) -> Int {
-  // println(
-  //   "Flag (" + UInt8(self.bits()).to_hex() + "|" + UInt8(flag.bits()).to_hex() +
-  //   ") = " + UInt8(self.bits()|(flag.bits())).to_hex(),
-  // )
+pub fn lor(self : Flag, flag : Flag) -> Int {
   self.bits() | flag.bits()
 }
 

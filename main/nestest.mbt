@@ -5,7 +5,7 @@ pub fn nestest() -> Unit {
     offset=0x8000,
     length=0x4000,
   )
-  nes.set_flags(@cpu.U + @cpu.I) // UNUSED + INTERRUPT
+  nes.set_flags(@cpu.U | @cpu.I) // UNUSED + INTERRUPT
   nes.load(data, offset=0xC000, length=0x4000)
   nes.load(
     [
@@ -19,7 +19,7 @@ pub fn nestest() -> Unit {
   nes.push16(@cpu.UInt16(0x07FF))
   while nes.pc() != 0x0800 {
     let _ = nes.step()
-    // if nes.pc() == 0xC7EB { break }
+    // if nes.pc() == 0xCFFC { break }
   }
   println("---")
   println(
