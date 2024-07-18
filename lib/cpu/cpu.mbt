@@ -1,4 +1,4 @@
-pub struct CPU {
+struct CPU {
   mem : Memory
   mut cycles : Int
   mut pc : UInt16 // Program Counter
@@ -96,7 +96,7 @@ pub fn read(self : CPU, addr : UInt16) -> UInt8 {
   // if log {
   //   println("$" + u16(addr).to_hex() + " → " + self.mem[addr].to_hex())
   // }
-  self.mem[addr]
+  self.mem[addr.0]
 }
 
 fn read16(self : CPU, addr : UInt16) -> UInt16 {
@@ -118,13 +118,13 @@ fn read16zp(self : CPU, addr : UInt16) -> UInt16 {
 }
 
 pub fn write(self : CPU, addr : UInt16, value : UInt8) -> Unit {
-  self.mem[addr] = value.0
+  self.mem[addr.0] = value.0
   // println("$" + u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
 }
 
 pub fn write16(self : CPU, addr : UInt16, value : UInt16) -> Unit {
-  self.mem[addr] = value.0
-  self.mem[addr + 1] = value.0 >> 8
+  self.mem[addr.0] = value.0
+  self.mem[addr.0 + 1] = value.0 >> 8
   // println(
   //   "$" + u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
@@ -227,9 +227,9 @@ fn dump_step(
   cycles : Int,
   illegal : Bool
 ) -> Unit {
-  let read8 = fn() { "$" + self.mem[self.pc + 1].to_hex() }
+  let read8 = fn() { "$" + self.mem[self.pc.0 + 1].to_hex() }
   let read16 = fn() {
-    "$" + self.mem[self.pc + 1 + 1].to_hex() + self.mem[self.pc + 1].to_hex()
+    "$" + self.mem[self.pc.0 + 1 + 1].to_hex() + self.mem[self.pc.0 + 1].to_hex()
   }
   let unofficial = if illegal { "*" } else { " " }
   let addr_mode = match mode {

@@ -14,7 +14,8 @@ pub fn C64::new(
   let cpu = @cpu.CPU::new(pc=baseaddress)
   let mem = cpu.mem()
   cpu.load(offset, data, ~length)
-  let vic = VIC::new(~baseaddress)
+  let vic = VIC::new(mem, 0xD000)
+  vic.reset()
   let c64 : C64 = { baseaddress, mem, cpu, vic }
   c64
 }

@@ -33,7 +33,7 @@ fn dump(
   }
 }
 
-pub fn op_get(self : Memory, addr : UInt16) -> UInt8 {
+pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   if addr > 0xFFFF {
     self.dump()
     abort("Memory::get out of bounds")
@@ -62,10 +62,10 @@ pub fn op_get(self : Memory, addr : UInt16) -> UInt8 {
   if addr >= 0xDD00 && addr <= 0xDDFF {
     // return memoryManager.cia2.onReadByte(address);
   }
-  self.mem[addr.0]
+  self.mem[addr]
 }
 
-fn op_set(self : Memory, addr : UInt16, value : Int) -> Unit {
+pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   if addr > 0xFFFF {
     self.dump()
     abort("Memory::set out of bounds")
@@ -99,5 +99,5 @@ fn op_set(self : Memory, addr : UInt16, value : Int) -> Unit {
   if addr >= 0xDD00 && addr <= 0xDDFF {
     // memoryManager.cia2.onWriteByte(address, data);
   }
-  self.mem[addr.0] = value |> u8
+  self.mem[addr] = value |> u8
 }

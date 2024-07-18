@@ -22,6 +22,18 @@ impl C64 {
   step(Self) -> Int
 }
 
+type CIA
+impl CIA {
+  acknowledgeCIAIRQ(Self) -> Unit
+  new(@cpu.Memory, Int) -> Self
+  reset(Self) -> Unit
+  writeCIAIRQmask(Self, Int) -> Unit
+}
+
+type ControlBitVal
+
+type InterruptBitVal
+
 pub struct NES {
   pub baseaddress : UInt16
   pub mem : @cpu.Memory
@@ -43,6 +55,7 @@ impl UInt16 {
   compare(Self, Self) -> Int
   debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  to_hex(Self) -> String
 }
 
 pub type UInt8 Int
@@ -55,8 +68,13 @@ impl UInt8 {
 
 type VIC
 impl VIC {
-  new(~baseaddress : UInt16) -> Self
+  acknowledgeVICrasterIRQ(Self) -> Unit
+  emulate(Self, Int) -> Int
+  new(@cpu.Memory, Int) -> Self
+  reset(Self) -> Unit
 }
+
+type VICregisters
 
 // Traits
 
