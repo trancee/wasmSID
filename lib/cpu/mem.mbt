@@ -1,3 +1,69 @@
+/// Memory Map
+/// https://sta.c64.org/cbm64mem.html
+///
+/// $0000-$00FF         Zero Page
+///
+/// $0100-$01FF         Processor Stack
+///
+/// $0200-$0258 BUF     BASIC Line Editor Input Buffer
+/// $0259-$0276         Tables for File Numbers, Device Numbers, and Secondary Addresses
+/// $0259-$0262 LAT     Kernal Table of Active Logical File Numbers
+/// $0263-$026C FAT     Kernal Table of Device Numbers for Each Logical File
+/// $026D-$0276 SAT     Kernal Table of Secondary Addresses for Each Logical File
+/// $0277-$0280 KEYD    Keyboard Buffer (Queue)
+///
+/// $0400-$07FF VICSCN  Video Screen Memory Area
+/// $0400-$07E7         Video Matrix: 25 Lines by 40 Columns
+/// $07F8-$07FF         Sprite Shape Data Pointers
+///
+/// $0800-$9FFF BASIC RAM
+/// $1000-$1FFF         Character ROM Image for VIC-II Chip When Using Memory Bank 0 (Default)
+/// $8000-$9FFF Cartridge ROM
+/// $9000-$9FFF         Character ROM Image for VIC-II Chip When Using Memory Bank 2
+///
+/// $A000-$BFFF BASIC ROM / Cartridge ROM
+/// $C000-$CFFF RAM
+///
+/// $D000-$DFFF I/O
+/// $D000-$DFFF Character ROM
+/// $D000-$D3FF VIC-II
+/// $D000-$D02E         VIC-II Chip Registers
+/// $D02F-$D03F         Not Connected           When read, they will always give a value of 255 ($FF).  This value will not change after writing to them.
+/// $D040-$D3FF         VIC-II Register Images
+/// $D400-$D7FF SID
+/// $D400-$D41C         Sound Interface Device (SID) Registers
+/// $D41D-$D41F         Not Connected           Reading them will always return a value of 255 ($FF), and writing to them will have no effect.
+/// $D420-$D7FF         SID Register Images     The result is that every 32-byte area in this 1K block is a mirror of every other.
+/// $D800-$DBFF Color RAM
+/// $DC00-$DCFF CIA #1
+/// $DC00-$DC0F         Complex Interface Adapter (CIA) #1 Registers
+/// $DD00-$DDFF CIA #2
+/// $DD00-$DD0F         Complex Interface Adapter (CIA) #2 Registers
+/// $DD10-$DDFF         CIA #2 Register Images  The result is that every 16-byte area in this 256-byte block is a mirror of every other.
+/// $DE00-$DEFF I/O #1  Reserved for I/O Expansion
+/// $DF00-$DFFF I/O #2  CIA #2 Register Images
+///
+/// $E000-$FFFF KERNAL ROM / Cartridge ROM
+/// $FF81-$FFF5         Kernal Jump Table
+/// $FFFA-$FFFF Hardware Vectors
+///       $FFFA         Non-Maskable Interrupt Hardware Vector
+///       $FFFC         System Reset (RES) Hardware Vector
+///       $FFFE         Maskable Interrupt Request and Break Hardware Vectors
+
+enum Address {
+  D6510
+  R6510
+  ADRAY1 // Vector: Routine to Convert a Number from Floating Point to Signed Integer
+  ADRAY2 // Vector: Routine to Convert a Number from Integer to Floating Point
+  CHARAC // Search Character for Scanning BASIC Text Input
+  ENDCHR // Search Character for Statement Termination or Quote
+  TRMPOS // Column position of the Cursor before the Last TAB or SPC
+  VERCK // Flag: LOAD or VERIFY
+  COUNT // Index into the Text Input Buffer/Number of Array Subscripts
+  DIMFLG // Flags for the Routines That Locate or Build an Array
+  VALTYP // Flag: Type of Data (String or Numeric)
+}
+
 struct Memory {
   mut mem : Array[UInt8]
 }
