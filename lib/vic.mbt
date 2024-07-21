@@ -1,3 +1,5 @@
+// https://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
+
 /// 6567 (NTSC)
 /// 6569 (PAL)
 ///

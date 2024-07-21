@@ -1,3 +1,5 @@
+// https://www.zimmers.net/cbmpics/cbm/c64/
+
 pub struct C64 {
   baseaddress : UInt16
   mem : @cpu.Memory
