@@ -3,6 +3,8 @@ package trancee/wasmSID/main
 // Values
 fn nestest() -> Unit
 
+fn sidtest() -> Unit
+
 // Types and methods
 
 // Traits

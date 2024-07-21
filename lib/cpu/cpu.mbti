@@ -3,17 +3,26 @@ package trancee/wasmSID/lib/cpu
 // Values
 
 // Types and methods
+type Address
+
 type CPU
 impl CPU {
   get_flags(Self) -> UInt8
+  has_interrupt(Self) -> Bool
+  irq(Self, ~pc : Int? = ..) -> Unit
   load(Self, UInt16, Array[Int], ~length : Int = ..) -> Unit
   mem(Self) -> Memory
-  new(~pc : Int = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = ..) -> Self
+  new(~pc : Int = .., ~mem : Memory? = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = ..) -> Self
+  nmi(Self, ~pc : Int? = ..) -> Unit
   pc(Self) -> Int
   push(Self, UInt8) -> Unit
   push16(Self, UInt16) -> Unit
   read(Self, UInt16) -> UInt8
-  reset(Self) -> Unit
+  register(Self, Register, Int) -> Unit
+  reset(Self, ~baseaddress : Int? = ..) -> Unit
+  setIRQ(Self, UInt16) -> Unit
+  setNMI(Self, UInt16) -> Unit
+  setRESET(Self, UInt16) -> Unit
   set_flags(Self, UInt8) -> Unit
   step(Self) -> Int
   write(Self, UInt16, UInt8) -> Unit
@@ -34,6 +43,7 @@ impl Flag {
   debug_write(Self, Buffer) -> Unit
   lor(Self, Self) -> Int
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
@@ -48,23 +58,33 @@ impl Flags {
 type Instruction
 impl Instruction {
   debug_write(Self, Buffer) -> Unit
+  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
 type Memory
 impl Memory {
+  new() -> Self
   op_get(Self, Int) -> UInt8
   op_set(Self, Int, Int) -> Unit
+  reset(Self) -> Unit
+  setROM(Self) -> Unit
 }
 
 type Mode
 impl Mode {
   debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
-type Register
+pub enum Register {
+  SP
+  A
+  X
+  Y
+}
 
 type Registers
 

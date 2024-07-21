@@ -45,6 +45,10 @@ fn op_sub(self : UInt8, other : UInt8) -> UInt8 {
   self.0 - other.0 // FIXME: Underflow
 }
 
+fn flip(self : UInt8, other : UInt8) -> UInt8 {
+  self.0 & (-other.0 - 1)
+}
+
 // bitwise and
 fn land(self : UInt8, other : UInt8) -> UInt8 {
   self.0 & other.0
@@ -79,6 +83,18 @@ fn bit(self : UInt8, bit : UInt8) -> Bool {
   ((self >> bit) & 1) == 1
 }
 
+fn clr(self : UInt8, bit : UInt8) -> UInt8 {
+  self.0 & (-bit.0 - 1)
+}
+
+fn set(self : UInt8, bit : UInt8) -> UInt8 {
+  self.0 | bit.0
+}
+
+fn has(self : UInt8, bit : UInt8) -> Bool {
+  (self.0 & bit.0) != 0
+}
+
 // fn to_byte(
 //   b0 : Bool,
 //   b1 : Bool,
@@ -95,16 +111,24 @@ fn bit(self : UInt8, bit : UInt8) -> Bool {
 //   (b7 |> to_u8)<<(7).0
 // }
 
+fn to_signed(self : UInt8) -> Int {
+  self.0 - ((self & 0x80) << 1).0
+}
+
 pub fn to_hex(self : UInt8) -> String {
   hex(self >> 4) + hex(self)
 }
 
-fn to_string(self : UInt8) -> String {
-  self.0.to_string()
+fn to_byte(self : UInt8) -> Byte {
+  self.0.to_byte()
 }
 
-fn to_signed(self : UInt8) -> Int {
-  self.0 - ((self & 0x80) << 1).0
+fn to_int(self : UInt8) -> Int {
+  self.0
+}
+
+fn to_string(self : UInt8) -> String {
+  self.0.to_string()
 }
 
 //
@@ -162,8 +186,20 @@ fn asr(self : UInt16, bit : UInt16) -> UInt16 {
   self.0 >> bit.0
 }
 
+fn has(self : UInt16, bit : UInt16) -> Bool {
+  (self.0 & bit.0) != 0
+}
+
 pub fn to_hex(self : UInt16) -> String {
   u8(self >> 8).to_hex() + u8(self & 0xFF).to_hex()
+}
+
+fn to_byte(self : UInt16) -> Byte {
+  self.0.to_byte()
+}
+
+fn to_int(self : UInt16) -> Int {
+  self.0
 }
 
 fn to_string(self : UInt16) -> String {

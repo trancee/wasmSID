@@ -9,15 +9,46 @@ pub struct C64 {
   pub baseaddress : UInt16
   pub mem : @cpu.Memory
   pub cpu : @cpu.CPU
+  pub sid : Array[SID]
+  pub cia1 : CIA
+  pub cia2 : CIA
   pub vic : VIC
+  pub psid : PSID
+  pub sampleRate : Int
+  pub highQuality : Bool
+  pub stereo : Bool
+  pub playbackSpeed : Int
+  pub paused : Bool
+  pub videoStandard : VideoStandard
+  pub cpuFrequency : CPUClock
+  pub sampleClockRatio : Int
+  pub selectedModel : SIDModel
+  pub mainVolume : Double
+  pub attenuation : Int
+  pub timerSource : Int
+  pub frameCycles : Int
+  pub frameCycleCnt : Int
+  pub prevRasterLine : Int
+  pub sampleCycleCnt : Int
+  pub overSampleCycleCnt : Int
+  pub finished : Bool
+  pub returned : Bool
+  pub irq : Int
+  pub nmi : Int
+  pub prevNMI : Int
 }
 impl C64 {
+  emulate(Self) -> Tuple[Int, Int]
   get_flags(Self) -> @cpu.UInt8
+  initC64(Self) -> Unit
+  initCPU(Self, ~baseaddress : Int? = ..) -> Unit
   load(Self, Array[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
-  new(~baseaddress : Int = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = ..) -> Self
+  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~psid : PSID) -> Self
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
+  reset(Self) -> Unit
+  setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   step(Self) -> Int
 }
@@ -25,14 +56,74 @@ impl C64 {
 type CIA
 impl CIA {
   acknowledgeCIAIRQ(Self) -> Unit
+  emulate(Self, UInt8) -> Bool
   new(@cpu.Memory, Int) -> Self
   reset(Self) -> Unit
   writeCIAIRQmask(Self, Int) -> Unit
 }
 
+type CPUClock
+impl CPUClock {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+pub type CRA UInt8
+impl CRA {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type CRAFlags
+
+pub type CRB UInt8
+impl CRB {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type CRBFlags
+
+type Channel
+impl Channel {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
 type ControlBitVal
 
+type FrameRate
+impl FrameRate {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+pub type ICR UInt8
+impl ICR {
+  compare(Self, Self) -> Int
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type ICRFlags
+
 type InterruptBitVal
+
+type InterruptControlStatusRegister
+
+type Mode
+impl Mode {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type ModelFormatStandard
+impl ModelFormatStandard {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
 
 pub struct NES {
   pub baseaddress : UInt16
@@ -48,6 +139,73 @@ impl NES {
   push16(Self, @cpu.UInt16) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   step(Self) -> Int
+}
+
+pub struct PSID {
+  pub mem : @cpu.Memory
+  pub data : Array[Int]
+  pub version : Version
+  pub realSID : Bool
+  pub digiMode : Bool
+  pub loadAddress : UInt16
+  pub initAddress : UInt16
+  pub playAddress : UInt16
+  pub endAddress : UInt16
+  pub title : String
+  pub author : String
+  pub info : String
+  pub subtune : UInt16
+  pub subtuneAmount : UInt16
+  pub modelFormatStandard : ModelFormatStandard
+  pub model : Array[SIDModel]
+  pub sid2Flags : SIDFlags
+  pub sid3Flags : SIDFlags
+  pub sid4Flags : SIDFlags
+  pub sid2BaseAddress : UInt8
+  pub sid3BaseAddress : UInt8
+  pub sid4BaseAddress : UInt8
+}
+impl PSID {
+  new(@cpu.Memory, Array[Int]) -> Self
+  process(Self) -> Bool
+}
+
+type Register
+impl Register {
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
+}
+
+type SID
+impl SID {
+  new(@cpu.Memory, Int, ~model : SIDModel = .., ~channel : Channel = ..) -> Self
+  reset(Self) -> Unit
+}
+
+type SIDFlags
+impl SIDFlags {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type SIDModel
+impl SIDModel {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type SIDheader
+
+type ScanLineCycles
+impl ScanLineCycles {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type ScanLines
+impl ScanLines {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
 }
 
 pub type UInt16 Int
@@ -69,12 +227,24 @@ impl UInt8 {
 type VIC
 impl VIC {
   acknowledgeVICrasterIRQ(Self) -> Unit
-  emulate(Self, Int) -> Int
+  emulate(Self, Int) -> Bool
   new(@cpu.Memory, Int) -> Self
   reset(Self) -> Unit
 }
 
 type VICregisters
+
+type Version
+impl Version {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
+type VideoStandard
+impl VideoStandard {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
 
 // Traits
 

@@ -68,12 +68,42 @@ struct Memory {
   mut mem : Array[UInt8]
 }
 
-fn Memory::new() -> Memory {
+pub fn Memory::new() -> Memory {
   { mem: Array::make(0x10000, 0x00) }
 }
 
-fn clear(self : Memory) -> Unit {
+pub fn reset(self : Memory) -> Unit {
   self.mem = Array::make(0x10000, 0x00)
+}
+
+//fill KERNAL/BASIC-ROM areas with content needed for SID-playback
+pub fn setROM(self : Memory) -> Unit {
+  let rom_IRQreturnCode = [0xAD, 0x0D, 0xDC, 0x68, 0xA8, 0x68, 0xAA, 0x68, 0x40] //CIA1-acknowledge IRQ-return
+  let rom_NMIstartCode = [0x78, 0x6c, 0x18, 0x03, 0x40] //SEI and jmp($0318)
+  let rom_IRQBRKstartCode = [ //Full IRQ-return (handling BRK with the same RAM vector as IRQ)
+    0x48, 0x8A, 0x48, 0x98, 0x48, 0xBA, 0xBD, 0x04, 0x01, 0x29, 0x10, 0xEA, 0xEA,
+    0xEA, 0xEA, 0xEA, 0x6C, 0x14, 0x03,
+  ]
+  for i = 0xA000; i < 0x10000; i = i + 1 {
+    self[i] = 0x60 //RTS (at least return if some unsupported call is made to ROM)
+  }
+  for i = 0xEA31; i < 0xEA7E; i = i + 1 {
+    self[i] = 0xEA //NOP (full IRQ-return leading to simple IRQ-return without other tasks)
+  }
+  for i = 0; i < rom_IRQreturnCode.length(); i = i + 1 {
+    self[0xEA7E + i] = rom_IRQreturnCode[i]
+  }
+  for i = 0; i < rom_NMIstartCode.length(); i = i + 1 {
+    self[0xFE43 + i] = rom_NMIstartCode[i]
+  }
+  for i = 0; i < rom_IRQBRKstartCode.length(); i = i + 1 {
+    self[0xFF48 + i] = rom_IRQBRKstartCode[i]
+  }
+  self[0xFFFB] = 0xFE
+  self[0xFFFA] = 0x43 //ROM NMI-vector
+  self[0xFFFF] = 0xFF
+  self[0xFFFE] = 0x48 //ROM IRQ-vector
+  //copy KERNAL & BASIC ROM contents into the RAM under them? (So PSIDs that don't select bank correctly will work better.)
 }
 
 fn dump(
@@ -106,26 +136,35 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   }
   // VIC-II
   if addr >= 0xD000 && addr <= 0xD3FF {
+    println("vic2 read $" + u16(addr).to_hex())
+    abort("")
     // return vic2.onReadByte(address);
   }
 
   // SID
   if addr >= 0xD400 && addr <= 0xD7FF {
-
+    println("sid read $" + u16(addr).to_hex())
+    // abort("")
   }
 
   // Color ram
   if addr >= 0xD800 && addr <= 0xDBFF {
+    println("color ram read $" + u16(addr).to_hex())
+    abort("")
     // return memoryManager.ram.onReadByte(address);
   }
 
   // CIA 1
   if addr >= 0xDC00 && addr <= 0xDCFF {
+    println("cia1 read $" + u16(addr).to_hex())
+    abort("")
     // return memoryManager.cia1.onReadByte(address);
   }
 
   // CIA 2
   if addr >= 0xDD00 && addr <= 0xDDFF {
+    println("cia2 read $" + u16(addr).to_hex())
+    abort("")
     // return memoryManager.cia2.onReadByte(address);
   }
   self.mem[addr]
@@ -138,10 +177,14 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   }
   // VIC-II
   if addr >= 0xD000 && addr <= 0xD3FF {
+    println("vic2 write $" + u16(addr).to_hex())
+    // abort("")
     // vic2.onWriteByte(address, data)
   }
   // SID
   if addr >= 0xD400 && addr <= 0xD7FF {
+    println("sid write $" + u16(addr).to_hex())
+    // abort("")
     // sid.play()
     // sidPlayer.synth.poke(address & 0x1f, data);
     if addr > 0xD418 {
@@ -153,16 +196,22 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   }
   // Color ram
   if addr >= 0xD800 && addr <= 0xDBFF {
+    println("color ram write $" + u16(addr).to_hex())
+    // abort("")
     // memoryManager.ram.onWriteByte(address, data);
   }
 
   // CIA 1
   if addr >= 0xDC00 && addr <= 0xDCFF {
+    println("cia1 write $" + u16(addr).to_hex())
+    // abort("")
     // memoryManager.cia1.onWriteByte(address, data);
   }
 
   // CIA 2
   if addr >= 0xDD00 && addr <= 0xDDFF {
+    println("cia2 write $" + u16(addr).to_hex())
+    // abort("")
     // memoryManager.cia2.onWriteByte(address, data);
   }
   self.mem[addr] = value |> u8

@@ -1,29 +1,39 @@
 struct CPU {
   mem : Memory
+  //
   mut cycles : Int
+  //
   mut pc : UInt16 // Program Counter
   mut registers : Registers
   mut flags : Flags
+  //
   decimal_mode : Bool
   mut needs_interrupt : Vector
 }
 
 pub fn CPU::new(
   ~pc : Int = 0x0000,
+  ~mem : Memory? = None,
   ~data : Array[Int] = [],
   ~offset : Int = 0,
   ~length : Int = data.length(),
   ~decimal_mode : Bool = true
 ) -> CPU {
-  let mem = Memory::new()
+  let mem = match mem {
+    Some(mem) => mem
+    None => Memory::new()
+  }
   let registers = Registers::new()
   let flags = Flags::new()
   let cpu : CPU = {
     mem,
+    //
     cycles: 0,
+    //
     pc,
     registers,
     flags,
+    //
     decimal_mode,
     needs_interrupt: None,
   }
@@ -49,10 +59,17 @@ fn addr(self : Vector) -> Int {
   }
 }
 
-pub fn reset(self : CPU) -> Unit {
+pub fn setRESET(self : CPU, pc : UInt16) -> Unit {
+  self.write16(RESET.addr(), pc)
+}
+
+pub fn reset(self : CPU, ~baseaddress : Int? = None) -> Unit {
   // self.mem.clear()
   self.cycles = 0
-  self.pc = self.read16(RESET.addr())
+  self.pc = match baseaddress {
+    Some(baseaddress) => baseaddress
+    None => self.read16(RESET.addr())
+  }
   self.registers.reset()
   self.flags.reset()
 }
@@ -69,8 +86,16 @@ pub fn set_flags(self : CPU, flags : UInt8) -> Unit {
   self.flags.set(flags)
 }
 
+pub fn has_interrupt(self : CPU) -> Bool {
+  self.flags[I]
+}
+
 pub fn pc(self : CPU) -> Int {
   self.pc.0
+}
+
+pub fn register(self : CPU, register : Register, value : Int) -> Unit {
+  self.registers[register] = value
 }
 
 // Load a program into memory
@@ -149,30 +174,44 @@ fn pop16(self : CPU) -> UInt16 {
   self.pop() | (self.pop() << 8) |> u16
 }
 
+pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
+  self.write16(NMI.addr(), pc)
+}
+
+/// triggers a NMI IRQ in the processor
+/// this is very similar to the BRK instruction
+pub fn nmi(self : CPU, ~pc : Int? = None) -> Unit {
+  self.push16(self.pc)
+  // self.flags.clear(B)
+  // self.push(self.flags.get()|(U.bits()))
+  self.opPHP(0, Mode::None)
+  self.flags.set_interrupt()
+  self.pc = match pc {
+    Some(pc) => pc
+    None => self.read16(NMI.addr())
+  }
+  self.cycles += 7
+}
+
+pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
+  self.write16(IRQ.addr(), pc)
+}
+
 /// triggers a normal IRQ
 /// this is very similar to the BRK instruction
-fn irq(self : CPU) -> Unit {
+pub fn irq(self : CPU, ~pc : Int? = None) -> Unit {
   if self.flags.not_interrupt() {
     self.push16(self.pc)
     // self.flags.clear(B)
     // self.push(self.flags.get()|(U.bits()))
     self.opPHP(0, Mode::None)
     self.flags.set_interrupt()
-    self.pc = self.read16(IRQ.addr())
+    self.pc = match pc {
+      Some(pc) => pc
+      None => self.read16(IRQ.addr())
+    }
     self.cycles += 7
   }
-}
-
-/// triggers a NMI IRQ in the processor
-/// this is very similar to the BRK instruction
-fn nmi(self : CPU) -> Unit {
-  self.push16(self.pc)
-  // self.flags.clear(B)
-  // self.push(self.flags.get()|(U.bits()))
-  self.opPHP(0, Mode::None)
-  self.flags.set_interrupt()
-  self.pc = self.read16(NMI.addr())
-  self.cycles += 7
 }
 
 pub fn step(self : CPU) -> Int {

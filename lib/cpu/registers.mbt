@@ -1,4 +1,4 @@
-enum Register {
+pub enum Register {
   SP // Stack Pointer
   A // Accumulator
   X // Index Register X
