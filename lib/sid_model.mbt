@@ -4,7 +4,7 @@ enum SIDModel {
   MOS6581
   MOS8580
   Both
-} derive(Debug, Eq)
+} derive(Eq)
 
 fn SIDModel::from_int(value : Int) -> SIDModel {
   match value {
@@ -40,7 +40,7 @@ enum Channel {
   Left
   Right
   Both
-} derive(Debug, Eq)
+} derive(Eq)
 
 fn Channel::from_int(value : Int) -> Channel {
   match value {

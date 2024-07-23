@@ -6,8 +6,7 @@ pub struct C64 {
   //
   cpu : @cpu.CPU
   sid : Array[SID]
-  cia1 : CIA
-  cia2 : CIA
+  cia : Array[CIA]
   vic : VIC
   //
   psid : PSID
@@ -65,8 +64,7 @@ pub fn C64::new(
   mem.setROM()
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
   let sid = [SID::new(mem, 0xD400)]
-  let cia1 = CIA::new(mem, 0xDC00)
-  let cia2 = CIA::new(mem, 0xDD00)
+  let cia = [CIA::new(mem, 0xDC00), CIA::new(mem, 0xDD00)]
   let vic = VIC::new(mem, 0xD000)
   //
   let c64 : C64 = {
@@ -75,8 +73,7 @@ pub fn C64::new(
     //
     cpu,
     sid,
-    cia1,
-    cia2,
+    cia,
     vic,
     //
     psid,
@@ -119,7 +116,7 @@ pub fn reset(self : C64) -> Unit {
   println(">> C64::reset")
 
   //
-  self.videoStandard = self.psid.modelFormatStandard.videoStandard
+  self.videoStandard = self.psid.flags.videoStandard
   if self.sampleRate == 0 {
     self.sampleRate = 44100
   }
@@ -132,7 +129,7 @@ pub fn reset(self : C64) -> Unit {
   //
   self.prevRasterLine = -1 //so if $d012 is set once only don't disturb FrameCycleCnt
   //
-  let model = self.psid.modelFormatStandard.model[0]
+  let model = self.psid.flags.model[0]
   self.sid[0].model = if self.selectedModel != Unknown {
     self.selectedModel
   } else {
@@ -140,91 +137,37 @@ pub fn reset(self : C64) -> Unit {
   }
 
   //
-  if self.psid.version != WebSID {
-    self.sid[0].channel = Channel::Left
+  self.sid[0].channel = Channel::Left
 
-    // SID #2
-    let mut model = self.psid.modelFormatStandard.model[1]
-    if model == Unknown {
-      model = self.sid[0].model
-    }
-    if self.selectedModel != Unknown {
-      model = self.selectedModel
-    }
-    self.sid[1] = SID::new(
-      self.mem,
-      0xD000 + (self.psid.sid2BaseAddress << 4).0,
-      ~model,
-      channel=Channel::Right,
-    )
-
-    // SID #3
-    let mut model = self.psid.modelFormatStandard.model[2]
-    if model == Unknown {
-      model = self.sid[0].model
-    }
-    if self.selectedModel != Unknown {
-      model = self.selectedModel
-    }
-    self.sid[2] = SID::new(
-      self.mem,
-      0xD000 + (self.psid.sid3BaseAddress << 4).0,
-      ~model,
-      channel=Channel::Both,
-    )
-
-    //ensure disabling SID4 in non-WebSID format
-  } else {
-    self.sid[0].channel = Channel::Left
-
-    // SID #2
-    let mut model = self.psid.sid2Flags.model
-    let channel = self.psid.sid2Flags.channel
-    if model == Unknown {
-      model = self.sid[0].model
-    }
-    if self.selectedModel != Unknown {
-      model = self.selectedModel
-    }
-    self.sid[1] = SID::new(
-      self.mem,
-      0xD000 + (self.psid.sid2BaseAddress << 4).0,
-      ~model,
-      ~channel,
-    )
-
-    // SID #3
-    let mut model = self.psid.sid3Flags.model
-    let channel = self.psid.sid3Flags.channel
-    if model == Unknown {
-      model = self.sid[0].model
-    }
-    if self.selectedModel != Unknown {
-      model = self.selectedModel
-    }
-    self.sid[2] = SID::new(
-      self.mem,
-      0xD000 + (self.psid.sid3BaseAddress << 4).0,
-      ~model,
-      ~channel,
-    )
-
-    // SID #4
-    let mut model = self.psid.sid4Flags.model
-    let channel = self.psid.sid4Flags.channel
-    if model == Unknown {
-      model = self.sid[0].model
-    }
-    if self.selectedModel != Unknown {
-      model = self.selectedModel
-    }
-    self.sid[3] = SID::new(
-      self.mem,
-      0xD000 + (self.psid.sid4BaseAddress << 4).0,
-      ~model,
-      ~channel,
-    )
+  // SID #2
+  let mut model = self.psid.flags.model[1]
+  if model == Unknown {
+    model = self.sid[0].model
   }
+  if self.selectedModel != Unknown {
+    model = self.selectedModel
+  }
+  self.sid[1] = SID::new(
+    self.mem,
+    0xD000 + (self.psid.sid2Address << 4).0,
+    ~model,
+    channel=Channel::Right,
+  )
+
+  // SID #3
+  let mut model = self.psid.flags.model[2]
+  if model == Unknown {
+    model = self.sid[0].model
+  }
+  if self.selectedModel != Unknown {
+    model = self.selectedModel
+  }
+  self.sid[2] = SID::new(
+    self.mem,
+    0xD000 + (self.psid.sid3Address << 4).0,
+    ~model,
+    channel=Channel::Both,
+  )
 
   //
   if self.sid.length() == 1 {
@@ -263,9 +206,8 @@ pub fn initC64(self : C64) -> Unit {
   // println(">> C64::initC64")
 
   //
-  self.sid[0].reset()
-  self.cia1.reset()
-  self.cia2.reset()
+  self.sid.each(fn(sid) { sid.reset() })
+  self.cia.each(fn(cia) { cia.reset() })
   // self.mem.reset()
   self.initCPU()
   self.irq = 0
@@ -332,8 +274,8 @@ pub fn emulate(self : C64) -> (Int, Int) {
       }
       self.irq = 0 //prepare for collecting IRQ sources
       self.nmi = 0 //prepare for collecting NMI sources
-      self.irq += if self.cia1.emulate(instructionCycles) { 1 } else { 0 }
-      self.nmi += if self.cia2.emulate(instructionCycles) { 1 } else { 0 }
+      self.irq += if self.cia[0].emulate(instructionCycles) { 1 } else { 0 }
+      self.nmi += if self.cia[1].emulate(instructionCycles) { 1 } else { 0 }
       self.irq += if self.vic.emulate(instructionCycles) { 1 } else { 0 }
     }
     self.sampleCycleCnt += instructionCycles << 4

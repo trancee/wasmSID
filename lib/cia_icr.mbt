@@ -1,4 +1,4 @@
-pub type ICR UInt8 derive(Eq, Compare, Debug)
+pub type ICR UInt8 derive(Eq, Compare)
 
 enum ICRFlags {
   NONE

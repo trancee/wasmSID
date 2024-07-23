@@ -7,35 +7,35 @@ fn hex(n : UInt8) -> String {
 // UInt8
 //
 
-pub type UInt8 Int derive(Eq, Compare, Debug)
+pub type UInt8 Int derive(Show, Eq, Compare)
 
 trait U8 {
   u8(Self) -> UInt8
 }
 
-fn U8::u8(self : Int) -> UInt8 {
-  self & 0xFF
-}
+// fn U8::u8(self : Int) -> UInt8 {
+//   self & 0xFF
+// }
 
-fn U8::u8(self : UInt8) -> UInt8 {
-  self & 0xFF
-}
+// fn U8::u8(self : UInt8) -> UInt8 {
+//   self & 0xFF
+// }
 
-fn U8::u8(self : UInt16) -> UInt8 {
-  self.0 & 0xFF
-}
+// fn U8::u8(self : UInt16) -> UInt8 {
+//   self.0 & 0xFF
+// }
 
-fn U8::u8(self : Bool) -> UInt8 {
-  if self {
-    1
-  } else {
-    0
-  }
-}
+// fn U8::u8(self : Bool) -> UInt8 {
+//   if self {
+//     1
+//   } else {
+//     0
+//   }
+// }
 
-fn U8::u8(self : Instruction) -> UInt8 {
-  get_opcode(self)
-}
+// fn U8::u8(self : Instruction) -> UInt8 {
+//   get_opcode(self)
+// }
 
 fn u8(self : UInt16) -> UInt8 {
   self.0 & 0xFF
@@ -103,10 +103,6 @@ pub fn to_hex(self : UInt8) -> String {
   hex(self >> 4) + hex(self)
 }
 
-fn to_string(self : UInt8) -> String {
-  self.0.to_string()
-}
-
 fn to_signed(self : UInt8) -> Int {
   self.0 - ((self & 0x80) << 1).0
 }
@@ -115,15 +111,15 @@ fn to_signed(self : UInt8) -> Int {
 // UInt16
 //
 
-pub type UInt16 Int derive(Eq, Compare, Debug)
+pub type UInt16 Int derive(Show, Eq, Compare)
 
 trait U16 {
   u16(Self) -> UInt16
 }
 
-fn U16::u16(self : Int) -> UInt16 {
-  self & 0xFFFF
-}
+// fn U16::u16(self : Int) -> UInt16 {
+//   self & 0xFFFF
+// }
 
 fn u16(self : UInt8) -> UInt16 {
   self.0 & 0xFFFF
@@ -168,8 +164,4 @@ fn asr(self : UInt16, bit : UInt16) -> UInt16 {
 
 pub fn to_hex(self : UInt16) -> String {
   u8(self >> 8).to_hex() + u8(self & 0xFF).to_hex()
-}
-
-fn to_string(self : UInt16) -> String {
-  self.0.to_string()
 }

@@ -2,55 +2,75 @@ enum SIDheader {
   Magic // 0x00 String[4]
   //
   Version // 0x04 Word
-  HeaderSize // 0x06 Word
+  DataOffset // 0x06 Word
+  //
   LoadAddress // 0x08 Word
   InitAddress // 0x0A Word
   PlayAddress // 0x0C Word
-  SubtuneAmount // 0x0E Word
-  DefaultSubtune // 0x10 Word
   //
-  SubtuneTimeSources // 0x12 Byte[4]
+  Songs // 0x0E Word
+  DefaultSong // 0x10 Word
+  //
+  Speed // 0x12 Byte[4]
   //
   Title // 0x16 String[32]
   Author // 0x36 String[32]
   ReleaseInfo // 0x56 String[32]
   //
-  ModelFormatStandard // 0x76 Word
+  Flags // 0x76 Word
   //
-  RelocStartPage // 0x78 Byte
-  RelocFreePages // 0x79 Byte
+  StartPage // 0x78 Byte
+  PageLength // 0x79 Byte
   //
-  SID2Flags // 0x7A Word
-  SID3Flags // 0x7C Word (the same address/flag-layout for SID3 as with SID2)
-  SID4Flags // 0x7E Word (the same address/flag-layout for SID4 as with SID2)
-  //
-  // WebSID
-  SID2BaseAddress // 0x7A Byte
-  SID3BaseAddress // 0x7B Byte
-  SID4BaseAddress // 0x7E Byte
+  SID2Address // 0x7A Byte
+  SID3Address // 0x7B Byte
 } derive(Show)
 
-// 1 for PSID v1, 2..4 for PSID v2..4 or RSID v2..4 (3/4 has 2SID/3SID support), 0x4E for 4SID (WebSID-format)
+/// Valid values:
+/// - 0x0001
+/// - 0x0002 (PSID V2NG, RSID)
+/// - 0x0003 (PSID V2NG, RSID)
+/// - 0x0004 (PSID V2NG, RSID)
+///
+/// Available version number can be 0001, 0002, 0003 or 0004. Headers of version 2,
+/// 3 and 4 provide additional fields. RSID and PSID v2NG files must have 0002,
+/// 0003 or 0004 here.
+///
+/// 0x4E for 4SID (WebSID-format)
 enum Version {
   Unknown
   PSIDv1
   PSIDv2
   PSIDv3
   PSIDv4
-  WebSID
-} derive(Debug, Eq)
+  RSIDv2
+  RSIDv3
+  RSIDv4
+} derive(Show, Eq)
 
-fn Version::from_int(value : UInt16) -> Version {
-  match value.0 {
-    0x00 => Unknown
-    0x01 => PSIDv1
-    0x02 => PSIDv2
-    0x03 => PSIDv3
-    0x04 => PSIDv4
-    0x4E => WebSID
-    _ => {
-      println("unknown version")
-      abort("unknown version")
+fn Version::from_int(value : UInt16, realSID : Bool) -> Version {
+  if realSID {
+    match value.0 {
+      // 0x00 => Unknown
+      0x02 => RSIDv2
+      0x03 => RSIDv3
+      0x04 => RSIDv4
+      _ => {
+        println("unknown version")
+        abort("unknown version")
+      }
+    }
+  } else {
+    match value.0 {
+      // 0x00 => Unknown
+      0x01 => PSIDv1
+      0x02 => PSIDv2
+      0x03 => PSIDv3
+      0x04 => PSIDv4
+      _ => {
+        println("unknown version")
+        abort("unknown version")
+      }
     }
   }
 }
@@ -58,11 +78,15 @@ fn Version::from_int(value : UInt16) -> Version {
 fn op_get(self : Version, value : Version) -> Int {
   match value {
     Unknown => 0x00
+    //
     PSIDv1 => 0x01
     PSIDv2 => 0x02
     PSIDv3 => 0x03
     PSIDv4 => 0x04
-    WebSID => 0x4E
+    //
+    RSIDv2 => 0x02
+    RSIDv3 => 0x03
+    RSIDv4 => 0x04
   }
 }
 
@@ -76,7 +100,7 @@ enum Mode {
   C64
   Digi
   BASIC
-} derive(Debug, Eq)
+} derive(Eq)
 
 fn Mode::from_int(value : Int, realSID : Bool) -> Mode {
   if realSID {
@@ -107,7 +131,7 @@ fn Mode::from_int(value : Int, realSID : Bool) -> Mode {
 struct SIDFlags {
   channel : Channel
   model : SIDModel
-} derive(Debug, Eq)
+} derive(Eq)
 
 fn SIDFlags::default() -> SIDFlags {
   SIDFlags::from_int(0x0000)
@@ -120,21 +144,18 @@ fn SIDFlags::from_int(value : UInt16) -> SIDFlags {
   }
 }
 
-struct ModelFormatStandard {
+struct Flags {
   player : Int
   mode : Mode
   videoStandard : VideoStandard
   model : Array[SIDModel]
-} derive(Debug, Eq)
+} derive(Eq)
 
-fn ModelFormatStandard::default() -> ModelFormatStandard {
-  ModelFormatStandard::from_int(0x0000, false)
+fn Flags::default() -> Flags {
+  Flags::from_int(0x0000, false)
 }
 
-fn ModelFormatStandard::from_int(
-  value : UInt16,
-  realSID : Bool
-) -> ModelFormatStandard {
+fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags {
   {
     player: (value.0 >> 0) & 0b01,
     mode: Mode::from_int((value.0 >> 1) & 0b01, realSID),
@@ -147,10 +168,10 @@ fn ModelFormatStandard::from_int(
   }
 }
 
-fn land(self : ModelFormatStandard, bits : Int) -> Int {
+fn land(self : Flags, bits : Int) -> Int {
   self & bits
 }
 
-fn asr(self : ModelFormatStandard, bits : Int) -> Int {
+fn asr(self : Flags, bits : Int) -> Int {
   self >> bits
 }

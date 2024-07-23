@@ -4,7 +4,7 @@ enum VideoStandard {
   NTSC
   PAL
   Both
-} derive(Debug, Eq)
+} derive(Show, Eq)
 
 fn VideoStandard::from_int(value : Int) -> VideoStandard {
   match value {
@@ -36,7 +36,7 @@ fn op_get(self : VideoStandard, value : VideoStandard) -> Int {
 
 ///
 
-type CPUClock VideoStandard derive(Debug, Eq)
+type CPUClock VideoStandard derive(Show, Eq)
 
 fn to_int(self : CPUClock) -> Int {
   self[self.0]
@@ -96,7 +96,7 @@ test "CPUClock::PAL shift left" {
 
 ///
 
-type ScanLines VideoStandard derive(Debug, Eq)
+type ScanLines VideoStandard derive(Show, Eq)
 
 fn to_int(self : ScanLines) -> Int {
   self[self.0]
@@ -139,7 +139,7 @@ test "panic ScanLines::Both" {
 
 ///
 
-type ScanLineCycles VideoStandard derive(Debug, Eq)
+type ScanLineCycles VideoStandard derive(Show, Eq)
 
 fn to_int(self : ScanLineCycles) -> Int {
   self[self.0]
@@ -182,7 +182,7 @@ test "panic ScanLineCycles::Both" {
 
 ///
 
-type FrameRate VideoStandard derive(Debug, Eq)
+type FrameRate VideoStandard derive(Show, Eq)
 
 fn to_int(self : FrameRate) -> Int {
   self[self.0]

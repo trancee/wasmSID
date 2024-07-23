@@ -7,7 +7,7 @@ pub enum Flag {
   U // Unused Flag
   V // Overflow Flag
   N // Negative Flag
-} derive(Debug, Show, Eq)
+} derive(Eq)
 
 pub fn lor(self : Flag, flag : Flag) -> Int {
   self.bits() | flag.bits()
@@ -35,7 +35,7 @@ struct Flags {
   mut u : Bool // 5: Unused Flag
   mut v : Bool // 6: Overflow Flag
   mut n : Bool // 7: Negative Flag
-} derive(Debug, Eq)
+} derive(Eq)
 
 fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
   {

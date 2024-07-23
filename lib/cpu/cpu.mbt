@@ -1110,7 +1110,7 @@ enum Mode {
   ZeroPage // 10
   ZeroPageX // 11
   ZeroPageY // 12
-} derive(Debug, Show, Eq)
+} derive(Eq)
 
 let instructions : FixedArray[
   (String, (CPU, UInt16, Mode) -> Unit, Mode, Int, Int, Int, Bool),
@@ -1585,7 +1585,7 @@ enum Instruction {
   // NOP // 0xEA
   // BRK // 0x00
   // RTI // 0x40
-} derive(Debug, Show)
+}
 
 // fn op_get(self : Instruction, instruction : Instruction) -> UInt8 {
 //   get_opcode(instruction)

@@ -10,8 +10,7 @@ pub struct C64 {
   pub mem : @cpu.Memory
   pub cpu : @cpu.CPU
   pub sid : Array[SID]
-  pub cia1 : CIA
-  pub cia2 : CIA
+  pub cia : Array[CIA]
   pub vic : VIC
   pub psid : PSID
   pub sampleRate : Int
@@ -94,6 +93,12 @@ impl Channel {
 
 type ControlBitVal
 
+type Flags
+impl Flags {
+  debug_write(Self, Buffer) -> Unit
+  op_equal(Self, Self) -> Bool
+}
+
 type FrameRate
 impl FrameRate {
   debug_write(Self, Buffer) -> Unit
@@ -115,12 +120,6 @@ type InterruptControlStatusRegister
 
 type Mode
 impl Mode {
-  debug_write(Self, Buffer) -> Unit
-  op_equal(Self, Self) -> Bool
-}
-
-type ModelFormatStandard
-impl ModelFormatStandard {
   debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
@@ -154,16 +153,16 @@ pub struct PSID {
   pub title : String
   pub author : String
   pub info : String
-  pub subtune : UInt16
-  pub subtuneAmount : UInt16
-  pub modelFormatStandard : ModelFormatStandard
+  pub songs : UInt16
+  pub defaultSong : UInt16
+  pub flags : Flags
   pub model : Array[SIDModel]
   pub sid2Flags : SIDFlags
   pub sid3Flags : SIDFlags
   pub sid4Flags : SIDFlags
-  pub sid2BaseAddress : UInt8
-  pub sid3BaseAddress : UInt8
-  pub sid4BaseAddress : UInt8
+  pub sid2Address : UInt8
+  pub sid3Address : UInt8
+  pub sid4Address : UInt8
 }
 impl PSID {
   new(@cpu.Memory, Array[Int]) -> Self
@@ -195,6 +194,10 @@ impl SIDModel {
 }
 
 type SIDheader
+impl SIDheader {
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
+}
 
 type ScanLineCycles
 impl ScanLineCycles {
@@ -238,6 +241,8 @@ type Version
 impl Version {
   debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 type VideoStandard
