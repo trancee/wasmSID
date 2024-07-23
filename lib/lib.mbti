@@ -63,14 +63,14 @@ impl CIA {
 
 type CPUClock
 impl CPUClock {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 pub type CRA UInt8
 impl CRA {
   compare(Self, Self) -> Int
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
@@ -79,7 +79,6 @@ type CRAFlags
 pub type CRB UInt8
 impl CRB {
   compare(Self, Self) -> Int
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
@@ -87,7 +86,6 @@ type CRBFlags
 
 type Channel
 impl Channel {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
@@ -95,20 +93,19 @@ type ControlBitVal
 
 type Flags
 impl Flags {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
 type FrameRate
 impl FrameRate {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 pub type ICR UInt8
 impl ICR {
   compare(Self, Self) -> Int
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
@@ -120,7 +117,6 @@ type InterruptControlStatusRegister
 
 type Mode
 impl Mode {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
@@ -162,7 +158,6 @@ pub struct PSID {
   pub sid4Flags : SIDFlags
   pub sid2Address : UInt8
   pub sid3Address : UInt8
-  pub sid4Address : UInt8
 }
 impl PSID {
   new(@cpu.Memory, Array[Int]) -> Self
@@ -183,13 +178,11 @@ impl SID {
 
 type SIDFlags
 impl SIDFlags {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
 type SIDModel
 impl SIDModel {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
 }
 
@@ -201,30 +194,34 @@ impl SIDheader {
 
 type ScanLineCycles
 impl ScanLineCycles {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 type ScanLines
 impl ScanLines {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 pub type UInt16 Int
 impl UInt16 {
   compare(Self, Self) -> Int
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
   to_hex(Self) -> String
+  to_string(Self) -> String
 }
 
 pub type UInt8 Int
 impl UInt8 {
   compare(Self, Self) -> Int
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
   to_hex(Self) -> String
+  to_string(Self) -> String
 }
 
 type VIC
@@ -239,7 +236,6 @@ type VICregisters
 
 type Version
 impl Version {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
   output(Self, Logger) -> Unit
   to_string(Self) -> String
@@ -247,8 +243,9 @@ impl Version {
 
 type VideoStandard
 impl VideoStandard {
-  debug_write(Self, Buffer) -> Unit
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 // Traits

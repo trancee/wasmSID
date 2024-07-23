@@ -1787,7 +1787,7 @@ fn testADCAbsolute(
   cpu.registers[A] = t.a
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x00)
   cpu.write(0xFF02, 0x80)
 
@@ -1836,7 +1836,7 @@ fn testADCImmediate(t : ADCTestData, ~ins : Instruction = ADC) -> Unit!String {
   cpu.registers[A] = t.a
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, t.op)
 
   //
@@ -1881,7 +1881,7 @@ fn testADCZeroPage(t : ADCTestData, ~ins : Instruction = ADC_ZP) -> Unit!String 
   cpu.registers[A] = t.a
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x42)
 
   //
@@ -1933,7 +1933,7 @@ fn testADCZeroPageX(
   cpu.registers[X] = 0x10
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x42)
 
   //
@@ -1985,7 +1985,7 @@ fn testADCAbsoluteX(
   cpu.registers[X] = 0x10
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x00)
   cpu.write(0xFF02, 0x80)
 
@@ -2038,7 +2038,7 @@ fn testADCAbsoluteY(
   cpu.registers[Y] = 0x10
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x00)
   cpu.write(0xFF02, 0x80)
 
@@ -2091,7 +2091,7 @@ fn testADCIndirectX(
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x02)
 
   //
@@ -2147,7 +2147,7 @@ fn testADCIndirectY(
   cpu.registers[Y] = 0x04
 
   //
-  cpu.write(0xFF00, U8::u8(ins))
+  cpu.write(0xFF00, ins.to_int())
   cpu.write(0xFF01, 0x02)
 
   //

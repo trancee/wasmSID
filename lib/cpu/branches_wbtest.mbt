@@ -356,9 +356,9 @@ fn testBEQ(t : BEQTestData) -> Unit!String {
 
   //
   if t.expectCycles == 5 {
-    cpu.write(t.pc + 0, U8::u8(LDA_IM))
+    cpu.write(t.pc + 0, LDA_IM.to_int())
     cpu.write(t.pc + 1, t.op)
-    cpu.write(t.pc + 2, U8::u8(t.ins))
+    cpu.write(t.pc + 2, t.ins.to_int())
     cpu.write(t.pc + 3, -4)
 
     //
@@ -368,7 +368,7 @@ fn testBEQ(t : BEQTestData) -> Unit!String {
     //
     @test.eq(cycles, t.expectCycles)!
   } else {
-    cpu.write(t.pc + 0, U8::u8(t.ins))
+    cpu.write(t.pc + 0, t.ins.to_int())
     cpu.write(t.pc + 1, t.op)
 
     //

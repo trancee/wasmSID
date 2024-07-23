@@ -9,46 +9,46 @@ test "CanJumpToASubroutineAndJumpBackAgain" {
   let p = cpu.flags
 
   //
-  cpu.write(0xFF00 + 0, U8::u8(JSR))
+  cpu.write(0xFF00 + 0, JSR.to_int())
   cpu.write(0xFF00 + 1, 0x00)
   cpu.write(0xFF00 + 2, 0x80)
 
   //
-  cpu.write(0x8000, U8::u8(RTS))
+  cpu.write(0x8000, RTS.to_int())
 
   //
-  cpu.write(0xFF00 + 3, U8::u8(LDA_IM))
+  cpu.write(0xFF00 + 3, LDA_IM.to_int())
   cpu.write(0xFF00 + 4, 0x42)
 
   //
   let mut cycles = cpu.step()
 
   //
-  @test.eq(cycles, 6)!
-  @test.eq(cpu.pc, 0x8000)!
-  @test.eq(cpu.registers[A], a)!
-  @test.eq(cpu.registers[SP], sp - 2)!
-  @test.eq(cpu.flags, p)!
+  @test.eq!(cycles, 6)
+  @test.eq!(cpu.pc, 0x8000)
+  @test.eq!(cpu.registers[A], a)
+  @test.eq!(cpu.registers[SP], sp - 2)
+  @test.eq!(cpu.flags, p)
 
   //
   cycles += cpu.step()
 
   //
-  @test.eq(cycles, 6 + 6)!
-  @test.eq(cpu.pc, 0xFF00 + 3)!
-  @test.eq(cpu.registers[A], a)!
-  @test.eq(cpu.registers[SP], sp)!
-  @test.eq(cpu.flags, p)!
+  @test.eq!(cycles, 6 + 6)
+  @test.eq!(cpu.pc, 0xFF00 + 3)
+  @test.eq!(cpu.registers[A], a)
+  @test.eq!(cpu.registers[SP], sp)
+  @test.eq!(cpu.flags, p)
 
   //
   cycles += cpu.step()
 
   //
-  @test.eq(cycles, 6 + 6 + 2)!
-  @test.eq(cpu.pc, 0xFF00 + 5)!
-  @test.eq(cpu.registers[A], 0x42)!
-  @test.eq(cpu.registers[SP], sp)!
-  @test.eq(cpu.flags, p)!
+  @test.eq!(cycles, 6 + 6 + 2)
+  @test.eq!(cpu.pc, 0xFF00 + 5)
+  @test.eq!(cpu.registers[A], 0x42)
+  @test.eq!(cpu.registers[SP], sp)
+  @test.eq!(cpu.flags, p)
 }
 
 test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
@@ -59,7 +59,7 @@ test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
   let p = cpu.flags
 
   //
-  cpu.write(0xFF00 + 0, U8::u8(JMP_ABS))
+  cpu.write(0xFF00 + 0, JMP_ABS.to_int())
   cpu.write(0xFF00 + 1, 0x00)
   cpu.write(0xFF00 + 2, 0x80)
 
@@ -67,10 +67,10 @@ test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
   let cycles = cpu.step()
 
   //
-  @test.eq(cycles, 3)!
-  @test.eq(cpu.pc, 0x8000)!
-  @test.eq(cpu.registers[SP], sp)!
-  @test.eq(cpu.flags, p)!
+  @test.eq!(cycles, 3)
+  @test.eq!(cpu.pc, 0x8000)
+  @test.eq!(cpu.registers[SP], sp)
+  @test.eq!(cpu.flags, p)
 }
 
 test "JumpIndirectCanJumpToAnNewLocationInTheProgram" {
@@ -81,7 +81,7 @@ test "JumpIndirectCanJumpToAnNewLocationInTheProgram" {
   let p = cpu.flags
 
   //
-  cpu.write(0xFF00 + 0, U8::u8(JMP_IND))
+  cpu.write(0xFF00 + 0, JMP_IND.to_int())
   cpu.write(0xFF00 + 1, 0x00)
   cpu.write(0xFF00 + 2, 0x80)
 
@@ -93,8 +93,8 @@ test "JumpIndirectCanJumpToAnNewLocationInTheProgram" {
   let cycles = cpu.step()
 
   //
-  @test.eq(cycles, 5)!
-  @test.eq(cpu.pc, 0x9000)!
-  @test.eq(cpu.registers[SP], sp)!
-  @test.eq(cpu.flags, p)!
+  @test.eq!(cycles, 5)
+  @test.eq!(cpu.pc, 0x9000)
+  @test.eq!(cpu.registers[SP], sp)
+  @test.eq!(cpu.flags, p)
 }

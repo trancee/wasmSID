@@ -1591,6 +1591,10 @@ enum Instruction {
 //   get_opcode(instruction)
 // }
 
+fn to_int(self : Instruction) -> Int {
+  get_opcode(self).0
+}
+
 fn get_opcode(instruction : Instruction) -> UInt8 {
   match instruction {
     // LDA

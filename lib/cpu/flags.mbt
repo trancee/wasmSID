@@ -35,7 +35,7 @@ struct Flags {
   mut u : Bool // 5: Unused Flag
   mut v : Bool // 6: Overflow Flag
   mut n : Bool // 7: Negative Flag
-} derive(Eq)
+} derive(Show, Eq)
 
 fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
   {
@@ -50,17 +50,17 @@ fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
   }
 }
 
-fn Flags::to_string(self : Flags) -> String {
-  if self[N] { "N" } else { "n" } + if self[V] { "V" } else { "v" } + "-" + if self[B] {
-    "B"
-  } else {
-    "b"
-  } + if self[D] { "D" } else { "d" } + if self[I] { "I" } else { "i" } + if self[Z] {
-    "Z"
-  } else {
-    "z"
-  } + if self[C] { "C" } else { "c" }
-}
+// fn Flags::to_string(self : Flags) -> String {
+//   if self[N] { "N" } else { "n" } + if self[V] { "V" } else { "v" } + "-" + if self[B] {
+//     "B"
+//   } else {
+//     "b"
+//   } + if self[D] { "D" } else { "d" } + if self[I] { "I" } else { "i" } + if self[Z] {
+//     "Z"
+//   } else {
+//     "z"
+//   } + if self[C] { "C" } else { "c" }
+// }
 
 fn op_get(self : Flags, flag : Flag) -> Bool {
   match flag {
