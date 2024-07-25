@@ -1,17 +1,28 @@
+/// $D400-$D41C
+/// Sound Interface Device (SID) Registers
+///
+/// SID is a custom music synthesizer and sound effects generator chip
+/// that gives the 64 its impressive musical capabilities.  It provides
+/// three separate music channels, or voices, as they are called.  Each
+/// voice has 16-bit frequency resolution, waveform control, envelope
+/// shaping, oscillator synchronization, and ring modulation.  In
+/// addition, programmable high-pass, low-pass, and band-pass filters can
+/// be set and enabled or disabled for each sound channel.
+
 // https://www.oxyron.de/html/registers_sid.html
 
 struct SID {
   mem : @cpu.Memory
   baseaddress : Int // VIC-baseaddress location in C64-memory (IO)
   //
-  mut model : SIDModel
+  mut model : Model
   mut channel : Channel
 }
 
 pub fn SID::new(
   mem : @cpu.Memory,
   baseaddress : Int,
-  ~model : SIDModel = Unknown,
+  ~model : Model = Unknown,
   ~channel : Channel = Unknown
 ) -> SID {
   let sid : SID = { mem, baseaddress, model, channel }

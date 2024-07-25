@@ -20,7 +20,7 @@ pub struct PSID {
   mut defaultSong : UInt16
   //
   mut flags : Flags
-  mut model : Array[SIDModel]
+  mut model : Array[Model]
   //
   mut sid2Flags : SIDFlags
   mut sid3Flags : SIDFlags
@@ -28,9 +28,9 @@ pub struct PSID {
   //
   mut sid2Address : UInt8
   mut sid3Address : UInt8
-}
+} derive(Show)
 
-pub fn PSID::new(mem : @cpu.Memory, data : Array[Int]) -> PSID {
+pub fn PSID::new(mem : @cpu.Memory, data : Array[Int]) -> PSID!String {
   let psid : PSID = {
     mem,
     data,
@@ -52,12 +52,12 @@ pub fn PSID::new(mem : @cpu.Memory, data : Array[Int]) -> PSID {
     songs: 0,
     defaultSong: 0,
     //
-    flags: Flags::default(),
+    flags: Flags::default!(),
     model: [],
     //
-    sid2Flags: SIDFlags::default(),
-    sid3Flags: SIDFlags::default(),
-    sid4Flags: SIDFlags::default(),
+    sid2Flags: SIDFlags::default!(),
+    sid3Flags: SIDFlags::default!(),
+    sid4Flags: SIDFlags::default!(),
     //
     sid2Address: 0x00,
     sid3Address: 0x00,
@@ -66,8 +66,8 @@ pub fn PSID::new(mem : @cpu.Memory, data : Array[Int]) -> PSID {
   psid
 }
 
-pub fn process(self : PSID) -> Bool {
-  // println(">> PSID::process")
+pub fn process(self : PSID) -> Unit!String {
+  println(">> PSID::process")
 
   /// Valid values:
   /// - PSID (0x50534944)
@@ -78,9 +78,9 @@ pub fn process(self : PSID) -> Bool {
   /// requires a true Commodore-64 environment to run properly. 'PSID' files will
   /// generally run trouble-free on older PlaySID and libsidplay1 based emulators,
   /// too.
-  let magic = self.readString(Magic)
+  let magic = self.readString!(Magic)
   if magic != "PSID" && magic != "RSID" {
-    return false
+    raise "no PSID or RSID file"
   }
   self.realSID = magic[0] == 'R'
 
@@ -93,7 +93,7 @@ pub fn process(self : PSID) -> Bool {
   /// Available version number can be 0001, 0002, 0003 or 0004. Headers of version 2,
   /// 3 and 4 provide additional fields. RSID and PSID v2NG files must have 0002,
   /// 0003 or 0004 here.
-  self.version = Version::from_int(self.readWord(Version), self.realSID)
+  self.version = Version::from_int!(self.readWord!(Version), self.realSID)
 
   /// Valid values:
   /// - 0x0076 (Version 1)
@@ -104,17 +104,14 @@ pub fn process(self : PSID) -> Bool {
   /// and 0x007C for version 2, 3 and 4.
   ///
   /// WebSID: for a 1-SID file the offset would be 0x7C, for a 2-SID file the offset would be 0x7E, etc.
-  let mut offset = self.readWord(DataOffset)
+  let mut offset = self.readWord!(DataOffset)
 
   //
-  let valid = match self.version {
+  let _ = match self.version {
     PSIDv1 => offset == 0x0076
     PSIDv2 | PSIDv3 | PSIDv4 => offset == 0x007C
     RSIDv2 | RSIDv3 | RSIDv4 => offset == 0x007C
-    _ => {
-      println("invalid data offset for version " + self.version.to_string())
-      abort("invalid data offset for version " + self.version.to_string())
-    }
+    _ => raise "invalid data offset for version " + self.version.to_string()
   }
 
   /// Valid values:
@@ -126,13 +123,14 @@ pub fn process(self : PSID) -> Bool {
   /// the little-endian load address (low byte, high byte). This must always be true
   /// for RSID files. Furthermore, the actual load address must NOT be less than
   /// $07E8 in RSID files.
-  self.loadAddress = self.readWord(LoadAddress)
+  self.loadAddress = self.readWord!(LoadAddress)
 
   //
   if self.loadAddress == 0 {
-    self.loadAddress = (self[offset + 1].0 << 8) | self[offset].0
+    self.loadAddress = u16(self[offset + 1] << 8) | u16(self[offset])
     offset += 2
   }
+  println("OK")
 
   /// Valid values:
   /// - $0000 - $FFFF
@@ -141,7 +139,7 @@ pub fn process(self : PSID) -> Bool {
   /// The start address of the machine code subroutine that initializes a song,
   /// accepting the contents of the 8-bit 6510 Accumulator as the song number
   /// parameter. 0 means the address is equal to the effective load address.
-  self.initAddress = self.readWord(InitAddress)
+  self.initAddress = self.readWord!(InitAddress)
 
   /// Valid values:
   /// - $0000 - $FFFF
@@ -151,14 +149,14 @@ pub fn process(self : PSID) -> Bool {
   /// to produce a continuous sound. 0 means the initialization subroutine is
   /// expected to install an interrupt handler, which then calls the music player at
   /// some place. This must always be true for RSID files.
-  self.playAddress = self.readWord(PlayAddress)
+  self.playAddress = self.readWord!(PlayAddress)
 
   /// Valid values:
   /// - 0x0001 - 0x0100
   ///
   /// The number of songs (or sound effects) that can be initialized by calling the
   /// init address. The minimum is 1. The maximum is 256.
-  self.songs = self.readWord(Songs)
+  self.songs = self.readWord!(Songs)
 
   /// Valid values:
   /// - 1 - songs
@@ -166,7 +164,7 @@ pub fn process(self : PSID) -> Bool {
   /// The song number to be played by default. This value is optional. It often
   /// specifies the first song you would hear upon starting the program is has been
   /// taken from. It has a default of 1.
-  self.defaultSong = self.readWord(DefaultSong)
+  self.defaultSong = self.readWord!(DefaultSong)
 
   /// Valid values:
   /// - 0x00000000 - 0xFFFFFFFF
@@ -180,9 +178,9 @@ pub fn process(self : PSID) -> Bool {
   /// 32 bytes which is not zero terminated. For less than 32 characters the string
   /// should be zero terminated. The maximum number of available free characters is
   /// 32.
-  self.title = self.readString(Title)
-  self.author = self.readString(Author)
-  self.info = self.readString(ReleaseInfo)
+  self.title = self.readString!(Title)
+  self.author = self.readString!(Author)
+  self.info = self.readString!(ReleaseInfo)
 
   /// Version 1 of the SID header is complete at this point. The binary C64 data
   /// starts here.
@@ -190,56 +188,57 @@ pub fn process(self : PSID) -> Bool {
     // PSIDv1 =>
     PSIDv2 | RSIDv2 => {
       /// This is a v3 specific field.
-      self.sid2Address = self.readByte(SID2Address)
+      self.sid2Address = self.readByte!(SID2Address)
       /// For v2NG, it should be set to 0.
       if self.sid2Address != 0x00 {
-        abort("address must not be set for PSID v2NG")
+        raise "address must not be set for PSID v2NG"
       }
 
       /// This is a v4 specific field.
-      self.sid3Address = self.readByte(SID3Address)
+      self.sid3Address = self.readByte!(SID3Address)
       /// For v2NG and v3, it should be set to 0.
       if self.sid3Address != 0x00 {
-        abort("address must not be set for PSID v2NG")
+        raise "address must not be set for PSID v2NG"
       }
     }
     PSIDv3 | RSIDv3 => {
       /// This is a v3 specific field.
-      self.sid2Address = self.readByte(SID2Address)
+      self.sid2Address = self.readByte!(SID2Address)
       if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) && (self.sid2Address <
       0xE0 || self.sid2Address > 0xFE) && (self.sid2Address & 1) == 1 {
-        abort("address must be set and an even number for PSID v3")
+        raise "address must be set and an even number for PSID v3"
       }
 
       /// This is a v4 specific field.
-      self.sid3Address = self.readByte(SID3Address)
+      self.sid3Address = self.readByte!(SID3Address)
       /// For v2NG and v3, it should be set to 0.
       if self.sid3Address != 0x00 {
-        abort("address must not be set for PSID v3")
+        raise "address must not be set for PSID v3"
       }
     }
     PSIDv4 | RSIDv4 => {
       /// This is a v3 specific field.
-      self.sid2Address = self.readByte(SID2Address)
+      self.sid2Address = self.readByte!(SID2Address)
       if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) && (self.sid2Address <
       0xE0 || self.sid2Address > 0xFE) && (self.sid2Address & 1) == 1 {
-        abort("address must be set and an even number for PSID v4")
+        raise "address must be set and an even number for PSID v4"
       }
 
       /// This is a v4 specific field.
-      self.sid3Address = self.readByte(SID3Address)
+      self.sid3Address = self.readByte!(SID3Address)
       if (self.sid3Address < 0x42 || self.sid3Address > 0x7F) && (self.sid3Address <
       0xE0 || self.sid3Address > 0xFE) && (self.sid3Address & 1) == 1 {
-        abort("address must be set and an even number for PSID v4")
+        raise "address must be set and an even number for PSID v4"
       }
     }
+    _ => raise "unknown PSID or RSID version"
   }
 
   /// Valid values:
   /// - 0x0000 - 0x03FF
   ///
   /// This is a 16 bit big endian number containing the following bitfields:
-  self.flags = Flags::from_int(self.readWord(Flags), self.realSID)
+  self.flags = Flags::from_int!(self.readWord!(Flags), self.realSID)
 
   //
   self.digiMode = self.flags.mode == Digi
@@ -250,6 +249,12 @@ pub fn process(self : PSID) -> Bool {
   /// $02A6 : depending on the PAL/NTSC flag in the SID file header, it is set to
   ///         0x01 for PAL and set to 0x00 for NTSC.
 
+  self[0x02A6] = match self.flags.videoStandard {
+    NTSC => 0
+    PAL => 1
+  }
+
+  //
   let mut j = 0
   for i = offset; i < self.data.length(); i = i + 1 {
     self[self.loadAddress + j] = self[i]
@@ -258,13 +263,10 @@ pub fn process(self : PSID) -> Bool {
   self.endAddress = (self.loadAddress + j) & 0xFFFF
 
   //
-  // println("<< PSID::process")
-
-  //
-  true
+  println("<< PSID::process")
 }
 
-fn readByte(self : PSID, header : SIDheader) -> UInt8 {
+fn readByte(self : PSID, header : SIDheader) -> UInt8!String {
   match header {
     StartPage => self[0x78]
     PageLength => self[0x79]
@@ -272,14 +274,11 @@ fn readByte(self : PSID, header : SIDheader) -> UInt8 {
     SID2Address => self[0x7A]
     SID3Address => self[0x7B]
     //
-    _ => {
-      println("unknown SID header: \(header)")
-      abort("unknown SID header: \(header)")
-    }
+    _ => raise "unknown SID header: \(header)"
   }
 }
 
-fn readWord(self : PSID, header : SIDheader) -> UInt16 {
+fn readWord(self : PSID, header : SIDheader) -> UInt16!String {
   match header {
     Version => self.makeWord(0x04)
     DataOffset => self.makeWord(0x06)
@@ -291,10 +290,7 @@ fn readWord(self : PSID, header : SIDheader) -> UInt16 {
     //
     Flags => self.makeWord(0x76)
     //
-    _ => {
-      println("unknown SID header: \(header)")
-      abort("unknown SID header: \(header)")
-    }
+    _ => raise "unknown SID header: \(header)"
   }
 }
 
@@ -302,7 +298,7 @@ fn makeWord(self : PSID, offset : Int) -> UInt16 {
   (self[offset] << 8).0 | self[offset + 1].0
 }
 
-fn readString(self : PSID, header : SIDheader) -> String {
+fn readString(self : PSID, header : SIDheader) -> String!String {
   match header {
     Magic => self.makeString(0x00, 4)
     //
@@ -310,10 +306,7 @@ fn readString(self : PSID, header : SIDheader) -> String {
     Author => self.makeString(0x36, 32)
     ReleaseInfo => self.makeString(0x56, 32)
     //
-    _ => {
-      println("unknown SID header: \(header)")
-      abort("unknown SID header: \(header)")
-    }
+    _ => raise "unknown SID header: \(header)"
   }
 }
 

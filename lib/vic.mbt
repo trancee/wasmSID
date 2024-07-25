@@ -1,12 +1,15 @@
+/// $D000-$D02E
+/// VIC-II Chip Registers
+///
+/// The Video Interface Controller (VIC-II chip) is a specially designed
+/// processor that is in charge of the 64's video display.  It is this
+/// chip which makes possible the 64's wide range of graphics
+/// capabilities.
+
 // https://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
 
 /// 6567 (NTSC)
 /// 6569 (PAL)
-///
-/// $D000-$D3FF VIC-II
-/// $D000-$D02E         VIC-II Chip Registers
-/// $D02F-$D03F         Not Connected           When read, they will always give a value of 255 ($FF).  This value will not change after writing to them.
-/// $D040-$D3FF         VIC-II Register Images
 
 struct VIC {
   mem : @cpu.Memory
@@ -30,108 +33,122 @@ pub fn VIC::new(mem : @cpu.Memory, baseaddress : Int) -> VIC {
   vic
 }
 
+/// These registers are all intialized to 0 at power-up.
 pub fn reset(self : VIC) -> Unit {
   for i = 0; i < 0x3F; i = i + 1 {
-    self[i] = 0x00
+    self[Sprite0XPos] = 0x00
+    self[Sprite0YPos] = 0x00
+    self[Sprite1XPos] = 0x00
+    self[Sprite1YPos] = 0x00
+    self[Sprite2XPos] = 0x00
+    self[Sprite2YPos] = 0x00
+    self[Sprite3XPos] = 0x00
+    self[Sprite3YPos] = 0x00
+    self[Sprite4XPos] = 0x00
+    self[Sprite4YPos] = 0x00
+    self[Sprite5XPos] = 0x00
+    self[Sprite5YPos] = 0x00
+    self[Sprite6XPos] = 0x00
+    self[Sprite6YPos] = 0x00
+    self[Sprite7XPos] = 0x00
+    self[Sprite7YPos] = 0x00
+    self[SpritesXPos] = 0x00
+    //
+    self[ControlRegisterVertical] = 0x00
+    //
+    self[ReadRasterWriteRasterValue] = 0x00
+    self[LightPenLatchXPos] = 0x00
+    self[LightPenLatchYPos] = 0x00
+    self[SpriteDisplayEnable] = 0x00
+    //
+    self[ControlRegisterHorizontal] = 0x00
+    //
+    self[SpritesExpand2xVertical] = 0x00
+    //
+    self[MemoryControlRegister] = 0x00
+    //
+    self[InterruptFlagRegister] = 0x00
+    //
+    self[IRQMaskRegister] = 0x00
+    self[SpriteBackgroundDisplayPriority] = 0x00
+    self[SpritesMultiColorModeSelect] = 0x00
+    self[SpritesExpand2xHorizontal] = 0x00
+    //
+    self[SpriteSpriteCollisionDetect] = 0x00
+    self[SpriteBackgroundCollisionDetect] = 0x00
+    self[BorderColor] = 0x00
+    self[BackgroundColor0] = 0x00
+    self[BackgroundColor1] = 0x00
+    self[BackgroundColor2] = 0x00
+    self[BackgroundColor3] = 0x00
+    self[SpriteMultiColorRegister0] = 0x00
+    self[SpriteMultiColorRegister1] = 0x00
+    //
+    self[Sprite0Color] = 0x00
+    self[Sprite1Color] = 0x00
+    self[Sprite2Color] = 0x00
+    self[Sprite3Color] = 0x00
+    self[Sprite4Color] = 0x00
+    self[Sprite5Color] = 0x00
+    self[Sprite6Color] = 0x00
+    self[Sprite7Color] = 0x00
   }
 }
 
 pub fn emulate(self : VIC, cycles : Int) -> Bool {
-  let mut rasterRow = 0
+  let mut rasterRow : UInt8 = 0
   self.rowCycleCount += cycles
   if self.rowCycleCount >= self.rasterRowCycles {
     self.rowCycleCount -= self.rasterRowCycles
-    rasterRow = ((self[CONTROL[CONTROL]] & RASTERROWMSB[RASTERROWMSB]) << 1) + self[RASTERROWL[RASTERROWL]]
+    rasterRow = ((self[ControlRegisterVertical] & cr(RasterCompare)) << 1) + self[ReadRasterWriteRasterValue]
     rasterRow += 1
     if rasterRow >= self.rasterLines {
       rasterRow = 0
     }
-    self[CONTROL[CONTROL]] = (self[CONTROL[CONTROL]] & (self[CONTROL[CONTROL]] ^
-      RASTERROWMSB[RASTERROWMSB])) | ((rasterRow & 0x0100) >> 1)
-    self[RASTERROWL[RASTERROWL]] = rasterRow & 0xFF
+    self[ControlRegisterVertical] = (self[ControlRegisterVertical] & (self[ControlRegisterVertical] ^
+      cr(RasterCompare))) | ((rasterRow & 0x0100) >> 1)
+    self[ReadRasterWriteRasterValue] = rasterRow & 0xFF
 
     //
-    if (self[INTERRUPT_ENABLE[INTERRUPT_ENABLE]] & RASTERROW_MATCH_IRQ[RASTERROW_MATCH_IRQ]) !=
-    0 {
-      if rasterRow == ((self[CONTROL[CONTROL]] & RASTERROWMSB[RASTERROWMSB]) << 1) +
-      self[RASTERROWL[RASTERROWL]] {
-        self[INTERRUPT[INTERRUPT]] = self[INTERRUPT[INTERRUPT]] | VIC_IRQ[VIC_IRQ] |
-          RASTERROW_MATCH_IRQ[RASTERROW_MATCH_IRQ]
+    if (self[IRQMaskRegister] & irqMask(InterruptEnabled)) != 0 {
+      if rasterRow == ((self[ControlRegisterVertical] & self[ControlRegisterVertical]) <<
+      1) + self[ReadRasterWriteRasterValue] {
+        self[InterruptFlagRegister] = self[InterruptFlagRegister] | irqFlag(
+            SetAnyEnabledVICIRQCondition,
+          ) | irqMask(InterruptEnabled)
       }
     }
   }
-  (self[INTERRUPT[INTERRUPT]] & VIC_IRQ[VIC_IRQ]) != 0
+  (self[InterruptFlagRegister] & irqFlag(SetAnyEnabledVICIRQCondition)) != 0
 }
 
 pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
-  self[INTERRUPT[INTERRUPT]] = self[INTERRUPT[INTERRUPT]] & (self[INTERRUPT[INTERRUPT]] ^
-    RASTERROW_MATCH_IRQ[RASTERROW_MATCH_IRQ])
-  self[INTERRUPT[INTERRUPT]] = self[INTERRUPT[INTERRUPT]] & (self[INTERRUPT[INTERRUPT]] ^
-    (VIC_IRQ[VIC_IRQ] | RASTERROW_MATCH_IRQ[RASTERROW_MATCH_IRQ]))
+  self[InterruptFlagRegister] = self[InterruptFlagRegister] & (self[InterruptFlagRegister] ^
+    irqMask(InterruptEnabled))
+  self[InterruptFlagRegister] = self[InterruptFlagRegister] & (self[InterruptFlagRegister] ^
+    (irqFlag(SetAnyEnabledVICIRQCondition) | irqMask(InterruptEnabled)))
 }
 
-fn op_get(self : VIC, addr : Int) -> Int {
-  let address = addr + self.baseaddress
-  if address > 0xFFFF {
+fn op_get(self : VIC, register : VICregister) -> UInt8 {
+  let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
+  // VIC-II Register Images
+  if address < 0xD000 || address > 0xD3FF {
     // self.dump()
-    println("VIC::get out of bounds")
-    abort("VIC::get out of bounds")
+    println("VIC \(register) → $" + self.mem[address].to_hex())
+    abort("out of bounds")
   }
+  println("VIC \(register) → $" + self.mem[address].to_hex())
   self.mem[address].0
 }
 
-fn op_set(self : VIC, addr : Int, value : Int) -> Unit {
-  let address = addr + self.baseaddress
-  if address > 0xFFFF {
+fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
+  let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
+  // VIC-II Register Images
+  if address < 0xD000 || address > 0xD3FF {
     // self.dump()
-    println("VIC::set out of bounds")
-    abort("VIC::set out of bounds")
+    println("VIC \(register) ← $" + value.to_hex())
+    abort("out of bounds")
   }
-  self.mem[address] = value
-}
-
-enum VICregisters {
-  CONTROL
-  RASTERROWL
-  SPRITE_ENABLE
-  INTERRUPT
-  INTERRUPT_ENABLE
-}
-
-fn op_get(self : VICregisters, value : VICregisters) -> Int {
-  match value {
-    CONTROL => 0x11
-    RASTERROWL => 0x12
-    SPRITE_ENABLE => 0x15
-    INTERRUPT => 0x19
-    INTERRUPT_ENABLE => 0x1A
-  }
-}
-
-enum ControlBitVal {
-  RASTERROWMSB
-  DISPLAY_ENABLE
-  ROWS
-  YSCROLL_MASK
-}
-
-fn op_get(self : ControlBitVal, value : ControlBitVal) -> Int {
-  match value {
-    RASTERROWMSB => 0x80
-    DISPLAY_ENABLE => 0x10
-    ROWS => 0x08
-    YSCROLL_MASK => 0x07
-  }
-}
-
-enum InterruptBitVal {
-  VIC_IRQ
-  RASTERROW_MATCH_IRQ
-}
-
-fn op_get(self : InterruptBitVal, value : InterruptBitVal) -> Int {
-  match value {
-    VIC_IRQ => 0x80
-    RASTERROW_MATCH_IRQ => 0x01
-  }
+  println("VIC \(register) ← $" + value.to_hex())
+  self.mem[address] = value.0
 }

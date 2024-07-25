@@ -60,8 +60,10 @@ impl Memory {
   new() -> Self
   op_get(Self, Int) -> UInt8
   op_set(Self, Int, Int) -> Unit
+  output(Self, Logger) -> Unit
   reset(Self) -> Unit
   setROM(Self) -> Unit
+  to_string(Self) -> String
 }
 
 type Mode

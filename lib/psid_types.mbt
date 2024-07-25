@@ -48,7 +48,7 @@ enum Version {
   RSIDv4
 } derive(Show, Eq)
 
-fn Version::from_int(value : UInt16, realSID : Bool) -> Version {
+fn Version::from_int(value : UInt16, realSID : Bool) -> Version!String {
   if realSID {
     match value.0 {
       // 0x00 => Unknown
@@ -56,8 +56,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version {
       0x03 => RSIDv3
       0x04 => RSIDv4
       _ => {
-        println("unknown version")
-        abort("unknown version")
+        raise "unknown version"
       }
     }
   } else {
@@ -68,8 +67,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version {
       0x03 => PSIDv3
       0x04 => PSIDv4
       _ => {
-        println("unknown version")
-        abort("unknown version")
+        raise "unknown version"
       }
     }
   }
@@ -100,16 +98,15 @@ enum Mode {
   C64
   Digi
   BASIC
-} derive(Eq)
+} derive(Show, Eq)
 
-fn Mode::from_int(value : Int, realSID : Bool) -> Mode {
+fn Mode::from_int(value : Int, realSID : Bool) -> Mode!String {
   if realSID {
     match value {
       0x00 => C64
       0x01 => Digi
       _ => {
-        println("unknown mode")
-        abort("unknown mode")
+        raise "unknown mode"
       }
     }
   } else {
@@ -117,8 +114,7 @@ fn Mode::from_int(value : Int, realSID : Bool) -> Mode {
       0x00 => C64
       0x01 => BASIC
       _ => {
-        println("unknown mode")
-        abort("unknown mode")
+        raise "unknown mode"
       }
     }
   }
@@ -130,17 +126,17 @@ fn Mode::from_int(value : Int, realSID : Bool) -> Mode {
 // bit5..4:SIDmodel(00:setting,01:6581,10:8580,11:both)
 struct SIDFlags {
   channel : Channel
-  model : SIDModel
-} derive(Eq)
+  model : Model
+} derive(Show, Eq)
 
-fn SIDFlags::default() -> SIDFlags {
-  SIDFlags::from_int(0x0000)
+fn SIDFlags::default() -> SIDFlags!String {
+  SIDFlags::from_int(0x0000)!
 }
 
-fn SIDFlags::from_int(value : UInt16) -> SIDFlags {
+fn SIDFlags::from_int(value : UInt16) -> SIDFlags!String {
   {
-    channel: Channel::from_int((value.0 >> 6) & 0b11),
-    model: SIDModel::from_int((value.0 >> 4) & 0b11),
+    channel: Channel::from_int((value.0 >> 6) & 0b11)!,
+    model: Model::from_int((value.0 >> 4) & 0b11)!,
   }
 }
 
@@ -148,22 +144,22 @@ struct Flags {
   player : Int
   mode : Mode
   videoStandard : VideoStandard
-  model : Array[SIDModel]
-} derive(Eq)
+  model : Array[Model]
+} derive(Show, Eq)
 
-fn Flags::default() -> Flags {
-  Flags::from_int(0x0000, false)
+fn Flags::default() -> Flags!String {
+  Flags::from_int!(0x0000, false)
 }
 
-fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags {
+fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags!String {
   {
     player: (value.0 >> 0) & 0b01,
-    mode: Mode::from_int((value.0 >> 1) & 0b01, realSID),
-    videoStandard: VideoStandard::from_int((value.0 >> 2) & 0b11),
+    mode: Mode::from_int!((value.0 >> 1) & 0b01, realSID),
+    videoStandard: VideoStandard::from_int!((value.0 >> 2) & 0b11),
     model: [
-      SIDModel::from_int((value.0 >> 4) & 0b11),
-      SIDModel::from_int((value.0 >> 6) & 0b11),
-      SIDModel::from_int((value.0 >> 8) & 0b11),
+      Model::from_int((value.0 >> 4) & 0b11)!,
+      Model::from_int((value.0 >> 6) & 0b11)!,
+      Model::from_int((value.0 >> 8) & 0b11)!,
     ],
   }
 }

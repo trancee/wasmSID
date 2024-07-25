@@ -62,11 +62,17 @@ enum Address {
   COUNT // Index into the Text Input Buffer/Number of Array Subscripts
   DIMFLG // Flags for the Routines That Locate or Build an Array
   VALTYP // Flag: Type of Data (String or Numeric)
+  //
+  TVSFLG // 02A6        678     Flag: TV Standard: $00 = NTSC, $01 = PAL.
+}
+
+fn op_get(self : Address, map : Address) -> UInt16 {
+  self[map]
 }
 
 struct Memory {
   mut mem : Array[UInt8]
-}
+} derive(Show)
 
 pub fn Memory::new() -> Memory {
   { mem: Array::make(0x10000, 0x00) }
@@ -136,34 +142,54 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   }
   // VIC-II
   if addr >= 0xD000 && addr <= 0xD3FF {
-    println("vic2 read $" + u16(addr).to_hex())
+    if addr >= 0xD02F && addr <= 0xD03F {
+      /// When read, they will always give a value of 255 ($FF).
+      /// This value will not change after writing to them.
+      return 0xFF
+    }
+    println(
+      "vic2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+    )
     abort("")
     // return vic2.onReadByte(address);
   }
 
   // SID
   if addr >= 0xD400 && addr <= 0xD7FF {
-    println("sid read $" + u16(addr).to_hex())
+    if addr >= 0xD41D && addr <= 0xD41F {
+      /// Reading them will always return a value of 255 ($FF),
+      /// and writing to them will have no effect.
+      return 0xFF
+    }
+    println(
+      "sid read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+    )
     // abort("")
   }
 
   // Color ram
   if addr >= 0xD800 && addr <= 0xDBFF {
-    println("color ram read $" + u16(addr).to_hex())
+    println(
+      "color ram read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+    )
     abort("")
     // return memoryManager.ram.onReadByte(address);
   }
 
   // CIA 1
   if addr >= 0xDC00 && addr <= 0xDCFF {
-    println("cia1 read $" + u16(addr).to_hex())
+    println(
+      "cia1 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+    )
     abort("")
     // return memoryManager.cia1.onReadByte(address);
   }
 
   // CIA 2
   if addr >= 0xDD00 && addr <= 0xDDFF {
-    println("cia2 read $" + u16(addr).to_hex())
+    println(
+      "cia2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+    )
     abort("")
     // return memoryManager.cia2.onReadByte(address);
   }

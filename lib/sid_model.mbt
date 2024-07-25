@@ -1,35 +1,33 @@
 //values: 8580 / 6581
-enum SIDModel {
+enum Model {
   Unknown
   MOS6581
   MOS8580
   Both
-} derive(Eq)
+} derive(Show, Eq)
 
-fn SIDModel::from_int(value : Int) -> SIDModel {
+fn Model::from_int(value : Int) -> Model!String {
   match value {
     0b00 => Unknown
     0b01 => MOS6581
     0b10 => MOS8580
     0b11 => Both
     _ => {
-      println("unknown SID model")
-      abort("unknown SID model")
+      raise "unknown SID model"
     }
   }
 }
 
-fn to_int(self : SIDModel) -> Int {
-  self[self]
+fn to_int(self : Model) -> Int!String {
+  self[self]!
 }
 
-fn op_get(self : SIDModel, value : SIDModel) -> Int {
+fn op_get(self : Model, value : Model) -> Int!String {
   match value {
     MOS6581 => 6581
     MOS8580 => 8580
     _ => {
-      println("unknown SID model")
-      abort("unknown SID model")
+      raise "unknown SID model"
     }
   }
 }
@@ -40,33 +38,31 @@ enum Channel {
   Left
   Right
   Both
-} derive(Eq)
+} derive(Show, Eq)
 
-fn Channel::from_int(value : Int) -> Channel {
+fn Channel::from_int(value : Int) -> Channel!String {
   match value {
     0 => Unknown
     1 => Left
     2 => Right
     3 => Both
     _ => {
-      println("unknown channel")
-      abort("unknown channel")
+      raise "unknown channel"
     }
   }
 }
 
-fn to_int(self : Channel) -> Int {
-  self[self]
+fn to_int(self : Channel) -> Int!String {
+  self[self]!
 }
 
-fn op_get(self : Channel, value : Channel) -> Int {
+fn op_get(self : Channel, value : Channel) -> Int!String {
   match value {
     Left => 1
     Right => 2
     Both => 3
     _ => {
-      println("unknown channel")
-      abort("unknown channel")
+      raise "unknown channel"
     }
   }
 }

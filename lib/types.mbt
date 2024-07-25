@@ -33,7 +33,7 @@ trait U8 {
 //   }
 // }
 
-fn u8(self : UInt16) -> UInt8 {
+fn u8(self : UInt16) -> UInt16 {
   self.0 & 0xFF
 }
 

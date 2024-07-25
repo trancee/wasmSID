@@ -139,8 +139,8 @@ fn op_get(self : CIA, register : Register) -> UInt8 {
   let address = self.baseaddress + register[register] % 0x10 // (repeated every $10, 16 bytes)
   if address < 0xDC00 || address > 0xDDFF {
     // self.dump()
-    println("CIA::get out of bounds")
-    abort("CIA::get out of bounds")
+    println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
+    abort("get out of bounds")
   }
   println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
   self.mem[address].0
@@ -150,21 +150,21 @@ fn op_set(self : CIA, register : Register, value : UInt8) -> Unit {
   let address = self.baseaddress + register[register] % 0x10 // (repeated every $10, 16 bytes)
   if address < 0xDC00 || address > 0xDDFF {
     // self.dump()
-    println("CIA::set out of bounds")
-    abort("CIA::set out of bounds")
+    println("CIA \(register) ← $" + value.to_hex())
+    abort("set out of bounds")
   }
   println("CIA \(register) ← $" + value.to_hex())
   self.mem[address] = value.0
 }
 
-enum InterruptControlStatusRegister {
-  TIMERA_UNDERFLOW
-  TIMERB_UNDERFLOW
-  TOD
-  RECEIVED
-  FLAG
-  NMI_GENERATED
-}
+// enum InterruptControlStatusRegister {
+//   TIMERA_UNDERFLOW
+//   TIMERB_UNDERFLOW
+//   TOD
+//   RECEIVED
+//   FLAG
+//   NMI_GENERATED
+// }
 
 test "cia1_instantiate" {
   let timer = 3

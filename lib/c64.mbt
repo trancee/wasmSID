@@ -22,7 +22,7 @@ pub struct C64 {
   mut videoStandard : VideoStandard
   mut cpuFrequency : CPUClock
   mut sampleClockRatio : Int //ratio of CPU-clock and samplerate
-  mut selectedModel : SIDModel
+  mut selectedModel : Model
   mut mainVolume : Double
   //
   // SID-file related:
@@ -112,7 +112,7 @@ pub fn C64::new(
 }
 
 //set hardware-parameters (Models, SIDs) for playback of loaded SID-tune
-pub fn reset(self : C64) -> Unit {
+pub fn reset(self : C64) -> Unit!String {
   println(">> C64::reset")
 
   //
@@ -121,10 +121,10 @@ pub fn reset(self : C64) -> Unit {
     self.sampleRate = 44100
   }
   self.cpuFrequency = CPUClock(self.videoStandard)
-  self.sampleClockRatio = (self.cpuFrequency << 4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
+  self.sampleClockRatio = (self.cpuFrequency << 4)! / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
   //
-  self.vic.rasterLines = ScanLines(self.videoStandard).to_int() // HINT: should be inferred
-  self.vic.rasterRowCycles = ScanLineCycles(self.videoStandard).to_int() // HINT: should be inferred
+  self.vic.rasterLines = ScanLines(self.videoStandard).to_int!() // HINT: should be inferred
+  self.vic.rasterRowCycles = ScanLineCycles(self.videoStandard).to_int!() // HINT: should be inferred
   self.frameCycles = self.vic.rasterLines * self.vic.rasterRowCycles ///C64->SampleRate / PAL_FRAMERATE; //1x speed tune with VIC Vertical-blank timing
   //
   self.prevRasterLine = -1 //so if $d012 is set once only don't disturb FrameCycleCnt
@@ -180,8 +180,7 @@ pub fn reset(self : C64) -> Unit {
     3 => 137 //increase for 3SID (to 137)
     4 => 200 //increase for 4SID (to 200)
     _ => {
-      println("unsupported number of SIDs")
-      abort("unsupported number of SIDs")
+      raise "unsupported number of SIDs"
     }
   }
 

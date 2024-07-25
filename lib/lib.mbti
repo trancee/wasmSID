@@ -21,7 +21,7 @@ pub struct C64 {
   pub videoStandard : VideoStandard
   pub cpuFrequency : CPUClock
   pub sampleClockRatio : Int
-  pub selectedModel : SIDModel
+  pub selectedModel : Model
   pub mainVolume : Double
   pub attenuation : Int
   pub timerSource : Int
@@ -46,7 +46,7 @@ impl C64 {
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
-  reset(Self) -> Unit
+  reset(Self) -> Unit!String
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   step(Self) -> Int
@@ -87,13 +87,19 @@ type CRBFlags
 type Channel
 impl Channel {
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
-type ControlBitVal
+type ControlRegisterHorizontal
+
+type ControlRegisterVertical
 
 type Flags
 impl Flags {
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 type FrameRate
@@ -111,13 +117,24 @@ impl ICR {
 
 type ICRFlags
 
-type InterruptBitVal
+type IRQMaskRegister
 
-type InterruptControlStatusRegister
+type InterruptFlagRegister
+
+type MemoryControlRegister
 
 type Mode
 impl Mode {
   op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
+}
+
+type Model
+impl Model {
+  op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 pub struct NES {
@@ -152,7 +169,7 @@ pub struct PSID {
   pub songs : UInt16
   pub defaultSong : UInt16
   pub flags : Flags
-  pub model : Array[SIDModel]
+  pub model : Array[Model]
   pub sid2Flags : SIDFlags
   pub sid3Flags : SIDFlags
   pub sid4Flags : SIDFlags
@@ -160,8 +177,10 @@ pub struct PSID {
   pub sid3Address : UInt8
 }
 impl PSID {
-  new(@cpu.Memory, Array[Int]) -> Self
-  process(Self) -> Bool
+  new(@cpu.Memory, Array[Int]) -> Self!String
+  output(Self, Logger) -> Unit
+  process(Self) -> Unit!String
+  to_string(Self) -> String
 }
 
 type Register
@@ -172,18 +191,15 @@ impl Register {
 
 type SID
 impl SID {
-  new(@cpu.Memory, Int, ~model : SIDModel = .., ~channel : Channel = ..) -> Self
+  new(@cpu.Memory, Int, ~model : Model = .., ~channel : Channel = ..) -> Self
   reset(Self) -> Unit
 }
 
 type SIDFlags
 impl SIDFlags {
   op_equal(Self, Self) -> Bool
-}
-
-type SIDModel
-impl SIDModel {
-  op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
 }
 
 type SIDheader
@@ -232,7 +248,13 @@ impl VIC {
   reset(Self) -> Unit
 }
 
-type VICregisters
+type VICregister
+impl VICregister {
+  compare(Self, Self) -> Int
+  op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
+}
 
 type Version
 impl Version {
