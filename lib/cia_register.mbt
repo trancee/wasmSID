@@ -55,7 +55,7 @@ enum Register {
   WR_ICR
   WR_CRA
   WR_CRB
-} derive(Show)
+} derive(Show, Eq)
 
 fn op_get(self : Register, register : Register) -> Int {
   match register {

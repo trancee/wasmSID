@@ -83,16 +83,16 @@ fn bit(self : UInt8, bit : UInt8) -> Bool {
   ((self >> bit) & 1) == 1
 }
 
-fn clr(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 & (-bit.0 - 1)
+fn clr(self : UInt8, mask : UInt8) -> UInt8 {
+  self.0 & (-mask.0 - 1)
 }
 
-fn set(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 | bit.0
+fn set(self : UInt8, mask : UInt8) -> UInt8 {
+  self.0 | mask.0
 }
 
-fn has(self : UInt8, bit : UInt8) -> Bool {
-  (self.0 & bit.0) != 0
+fn has(self : UInt8, mask : UInt8) -> Bool {
+  (self.0 & mask.0) != 0
 }
 
 // fn to_byte(

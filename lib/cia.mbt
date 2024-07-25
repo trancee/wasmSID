@@ -8,53 +8,64 @@
 /// $DD00-$DD0F Complex Interface Adapter (CIA) #2 Registers
 /// $DD10-$DDFF CIA #2 Register Images  The result is that every 16-byte area in this 256-byte block is a mirror of every other.
 
+let cia_mem_upper = 0xDC00
+
+let cia_mem_lower = 0xDDFF
+
+let cia_mem_length = 0x00FF
+
 struct CIA {
   mem : @cpu.Memory
   baseaddress : Int // CIA-baseaddress location in C64-memory (IO)
+  //
+  videoStandard : VideoStandard
 }
 
-pub fn CIA::new(mem : @cpu.Memory, baseaddress : Int) -> CIA {
-  let cia : CIA = { mem, baseaddress }
-  cia.reset()
+pub fn CIA::new(
+  mem : @cpu.Memory,
+  baseaddress : Int,
+  ~videoStandard : VideoStandard = Unknown
+) -> CIA {
+  let cia : CIA = { mem, baseaddress, videoStandard }
+  cia.reset(videoStandard)
   cia
 }
 
-pub fn reset(self : CIA) -> Unit {
-  // Read
-  self[RD_PRA] = 0x00
-  self[RD_PRB] = 0x00
-  self[RD_DDRA] = 0x00
-  self[RD_DDRB] = 0x00
-  self[RD_TA_LO] = 0x00
-  self[RD_TA_HI] = 0x00
-  self[RD_TB_LO] = 0x00
-  self[RD_TB_HI] = 0x00
-  self[RD_TOD_10TH] = 0x00
-  self[RD_TOD_SEC] = 0x00
-  self[RD_TOD_MIN] = 0x00
-  self[RD_TOD_HR] = 0x00
-  self[RD_SDR] = 0x00
-  self[RD_ICR] = 0x00
-  self[RD_CRA] = 0x00
-  self[RD_CRB] = 0x00
+pub fn reset(self : CIA, videoStandard : VideoStandard) -> Unit {
+  self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
 
-  // Write
-  self[WR_PRA] = 0x00
-  self[WR_PRB] = 0x00
-  self[WR_DDRA] = 0x00
-  self[WR_DDRB] = 0x00
-  self[WR_TA_LO] = 0x00
-  self[WR_TA_HI] = 0x00
-  self[WR_TB_LO] = 0x00
-  self[WR_TB_HI] = 0x00
-  self[WR_TOD_10TH] = 0x00
-  self[WR_TOD_SEC] = 0x00
-  self[WR_TOD_MIN] = 0x00
-  self[WR_TOD_HR] = 0x00
-  self[WR_SDR] = 0x00
-  self[WR_ICR] = 0x00
-  self[WR_CRA] = 0x00
-  self[WR_CRB] = 0x00
+  //
+  if self.baseaddress == 0xDC00 {
+    //Imitate CIA1 keyboard/joy port, some tunes check if buttons are not pressed
+    self[RD_PRA] = 0x10
+    self[RD_PRB] = 0xFF
+
+    //initialize CIAs
+    self[WR_TA_LO] = match videoStandard {
+      NTSC => 0x24
+      PAL => 0x40
+    }
+    self[WR_TA_HI] = match videoStandard {
+      NTSC => 0x95
+      PAL => 0x42
+    }
+
+    //Reset-default, but for PSID CIA1 TimerA IRQ should be enabled anyway if SID is CIA-timed
+    self[WR_ICR] = 0x81
+
+    //some tunes (and PSID doc) expect already running CIA (Reset-default)
+    self[WR_CRA] = 0x01
+    //All counters other than CIA1 TimerA should be disabled and set to 0xFF for PSID:
+    self[WR_CRB] = 0x00
+  } else if self.baseaddress == 0xDD00 {
+    //VICbank-selector default
+    self[WR_PRA] = 0x03
+    self[RD_PRA] = 0x03
+
+    //
+    self[WR_TA_LO] = 0xFF
+    self[WR_TA_HI] = 0xFF
+  }
 }
 
 pub fn emulate(self : CIA, cycles : UInt8) -> Bool {
@@ -120,9 +131,9 @@ pub fn emulate(self : CIA, cycles : UInt8) -> Bool {
 /// `ZERO`, any mask bit written with a on will be cleared, while those mask bits written with a zero will be unaffected.
 /// If bit 7 of the data written is a `ONE`, any mask bit written with a one will be set, while those mask bits written with a zero will be unaffected.
 /// In order for an interrupt flag to set `IR` and generate an Interrupt Request, the corresponding `MASK` bit must be set.
-pub fn writeCIAIRQmask(self : CIA, mask : Int) -> Unit {
+pub fn writeCIAIRQmask(self : CIA, mask : UInt8) -> Unit {
   // println(">> writeCIAIRQmask $" + self[WR_ICR].to_hex() + " \(mask)")
-  match mask & 0x80 {
+  match mask.0 & 0x80 {
     0 => self[WR_ICR] = self[WR_ICR].clr(mask & 0x1F) // CLEAR
     _ => self[WR_ICR] = self[WR_ICR].set(mask & 0x1F) // SET
   }
@@ -137,40 +148,40 @@ pub fn acknowledgeCIAIRQ(self : CIA) -> Unit {
 
 fn op_get(self : CIA, register : Register) -> UInt8 {
   let address = self.baseaddress + register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if address < 0xDC00 || address > 0xDDFF {
+  if address < cia_mem_upper || address > cia_mem_lower {
     // self.dump()
     println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
     abort("get out of bounds")
   }
   println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
+  match register {
+    /// FIXME: depends on memory bank?
+    RD_ICR => self.acknowledgeCIAIRQ()
+  }
   self.mem[address].0
 }
 
 fn op_set(self : CIA, register : Register, value : UInt8) -> Unit {
   let address = self.baseaddress + register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if address < 0xDC00 || address > 0xDDFF {
+  if address < cia_mem_upper || address > cia_mem_lower {
     // self.dump()
     println("CIA \(register) ← $" + value.to_hex())
     abort("set out of bounds")
   }
   println("CIA \(register) ← $" + value.to_hex())
-  self.mem[address] = value.0
+  match register {
+    /// FIXME: depends on memory bank?
+    WR_ICR => self.writeCIAIRQmask(value) //only writing 1 to $d019 bit0 would acknowledge, not any value (but RMW instructions write $d019 back before mod.)
+    // WR_SDR => self.mem[address] = value.0
+    _ => self.mem[address] = value.0
+  }
 }
-
-// enum InterruptControlStatusRegister {
-//   TIMERA_UNDERFLOW
-//   TIMERB_UNDERFLOW
-//   TOD
-//   RECEIVED
-//   FLAG
-//   NMI_GENERATED
-// }
 
 test "cia1_instantiate" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, 0xDC00)
+  let cia = CIA::new(mem, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   cia.writeCIAIRQmask(0x00)
@@ -188,7 +199,7 @@ test "cia1_timera" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, 0xDC00)
+  let cia = CIA::new(mem, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //
@@ -243,7 +254,7 @@ test "cia1_timera_forceload" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, 0xDC00)
+  let cia = CIA::new(mem, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //
@@ -308,7 +319,7 @@ test "cia1_timera_oneshot" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, 0xDC00)
+  let cia = CIA::new(mem, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //

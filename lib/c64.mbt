@@ -1,5 +1,11 @@
 // https://www.zimmers.net/cbmpics/cbm/c64/
 
+let c64_mem_upper = 0x0000
+
+let c64_mem_lower = 0xFFFF
+
+let c64_mem_length = 0xFFFF
+
 pub struct C64 {
   baseaddress : UInt16
   mem : @cpu.Memory
@@ -178,10 +184,7 @@ pub fn reset(self : C64) -> Unit!String {
     1 => 26
     2 => 43 //increase for 2SID (to 43)
     3 => 137 //increase for 3SID (to 137)
-    4 => 200 //increase for 4SID (to 200)
-    _ => {
-      raise "unsupported number of SIDs"
-    }
+    _ => raise "unsupported number of SIDs"
   }
 
   //
@@ -206,8 +209,10 @@ pub fn initC64(self : C64) -> Unit {
 
   //
   self.sid.each(fn(sid) { sid.reset() })
-  self.cia.each(fn(cia) { cia.reset() })
+  self.cia.each(fn(cia) { cia.reset(self.videoStandard) })
+
   // self.mem.reset()
+
   self.initCPU()
   self.irq = 0
   self.nmi = 0
@@ -220,6 +225,17 @@ pub fn initC64(self : C64) -> Unit {
   }
   self.sampleCycleCnt = 0
   self.overSampleCycleCnt = 0
+
+  //initialize bank-reg. (ROM-banks and IO enabled)
+  self[0x0001] = 0x37
+
+  //IRQ
+  self[0x0314] = 0x31
+  self[0x0315] = 0xEA
+
+  //NMI
+  self[0x0318] = 0x81
+  self[0x0319] = 0xEA
 
   //
   // println("<< C64::initC64")
@@ -341,10 +357,24 @@ fn interrupts(self : C64) -> Bool {
   false
 }
 
-// pub fn op_get(self : C64, addr : Int) -> UInt8 {
-//   self.cpu.read(addr)
-// }
+fn op_get(self : C64, address : UInt16) -> UInt8 {
+  if address < c64_mem_upper || address > c64_mem_lower {
+    // self.dump()
+    println(
+      "C64 $" + address.to_hex() + " → $" + self.mem[address.0].to_hex(),
+    )
+    abort("out of bounds")
+  }
+  println("C64 $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
+  self.mem[address.0].0
+}
 
-// pub fn op_set(self : C64, addr : Int, value : Int) -> Unit {
-//   self.cpu.write(addr, value)
-// }
+fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
+  if address < c64_mem_upper || address > c64_mem_lower {
+    // self.dump()
+    println("C64 $" + address.to_hex() + " ← $" + value.to_hex())
+    abort("out of bounds")
+  }
+  println("C64 $" + address.to_hex() + " ← $" + value.to_hex())
+  self.mem[address.0] = value.0
+}

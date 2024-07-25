@@ -1,4 +1,4 @@
-/// D000-D02E MOS 6566 VIDEO INTERFACE CONTROLLER (VIC)
+/// MOS 6566 VIDEO INTERFACE CONTROLLER (VIC)
 
 enum VICregister {
   Sprite0XPos
@@ -21,6 +21,27 @@ enum VICregister {
   //
   ControlRegisterVertical
   //
+  ///  RASTER REGISTER
+  ///
+  ///    The raster register is found in the VIC-II chip at location 53266
+  ///  ($D012). The raster register is a dual purpose register. When you read
+  ///  this register it returns the lower 8 bits of the current raster position.
+  ///  The raster position of the most significant bit is in register location
+  ///  53265 ($D011). You use the raster register to set up timing changes in
+  ///  your display so that you can get rid of screen flicker. The changes on
+  ///  your screen should be made when the raster is not in the visible display
+  ///  area, which is when your dot positions fall between 51 and 251.
+  ///    When the raster register is written to (including the MSB) the number
+  ///  written to is saved for use with the raster compare function. When the
+  ///  actual raster value becomes the same as the number written to the raster
+  ///  register, a bit in the VIC-II chip interrupt register 53273 ($D019) is
+  ///  turned ON by setting it to 1.
+  ///
+  ///  +-----------------------------------------------------------------------+
+  ///  | NOTE: If the proper interrupt bit is enabled (turned on), an interrupt|
+  ///  | (IRQ) will occur.                                                     |
+  ///  +-----------------------------------------------------------------------+
+  ///
   ReadRasterWriteRasterValue
   LightPenLatchXPos
   LightPenLatchYPos
@@ -32,6 +53,25 @@ enum VICregister {
   //
   MemoryControlRegister
   //
+  ///  INTERRUPT STATUS REGISTER
+  ///
+  ///    The interrupt status register shows the current status of any interrupt
+  ///  source. The current status of bit 2 of the interrupt register will be a 1
+  ///  when two sprites hit each other. The same is true, in a corresponding 1
+  ///  to 1 relationship, for bits 0-3 listed in the chart below. Bit 7 is also
+  ///  set with a 1, whenever an interrupt occurs.
+  ///    The interrupt status register is located at 53273 ($D019) and is as
+  ///  follows:
+  ///
+  ///    LATCH  BIT#             DESCRIPTION
+  ///  -------------------------------------------------------------------------
+  ///    IRST    0   Set when current raster count = stored raster count
+  ///    IMDC    1   Set by SPRITE-DATA collision (1st one only, until reset)
+  ///    IMMC    2   Set by SPRITE-SPRITE collision (1st one only, until reset)
+  ///     ILP    3   Set by negative transition of light pen (1 per frame)
+  ///     IRQ    7   Set by latch set and enabled
+  ///  -------------------------------------------------------------------------
+  ///
   InterruptFlagRegister
   //
   IRQMaskRegister

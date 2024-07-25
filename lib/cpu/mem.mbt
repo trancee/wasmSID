@@ -78,8 +78,19 @@ pub fn Memory::new() -> Memory {
   { mem: Array::make(0x10000, 0x00) }
 }
 
-pub fn reset(self : Memory) -> Unit {
+pub fn clear(self : Memory) -> Unit {
   self.mem = Array::make(0x10000, 0x00)
+}
+
+pub fn reset(
+  self : Memory,
+  ~offset : Int = 0,
+  ~length : Int = self.mem.length(),
+  ~value : Int = 0x00
+) -> Unit {
+  for i = 0; i < length; i = i + 1 {
+    self[offset + i] = value
+  }
 }
 
 //fill KERNAL/BASIC-ROM areas with content needed for SID-playback

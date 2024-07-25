@@ -1,19 +1,46 @@
+/// MOS 6566 VIDEO INTERFACE CONTROLLER (VIC)
+///
 /// $D000-$D02E
 /// VIC-II Chip Registers
 ///
-/// The Video Interface Controller (VIC-II chip) is a specially designed
-/// processor that is in charge of the 64's video display.  It is this
-/// chip which makes possible the 64's wide range of graphics
-/// capabilities.
+/// All of the graphics abilities of the Commodore 64 come from the 6567
+/// Video Interface Chip (also known as the VIC-II chip). This chip gives a
+/// variety of graphics modes, including a 40 column by 25 line text display,
+/// a 320 by 200 dot high resolution display, and SPRITES, small movable
+/// objects which make writing games simple. And if this weren't enough,
+/// many of the graphics modes can be mixed on the same screen. It is
+/// possible, for example, to define the top half of the screen to be in
+/// high resolution mode, while the bottom half is in text mode. And SPRITES
+/// will combine with anything! More on sprites later. First the other
+/// graphics modes.
+
+/// ($D02F-$D03F)
+/// Not Connected
+///
+/// The VIC-II chip has only 47 registers for 64 bytes of possible address
+/// space.  Therefore, the remaining 17 addresses do not access any
+/// memory.  When read, they will always give a value of 255 ($FF).  This
+/// value will not change after writing to them.
+
+/// ($D040-$D3FF)
+/// VIC-II Register Images
+///
+/// Since the VIC-II requires only enough addressing lines to handle 64
+/// locations (the minimum possible for its 47 registers), none of the
+/// higher bits are decoded when addressing this 1K area.  The result is
+/// that every 64 byte area in this 1K block is a mirror of every other.
 
 // https://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
 
-/// 6567 (NTSC)
-/// 6569 (PAL)
+let vic_mem_upper = 0xD000
+
+let vic_mem_lower = 0xD3FF
+
+let vic_mem_length = 0x03FF
 
 struct VIC {
   mem : @cpu.Memory
-  baseaddress : Int // VIC-baseaddress location in C64-memory (IO)
+  baseaddress : Int
   //
   mut rasterLines : Int
   mut rasterRowCycles : Int
@@ -35,64 +62,21 @@ pub fn VIC::new(mem : @cpu.Memory, baseaddress : Int) -> VIC {
 
 /// These registers are all intialized to 0 at power-up.
 pub fn reset(self : VIC) -> Unit {
-  for i = 0; i < 0x3F; i = i + 1 {
-    self[Sprite0XPos] = 0x00
-    self[Sprite0YPos] = 0x00
-    self[Sprite1XPos] = 0x00
-    self[Sprite1YPos] = 0x00
-    self[Sprite2XPos] = 0x00
-    self[Sprite2YPos] = 0x00
-    self[Sprite3XPos] = 0x00
-    self[Sprite3YPos] = 0x00
-    self[Sprite4XPos] = 0x00
-    self[Sprite4YPos] = 0x00
-    self[Sprite5XPos] = 0x00
-    self[Sprite5YPos] = 0x00
-    self[Sprite6XPos] = 0x00
-    self[Sprite6YPos] = 0x00
-    self[Sprite7XPos] = 0x00
-    self[Sprite7YPos] = 0x00
-    self[SpritesXPos] = 0x00
-    //
-    self[ControlRegisterVertical] = 0x00
-    //
-    self[ReadRasterWriteRasterValue] = 0x00
-    self[LightPenLatchXPos] = 0x00
-    self[LightPenLatchYPos] = 0x00
-    self[SpriteDisplayEnable] = 0x00
-    //
-    self[ControlRegisterHorizontal] = 0x00
-    //
-    self[SpritesExpand2xVertical] = 0x00
-    //
-    self[MemoryControlRegister] = 0x00
-    //
-    self[InterruptFlagRegister] = 0x00
-    //
-    self[IRQMaskRegister] = 0x00
-    self[SpriteBackgroundDisplayPriority] = 0x00
-    self[SpritesMultiColorModeSelect] = 0x00
-    self[SpritesExpand2xHorizontal] = 0x00
-    //
-    self[SpriteSpriteCollisionDetect] = 0x00
-    self[SpriteBackgroundCollisionDetect] = 0x00
-    self[BorderColor] = 0x00
-    self[BackgroundColor0] = 0x00
-    self[BackgroundColor1] = 0x00
-    self[BackgroundColor2] = 0x00
-    self[BackgroundColor3] = 0x00
-    self[SpriteMultiColorRegister0] = 0x00
-    self[SpriteMultiColorRegister1] = 0x00
-    //
-    self[Sprite0Color] = 0x00
-    self[Sprite1Color] = 0x00
-    self[Sprite2Color] = 0x00
-    self[Sprite3Color] = 0x00
-    self[Sprite4Color] = 0x00
-    self[Sprite5Color] = 0x00
-    self[Sprite6Color] = 0x00
-    self[Sprite7Color] = 0x00
-  }
+  self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
+
+  //
+  self[ControlRegisterVertical] = 0x8B
+  self[ReadRasterWriteRasterValue] = 0x37
+
+  /// ($D02F-$D03F)
+  /// Not Connected
+  ///
+  /// The VIC-II chip has only 47 registers for 64 bytes of possible address
+  /// space.  Therefore, the remaining 17 addresses do not access any
+  /// memory.  When read, they will always give a value of 255 ($FF).  This
+  /// value will not change after writing to them.
+
+  self.mem.reset(offset=0xD02F, length=0x0010, value=0xFF)
 }
 
 pub fn emulate(self : VIC, cycles : Int) -> Bool {
@@ -105,12 +89,13 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
     if rasterRow >= self.rasterLines {
       rasterRow = 0
     }
-    self[ControlRegisterVertical] = (self[ControlRegisterVertical] & (self[ControlRegisterVertical] ^
-      cr(RasterCompare))) | ((rasterRow & 0x0100) >> 1)
+    self[ControlRegisterVertical] = self[ControlRegisterVertical].clr(
+        cr(RasterCompare),
+      ) | ((rasterRow & 0x0100) >> 1)
     self[ReadRasterWriteRasterValue] = rasterRow & 0xFF
 
     //
-    if (self[IRQMaskRegister] & irqMask(InterruptEnabled)) != 0 {
+    if self[IRQMaskRegister].has(irqMask(InterruptEnabled)) {
       if rasterRow == ((self[ControlRegisterVertical] & self[ControlRegisterVertical]) <<
       1) + self[ReadRasterWriteRasterValue] {
         self[InterruptFlagRegister] = self[InterruptFlagRegister] | irqFlag(
@@ -119,20 +104,22 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
       }
     }
   }
-  (self[InterruptFlagRegister] & irqFlag(SetAnyEnabledVICIRQCondition)) != 0
+  self[InterruptFlagRegister].has(irqFlag(SetAnyEnabledVICIRQCondition))
 }
 
 pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
-  self[InterruptFlagRegister] = self[InterruptFlagRegister] & (self[InterruptFlagRegister] ^
-    irqMask(InterruptEnabled))
-  self[InterruptFlagRegister] = self[InterruptFlagRegister] & (self[InterruptFlagRegister] ^
-    (irqFlag(SetAnyEnabledVICIRQCondition) | irqMask(InterruptEnabled)))
+  self[InterruptFlagRegister] = self[InterruptFlagRegister].clr(
+    irqMask(InterruptEnabled),
+  )
+  self[InterruptFlagRegister] = self[InterruptFlagRegister].clr(
+    irqFlag(SetAnyEnabledVICIRQCondition) | irqMask(InterruptEnabled),
+  )
 }
 
 fn op_get(self : VIC, register : VICregister) -> UInt8 {
   let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
   // VIC-II Register Images
-  if address < 0xD000 || address > 0xD3FF {
+  if address < vic_mem_upper || address > vic_mem_lower {
     // self.dump()
     println("VIC \(register) → $" + self.mem[address].to_hex())
     abort("out of bounds")
@@ -144,11 +131,15 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
 fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
   // VIC-II Register Images
-  if address < 0xD000 || address > 0xD3FF {
+  if address < vic_mem_upper || address > vic_mem_lower {
     // self.dump()
     println("VIC \(register) ← $" + value.to_hex())
     abort("out of bounds")
   }
   println("VIC \(register) ← $" + value.to_hex())
-  self.mem[address] = value.0
+  match register {
+    /// FIXME: depends on memory bank?
+    InterruptFlagRegister => self.acknowledgeVICrasterIRQ()
+    _ => self.mem[address] = value.0
+  }
 }

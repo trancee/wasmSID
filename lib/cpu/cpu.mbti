@@ -57,11 +57,12 @@ type Instruction
 
 type Memory
 impl Memory {
+  clear(Self) -> Unit
   new() -> Self
   op_get(Self, Int) -> UInt8
   op_set(Self, Int, Int) -> Unit
   output(Self, Logger) -> Unit
-  reset(Self) -> Unit
+  reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
   setROM(Self) -> Unit
   to_string(Self) -> String
 }

@@ -5,6 +5,8 @@ alias @trancee/wasmSID/lib/cpu as @cpu
 // Values
 
 // Types and methods
+type AttackDecayCycleControl
+
 pub struct C64 {
   pub baseaddress : UInt16
   pub mem : @cpu.Memory
@@ -56,9 +58,9 @@ type CIA
 impl CIA {
   acknowledgeCIAIRQ(Self) -> Unit
   emulate(Self, UInt8) -> Bool
-  new(@cpu.Memory, Int) -> Self
-  reset(Self) -> Unit
-  writeCIAIRQmask(Self, Int) -> Unit
+  new(@cpu.Memory, Int, ~videoStandard : VideoStandard = ..) -> Self
+  reset(Self, VideoStandard) -> Unit
+  writeCIAIRQmask(Self, UInt8) -> Unit
 }
 
 type CPUClock
@@ -94,6 +96,8 @@ impl Channel {
 type ControlRegisterHorizontal
 
 type ControlRegisterVertical
+
+type FilterResonanceControlRegister
 
 type Flags
 impl Flags {
@@ -185,6 +189,7 @@ impl PSID {
 
 type Register
 impl Register {
+  op_equal(Self, Self) -> Bool
   output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
@@ -208,6 +213,14 @@ impl SIDheader {
   to_string(Self) -> String
 }
 
+type SIDregister
+impl SIDregister {
+  compare(Self, Self) -> Int
+  op_equal(Self, Self) -> Bool
+  output(Self, Logger) -> Unit
+  to_string(Self) -> String
+}
+
 type ScanLineCycles
 impl ScanLineCycles {
   op_equal(Self, Self) -> Bool
@@ -221,6 +234,8 @@ impl ScanLines {
   output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
+
+type SustainReleaseCycleControl
 
 pub type UInt16 Int
 impl UInt16 {
@@ -269,6 +284,10 @@ impl VideoStandard {
   output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
+
+type VoiceControlRegister
+
+type VolumeFilterSelectRegister
 
 // Traits
 

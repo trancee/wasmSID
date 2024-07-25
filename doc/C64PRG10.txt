@@ -7832,7 +7832,7 @@ stop tok64
   The raster position of the most significant bit is in register location
   53265 ($D011). You use the raster register to set up timing changes in
   your display so that you can get rid of screen flicker. The changes on
-  your screen should be mode when the raster is not in the visible display
+  your screen should be made when the raster is not in the visible display
   area, which is when your dot positions fall between 51 and 251.
     When the raster register is written to (including the MSB) the number
   written to is saved for use with the raster compare function. When the
