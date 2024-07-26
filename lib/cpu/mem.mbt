@@ -92,8 +92,8 @@ struct Memory {
   hooks : Array[Hook]
 }
 
-pub fn Memory::new(~length : Int = 0x10000, ~value : Int = 0x00) -> Memory {
-  { mem: Array::make(length, value), hooks: [] }
+pub fn Memory::new(~length : Int = 0xFFFF, ~value : Int = 0x00) -> Memory {
+  { mem: Array::make(length + 1, value), hooks: [] }
 }
 
 pub fn hook(
@@ -103,12 +103,11 @@ pub fn hook(
   r : (Int) -> Int,
   w : (Int, Int) -> Unit
 ) -> Unit {
-  println("add hook")
   self.hooks.push(Hook::new(lower, upper, r, w))
 }
 
 pub fn clear(self : Memory) -> Unit {
-  self.mem = Array::make(0x10000, 0x00)
+  self.mem = Array::make(self.mem.length(), 0x00)
 }
 
 pub fn reset(
@@ -117,6 +116,11 @@ pub fn reset(
   ~length : Int = self.mem.length(),
   ~value : Int = 0x00
 ) -> Unit {
+  println(
+    "Memory::reset $" + UInt16(offset).to_hex() + " - $" + UInt16(
+      offset + length,
+    ).to_hex() + " = #$" + UInt8(value).to_hex(),
+  )
   for i = 0; i < length; i = i + 1 {
     self[offset + i] = value
   }
@@ -176,20 +180,21 @@ fn dump(
 }
 
 pub fn op_get(self : Memory, addr : Int) -> UInt8 {
+  println("Memory::op_get $" + UInt16(addr).to_hex())
   if addr > 0xFFFF {
     self.dump()
-    abort("Memory::get out of bounds")
+    println("Memory::get out of bounds")
+    panic()
   }
 
   //
   for i = 0; i < self.hooks.length(); i = i + 1 {
-    println(
-      "R:HOOK $" + UInt16(self.hooks[i].lower).to_hex() + " - $" + UInt16(
-        self.hooks[i].upper,
-      ).to_hex() + " | $" + UInt16(addr).to_hex(),
-    )
     if addr >= self.hooks[i].lower && addr <= self.hooks[i].upper {
-      println("R:HOOK")
+      println(
+        "R:HOOK $" + UInt16(self.hooks[i].lower).to_hex() + " - $" + UInt16(
+          self.hooks[i].upper,
+        ).to_hex() + " | $" + UInt16(addr).to_hex(),
+      )
       return (self.hooks[i].r)(addr)
     }
   }
@@ -251,21 +256,23 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
 }
 
 pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
+  println(
+    "Memory::op_set $" + UInt16(addr).to_hex() + " = " + UInt8(value).to_hex(),
+  )
   if addr > 0xFFFF {
     self.dump()
-    abort("Memory::set out of bounds")
+    println("Memory::set out of bounds")
+    panic()
   }
 
   //
-  // println("HOOKS: " + self.hooks.length().to_string())
   for i = 0; i < self.hooks.length(); i = i + 1 {
-    println(
-      "W:HOOK $" + UInt16(self.hooks[i].lower).to_hex() + " - $" + UInt16(
-        self.hooks[i].upper,
-      ).to_hex() + " | $" + UInt16(addr).to_hex(),
-    )
     if addr >= self.hooks[i].lower && addr <= self.hooks[i].upper {
-      println("W:HOOK")
+      println(
+        "W:HOOK $" + UInt16(self.hooks[i].lower).to_hex() + " - $" + UInt16(
+          self.hooks[i].upper,
+        ).to_hex() + " | $" + UInt16(addr).to_hex(),
+      )
       return (self.hooks[i].w)(addr, value)
     }
   }
@@ -310,5 +317,10 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   //   abort("")
   //   // memoryManager.cia2.onWriteByte(address, data);
   // }
+  println(
+    "OK $" + UInt16(addr).to_hex() + " ($" + UInt16(self.mem.length()).to_hex() +
+    ")",
+  )
+  println("OK $" + UInt16(addr).to_hex() + " #$" + self.mem[addr].to_hex())
   self.mem[addr] = value |> u8
 }

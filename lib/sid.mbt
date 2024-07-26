@@ -107,16 +107,18 @@ struct SID {
 }
 
 pub fn SID::new(
-  mainmem : @cpu.Memory,
+  cpu : @cpu.CPU,
   baseaddress : Int,
   ~model : Model = Unknown,
-  ~channel : Channel = Unknown
+  ~channel : Channel = Unknown,
+  ~videoStandard : VideoStandard = Unknown
 ) -> SID {
+  println("SID::new")
   let mem = @cpu.Memory::new(length=sid_mem_length)
   let sid : SID = { mem, baseaddress, model, channel }
-  mainmem.hook(
-    sid_mem_upper,
+  cpu.mem().hook(
     sid_mem_lower,
+    sid_mem_upper,
     fn(address : Int) {
       println("SID::r")
       sid.r(address).0
@@ -130,8 +132,9 @@ pub fn SID::new(
   sid
 }
 
-pub fn reset(self : SID) -> Unit {
-  self.mem.reset(offset=self.baseaddress - sid_mem_upper, length=sid_mem_length)
+pub fn reset(self : SID, ~videoStandard : VideoStandard = Unknown) -> Unit {
+  // self.mem.reset(offset=self.baseaddress, length=sid_mem_length)
+  self.mem.reset()
 
   /// ($D41D-$D41F)
   /// Not Connected
@@ -142,8 +145,8 @@ pub fn reset(self : SID) -> Unit {
   /// writing to them will have no effect.
 
   self.mem.reset(
-    offset=0xD41D - sid_mem_upper,
-    length=0xD41F - 0xD41D,
+    offset=0xD41D - self.baseaddress,
+    length=3, // $D41D-$D41F
     value=0xFF,
   )
 }

@@ -69,9 +69,13 @@ pub fn C64::new(
   let mem = cpu.mem()
   mem.setROM()
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let sid = [SID::new(mem, 0xD400)]
-  let cia = [CIA::new(mem, 0xDC00), CIA::new(mem, 0xDD00)]
-  let vic = VIC::new(mem, 0xD000)
+  let videoStandard = psid.flags.videoStandard
+  let sid = [SID::new(cpu, 0xD400, ~videoStandard)]
+  let cia = [
+    CIA::new(cpu, 0xDC00, ~videoStandard),
+    CIA::new(cpu, 0xDD00, ~videoStandard),
+  ]
+  let vic = VIC::new(mem, 0xD000, ~videoStandard)
   //
   let c64 : C64 = {
     baseaddress,
@@ -90,7 +94,7 @@ pub fn C64::new(
     playbackSpeed: 0,
     paused: false,
     //
-    videoStandard: Unknown,
+    videoStandard,
     cpuFrequency: Unknown,
     sampleClockRatio: 0,
     selectedModel: Unknown,
@@ -154,7 +158,7 @@ pub fn reset(self : C64) -> Unit!String {
     model = self.selectedModel
   }
   self.sid[1] = SID::new(
-    self.mem,
+    self.cpu,
     0xD000 + (self.psid.sid2Address << 4).0,
     ~model,
     channel=Channel::Right,
@@ -169,7 +173,7 @@ pub fn reset(self : C64) -> Unit!String {
     model = self.selectedModel
   }
   self.sid[2] = SID::new(
-    self.mem,
+    self.cpu,
     0xD000 + (self.psid.sid3Address << 4).0,
     ~model,
     channel=Channel::Both,
@@ -208,8 +212,9 @@ pub fn initC64(self : C64) -> Unit {
   // println(">> C64::initC64")
 
   //
-  self.sid.each(fn(sid) { sid.reset() })
-  self.cia.each(fn(cia) { cia.reset(self.videoStandard) })
+  self.sid.each(fn(sid) { sid.reset(videoStandard=self.videoStandard) })
+  self.cia.each(fn(cia) { cia.reset(videoStandard=self.videoStandard) })
+  self.vic.reset(videoStandard=self.videoStandard)
 
   // self.mem.reset()
 

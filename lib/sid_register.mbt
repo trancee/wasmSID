@@ -64,6 +64,9 @@ enum SIDregister {
 
   /// Envelope Generator 3 Output
   ENV3
+
+  /// Not Connected
+  UNUSED
 } derive(Show, Compare, Eq)
 
 fn sid(register : SIDregister) -> Int {
@@ -108,6 +111,9 @@ fn sid(register : SIDregister) -> Int {
 
     ///
     ENV3 => 0x1C
+
+    ///
+    UNUSED => 0x1D
   }
 }
 

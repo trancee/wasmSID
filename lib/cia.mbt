@@ -16,23 +16,36 @@ let cia_mem_length = 0x00FF
 
 struct CIA {
   mem : @cpu.Memory
-  baseaddress : Int // CIA-baseaddress location in C64-memory (IO)
-  //
-  videoStandard : VideoStandard
+  baseaddress : Int
 }
 
 pub fn CIA::new(
-  mem : @cpu.Memory,
+  cpu : @cpu.CPU,
   baseaddress : Int,
   ~videoStandard : VideoStandard = Unknown
 ) -> CIA {
-  let cia : CIA = { mem, baseaddress, videoStandard }
-  cia.reset(videoStandard)
+  println("CIA::new")
+  let mem = @cpu.Memory::new(length=cia_mem_length)
+  let cia : CIA = { mem, baseaddress }
+  cpu.mem().hook(
+    cia_mem_lower,
+    cia_mem_upper,
+    fn(address : Int) {
+      println("CIA::r")
+      cia.r(address).0
+    },
+    fn(address : Int, value : Int) {
+      println("CIA::w")
+      cia.w(address, value)
+    },
+  )
+  cia.reset(~videoStandard)
   cia
 }
 
-pub fn reset(self : CIA, videoStandard : VideoStandard) -> Unit {
-  self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
+pub fn reset(self : CIA, ~videoStandard : VideoStandard = Unknown) -> Unit {
+  // self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
+  self.mem.reset()
 
   //
   if self.baseaddress == 0xDC00 {
@@ -44,10 +57,12 @@ pub fn reset(self : CIA, videoStandard : VideoStandard) -> Unit {
     self[WR_TA_LO] = match videoStandard {
       NTSC => 0x24
       PAL => 0x40
+      _ => 0x00
     }
     self[WR_TA_HI] = match videoStandard {
       NTSC => 0x95
       PAL => 0x42
+      _ => 0x00
     }
 
     //Reset-default, but for PSID CIA1 TimerA IRQ should be enabled anyway if SID is CIA-timed
@@ -146,42 +161,56 @@ pub fn acknowledgeCIAIRQ(self : CIA) -> Unit {
   // println("<< acknowledgeCIAIRQ $" + self[RD_ICR].to_hex())
 }
 
+fn r(self : CIA, address : UInt16) -> UInt8 {
+  println("CIA $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
+  self.mem[address.0].0
+}
+
+fn w(self : CIA, address : UInt16, value : UInt8) -> Unit {
+  // println("CIA $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
+  self.mem[address.0] = value.0
+}
+
 fn op_get(self : CIA, register : Register) -> UInt8 {
-  let address = self.baseaddress + register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if address < cia_mem_upper || address > cia_mem_lower {
+  println("CIA get")
+  let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
+  if self.baseaddress + address < cia_mem_upper || self.baseaddress + address > cia_mem_lower {
     // self.dump()
     println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
     abort("get out of bounds")
   }
-  println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
-  match register {
-    /// FIXME: depends on memory bank?
-    RD_ICR => self.acknowledgeCIAIRQ()
-  }
-  self.mem[address].0
+  // println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
+  // match register {
+  //   /// FIXME: depends on memory bank?
+  //   RD_ICR => self.acknowledgeCIAIRQ()
+  // }
+  // self.mem[address].0
+  self.r(address)
 }
 
 fn op_set(self : CIA, register : Register, value : UInt8) -> Unit {
-  let address = self.baseaddress + register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if address < cia_mem_upper || address > cia_mem_lower {
+  println("CIA::set \(register) = #$" + value.to_hex())
+  let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
+  if self.baseaddress + address < cia_mem_upper || self.baseaddress + address > cia_mem_lower {
     // self.dump()
     println("CIA \(register) ← $" + value.to_hex())
     abort("set out of bounds")
   }
-  println("CIA \(register) ← $" + value.to_hex())
-  match register {
-    /// FIXME: depends on memory bank?
-    WR_ICR => self.writeCIAIRQmask(value) //only writing 1 to $d019 bit0 would acknowledge, not any value (but RMW instructions write $d019 back before mod.)
-    // WR_SDR => self.mem[address] = value.0
-    _ => self.mem[address] = value.0
-  }
+  // println("CIA \(register) ← $" + value.to_hex())
+  // match register {
+  //   /// FIXME: depends on memory bank?
+  //   // WR_ICR => self.writeCIAIRQmask(value) //only writing 1 to $d019 bit0 would acknowledge, not any value (but RMW instructions write $d019 back before mod.)
+  //   // WR_SDR => self.mem[address] = value.0
+  //   _ => self.mem[address] = value.0
+  // }
+  self.w(address, value)
 }
 
 test "cia1_instantiate" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   cia.writeCIAIRQmask(0x00)
@@ -199,7 +228,7 @@ test "cia1_timera" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //
@@ -254,7 +283,7 @@ test "cia1_timera_forceload" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //
@@ -319,7 +348,7 @@ test "cia1_timera_oneshot" {
   let timer = 3
   let cpu = @cpu.CPU::new()
   let mem = cpu.mem()
-  let cia = CIA::new(mem, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_upper)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //

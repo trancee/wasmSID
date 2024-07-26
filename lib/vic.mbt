@@ -47,7 +47,12 @@ struct VIC {
   mut rowCycleCount : Int
 }
 
-pub fn VIC::new(mem : @cpu.Memory, baseaddress : Int) -> VIC {
+pub fn VIC::new(
+  mem : @cpu.Memory,
+  baseaddress : Int,
+  ~videoStandard : VideoStandard = Unknown
+) -> VIC {
+  println("VIC::new")
   let vic : VIC = {
     mem,
     baseaddress,
@@ -67,7 +72,7 @@ pub fn VIC::new(mem : @cpu.Memory, baseaddress : Int) -> VIC {
 }
 
 /// These registers are all intialized to 0 at power-up.
-pub fn reset(self : VIC) -> Unit {
+pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit {
   self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
 
   //
