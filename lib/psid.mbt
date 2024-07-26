@@ -28,7 +28,7 @@ pub struct PSID {
   //
   mut sid2Address : UInt8
   mut sid3Address : UInt8
-} derive(Show)
+}
 
 pub fn PSID::new(mem : @cpu.Memory, data : Array[Int]) -> PSID!String {
   let psid : PSID = {
@@ -130,7 +130,6 @@ pub fn process(self : PSID) -> Unit!String {
     self.loadAddress = u16(self[offset + 1] << 8) | u16(self[offset])
     offset += 2
   }
-  println("OK")
 
   /// Valid values:
   /// - $0000 - $FFFF

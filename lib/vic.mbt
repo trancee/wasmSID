@@ -56,6 +56,12 @@ pub fn VIC::new(mem : @cpu.Memory, baseaddress : Int) -> VIC {
     rasterRowCycles: 0,
     rowCycleCount: 0,
   }
+  mem.hook(
+    vic_mem_upper,
+    vic_mem_lower,
+    fn(address : Int) { vic.r(address).0 },
+    fn(address : Int, value : Int) { vic.w(address, value) },
+  )
   vic.reset()
   vic
 }
@@ -116,6 +122,16 @@ pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
   )
 }
 
+fn r(self : VIC, address : UInt16) -> UInt8 {
+  println("VIC $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
+  self.mem[address.0].0
+}
+
+fn w(self : VIC, address : UInt16, value : UInt8) -> Unit {
+  println("VIC $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
+  self.mem[address.0] = value.0
+}
+
 fn op_get(self : VIC, register : VICregister) -> UInt8 {
   let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
   // VIC-II Register Images
@@ -124,8 +140,9 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
     println("VIC \(register) → $" + self.mem[address].to_hex())
     abort("out of bounds")
   }
-  println("VIC \(register) → $" + self.mem[address].to_hex())
-  self.mem[address].0
+  // println("VIC \(register) → $" + self.mem[address].to_hex())
+  // self.mem[address].0
+  self.r(address)
 }
 
 fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
@@ -136,10 +153,11 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
     println("VIC \(register) ← $" + value.to_hex())
     abort("out of bounds")
   }
-  println("VIC \(register) ← $" + value.to_hex())
-  match register {
-    /// FIXME: depends on memory bank?
-    InterruptFlagRegister => self.acknowledgeVICrasterIRQ()
-    _ => self.mem[address] = value.0
-  }
+  // println("VIC \(register) ← $" + value.to_hex())
+  // match register {
+  //   /// FIXME: depends on memory bank?
+  //   InterruptFlagRegister => self.acknowledgeVICrasterIRQ()
+  //   _ => self.mem[address] = value.0
+  // }
+  self.w(address, value)
 }

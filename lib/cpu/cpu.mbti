@@ -3,8 +3,6 @@ package trancee/wasmSID/lib/cpu
 // Values
 
 // Types and methods
-type Address
-
 type CPU
 impl CPU {
   get_flags(Self) -> UInt8
@@ -53,18 +51,19 @@ impl Flags {
   to_string(Self) -> String
 }
 
+type Hook
+
 type Instruction
 
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  new() -> Self
+  hook(Self, Int, Int, (Int) -> Int, (Int, Int) -> Unit) -> Unit
+  new(~length : Int = .., ~value : Int = ..) -> Self
   op_get(Self, Int) -> UInt8
   op_set(Self, Int, Int) -> Unit
-  output(Self, Logger) -> Unit
   reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
   setROM(Self) -> Unit
-  to_string(Self) -> String
 }
 
 type Mode

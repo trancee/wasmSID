@@ -107,18 +107,31 @@ struct SID {
 }
 
 pub fn SID::new(
-  mem : @cpu.Memory,
+  mainmem : @cpu.Memory,
   baseaddress : Int,
   ~model : Model = Unknown,
   ~channel : Channel = Unknown
 ) -> SID {
+  let mem = @cpu.Memory::new(length=sid_mem_length)
   let sid : SID = { mem, baseaddress, model, channel }
+  mainmem.hook(
+    sid_mem_upper,
+    sid_mem_lower,
+    fn(address : Int) {
+      println("SID::r")
+      sid.r(address).0
+    },
+    fn(address : Int, value : Int) {
+      println("SID::w")
+      sid.w(address, value)
+    },
+  )
   sid.reset()
   sid
 }
 
 pub fn reset(self : SID) -> Unit {
-  self.mem.reset(offset=self.baseaddress, length=sid_mem_length)
+  self.mem.reset(offset=self.baseaddress - sid_mem_upper, length=sid_mem_length)
 
   /// ($D41D-$D41F)
   /// Not Connected
@@ -128,10 +141,24 @@ pub fn reset(self : SID) -> Unit {
   /// not used.  Reading them will always return a value of 255 ($FF), and
   /// writing to them will have no effect.
 
-  self.mem.reset(offset=0xD41D, length=0xD41F - 0xD41D, value=0xFF)
+  self.mem.reset(
+    offset=0xD41D - sid_mem_upper,
+    length=0xD41F - 0xD41D,
+    value=0xFF,
+  )
 }
 
-fn op_get(self : SID, register : SIDregister) -> Int {
+fn r(self : SID, address : UInt16) -> UInt8 {
+  println("SID $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
+  self.mem[address.0].0
+}
+
+fn w(self : SID, address : UInt16, value : UInt8) -> Unit {
+  println("SID $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
+  self.mem[address.0] = value.0
+}
+
+fn op_get(self : SID, register : SIDregister) -> UInt8 {
   let address = self.baseaddress + sid(register) % 0x20 // (repeated every $20, 32 bytes)
   /// SID Register Images
   if address < sid_mem_upper || address > sid_mem_lower {
@@ -139,8 +166,9 @@ fn op_get(self : SID, register : SIDregister) -> Int {
     println("SID \(register) → $" + self.mem[address].to_hex())
     abort("out of bounds")
   }
-  println("SID \(register) → $" + self.mem[address].to_hex())
-  self.mem[address].0
+  // println("SID \(register) → $" + self.mem[address].to_hex())
+  // self.mem[address].0
+  self.r(address)
 }
 
 fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
@@ -151,6 +179,7 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     println("SID \(register) ← $" + value.to_hex())
     abort("out of bounds")
   }
-  println("SID \(register) ← $" + value.to_hex())
-  self.mem[address] = value.0
+  // println("SID \(register) ← $" + value.to_hex())
+  // self.mem[address] = value.0
+  self.w(address, value)
 }

@@ -50,32 +50,61 @@
 ///       $FFFC         System Reset (RES) Hardware Vector
 ///       $FFFE         Maskable Interrupt Request and Break Hardware Vectors
 
-enum Address {
-  D6510
-  R6510
-  ADRAY1 // Vector: Routine to Convert a Number from Floating Point to Signed Integer
-  ADRAY2 // Vector: Routine to Convert a Number from Integer to Floating Point
-  CHARAC // Search Character for Scanning BASIC Text Input
-  ENDCHR // Search Character for Statement Termination or Quote
-  TRMPOS // Column position of the Cursor before the Last TAB or SPC
-  VERCK // Flag: LOAD or VERIFY
-  COUNT // Index into the Text Input Buffer/Number of Array Subscripts
-  DIMFLG // Flags for the Routines That Locate or Build an Array
-  VALTYP // Flag: Type of Data (String or Numeric)
-  //
-  TVSFLG // 02A6        678     Flag: TV Standard: $00 = NTSC, $01 = PAL.
+// enum Address {
+//   D6510
+//   R6510
+//   ADRAY1 // Vector: Routine to Convert a Number from Floating Point to Signed Integer
+//   ADRAY2 // Vector: Routine to Convert a Number from Integer to Floating Point
+//   CHARAC // Search Character for Scanning BASIC Text Input
+//   ENDCHR // Search Character for Statement Termination or Quote
+//   TRMPOS // Column position of the Cursor before the Last TAB or SPC
+//   VERCK // Flag: LOAD or VERIFY
+//   COUNT // Index into the Text Input Buffer/Number of Array Subscripts
+//   DIMFLG // Flags for the Routines That Locate or Build an Array
+//   VALTYP // Flag: Type of Data (String or Numeric)
+//   //
+//   TVSFLG // 02A6        678     Flag: TV Standard: $00 = NTSC, $01 = PAL.
+// }
+
+// fn op_get(self : Address, map : Address) -> UInt16 {
+//   self[map]
+// }
+
+struct Hook {
+  upper : Int
+  lower : Int
+  r : (Int) -> Int
+  w : (Int, Int) -> Unit
 }
 
-fn op_get(self : Address, map : Address) -> UInt16 {
-  self[map]
+fn Hook::new(
+  lower : Int,
+  upper : Int,
+  r : (Int) -> Int,
+  w : (Int, Int) -> Unit
+) -> Hook {
+  { lower, upper, r, w }
 }
 
 struct Memory {
   mut mem : Array[UInt8]
-} derive(Show)
+  //
+  hooks : Array[Hook]
+}
 
-pub fn Memory::new() -> Memory {
-  { mem: Array::make(0x10000, 0x00) }
+pub fn Memory::new(~length : Int = 0x10000, ~value : Int = 0x00) -> Memory {
+  { mem: Array::make(length, value), hooks: [] }
+}
+
+pub fn hook(
+  self : Memory,
+  lower : Int,
+  upper : Int,
+  r : (Int) -> Int,
+  w : (Int, Int) -> Unit
+) -> Unit {
+  println("add hook")
+  self.hooks.push(Hook::new(lower, upper, r, w))
 }
 
 pub fn clear(self : Memory) -> Unit {
@@ -151,59 +180,73 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
     self.dump()
     abort("Memory::get out of bounds")
   }
-  // VIC-II
-  if addr >= 0xD000 && addr <= 0xD3FF {
-    if addr >= 0xD02F && addr <= 0xD03F {
-      /// When read, they will always give a value of 255 ($FF).
-      /// This value will not change after writing to them.
-      return 0xFF
+
+  //
+  for i = 0; i < self.hooks.length(); i = i + 1 {
+    println(
+      "R:HOOK $" + UInt16(self.hooks[i].lower).to_hex() + " - $" + UInt16(
+        self.hooks[i].upper,
+      ).to_hex() + " | $" + UInt16(addr).to_hex(),
+    )
+    if addr >= self.hooks[i].lower && addr <= self.hooks[i].upper {
+      println("R:HOOK")
+      return (self.hooks[i].r)(addr)
     }
-    println(
-      "vic2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-    )
-    abort("")
-    // return vic2.onReadByte(address);
   }
 
-  // SID
-  if addr >= 0xD400 && addr <= 0xD7FF {
-    if addr >= 0xD41D && addr <= 0xD41F {
-      /// Reading them will always return a value of 255 ($FF),
-      /// and writing to them will have no effect.
-      return 0xFF
-    }
-    println(
-      "sid read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-    )
-    // abort("")
-  }
+  // // VIC-II
+  // if addr >= 0xD000 && addr <= 0xD3FF {
+  //   if addr >= 0xD02F && addr <= 0xD03F {
+  //     /// When read, they will always give a value of 255 ($FF).
+  //     /// This value will not change after writing to them.
+  //     return 0xFF
+  //   }
+  //   println(
+  //     "vic2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+  //   )
+  //   abort("")
+  //   // return vic2.onReadByte(address);
+  // }
 
-  // Color ram
-  if addr >= 0xD800 && addr <= 0xDBFF {
-    println(
-      "color ram read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-    )
-    abort("")
-    // return memoryManager.ram.onReadByte(address);
-  }
+  // // SID
+  // if addr >= 0xD400 && addr <= 0xD7FF {
+  //   if addr >= 0xD41D && addr <= 0xD41F {
+  //     /// Reading them will always return a value of 255 ($FF),
+  //     /// and writing to them will have no effect.
+  //     return 0xFF
+  //   }
+  //   println(
+  //     "sid read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+  //   )
+  //   abort("")
+  // }
 
-  // CIA 1
-  if addr >= 0xDC00 && addr <= 0xDCFF {
-    println(
-      "cia1 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-    )
-    abort("")
-    // return memoryManager.cia1.onReadByte(address);
-  }
+  // // Color ram
+  // if addr >= 0xD800 && addr <= 0xDBFF {
+  //   println(
+  //     "color ram read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+  //   )
+  //   abort("")
+  //   // return memoryManager.ram.onReadByte(address);
+  // }
 
-  // CIA 2
-  if addr >= 0xDD00 && addr <= 0xDDFF {
-    println(
-      "cia2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-    )
-    abort("")
-    // return memoryManager.cia2.onReadByte(address);
-  }
+  // // CIA 1
+  // if addr >= 0xDC00 && addr <= 0xDCFF {
+  //   println(
+  //     "cia1 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+  //   )
+  //   abort("")
+  //   // return memoryManager.cia1.onReadByte(address);
+  // }
+
+  // // CIA 2
+  // if addr >= 0xDD00 && addr <= 0xDDFF {
+  //   println(
+  //     "cia2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
+  //   )
+  //   abort("")
+  //   // return memoryManager.cia2.onReadByte(address);
+  // }
   self.mem[addr]
 }
 
@@ -212,44 +255,60 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
     self.dump()
     abort("Memory::set out of bounds")
   }
-  // VIC-II
-  if addr >= 0xD000 && addr <= 0xD3FF {
-    println("vic2 write $" + u16(addr).to_hex())
-    // abort("")
-    // vic2.onWriteByte(address, data)
-  }
-  // SID
-  if addr >= 0xD400 && addr <= 0xD7FF {
-    println("sid write $" + u16(addr).to_hex())
-    // abort("")
-    // sid.play()
-    // sidPlayer.synth.poke(address & 0x1f, data);
-    if addr > 0xD418 {
-      // console.log("attempted digi poke:", address, data);
-      // sidPlayer.synth.pokeDigi(address, data);
-      // println("attempted digi poke")
-      // abort("digi")
+
+  //
+  // println("HOOKS: " + self.hooks.length().to_string())
+  for i = 0; i < self.hooks.length(); i = i + 1 {
+    println(
+      "W:HOOK $" + UInt16(self.hooks[i].lower).to_hex() + " - $" + UInt16(
+        self.hooks[i].upper,
+      ).to_hex() + " | $" + UInt16(addr).to_hex(),
+    )
+    if addr >= self.hooks[i].lower && addr <= self.hooks[i].upper {
+      println("W:HOOK")
+      return (self.hooks[i].w)(addr, value)
     }
   }
-  // Color ram
-  if addr >= 0xD800 && addr <= 0xDBFF {
-    println("color ram write $" + u16(addr).to_hex())
-    // abort("")
-    // memoryManager.ram.onWriteByte(address, data);
-  }
 
-  // CIA 1
-  if addr >= 0xDC00 && addr <= 0xDCFF {
-    println("cia1 write $" + u16(addr).to_hex())
-    // abort("")
-    // memoryManager.cia1.onWriteByte(address, data);
-  }
+  // // VIC-II
+  // if addr >= 0xD000 && addr <= 0xD3FF {
+  //   println("vic2 write $" + u16(addr).to_hex())
+  //   abort("")
+  //   // vic2.onWriteByte(address, data)
+  // }
 
-  // CIA 2
-  if addr >= 0xDD00 && addr <= 0xDDFF {
-    println("cia2 write $" + u16(addr).to_hex())
-    // abort("")
-    // memoryManager.cia2.onWriteByte(address, data);
-  }
+  // // SID
+  // if addr >= 0xD400 && addr <= 0xD7FF {
+  //   println("sid write $" + u16(addr).to_hex())
+  //   abort("")
+  //   // sid.play()
+  //   // sidPlayer.synth.poke(address & 0x1f, data);
+  //   if addr > 0xD418 {
+  //     // console.log("attempted digi poke:", address, data);
+  //     // sidPlayer.synth.pokeDigi(address, data);
+  //     // println("attempted digi poke")
+  //     // abort("digi")
+  //   }
+  // }
+  // // Color ram
+  // if addr >= 0xD800 && addr <= 0xDBFF {
+  //   println("color ram write $" + u16(addr).to_hex())
+  //   abort("")
+  //   // memoryManager.ram.onWriteByte(address, data);
+  // }
+
+  // // CIA 1
+  // if addr >= 0xDC00 && addr <= 0xDCFF {
+  //   println("cia1 write $" + u16(addr).to_hex())
+  //   abort("")
+  //   // memoryManager.cia1.onWriteByte(address, data);
+  // }
+
+  // // CIA 2
+  // if addr >= 0xDD00 && addr <= 0xDDFF {
+  //   println("cia2 write $" + u16(addr).to_hex())
+  //   abort("")
+  //   // memoryManager.cia2.onWriteByte(address, data);
+  // }
   self.mem[addr] = value |> u8
 }

@@ -182,9 +182,7 @@ pub struct PSID {
 }
 impl PSID {
   new(@cpu.Memory, Array[Int]) -> Self!String
-  output(Self, Logger) -> Unit
   process(Self) -> Unit!String
-  to_string(Self) -> String
 }
 
 type Register
