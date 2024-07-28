@@ -58,7 +58,7 @@ type Instruction
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  hook(Self, Int, Int, (Int) -> Int, (Int, Int) -> Unit) -> Unit
+  hook(Self, Int, Int, Array[Int], (Int) -> Int, (Int, Int) -> Unit) -> Unit
   new(~length : Int = .., ~value : Int = ..) -> Self
   op_get(Self, Int) -> UInt8
   op_set(Self, Int, Int) -> Unit

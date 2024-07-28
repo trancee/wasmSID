@@ -8,14 +8,18 @@
 /// $DD00-$DD0F Complex Interface Adapter (CIA) #2 Registers
 /// $DD10-$DDFF CIA #2 Register Images  The result is that every 16-byte area in this 256-byte block is a mirror of every other.
 
-let cia_mem_upper = 0xDC00
+let cia_mem_start = 0xDC00
 
-let cia_mem_lower = 0xDDFF
+let cia1_mem_start = 0xDC00
 
-let cia_mem_length = 0x00FF
+let cia2_mem_start = 0xDD00
+
+let cia_mem_end = 0xDDFF
+
+let cia_mem_size = 0x00FF
 
 struct CIA {
-  mem : @cpu.Memory
+  mem : Array[Int]
   baseaddress : Int
 }
 
@@ -25,11 +29,12 @@ pub fn CIA::new(
   ~videoStandard : VideoStandard = Unknown
 ) -> CIA {
   println("CIA::new")
-  let mem = @cpu.Memory::new(length=cia_mem_length)
+  let mem = Array::make(cia_mem_size + 1, 0x00) // @cpu.Memory::new(length=cia_mem_size)
   let cia : CIA = { mem, baseaddress }
   cpu.mem().hook(
-    cia_mem_lower,
-    cia_mem_upper,
+    cia_mem_start,
+    cia_mem_end,
+    mem,
     fn(address : Int) {
       println("CIA::r")
       cia.r(address).0
@@ -45,41 +50,46 @@ pub fn CIA::new(
 
 pub fn reset(self : CIA, ~videoStandard : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
-  self.mem.reset()
+  for i = 0; i < self.mem.length(); i = i + 1 {
+    self.mem[i] = 0x00
+  }
 
   //
-  if self.baseaddress == 0xDC00 {
-    //Imitate CIA1 keyboard/joy port, some tunes check if buttons are not pressed
-    self[RD_PRA] = 0x10
-    self[RD_PRB] = 0xFF
+  match self.baseaddress {
+    cia1_mem_start => {
+      //Imitate CIA1 keyboard/joy port, some tunes check if buttons are not pressed
+      self[RD_PRA] = 0x10
+      self[RD_PRB] = 0xFF
 
-    //initialize CIAs
-    self[WR_TA_LO] = match videoStandard {
-      NTSC => 0x24
-      PAL => 0x40
-      _ => 0x00
+      //initialize CIAs
+      self[WR_TA_LO] = match videoStandard {
+        NTSC => 0x24
+        PAL => 0x40
+        _ => 0x00
+      }
+      self[WR_TA_HI] = match videoStandard {
+        NTSC => 0x95
+        PAL => 0x42
+        _ => 0x00
+      }
+
+      //Reset-default, but for PSID CIA1 TimerA IRQ should be enabled anyway if SID is CIA-timed
+      self[WR_ICR] = 0x81
+
+      //some tunes (and PSID doc) expect already running CIA (Reset-default)
+      self[WR_CRA] = 0x01
+      //All counters other than CIA1 TimerA should be disabled and set to 0xFF for PSID:
+      self[WR_CRB] = 0x00
     }
-    self[WR_TA_HI] = match videoStandard {
-      NTSC => 0x95
-      PAL => 0x42
-      _ => 0x00
+    cia2_mem_start => {
+      //VICbank-selector default
+      self[WR_PRA] = 0x03
+      self[RD_PRA] = 0x03
+
+      //
+      self[WR_TA_LO] = 0xFF
+      self[WR_TA_HI] = 0xFF
     }
-
-    //Reset-default, but for PSID CIA1 TimerA IRQ should be enabled anyway if SID is CIA-timed
-    self[WR_ICR] = 0x81
-
-    //some tunes (and PSID doc) expect already running CIA (Reset-default)
-    self[WR_CRA] = 0x01
-    //All counters other than CIA1 TimerA should be disabled and set to 0xFF for PSID:
-    self[WR_CRB] = 0x00
-  } else if self.baseaddress == 0xDD00 {
-    //VICbank-selector default
-    self[WR_PRA] = 0x03
-    self[RD_PRA] = 0x03
-
-    //
-    self[WR_TA_LO] = 0xFF
-    self[WR_TA_HI] = 0xFF
   }
 }
 
@@ -162,21 +172,25 @@ pub fn acknowledgeCIAIRQ(self : CIA) -> Unit {
 }
 
 fn r(self : CIA, address : UInt16) -> UInt8 {
-  println("CIA $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
-  self.mem[address.0].0
+  println(
+    "CIA $" + address.to_hex() + " → $" + UInt8(self.mem[address.0]).to_hex(),
+  )
+  self.mem[address.0]
 }
 
 fn w(self : CIA, address : UInt16, value : UInt8) -> Unit {
-  // println("CIA $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
+  println(
+    "CIA $" + address.to_hex() + " ← $" + UInt8(self.mem[address.0]).to_hex(),
+  )
   self.mem[address.0] = value.0
 }
 
 fn op_get(self : CIA, register : Register) -> UInt8 {
-  println("CIA get")
+  println("CIA::get \(register)")
   let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if self.baseaddress + address < cia_mem_upper || self.baseaddress + address > cia_mem_lower {
+  if self.baseaddress + address < cia_mem_start || self.baseaddress + address > cia_mem_end {
     // self.dump()
-    println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
+    println("CIA \(register) → $" + UInt8(self.mem[address % 0x100]).to_hex())
     abort("get out of bounds")
   }
   // println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
@@ -191,7 +205,7 @@ fn op_get(self : CIA, register : Register) -> UInt8 {
 fn op_set(self : CIA, register : Register, value : UInt8) -> Unit {
   println("CIA::set \(register) = #$" + value.to_hex())
   let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if self.baseaddress + address < cia_mem_upper || self.baseaddress + address > cia_mem_lower {
+  if self.baseaddress + address < cia_mem_start || self.baseaddress + address > cia_mem_end {
     // self.dump()
     println("CIA \(register) ← $" + value.to_hex())
     abort("set out of bounds")
@@ -208,18 +222,23 @@ fn op_set(self : CIA, register : Register, value : UInt8) -> Unit {
 
 test "cia1_instantiate" {
   let timer = 3
+  //
   let cpu = @cpu.CPU::new()
-  let mem = cpu.mem()
-  let cia = CIA::new(cpu, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_start)
+  //
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
+  //
   cia.writeCIAIRQmask(0x00)
+  //
   @test.eq!(cia[WR_TA_HI], 0)
   @test.eq!(cia[WR_TA_LO], timer)
   @test.eq!(cia[RD_TA_HI], 0)
   @test.eq!(cia[RD_TA_LO], 0)
+  //
   @test.eq!(cia[WR_CRA], cra(NONE))
   @test.eq!(cia[RD_CRA], cra(NONE))
+  //
   @test.eq!(cia[WR_ICR], icr(NONE))
   @test.eq!(cia[RD_ICR], icr(NONE))
 }
@@ -227,8 +246,7 @@ test "cia1_instantiate" {
 test "cia1_timera" {
   let timer = 3
   let cpu = @cpu.CPU::new()
-  let mem = cpu.mem()
-  let cia = CIA::new(cpu, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_start)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //
@@ -282,8 +300,7 @@ test "cia1_timera" {
 test "cia1_timera_forceload" {
   let timer = 3
   let cpu = @cpu.CPU::new()
-  let mem = cpu.mem()
-  let cia = CIA::new(cpu, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_start)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //
@@ -347,8 +364,7 @@ test "cia1_timera_forceload" {
 test "cia1_timera_oneshot" {
   let timer = 3
   let cpu = @cpu.CPU::new()
-  let mem = cpu.mem()
-  let cia = CIA::new(cpu, cia_mem_upper)
+  let cia = CIA::new(cpu, cia_mem_start)
   cia[WR_TA_HI] = 0
   cia[WR_TA_LO] = timer
   //

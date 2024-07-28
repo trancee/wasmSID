@@ -58,8 +58,8 @@ type CIA
 impl CIA {
   acknowledgeCIAIRQ(Self) -> Unit
   emulate(Self, UInt8) -> Bool
-  new(@cpu.Memory, Int, ~videoStandard : VideoStandard = ..) -> Self
-  reset(Self, VideoStandard) -> Unit
+  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = ..) -> Self
+  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
   writeCIAIRQmask(Self, UInt8) -> Unit
 }
 
@@ -194,8 +194,8 @@ impl Register {
 
 type SID
 impl SID {
-  new(@cpu.Memory, Int, ~model : Model = .., ~channel : Channel = ..) -> Self
-  reset(Self) -> Unit
+  new(@cpu.CPU, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = ..) -> Self
+  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
 type SIDFlags
@@ -257,8 +257,8 @@ type VIC
 impl VIC {
   acknowledgeVICrasterIRQ(Self) -> Unit
   emulate(Self, Int) -> Bool
-  new(@cpu.Memory, Int) -> Self
-  reset(Self) -> Unit
+  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = ..) -> Self
+  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
 type VICregister

@@ -1,10 +1,10 @@
 // https://www.zimmers.net/cbmpics/cbm/c64/
 
-let c64_mem_upper = 0x0000
+let c64_mem_start = 0x0000
 
-let c64_mem_lower = 0xFFFF
+let c64_mem_end = 0xFFFF
 
-let c64_mem_length = 0xFFFF
+let c64_mem_size = 0xFFFF
 
 pub struct C64 {
   baseaddress : UInt16
@@ -75,7 +75,7 @@ pub fn C64::new(
     CIA::new(cpu, 0xDC00, ~videoStandard),
     CIA::new(cpu, 0xDD00, ~videoStandard),
   ]
-  let vic = VIC::new(mem, 0xD000, ~videoStandard)
+  let vic = VIC::new(cpu, 0xD000, ~videoStandard)
   //
   let c64 : C64 = {
     baseaddress,
@@ -196,7 +196,7 @@ pub fn reset(self : C64) -> Unit!String {
 }
 
 pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
-  // println(">> C64::initCPU")
+  println(">> C64::initCPU")
 
   //
   self.cpu.reset(~baseaddress)
@@ -204,12 +204,12 @@ pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
   self.prevNMI = 0
 
   //
-  // println("<< C64::initCPU")
+  println("<< C64::initCPU")
 }
 
 //C64 Reset
 pub fn initC64(self : C64) -> Unit {
-  // println(">> C64::initC64")
+  println(">> C64::initC64")
 
   //
   self.sid.each(fn(sid) { sid.reset(videoStandard=self.videoStandard) })
@@ -243,7 +243,7 @@ pub fn initC64(self : C64) -> Unit {
   self[0x0319] = 0xEA
 
   //
-  // println("<< C64::initC64")
+  println("<< C64::initC64")
 }
 
 pub fn emulate(self : C64) -> (Int, Int) {
@@ -363,7 +363,7 @@ fn interrupts(self : C64) -> Bool {
 }
 
 fn op_get(self : C64, address : UInt16) -> UInt8 {
-  if address < c64_mem_upper || address > c64_mem_lower {
+  if address < c64_mem_start || address > c64_mem_end {
     // self.dump()
     println(
       "C64 $" + address.to_hex() + " → $" + self.mem[address.0].to_hex(),
@@ -375,7 +375,7 @@ fn op_get(self : C64, address : UInt16) -> UInt8 {
 }
 
 fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
-  if address < c64_mem_upper || address > c64_mem_lower {
+  if address < c64_mem_start || address > c64_mem_end {
     // self.dump()
     println("C64 $" + address.to_hex() + " ← $" + value.to_hex())
     abort("out of bounds")

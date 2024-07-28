@@ -32,14 +32,14 @@
 
 // https://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
 
-let vic_mem_upper = 0xD000
+let vic_mem_start = 0xD000
 
-let vic_mem_lower = 0xD3FF
+let vic_mem_end = 0xD3FF
 
-let vic_mem_length = 0x03FF
+let vic_mem_size = 0x03FF
 
 struct VIC {
-  mem : @cpu.Memory
+  mem : Array[Int]
   baseaddress : Int
   //
   mut rasterLines : Int
@@ -48,11 +48,12 @@ struct VIC {
 }
 
 pub fn VIC::new(
-  mem : @cpu.Memory,
+  cpu : @cpu.CPU,
   baseaddress : Int,
   ~videoStandard : VideoStandard = Unknown
 ) -> VIC {
   println("VIC::new")
+  let mem = Array::make(vic_mem_size + 1, 0x00) // @cpu.Memory::new(length=vic_mem_size)
   let vic : VIC = {
     mem,
     baseaddress,
@@ -61,11 +62,18 @@ pub fn VIC::new(
     rasterRowCycles: 0,
     rowCycleCount: 0,
   }
-  mem.hook(
-    vic_mem_upper,
-    vic_mem_lower,
-    fn(address : Int) { vic.r(address).0 },
-    fn(address : Int, value : Int) { vic.w(address, value) },
+  cpu.mem().hook(
+    vic_mem_start,
+    vic_mem_end,
+    mem,
+    fn(address : Int) {
+      println("VIC::r")
+      vic.r(address).0
+    },
+    fn(address : Int, value : Int) {
+      println("VIC::w")
+      vic.w(address, value)
+    },
   )
   vic.reset()
   vic
@@ -73,7 +81,10 @@ pub fn VIC::new(
 
 /// These registers are all intialized to 0 at power-up.
 pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit {
-  self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
+  // self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
+  for i = 0; i < self.mem.length(); i = i + 1 {
+    self.mem[i] = 0x00
+  }
 
   //
   self[ControlRegisterVertical] = 0x8B
@@ -87,7 +98,14 @@ pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit {
   /// memory.  When read, they will always give a value of 255 ($FF).  This
   /// value will not change after writing to them.
 
-  self.mem.reset(offset=0xD02F, length=0x0010, value=0xFF)
+  // self.mem.reset(
+  //   offset=0xD02F - self.baseaddress,
+  //   length=0x0010, // $D02F-$D03F
+  //   value=0xFF,
+  // )
+  for i = 0xD02F - self.baseaddress; i <= 0xD03F - 0xD02F; i = i + 1 {
+    self.mem[i] = 0xFF
+  }
 }
 
 pub fn emulate(self : VIC, cycles : Int) -> Bool {
@@ -128,21 +146,21 @@ pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
 }
 
 fn r(self : VIC, address : UInt16) -> UInt8 {
-  println("VIC $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
-  self.mem[address.0].0
+  // println("VIC $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
+  self.mem[address.0]
 }
 
 fn w(self : VIC, address : UInt16, value : UInt8) -> Unit {
-  println("VIC $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
+  // println("VIC $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
   self.mem[address.0] = value.0
 }
 
 fn op_get(self : VIC, register : VICregister) -> UInt8 {
-  let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
+  let address = vic(register) % 0x40 // (repeated every $40, 64 bytes)
   // VIC-II Register Images
-  if address < vic_mem_upper || address > vic_mem_lower {
+  if self.baseaddress + address < vic_mem_start || self.baseaddress + address > vic_mem_end {
     // self.dump()
-    println("VIC \(register) → $" + self.mem[address].to_hex())
+    println("VIC \(register) → $" + UInt8(self.mem[address]).to_hex())
     abort("out of bounds")
   }
   // println("VIC \(register) → $" + self.mem[address].to_hex())
@@ -151,9 +169,9 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
 }
 
 fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
-  let address = self.baseaddress + vic(register) % 0x40 // (repeated every $40, 64 bytes)
+  let address = vic(register) % 0x40 // (repeated every $40, 64 bytes)
   // VIC-II Register Images
-  if address < vic_mem_upper || address > vic_mem_lower {
+  if self.baseaddress + address < vic_mem_start || self.baseaddress + address > vic_mem_end {
     // self.dump()
     println("VIC \(register) ← $" + value.to_hex())
     abort("out of bounds")

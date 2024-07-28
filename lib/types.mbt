@@ -1,7 +1,8 @@
-fn hex(n : UInt8) -> String {
-  let s = "0123456789ABCDEF"
-  s[(n & 0x0F).0].to_string()
-}
+let s = "0123456789ABCDEF"
+
+// fn hex(n : UInt8) -> String {
+//   s[(n & 0x0F).0].to_string()
+// }
 
 //
 // UInt8
@@ -116,7 +117,8 @@ fn to_signed(self : UInt8) -> Int {
 }
 
 pub fn to_hex(self : UInt8) -> String {
-  hex(self >> 4) + hex(self)
+  s[((self >> 4) & 0x0F).0].to_string() + s[(self & 0x0F).0].to_string()
+  // hex(self >> 4) + hex(self)
 }
 
 fn to_byte(self : UInt8) -> Byte {
@@ -187,7 +189,14 @@ fn has(self : UInt16, bit : UInt16) -> Bool {
 }
 
 pub fn to_hex(self : UInt16) -> String {
-  u8(self >> 8).to_hex() + u8(self & 0xFF).to_hex()
+  // println(
+  //   "U16::to_hex \(self) $" + s[((self >> 12) & 0x0F).0].to_string() + s[((self >>
+  //   8) & 0x0F).0].to_string() + s[((self >> 4) & 0x0F).0].to_string() + s[(self &
+  //   0x0F).0].to_string(),
+  // )
+  // u8(self >> 8).to_hex() + u8(self & 0xFF).to_hex()
+  s[((self >> 12) & 0x0F).0].to_string() + s[((self >> 8) & 0x0F).0].to_string() +
+  s[((self >> 4) & 0x0F).0].to_string() + s[(self & 0x0F).0].to_string()
 }
 
 fn to_byte(self : UInt16) -> Byte {

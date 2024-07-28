@@ -92,14 +92,14 @@
 
 // https://www.oxyron.de/html/registers_sid.html
 
-let sid_mem_upper = 0xD400
+let sid_mem_start = 0xD400
 
-let sid_mem_lower = 0xD7FF
+let sid_mem_end = 0xD7FF
 
-let sid_mem_length = 0x03FF
+let sid_mem_size = 0x03FF
 
 struct SID {
-  mem : @cpu.Memory
+  mem : Array[Int]
   baseaddress : Int
   //
   mut model : Model
@@ -114,18 +114,19 @@ pub fn SID::new(
   ~videoStandard : VideoStandard = Unknown
 ) -> SID {
   println("SID::new")
-  let mem = @cpu.Memory::new(length=sid_mem_length)
+  let mem = Array::make(sid_mem_size + 1, 0x00) // @cpu.Memory::new(length=sid_mem_size)
   let sid : SID = { mem, baseaddress, model, channel }
   cpu.mem().hook(
-    sid_mem_lower,
-    sid_mem_upper,
+    sid_mem_start,
+    sid_mem_end,
+    mem,
     fn(address : Int) {
-      println("SID::r")
-      sid.r(address).0
+      println("SID::r $" + UInt16(address).to_hex())
+      sid.r(address - baseaddress).0
     },
     fn(address : Int, value : Int) {
-      println("SID::w")
-      sid.w(address, value)
+      println("SID::w $" + UInt16(address).to_hex())
+      sid.w(address - baseaddress, value)
     },
   )
   sid.reset()
@@ -134,7 +135,9 @@ pub fn SID::new(
 
 pub fn reset(self : SID, ~videoStandard : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=sid_mem_length)
-  self.mem.reset()
+  for i = 0; i < self.mem.length(); i = i + 1 {
+    self.mem[i] = 0x00
+  }
 
   /// ($D41D-$D41F)
   /// Not Connected
@@ -144,29 +147,36 @@ pub fn reset(self : SID, ~videoStandard : VideoStandard = Unknown) -> Unit {
   /// not used.  Reading them will always return a value of 255 ($FF), and
   /// writing to them will have no effect.
 
-  self.mem.reset(
-    offset=0xD41D - self.baseaddress,
-    length=3, // $D41D-$D41F
-    value=0xFF,
-  )
+  // self.mem.reset(
+  //   offset=0xD41D - self.baseaddress,
+  //   length=0x0003, // $D41D-$D41F
+  //   value=0xFF,
+  // )
+  for i = 0xD41D - self.baseaddress; i <= 0xD41D - 0xD41F; i = i + 1 {
+    self.mem[i] = 0xFF
+  }
 }
 
 fn r(self : SID, address : UInt16) -> UInt8 {
-  println("SID $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
-  self.mem[address.0].0
+  println(
+    "SID $" + address.to_hex() + " → $" + UInt8(self.mem[address.0]).to_hex(),
+  )
+  self.mem[address.0]
 }
 
 fn w(self : SID, address : UInt16, value : UInt8) -> Unit {
-  println("SID $" + address.to_hex() + " ← $" + self.mem[address.0].to_hex())
+  println(
+    "SID $" + address.to_hex() + " ← $" + UInt8(self.mem[address.0]).to_hex(),
+  )
   self.mem[address.0] = value.0
 }
 
 fn op_get(self : SID, register : SIDregister) -> UInt8 {
-  let address = self.baseaddress + sid(register) % 0x20 // (repeated every $20, 32 bytes)
+  let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
   /// SID Register Images
-  if address < sid_mem_upper || address > sid_mem_lower {
+  if self.baseaddress + address < sid_mem_start || self.baseaddress + address > sid_mem_end {
     // self.dump()
-    println("SID \(register) → $" + self.mem[address].to_hex())
+    println("SID \(register) → $" + UInt8(self.mem[address]).to_hex())
     abort("out of bounds")
   }
   // println("SID \(register) → $" + self.mem[address].to_hex())
@@ -175,9 +185,9 @@ fn op_get(self : SID, register : SIDregister) -> UInt8 {
 }
 
 fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
-  let address = self.baseaddress + sid(register) % 0x20 // (repeated every $20, 32 bytes)
+  let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
   /// SID Register Images
-  if address < sid_mem_upper || address > sid_mem_lower {
+  if self.baseaddress + address < sid_mem_start || self.baseaddress + address > sid_mem_end {
     // self.dump()
     println("SID \(register) ← $" + value.to_hex())
     abort("out of bounds")
