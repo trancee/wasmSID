@@ -23,7 +23,7 @@ test "BEQCanBranchForwardsWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
@@ -49,7 +49,7 @@ test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
@@ -75,7 +75,7 @@ test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BEQCanBranchBackwardsWhenZeroIsSet" {
@@ -101,7 +101,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
@@ -127,7 +127,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BNECanBranchForwardsWhenZeroIsNotSet" {
@@ -153,7 +153,7 @@ test "BNECanBranchForwardsWhenZeroIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
@@ -179,7 +179,7 @@ test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
@@ -205,7 +205,7 @@ test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
@@ -231,7 +231,7 @@ test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
     expectV: false,
     expectN: true,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
@@ -257,7 +257,7 @@ test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
@@ -283,7 +283,7 @@ test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
     expectV: true,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
@@ -309,7 +309,7 @@ test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ(t)!
+  testBEQ!(t)
 }
 
 // Test
@@ -337,7 +337,7 @@ struct BEQTestData {
   expectN : Bool
 }
 
-fn testBEQ(t : BEQTestData) -> Unit!String {
+fn testBEQ(t : BEQTestData) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
@@ -366,25 +366,25 @@ fn testBEQ(t : BEQTestData) -> Unit!String {
     cycles += cpu.step()
 
     //
-    @test.eq(cycles, t.expectCycles)!
+    @test.eq!(cycles, t.expectCycles)
   } else {
     cpu.write(t.pc + 0, t.ins.to_int())
     cpu.write(t.pc + 1, t.op)
 
     //
-    @test.eq(cpu.step(), t.expectCycles)!
+    @test.eq!(cpu.step(), t.expectCycles)
   }
 
   //
-  @test.eq(cpu.pc, t.expectPC)!
+  @test.eq!(cpu.pc, t.expectPC)
 
   //
-  @test.eq(cpu.flags[C], t.expectC)!
-  @test.eq(cpu.flags[Z], t.expectZ)!
-  @test.eq(cpu.flags[I], i)!
-  @test.eq(cpu.flags[D], d)!
-  @test.eq(cpu.flags[B], b)!
-  @test.eq(cpu.flags[U], u)!
-  @test.eq(cpu.flags[V], t.expectV)!
-  @test.eq(cpu.flags[N], t.expectN)!
+  @test.eq!(cpu.flags[C], t.expectC)
+  @test.eq!(cpu.flags[Z], t.expectZ)
+  @test.eq!(cpu.flags[I], i)
+  @test.eq!(cpu.flags[D], d)
+  @test.eq!(cpu.flags[B], b)
+  @test.eq!(cpu.flags[U], u)
+  @test.eq!(cpu.flags[V], t.expectV)
+  @test.eq!(cpu.flags[N], t.expectN)
 }

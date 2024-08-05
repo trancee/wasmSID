@@ -12,24 +12,20 @@ fn Model::from_int(value : Int) -> Model!String {
     0b01 => MOS6581
     0b10 => MOS8580
     0b11 => Both
-    _ => {
-      raise "unknown SID model"
-    }
+    _ => raise "unknown SID model"
   }
 }
 
 fn to_int(self : Model) -> Int!String {
-  self[self]!
+  match self {
+    MOS6581 => 6581
+    MOS8580 => 8580
+    _ => raise "unknown SID model"
+  }
 }
 
 fn op_get(self : Model, value : Model) -> Int!String {
-  match value {
-    MOS6581 => 6581
-    MOS8580 => 8580
-    _ => {
-      raise "unknown SID model"
-    }
-  }
+  value.to_int!()
 }
 
 //1:left, 2:right, 3:both(middle)
@@ -46,23 +42,19 @@ fn Channel::from_int(value : Int) -> Channel!String {
     1 => Left
     2 => Right
     3 => Both
-    _ => {
-      raise "unknown channel"
-    }
+    _ => raise "unknown channel"
   }
 }
 
 fn to_int(self : Channel) -> Int!String {
-  self[self]!
-}
-
-fn op_get(self : Channel, value : Channel) -> Int!String {
-  match value {
+  match self {
     Left => 1
     Right => 2
     Both => 3
-    _ => {
-      raise "unknown channel"
-    }
+    _ => raise "unknown channel"
   }
+}
+
+fn op_get(self : Channel, value : Channel) -> Int!String {
+  value.to_int!()
 }

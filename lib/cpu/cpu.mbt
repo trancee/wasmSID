@@ -14,7 +14,7 @@ struct CPU {
 pub fn CPU::new(
   ~pc : Int = 0x0000,
   ~mem : Memory? = None,
-  ~data : Array[Int] = [],
+  ~data : FixedArray[Int] = [],
   ~offset : Int = 0,
   ~length : Int = data.length(),
   ~decimal_mode : Bool = true
@@ -102,7 +102,7 @@ pub fn register(self : CPU, register : Register, value : Int) -> Unit {
 pub fn load(
   self : CPU,
   addr : UInt16,
-  data : Array[Int],
+  data : FixedArray[Int],
   ~length : Int = data.length()
 ) -> Unit {
   // println(

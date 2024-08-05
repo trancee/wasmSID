@@ -6,7 +6,7 @@ pub struct NES {
 
 pub fn NES::new(
   ~baseaddress : Int = 0x0000,
-  ~data : Array[Int] = [],
+  ~data : FixedArray[Int] = [],
   ~offset : Int = 0x0000,
   ~length : Int = data.length()
 ) -> NES {
@@ -19,7 +19,7 @@ pub fn NES::new(
 
 pub fn load(
   self : NES,
-  data : Array[Int],
+  data : FixedArray[Int],
   ~offset : Int = 0,
   ~length : Int = data.length()
 ) -> Unit {

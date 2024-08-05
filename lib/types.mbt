@@ -8,7 +8,7 @@ let s = "0123456789ABCDEF"
 // UInt8
 //
 
-pub type UInt8 Int derive(Show, Eq, Compare)
+pub type UInt8 Int derive(Show, Eq, Compare, Default)
 
 trait U8 {
   u8(Self) -> UInt8
@@ -34,7 +34,7 @@ trait U8 {
 //   }
 // }
 
-fn u8(self : UInt16) -> UInt16 {
+fn u8(self : UInt16) -> UInt8 {
   self.0 & 0xFF
 }
 
@@ -44,6 +44,18 @@ fn op_add(self : UInt8, other : UInt8) -> UInt8 {
 
 fn op_sub(self : UInt8, other : UInt8) -> UInt8 {
   self.0 - other.0 // FIXME: Underflow
+}
+
+fn op_mul(self : UInt8, other : UInt8) -> UInt8 {
+  self.0 * other.0 // FIXME: Overflow
+}
+
+fn op_div(self : UInt8, other : UInt8) -> UInt8 {
+  self.0 / other.0 // FIXME: Underflow
+}
+
+fn op_mod(self : UInt8, other : UInt8) -> UInt8 {
+  self.0 % other.0
 }
 
 fn flip(self : UInt8, other : UInt8) -> UInt8 {
@@ -81,6 +93,10 @@ fn asr(self : UInt8, bit : UInt8) -> UInt8 {
 }
 
 fn bit(self : UInt8, bit : UInt8) -> Bool {
+  if bit >= 8 {
+    println("UInt8::bit out of bounds")
+    abort("out of bounds")
+  }
   ((self >> bit) & 1) == 1
 }
 
@@ -133,7 +149,7 @@ fn to_int(self : UInt8) -> Int {
 // UInt16
 //
 
-pub type UInt16 Int derive(Show, Eq, Compare)
+pub type UInt16 Int derive(Show, Eq, Compare, Default)
 
 trait U16 {
   u16(Self) -> UInt16
@@ -144,7 +160,7 @@ trait U16 {
 // }
 
 fn u16(self : UInt8) -> UInt16 {
-  self.0 & 0xFFFF
+  self.0 & 0xFF
 }
 
 // fn to_u16[T : U16](t : T) -> UInt16 {
@@ -159,6 +175,14 @@ fn op_sub(self : UInt16, other : UInt16) -> UInt16 {
   self.0 - other.0 |> u16 // handle underflow
 }
 
+fn op_mul(self : UInt16, other : UInt16) -> UInt16 {
+  self.0 * other.0 // handle overflow
+}
+
+fn op_div(self : UInt16, other : UInt16) -> UInt16 {
+  self.0 / other.0 // handle underflow
+}
+
 // bitwise and
 fn land(self : UInt16, other : UInt16) -> UInt16 {
   self.0 & other.0
@@ -167,6 +191,11 @@ fn land(self : UInt16, other : UInt16) -> UInt16 {
 // bitwise or
 fn lor(self : UInt16, bit : UInt16) -> UInt16 {
   self.0 | bit.0
+}
+
+// bitwise xor
+fn lxor(self : UInt16, bit : UInt16) -> UInt16 {
+  self.0 ^ bit.0
 }
 
 // logic shift left

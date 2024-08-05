@@ -73,7 +73,7 @@
 struct Hook {
   start : Int
   end : Int
-  mem : Array[Int]
+  mem : FixedArray[Int]
   r : (Int) -> Int
   w : (Int, Int) -> Unit
 }
@@ -81,7 +81,7 @@ struct Hook {
 fn Hook::new(
   start : Int,
   end : Int,
-  mem : Array[Int],
+  mem : FixedArray[Int],
   r : (Int) -> Int,
   w : (Int, Int) -> Unit
 ) -> Hook {
@@ -89,20 +89,20 @@ fn Hook::new(
 }
 
 struct Memory {
-  mut mem : Array[UInt8]
+  mut mem : FixedArray[UInt8]
   //
   hooks : Array[Hook]
 }
 
 pub fn Memory::new(~length : Int = 0xFFFF, ~value : Int = 0x00) -> Memory {
-  { mem: Array::make(length + 1, value), hooks: [] }
+  { mem: FixedArray::make(length + 1, value), hooks: [] }
 }
 
 pub fn hook(
   self : Memory,
   start : Int,
   end : Int,
-  mem : Array[Int],
+  mem : FixedArray[Int],
   r : (Int) -> Int,
   w : (Int, Int) -> Unit
 ) -> Unit {
@@ -110,7 +110,7 @@ pub fn hook(
 }
 
 pub fn clear(self : Memory) -> Unit {
-  self.mem = Array::make(self.mem.length(), 0x00)
+  self.mem = FixedArray::make(self.mem.length(), 0x00)
 }
 
 pub fn reset(

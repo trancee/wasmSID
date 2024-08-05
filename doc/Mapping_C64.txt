@@ -6939,7 +6939,7 @@ Bits 1-3:  Text character dot-data base address within VIC-II address
 Bits 4-7:  Video matrix base address within VIC-II address space
 
 This register affects virtually all graphics operations.  It
-determines the vase address of two very important data areas, the
+determines the base address of two very important data areas, the
 Video Matrix, and the Character Dot-Data area.
 
 Bits 1-3.  These bits are used to set the location of the Character
@@ -6947,7 +6947,7 @@ Dot-Data area.  This area is where the data is stored (for more
 information on character shape data, see the alternate entry for
 location 53248 ($D000), the Character Generator ROM).
 
-Bits 1-3 can represent any even number from 0 to 14.  That numer
+Bits 1-3 can represent any even number from 0 to 14.  That number
 stands for the even 1K offset of the character data area from the
 beginning of VIC-II memory.  For example, if these bits are all set to
 0, it means that the character memory occupies the first 2K of VIC-II
@@ -7501,7 +7501,7 @@ Location Range: 53280-53294 ($D020-$D02E)
 VIC-II Color Register
 
 Although these color registers are used for various purposes, all of
-them have one thing in common.  Like the Color RAM Nybbles, only the
+them have one thing in common.  Like the Color RAM nybbles, only the
 lower four bits are connected.  Therefore, when reading these
 registers, you must mask out the upper four bits (that is,
 BORDERCOLOR=PEEK(53280)AND15) in order to get a true reading.
@@ -11803,7 +11803,7 @@ Row
 ::Color Codes::
 :::::::::::::::
 
-Value to POKE for Each Color
+Value to POKE for each color
 
              Low nybble    High nybble   Select multicolor
 Color        color value   color value   color value
@@ -11825,7 +11825,7 @@ Light Green  13            208           --
 Light Blue   14            224           --
 Light Gray   15            240           --
 
-Where To POKE Color Values For Each Mode
+Where to POKE color values for each mode
 
                  Bit or
 Mode *           bit-pair   Location        Color value

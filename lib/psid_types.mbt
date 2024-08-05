@@ -55,9 +55,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version!String {
       0x02 => RSIDv2
       0x03 => RSIDv3
       0x04 => RSIDv4
-      _ => {
-        raise "unknown version"
-      }
+      _ => raise "unknown version"
     }
   } else {
     match value.0 {
@@ -66,9 +64,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version!String {
       0x02 => PSIDv2
       0x03 => PSIDv3
       0x04 => PSIDv4
-      _ => {
-        raise "unknown version"
-      }
+      _ => raise "unknown version"
     }
   }
 }
@@ -105,17 +101,13 @@ fn Mode::from_int(value : Int, realSID : Bool) -> Mode!String {
     match value {
       0x00 => C64
       0x01 => Digi
-      _ => {
-        raise "unknown mode"
-      }
+      _ => raise "unknown mode"
     }
   } else {
     match value {
       0x00 => C64
       0x01 => BASIC
-      _ => {
-        raise "unknown mode"
-      }
+      _ => raise "unknown mode"
     }
   }
 }
@@ -130,13 +122,13 @@ struct SIDFlags {
 } derive(Show, Eq)
 
 fn SIDFlags::default() -> SIDFlags!String {
-  SIDFlags::from_int(0x0000)!
+  SIDFlags::from_int!(0x0000)
 }
 
 fn SIDFlags::from_int(value : UInt16) -> SIDFlags!String {
   {
-    channel: Channel::from_int((value.0 >> 6) & 0b11)!,
-    model: Model::from_int((value.0 >> 4) & 0b11)!,
+    channel: Channel::from_int!((value.0 >> 6) & 0b11),
+    model: Model::from_int!((value.0 >> 4) & 0b11),
   }
 }
 
@@ -157,9 +149,9 @@ fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags!String {
     mode: Mode::from_int!((value.0 >> 1) & 0b01, realSID),
     videoStandard: VideoStandard::from_int!((value.0 >> 2) & 0b11),
     model: [
-      Model::from_int((value.0 >> 4) & 0b11)!,
-      Model::from_int((value.0 >> 6) & 0b11)!,
-      Model::from_int((value.0 >> 8) & 0b11)!,
+      Model::from_int!((value.0 >> 4) & 0b11),
+      Model::from_int!((value.0 >> 6) & 0b11),
+      Model::from_int!((value.0 >> 8) & 0b11),
     ],
   }
 }

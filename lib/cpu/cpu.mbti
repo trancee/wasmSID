@@ -8,9 +8,9 @@ impl CPU {
   get_flags(Self) -> UInt8
   has_interrupt(Self) -> Bool
   irq(Self, ~pc : Int? = ..) -> Unit
-  load(Self, UInt16, Array[Int], ~length : Int = ..) -> Unit
+  load(Self, UInt16, FixedArray[Int], ~length : Int = ..) -> Unit
   mem(Self) -> Memory
-  new(~pc : Int = .., ~mem : Memory? = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = ..) -> Self
+  new(~pc : Int = .., ~mem : Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = ..) -> Self
   nmi(Self, ~pc : Int? = ..) -> Unit
   pc(Self) -> Int
   push(Self, UInt8) -> Unit
@@ -46,7 +46,6 @@ type Flags
 impl Flags {
   get(Self) -> UInt8
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   set(Self, UInt8) -> Unit
   to_string(Self) -> String
 }
@@ -58,7 +57,7 @@ type Instruction
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  hook(Self, Int, Int, Array[Int], (Int) -> Int, (Int, Int) -> Unit) -> Unit
+  hook(Self, Int, Int, FixedArray[Int], (Int) -> Int, (Int, Int) -> Unit) -> Unit
   new(~length : Int = .., ~value : Int = ..) -> Self
   op_get(Self, Int) -> UInt8
   op_set(Self, Int, Int) -> Unit
@@ -84,7 +83,6 @@ pub type UInt16 Int
 impl UInt16 {
   compare(Self, Self) -> Int
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_hex(Self) -> String
   to_string(Self) -> String
 }
@@ -93,7 +91,6 @@ pub type UInt8 Int
 impl UInt8 {
   compare(Self, Self) -> Int
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_hex(Self) -> String
   to_string(Self) -> String
 }
@@ -103,4 +100,9 @@ type Vector
 // Traits
 
 // Extension Methods
+impl Show for Flags
+
+impl Show for UInt16
+
+impl Show for UInt8
 

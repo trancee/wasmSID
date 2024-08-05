@@ -1,162 +1,411 @@
 /// MOS 6566 VIDEO INTERFACE CONTROLLER (VIC)
 
+/// VIC Interrupt Flag Register
+///
+/// The VIC-II chip is capable of generating a maskable request (IRQ) when
+/// certain conditions relating to the video display are fulfilled.
+struct VICInterruptFlag {
+  /// Bit 0:  Flag:  Is the Raster Compare a possible source of an IRQ? (1=yes)
+  mut rasterCompare : Bool
+  /// Bit 1:  Flag:  Is a collision between a sprite and the normal graphics display a possible source of an IRQ?  (1=yes)
+  mut spriteCollide : Bool
+  /// Bit 2:  Flag:  Is a collision between two sprites a possible source of an IRQ?  (1=yes)
+  mut spritesCollide : Bool
+  /// Bit 3:  Flag:  Is the light pen trigger a possible source of an IRQ? (1=yes)
+  mut lightPenTrigger : Bool
+  /// Bits 4-6:  Not used
+  /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
+  mut vicIRQ : Bool
+} derive(Default)
+
+/// IRQ Mask Register
+///
+/// This register is used to enable an IRQ request to occur when one of
+/// the VIC-II chip interrupt conditions is met.
+struct IRQMask {
+  /// Bit 0:  Enable Raster Compare IRQ (1=interrupt enabled)
+  mut rasterCompare : Bool
+  /// Bit 1:  Enable IRQ to occure when sprite collides with display of normal graphics data (1=interrupt enabled)
+  mut spriteCollide : Bool
+  /// Bit 2:  Enable IRQ to occur when two sprites collide (1=interrupt enabled)
+  mut spritesCollide : Bool
+  /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
+  mut lightPenTrigger : Bool
+  /// Bits 4-7:  Not used
+} derive(Default)
+
+struct ControlRegister {
+  /// SCROLY
+  mut rowDisplay : Bool
+  mut blankScreen : Bool
+  mut bitmapMode : Bool
+  mut extendedColorMode : Bool
+
+  /// SCROLX
+  mut columnDisplay : Bool
+  mut multicolorMode : Bool
+  mut videoChipReset : Bool
+} derive(Default)
+
+struct Coordinate {
+  mut x : Int
+  mut y : Int
+} derive(Default)
+
+struct VICRegister {
+  spritePosition : FixedArray[Coordinate]
+  spriteEnable : FixedArray[Bool]
+  spriteExpandX : FixedArray[Bool]
+  spriteExpandY : FixedArray[Bool]
+  spritePriority : FixedArray[Bool]
+  spriteMode : FixedArray[Bool]
+  spriteCollide : FixedArray[Bool]
+  spritesCollide : FixedArray[Bool]
+
+  ///
+  mut borderColor : Color
+  backgroundColor : FixedArray[Color]
+  spriteMulticolor : FixedArray[Color]
+  spriteColor : FixedArray[Color]
+
+  ///
+  scroll : Coordinate
+
+  ///
+  controlRegister : ControlRegister
+  interruptFlag : VICInterruptFlag
+  irqMask : IRQMask
+
+  ///
+  mut rasterScanLine : Int
+
+  ///
+  lightPen : Coordinate
+
+  ///
+  mut characterDataArea : Int
+  mut videoMatrixArea : Int
+}
+
+fn VICRegister::default() -> VICRegister {
+  {
+    spritePosition: FixedArray::make(8, Coordinate::default()),
+    /// In order for any sprite to be displayed, the corresponding bit in this
+    /// register must be set to 1 (the default for this location is 0).
+    spriteEnable: FixedArray::make(8, false),
+    spriteExpandX: FixedArray::make(8, false),
+    spriteExpandY: FixedArray::make(8, false),
+    spritePriority: FixedArray::make(8, false),
+    spriteMode: FixedArray::make(8, false),
+    spriteCollide: FixedArray::make(8, false),
+    spritesCollide: FixedArray::make(8, false),
+
+    ///
+    borderColor: LightBlue,
+    backgroundColor: [Blue, White, Red, Cyan],
+    spriteMulticolor: [Purple, Black],
+    spriteColor: [White, Red, Cyan, Purple, Green, Blue, Yellow, MediumGray],
+
+    ///
+    scroll: Coordinate::default(),
+
+    ///
+    controlRegister: ControlRegister::default(),
+    interruptFlag: VICInterruptFlag::default(),
+    irqMask: IRQMask::default(),
+
+    ///
+    rasterScanLine: Int::default(),
+
+    ///
+    lightPen: Coordinate::default(),
+
+    ///
+    characterDataArea: Int::default(),
+    videoMatrixArea: Int::default(),
+  }
+}
+
 enum VICregister {
-  Sprite0XPos
-  Sprite0YPos
-  Sprite1XPos
-  Sprite1YPos
-  Sprite2XPos
-  Sprite2YPos
-  Sprite3XPos
-  Sprite3YPos
-  Sprite4XPos
-  Sprite4YPos
-  Sprite5XPos
-  Sprite5YPos
-  Sprite6XPos
-  Sprite6YPos
-  Sprite7XPos
-  Sprite7YPos
-  SpritesXPos
-  //
-  ControlRegisterVertical
-  //
-  ///  RASTER REGISTER
-  ///
-  ///    The raster register is found in the VIC-II chip at location 53266
-  ///  ($D012). The raster register is a dual purpose register. When you read
-  ///  this register it returns the lower 8 bits of the current raster position.
-  ///  The raster position of the most significant bit is in register location
-  ///  53265 ($D011). You use the raster register to set up timing changes in
-  ///  your display so that you can get rid of screen flicker. The changes on
-  ///  your screen should be made when the raster is not in the visible display
-  ///  area, which is when your dot positions fall between 51 and 251.
-  ///    When the raster register is written to (including the MSB) the number
-  ///  written to is saved for use with the raster compare function. When the
-  ///  actual raster value becomes the same as the number written to the raster
-  ///  register, a bit in the VIC-II chip interrupt register 53273 ($D019) is
-  ///  turned ON by setting it to 1.
-  ///
-  ///  +-----------------------------------------------------------------------+
-  ///  | NOTE: If the proper interrupt bit is enabled (turned on), an interrupt|
-  ///  | (IRQ) will occur.                                                     |
-  ///  +-----------------------------------------------------------------------+
-  ///
-  ReadRasterWriteRasterValue
-  LightPenLatchXPos
-  LightPenLatchYPos
-  SpriteDisplayEnable
-  //
-  ControlRegisterHorizontal
-  //
-  SpritesExpand2xVertical
-  //
-  MemoryControlRegister
-  //
-  ///  INTERRUPT STATUS REGISTER
-  ///
-  ///    The interrupt status register shows the current status of any interrupt
-  ///  source. The current status of bit 2 of the interrupt register will be a 1
-  ///  when two sprites hit each other. The same is true, in a corresponding 1
-  ///  to 1 relationship, for bits 0-3 listed in the chart below. Bit 7 is also
-  ///  set with a 1, whenever an interrupt occurs.
-  ///    The interrupt status register is located at 53273 ($D019) and is as
-  ///  follows:
-  ///
-  ///    LATCH  BIT#             DESCRIPTION
-  ///  -------------------------------------------------------------------------
-  ///    IRST    0   Set when current raster count = stored raster count
-  ///    IMDC    1   Set by SPRITE-DATA collision (1st one only, until reset)
-  ///    IMMC    2   Set by SPRITE-SPRITE collision (1st one only, until reset)
-  ///     ILP    3   Set by negative transition of light pen (1 per frame)
-  ///     IRQ    7   Set by latch set and enabled
-  ///  -------------------------------------------------------------------------
-  ///
-  InterruptFlagRegister
-  //
-  IRQMaskRegister
-  SpriteBackgroundDisplayPriority
-  SpritesMultiColorModeSelect
-  SpritesExpand2xHorizontal
-  //
-  SpriteSpriteCollisionDetect
-  SpriteBackgroundCollisionDetect
-  BorderColor
-  BackgroundColor0
-  BackgroundColor1
-  BackgroundColor2
-  BackgroundColor3
-  SpriteMultiColorRegister0
-  SpriteMultiColorRegister1
-  //
-  Sprite0Color
-  Sprite1Color
-  Sprite2Color
-  Sprite3Color
-  Sprite4Color
-  Sprite5Color
-  Sprite6Color
-  Sprite7Color
+  /// Location Range: 53248-53264 ($D000-$D010)
+  /// Sprite Horizontal and Vertical Position Registers
+
+  /// $00 - $01
+  /// Sprite 0 Horizontal Position
+  SP0X
+  /// Sprite 0 Vertical Position
+  SP0Y
+
+  /// $02 - $03
+  /// Sprite 1 Horizontal Position
+  SP1X
+  /// Sprite 1 Vertical Position
+  SP1Y
+
+  /// $04 - $05
+  /// Sprite 2 Horizontal Position
+  SP2X
+  /// Sprite 2 Vertical Position
+  SP2Y
+
+  /// $06 - $07
+  /// Sprite 3 Horizontal Position
+  SP3X
+  /// Sprite 3 Vertical Position
+  SP3Y
+
+  /// $08 - $09
+  /// Sprite 4 Horizontal Position
+  SP4X
+  /// Sprite 4 Vertical Position
+  SP4Y
+
+  /// $0A - $0B
+  /// Sprite 5 Horizontal Position
+  SP5X
+  /// Sprite 5 Vertical Position
+  SP5Y
+
+  /// $0C - $0D
+  /// Sprite 6 Horizontal Position
+  SP6X
+  /// Sprite 6 Vertical Position
+  SP6Y
+
+  /// $0E - $0F
+  /// Sprite 7 Horizontal Position
+  SP7X
+  /// Sprite 7 Vertical Position
+  SP7Y
+
+  /// $10
+  /// Most Significant Bits of Sprites 0-7 Horizontal Position
+  MSIGX
+
+  /// $11
+  /// Vertical Fine Scrolling and Control Register
+  SCROLY
+
+  /// $12
+  /// Read Current Raster Scan Line/Write Line to Compare for Raster IRQ
+  RASTER
+
+  /// Location Range: 53267-53268 ($D013-$D014)
+  /// Light Pen Registers
+
+  /// $13 - $14
+  /// Light Pen Horizontal Position
+  LPENX
+  /// Light Pen Vertical Position
+  LPENY
+
+  /// $15
+  /// Sprite Enable Register
+  SPENA
+
+  /// $16
+  /// Horizontal Fine Scrolling and Control Register
+  SCROLX
+
+  /// $17
+  /// Sprite Vertical Expansion Register
+  YXPAND
+
+  /// $18
+  /// VIC-II Chip Memory Control Register
+  VMCSB
+
+  /// $19
+  /// VIC Interrupt Flag Register
+  VICIRQ
+  /// $1A
+  /// IRQ Mask Register
+  IRQMASK
+
+  /// $1B
+  /// Sprite to Foreground Display Priority Register
+  SPBGPR
+  /// $1C
+  /// Sprite Multicolor Registers
+  SPMC
+
+  /// $1D
+  /// Sprite Horizontal Expansion Register
+  XXPAND
+
+  /// Location Range: 53278-53279 ($D01E-$D01F)
+  /// Sprite Collision Detection Registers
+
+  /// $1E
+  /// Sprite to Sprite Collision Register
+  SPSPCL
+  /// $1F
+  /// Sprite to Foreground Collision Register
+  SPBGCL
+
+  /// Location Range: 53280-53294 ($D020-$D02E)
+  /// VIC-II Color Register
+
+  /// $20
+  /// Border Color Register
+  EXTCOL
+  /// Background Color 0
+  BGCOL0
+  /// Background Color 1
+  BGCOL1
+  /// Background Color 2
+  BGCOL2
+  /// Background Color 3
+  BGCOL3
+  /// Sprite Multicolor Register 0
+  SPMC0
+  /// Sprite Multicolor Register 1
+  SPMC1
+
+  /// Location Range: 53287-53294 ($D027-$D02E)
+  /// Sprite Color Registers
+
+  /// Sprite 0 Color Register (the default color value is 1, white)
+  SP0COL
+  /// Sprite 1 Color Register (the default color value is 2, red)
+  SP1COL
+  /// Sprite 2 Color Register (the default color value is 3, cyan)
+  SP2COL
+  /// Sprite 3 Color Register (the default color value is 4, purple)
+  SP3COL
+  /// Sprite 4 Color Register (the default color value is 5, green)
+  SP4COL
+  /// Sprite 5 Color Register (the default color value is 6, blue)
+  SP5COL
+  /// Sprite 6 Color Register (the default color value is 7, yellow)
+  SP6COL
+  /// Sprite 7 Color Register (the default color value is 12, medium gray)
+  SP7COL
 } derive(Show, Compare, Eq)
 
 fn vic(register : VICregister) -> Int {
   match register {
-    Sprite0XPos => 0x00 /// Sprite 0 X Pos
-    Sprite0YPos => 0x01 /// Sprite 0 Y Pos
-    Sprite1XPos => 0x02 /// Sprite 1 X Pos
-    Sprite1YPos => 0x03 /// Sprite 1 Y Pos
-    Sprite2XPos => 0x04 /// Sprite 2 X Pos
-    Sprite2YPos => 0x05 /// Sprite 2 Y Pos
-    Sprite3XPos => 0x06 /// Sprite 3 X Pos
-    Sprite3YPos => 0x07 /// Sprite 3 Y Pos
-    Sprite4XPos => 0x08 /// Sprite 4 X Pos
-    Sprite4YPos => 0x09 /// Sprite 4 Y Pos
-    Sprite5XPos => 0x0A /// Sprite 5 X Pos
-    Sprite5YPos => 0x0B /// Sprite 5 Y Pos
-    Sprite6XPos => 0x0C /// Sprite 6 X Pos
-    Sprite6YPos => 0x0D /// Sprite 6 Y Pos
-    Sprite7XPos => 0x0E /// Sprite 7 X Pos
-    Sprite7YPos => 0x0F /// Sprite 7 Y Pos
-    SpritesXPos => 0x10 /// Sprites 0-7 X Pos (msb of X coord.)
+    SP0X => 0x00
+    SP0Y => 0x01
+    SP1X => 0x02
+    SP1Y => 0x03
+    SP2X => 0x04
+    SP2Y => 0x05
+    SP3X => 0x06
+    SP3Y => 0x07
+    SP4X => 0x08
+    SP4Y => 0x09
+    SP5X => 0x0A
+    SP5Y => 0x0B
+    SP6X => 0x0C
+    SP6Y => 0x0D
+    SP7X => 0x0E
+    SP7Y => 0x0F
+    MSIGX => 0x10
     //
-    ControlRegisterVertical => 0x11 /// VIC Control Register
+    SCROLY => 0x11
+    RASTER => 0x12
     //
-    ReadRasterWriteRasterValue => 0x12 /// Read Raster / Write Raster Value for Compare IRQ
-    LightPenLatchXPos => 0x13 /// Light-Pen Latch X Pos
-    LightPenLatchYPos => 0x14 /// Light-Pen Latch Y Pos
-    SpriteDisplayEnable => 0x15 /// Sprite display Enable: 1 = Enable
+    LPENX => 0x13
+    LPENY => 0x14
+    SPENA => 0x15
     //
-    ControlRegisterHorizontal => 0x16 /// VIC Control Register
+    SCROLX => 0x16
+    YXPAND => 0x17
     //
-    SpritesExpand2xVertical => 0x17 /// Sprites 0-7 Expand 2x Vertical (Y)
+    VMCSB => 0x18
     //
-    MemoryControlRegister => 0x18 /// VIC Memory Control Register
+    VICIRQ => 0x19
+    IRQMASK => 0x1A
     //
-    InterruptFlagRegister => 0x19 /// VIC Interrupt Flag Register (Bit = 1: IRQ	Occurred)
+    SPBGPR => 0x1B
+    SPMC => 0x1C
+    XXPAND => 0x1D
     //
-    IRQMaskRegister => 0x1A /// IRQ Mask Register: 1 = Interrupt Enabled
-    SpriteBackgroundDisplayPriority => 0x1B ///	Sprite to Background Display Priority: 1 = Sprite
-    SpritesMultiColorModeSelect => 0x1C ///	Sprites 0-7 Multi-Color Mode Select: 1 = M.C.M.
-    SpritesExpand2xHorizontal => 0x1D ///	Sprites 0-7 Expand 2x Horizontal (X)
+    SPSPCL => 0x1E
+    SPBGCL => 0x1F
     //
-    SpriteSpriteCollisionDetect => 0x1E /// Sprite to Sprite Collision Detect
-    SpriteBackgroundCollisionDetect => 0x1F ///	Sprite to Background Collision Detect
-    BorderColor => 0x20 /// Border Color
-    BackgroundColor0 => 0x21 /// Background Color 0
-    BackgroundColor1 => 0x22 /// Background Color 1
-    BackgroundColor2 => 0x23 /// Background Color 2
-    BackgroundColor3 => 0x24 /// Background Color 3
-    SpriteMultiColorRegister0 => 0x25 /// Sprite Multi-Color Register 0
-    SpriteMultiColorRegister1 => 0x26 /// Sprite Multi-Color Register 1
+    EXTCOL => 0x20
+    BGCOL0 => 0x21
+    BGCOL1 => 0x22
+    BGCOL2 => 0x23
+    BGCOL3 => 0x24
+    SPMC0 => 0x25
+    SPMC1 => 0x26
     //
-    Sprite0Color => 0x27 /// Sprite 0 Color
-    Sprite1Color => 0x28 /// Sprite 1 Color
-    Sprite2Color => 0x29 /// Sprite 2 Color
-    Sprite3Color => 0x2A /// Sprite 3 Color
-    Sprite4Color => 0x2B /// Sprite 4 Color
-    Sprite5Color => 0x2C /// Sprite 5 Color
-    Sprite6Color => 0x2D /// Sprite 6 Color
-    Sprite7Color => 0x2E /// Sprite 7 Color
+    SP0COL => 0x27
+    SP1COL => 0x28
+    SP2COL => 0x29
+    SP3COL => 0x2A
+    SP4COL => 0x2B
+    SP5COL => 0x2C
+    SP6COL => 0x2D
+    SP7COL => 0x2E
+  }
+}
+
+fn VICregister::from_int(value : Int) -> VICregister!String {
+  match value {
+    0x00 => SP0X
+    0x01 => SP0Y
+    0x02 => SP1X
+    0x03 => SP1Y
+    0x04 => SP2X
+    0x05 => SP2Y
+    0x06 => SP3X
+    0x07 => SP3Y
+    0x08 => SP4X
+    0x09 => SP4Y
+    0x0A => SP5X
+    0x0B => SP5Y
+    0x0C => SP6X
+    0x0D => SP6Y
+    0x0E => SP7X
+    0x0F => SP7Y
+    0x10 => MSIGX
+
+    //
+    0x11 => SCROLY
+    0x12 => RASTER
+    //
+    0x13 => LPENX
+    0x14 => LPENY
+    0x15 => SPENA
+    //
+    0x16 => SCROLX
+    0x17 => YXPAND
+    //
+    0x18 => VMCSB
+    //
+    0x19 => VICIRQ
+    0x1A => IRQMASK
+    //
+    0x1B => SPBGPR
+    0x1C => SPMC
+    0x1D => XXPAND
+    //
+    0x1E => SPSPCL
+    0x1F => SPBGCL
+    //
+    0x20 => EXTCOL
+    0x21 => BGCOL0
+    0x22 => BGCOL1
+    0x23 => BGCOL2
+    0x24 => BGCOL3
+    0x25 => SPMC0
+    0x26 => SPMC1
+    //
+    0x27 => SP0COL
+    0x28 => SP1COL
+    0x29 => SP2COL
+    0x2A => SP3COL
+    0x2B => SP4COL
+    0x2C => SP5COL
+    0x2D => SP6COL
+    0x2E => SP7COL
+
+    ///
+    _ => raise "unknown VIC register: \(value)"
   }
 }
 

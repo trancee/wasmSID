@@ -58,7 +58,7 @@ let default_samplerate = 44100
 pub fn C64::new(
   ~baseaddress : Int = 0x0000,
   ~mem : @cpu.Memory? = None,
-  ~data : Array[Int] = [],
+  ~data : FixedArray[Int] = [],
   ~offset : Int = 0x0000,
   ~length : Int = data.length(),
   ~sampleRate : Int = default_samplerate,
@@ -131,7 +131,7 @@ pub fn reset(self : C64) -> Unit!String {
     self.sampleRate = 44100
   }
   self.cpuFrequency = CPUClock(self.videoStandard)
-  self.sampleClockRatio = (self.cpuFrequency << 4)! / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
+  self.sampleClockRatio = self.cpuFrequency.lsl!(4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
   //
   self.vic.rasterLines = ScanLines(self.videoStandard).to_int!() // HINT: should be inferred
   self.vic.rasterRowCycles = ScanLineCycles(self.videoStandard).to_int!() // HINT: should be inferred
@@ -256,7 +256,7 @@ pub fn emulate(self : C64) -> (Int, Int) {
       if self.frameCycleCnt >= self.frameCycles {
         self.frameCycleCnt -= self.frameCycles
         if self.finished { //some tunes (e.g. Barbarian, A-Maze-Ing) doesn't always finish in 1 frame
-          self.initCPU(baseaddress=Some(self.psid.playAddress.0)) //(PSID docs say bank-register should always be set for each call's region)
+          self.initCPU(baseaddress=Some(self.psid.playAddress)) //(PSID docs say bank-register should always be set for each call's region)
           self.finished = false
           // FIXME
           // if self.timerSource == 0 {
@@ -313,7 +313,7 @@ pub fn emulate(self : C64) -> (Int, Int) {
 
 pub fn load(
   self : C64,
-  data : Array[Int],
+  data : FixedArray[Int],
   ~offset : Int = 0,
   ~length : Int = data.length()
 ) -> Unit {

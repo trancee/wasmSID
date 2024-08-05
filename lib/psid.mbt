@@ -1,16 +1,16 @@
 pub struct PSID {
   mem : @cpu.Memory
-  data : Array[Int]
+  data : FixedArray[Int]
   //
   mut version : Version
   //
   mut realSID : Bool
   mut digiMode : Bool
   //
-  mut loadAddress : UInt16
-  mut initAddress : UInt16
-  mut playAddress : UInt16
-  mut endAddress : UInt16
+  mut loadAddress : Int
+  mut initAddress : Int
+  mut playAddress : Int
+  mut endAddress : Int
   //
   mut title : String
   mut author : String
@@ -20,7 +20,7 @@ pub struct PSID {
   mut defaultSong : UInt16
   //
   mut flags : Flags
-  mut model : Array[Model]
+  mut model : FixedArray[Model]
   //
   mut sid2Flags : SIDFlags
   mut sid3Flags : SIDFlags
@@ -30,7 +30,7 @@ pub struct PSID {
   mut sid3Address : UInt8
 }
 
-pub fn PSID::new(mem : @cpu.Memory, data : Array[Int]) -> PSID!String {
+pub fn PSID::new(mem : @cpu.Memory, data : FixedArray[Int]) -> PSID!String {
   let psid : PSID = {
     mem,
     data,
@@ -127,7 +127,7 @@ pub fn process(self : PSID) -> Unit!String {
 
   //
   if self.loadAddress == 0 {
-    self.loadAddress = u16(self[offset + 1] << 8) | u16(self[offset])
+    self.loadAddress = (self[offset + 1] << 8) | self[offset]
     offset += 2
   }
 
@@ -249,8 +249,8 @@ pub fn process(self : PSID) -> Unit!String {
   ///         0x01 for PAL and set to 0x00 for NTSC.
 
   self[0x02A6] = match self.flags.videoStandard {
-    NTSC => 0
-    PAL => 1
+    NTSC => 0x00
+    PAL => 0x01
   }
 
   //
@@ -265,7 +265,7 @@ pub fn process(self : PSID) -> Unit!String {
   println("<< PSID::process")
 }
 
-fn readByte(self : PSID, header : SIDheader) -> UInt8!String {
+fn readByte(self : PSID, header : SIDheader) -> Int!String {
   match header {
     StartPage => self[0x78]
     PageLength => self[0x79]
@@ -277,7 +277,7 @@ fn readByte(self : PSID, header : SIDheader) -> UInt8!String {
   }
 }
 
-fn readWord(self : PSID, header : SIDheader) -> UInt16!String {
+fn readWord(self : PSID, header : SIDheader) -> Int!String {
   match header {
     Version => self.makeWord(0x04)
     DataOffset => self.makeWord(0x06)
@@ -293,8 +293,8 @@ fn readWord(self : PSID, header : SIDheader) -> UInt16!String {
   }
 }
 
-fn makeWord(self : PSID, offset : Int) -> UInt16 {
-  (self[offset] << 8).0 | self[offset + 1].0
+fn makeWord(self : PSID, offset : Int) -> Int {
+  (self[offset] << 8) | self[offset + 1]
 }
 
 fn readString(self : PSID, header : SIDheader) -> String!String {
@@ -317,8 +317,8 @@ fn makeString(self : PSID, offset : Int, length : Int) -> String {
   bytes.to_string()
 }
 
-fn op_get(self : PSID, address : UInt16) -> UInt8 {
-  if address < 0 || address > self.data.length() {
+fn op_get(self : PSID, address : Int) -> Int {
+  if address < 0x0000 || address > self.data.length() {
     // self.dump()
     println("PSID::get out of bounds")
     abort("PSID::get out of bounds")
@@ -326,15 +326,15 @@ fn op_get(self : PSID, address : UInt16) -> UInt8 {
   // println(
   //   "PSID $" + address.to_hex() + " → #$" + (self.data[address.0] |> u8).to_hex(),
   // )
-  self.data[address.0]
+  self.data[address]
 }
 
-fn op_set(self : PSID, address : UInt16, value : UInt8) -> Unit {
-  if address < 0 || address > 0xFFFF {
+fn op_set(self : PSID, address : Int, value : Int) -> Unit {
+  if address < 0x0000 || address > 0xFFFF {
     // self.dump()
     println("PSID::set out of bounds")
     abort("PSID::set out of bounds")
   }
   // println("PSID $" + address.to_hex() + " ← #$" + value.to_hex())
-  self.mem[address.0] = value.0
+  self.mem[address] = value
 }

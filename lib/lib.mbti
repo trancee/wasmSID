@@ -5,7 +5,9 @@ alias @trancee/wasmSID/lib/cpu as @cpu
 // Values
 
 // Types and methods
-type AttackDecayCycleControl
+type ADSR
+
+type ADSRState
 
 pub struct C64 {
   pub baseaddress : UInt16
@@ -43,8 +45,8 @@ impl C64 {
   get_flags(Self) -> @cpu.UInt8
   initC64(Self) -> Unit
   initCPU(Self, ~baseaddress : Int? = ..) -> Unit
-  load(Self, Array[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
-  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~psid : PSID) -> Self
+  load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
+  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~psid : PSID) -> Self
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
@@ -66,7 +68,6 @@ impl CIA {
 type CPUClock
 impl CPUClock {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
@@ -89,27 +90,51 @@ type CRBFlags
 type Channel
 impl Channel {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
+}
+
+type Color
+
+type ControlRegister
+impl ControlRegister {
+  default() -> Self
 }
 
 type ControlRegisterHorizontal
 
 type ControlRegisterVertical
 
-type FilterResonanceControlRegister
+type Coordinate
+impl Coordinate {
+  default() -> Self
+}
+
+type Envelope
+impl Envelope {
+  default() -> Self
+  to_string(Self) -> String
+}
+
+type FilterResonanceControl
+impl FilterResonanceControl {
+  to_string(Self) -> String
+}
+
+type FilterSelect
+impl FilterSelect {
+  default() -> Self
+  to_string(Self) -> String
+}
 
 type Flags
 impl Flags {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
 type FrameRate
 impl FrameRate {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
@@ -121,23 +146,31 @@ impl ICR {
 
 type ICRFlags
 
+type IRQMask
+impl IRQMask {
+  default() -> Self
+}
+
 type IRQMaskRegister
 
 type InterruptFlagRegister
+
+type Memory
+impl Memory {
+  new(Int, ~value : Int = .., ~baseaddress : Int) -> Self
+}
 
 type MemoryControlRegister
 
 type Mode
 impl Mode {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
 type Model
 impl Model {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
@@ -148,8 +181,8 @@ pub struct NES {
 }
 impl NES {
   get_flags(Self) -> @cpu.UInt8
-  load(Self, Array[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
-  new(~baseaddress : Int = .., ~data : Array[Int] = .., ~offset : Int = .., ~length : Int = ..) -> Self
+  load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
+  new(~baseaddress : Int = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = ..) -> Self
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
@@ -159,21 +192,21 @@ impl NES {
 
 pub struct PSID {
   pub mem : @cpu.Memory
-  pub data : Array[Int]
+  pub data : FixedArray[Int]
   pub version : Version
   pub realSID : Bool
   pub digiMode : Bool
-  pub loadAddress : UInt16
-  pub initAddress : UInt16
-  pub playAddress : UInt16
-  pub endAddress : UInt16
+  pub loadAddress : Int
+  pub initAddress : Int
+  pub playAddress : Int
+  pub endAddress : Int
   pub title : String
   pub author : String
   pub info : String
   pub songs : UInt16
   pub defaultSong : UInt16
   pub flags : Flags
-  pub model : Array[Model]
+  pub model : FixedArray[Model]
   pub sid2Flags : SIDFlags
   pub sid3Flags : SIDFlags
   pub sid4Flags : SIDFlags
@@ -181,14 +214,13 @@ pub struct PSID {
   pub sid3Address : UInt8
 }
 impl PSID {
-  new(@cpu.Memory, Array[Int]) -> Self!String
+  new(@cpu.Memory, FixedArray[Int]) -> Self!String
   process(Self) -> Unit!String
 }
 
 type Register
 impl Register {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
@@ -201,13 +233,16 @@ impl SID {
 type SIDFlags
 impl SIDFlags {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
+  to_string(Self) -> String
+}
+
+type SIDRegister
+impl SIDRegister {
   to_string(Self) -> String
 }
 
 type SIDheader
 impl SIDheader {
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
@@ -215,31 +250,30 @@ type SIDregister
 impl SIDregister {
   compare(Self, Self) -> Int
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
+
+type SIDspecs
+
+type SIDwavOutput
 
 type ScanLineCycles
 impl ScanLineCycles {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
 type ScanLines
 impl ScanLines {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
-
-type SustainReleaseCycleControl
 
 pub type UInt16 Int
 impl UInt16 {
   compare(Self, Self) -> Int
+  default() -> Self
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_hex(Self) -> String
   to_string(Self) -> String
 }
@@ -247,8 +281,8 @@ impl UInt16 {
 pub type UInt8 Int
 impl UInt8 {
   compare(Self, Self) -> Int
+  default() -> Self
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_hex(Self) -> String
   to_string(Self) -> String
 }
@@ -261,33 +295,97 @@ impl VIC {
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
+type VICInterruptFlag
+impl VICInterruptFlag {
+  default() -> Self
+}
+
+type VICRegister
+
 type VICregister
 impl VICregister {
   compare(Self, Self) -> Int
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
 type Version
 impl Version {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
 type VideoStandard
 impl VideoStandard {
   op_equal(Self, Self) -> Bool
-  output(Self, Logger) -> Unit
   to_string(Self) -> String
 }
 
-type VoiceControlRegister
+type Voice
+impl Voice {
+  default() -> Self
+  to_string(Self) -> String
+}
 
-type VolumeFilterSelectRegister
+type VoiceControl
+impl VoiceControl {
+  default() -> Self
+  to_string(Self) -> String
+}
+
+type Wave
+
+type Waveform
+impl Waveform {
+  op_equal(Self, Self) -> Bool
+}
 
 // Traits
 
 // Extension Methods
+impl Show for CPUClock
+
+impl Show for Channel
+
+impl Show for Envelope
+
+impl Show for FilterResonanceControl
+
+impl Show for FilterSelect
+
+impl Show for Flags
+
+impl Show for FrameRate
+
+impl Show for Mode
+
+impl Show for Model
+
+impl Show for Register
+
+impl Show for SIDFlags
+
+impl Show for SIDRegister
+
+impl Show for SIDheader
+
+impl Show for SIDregister
+
+impl Show for ScanLineCycles
+
+impl Show for ScanLines
+
+impl Show for UInt16
+
+impl Show for UInt8
+
+impl Show for VICregister
+
+impl Show for Version
+
+impl Show for VideoStandard
+
+impl Show for Voice
+
+impl Show for VoiceControl
 
