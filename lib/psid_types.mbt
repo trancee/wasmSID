@@ -48,14 +48,14 @@ enum Version {
   RSIDv4
 } derive(Show, Eq)
 
-fn Version::from_int(value : UInt16, realSID : Bool) -> Version!String {
+fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
   if realSID {
     match value.0 {
       // 0x00 => Unknown
       0x02 => RSIDv2
       0x03 => RSIDv3
       0x04 => RSIDv4
-      _ => raise "unknown version"
+      _ => raise UnknownVersion
     }
   } else {
     match value.0 {
@@ -64,7 +64,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version!String {
       0x02 => PSIDv2
       0x03 => PSIDv3
       0x04 => PSIDv4
-      _ => raise "unknown version"
+      _ => raise UnknownVersion
     }
   }
 }
@@ -96,18 +96,18 @@ enum Mode {
   BASIC
 } derive(Show, Eq)
 
-fn Mode::from_int(value : Int, realSID : Bool) -> Mode!String {
+fn Mode::from_int(value : Int, realSID : Bool) -> Mode! {
   if realSID {
     match value {
       0x00 => C64
       0x01 => Digi
-      _ => raise "unknown mode"
+      _ => raise UnknownMode
     }
   } else {
     match value {
       0x00 => C64
       0x01 => BASIC
-      _ => raise "unknown mode"
+      _ => raise UnknownMode
     }
   }
 }
@@ -121,11 +121,11 @@ struct SIDFlags {
   model : Model
 } derive(Show, Eq)
 
-fn SIDFlags::default() -> SIDFlags!String {
+fn SIDFlags::default() -> SIDFlags! {
   SIDFlags::from_int!(0x0000)
 }
 
-fn SIDFlags::from_int(value : UInt16) -> SIDFlags!String {
+fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
   {
     channel: Channel::from_int!((value.0 >> 6) & 0b11),
     model: Model::from_int!((value.0 >> 4) & 0b11),
@@ -139,11 +139,11 @@ struct Flags {
   model : Array[Model]
 } derive(Show, Eq)
 
-fn Flags::default() -> Flags!String {
+fn Flags::default() -> Flags! {
   Flags::from_int!(0x0000, false)
 }
 
-fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags!String {
+fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags! {
   {
     player: (value.0 >> 0) & 0b01,
     mode: Mode::from_int!((value.0 >> 1) & 0b01, realSID),
@@ -160,6 +160,6 @@ fn land(self : Flags, bits : Int) -> Int {
   self & bits
 }
 
-fn asr(self : Flags, bits : Int) -> Int {
+fn shr(self : Flags, bits : Int) -> Int {
   self >> bits
 }

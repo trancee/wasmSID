@@ -80,19 +80,31 @@ fn FilterResonanceControl::from_u8(value : UInt8) -> FilterResonanceControl {
 
 fn to_u8(self : FilterResonanceControl) -> UInt8 {
   /// Bit 0:  Filter the output of voice 1?  1=yes
-  (self.voice[0].to_int() << 0
+  (
+    self.voice[0].to_int() <<
 
-  /// Bit 1:  Filter the output of voice 2?  1=yes
-  ) | (self.voice[1].to_int() << 1)
+    /// Bit 1:  Filter the output of voice 2?  1=yes
+    0
+  ) |
+  (
+    self.voice[1].to_int() <<
 
-  /// Bit 2:  Filter the output of voice 3?  1=yes
-   | (self.voice[2].to_int() << 2)
+    /// Bit 2:  Filter the output of voice 3?  1=yes
+    1
+  ) |
+  (
+    self.voice[2].to_int() <<
 
-  /// Bit 3:  Filter the output from the external input?  1=yes
-   | (self.external.to_int() << 3)
+    /// Bit 3:  Filter the output from the external input?  1=yes
+    2
+  ) |
+  (
+    self.external.to_int() <<
 
-  /// Bits 4-7:  Select filter resonance 0-15
-   | (self.resonance << 4)
+    /// Bits 4-7:  Select filter resonance 0-15
+    3
+  ) |
+  (self.resonance << 4)
 }
 
 struct Envelope {
@@ -330,7 +342,7 @@ fn sid(register : SIDregister) -> Int {
   }
 }
 
-fn SIDregister::from_int(value : Int) -> SIDregister!String {
+fn SIDregister::from_int(value : Int) -> SIDregister! {
   match value {
     /// Voice 1
     0x00 => FRELO1
@@ -377,7 +389,7 @@ fn SIDregister::from_int(value : Int) -> SIDregister!String {
     0x1D => UNUSED
 
     ///
-    _ => raise "unknown SID register: \(value)"
+    _ => raise UnknownRegister("SID", value)
   }
 }
 
@@ -469,28 +481,49 @@ fn VoiceControl::from_u8(value : UInt8) -> VoiceControl {
 
 fn to_u8(self : VoiceControl) -> UInt8 {
   /// Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
-  (self.gateBit.to_int() << 0
+  (
+    self.gateBit.to_int() <<
 
-  /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency
-  ) | (self.syncBit.to_int() << 1)
+    /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency
+    0
+  ) |
+  (
+    self.syncBit.to_int() <<
 
-  /// Bit 2:  Ring Modulation:  1=Ring modulate Oscillators 1 and 3
-   | (self.ringModulation.to_int() << 2)
+    /// Bit 2:  Ring Modulation:  1=Ring modulate Oscillators 1 and 3
+    1
+  ) |
+  (
+    self.ringModulation.to_int() <<
 
-  /// Bit 3:  Test Bit:  1=Disable Oscillator 1
-   | (self.testBit.to_int() << 3)
+    /// Bit 3:  Test Bit:  1=Disable Oscillator 1
+    2
+  ) |
+  (
+    self.testBit.to_int() <<
 
-  /// Bit 4:  Select triangle waveform
-   | (self.triangleWaveform.to_int() << 4)
+    /// Bit 4:  Select triangle waveform
+    3
+  ) |
+  (
+    self.triangleWaveform.to_int() <<
 
-  /// Bit 5:  Select sawtooth waveform
-   | (self.sawtoothWaveform.to_int() << 5)
+    /// Bit 5:  Select sawtooth waveform
+    4
+  ) |
+  (
+    self.sawtoothWaveform.to_int() <<
 
-  /// Bit 6:  Select pulse waveform
-   | (self.pulseWaveform.to_int() << 6)
+    /// Bit 6:  Select pulse waveform
+    5
+  ) |
+  (
+    self.pulseWaveform.to_int() <<
 
-  /// Bit 7:  Select random noise waveform
-   | (self.noiseWaveform.to_int() << 7)
+    /// Bit 7:  Select random noise waveform
+    6
+  ) |
+  (self.noiseWaveform.to_int() << 7)
 }
 
 // fn waveform(self : VoiceControl) -> Int {
@@ -499,7 +532,10 @@ fn to_u8(self : VoiceControl) -> UInt8 {
 // }
 
 fn hasWaveform(self : VoiceControl) -> Bool {
-  self.triangleWaveform || self.sawtoothWaveform || self.pulseWaveform || self.noiseWaveform
+  self.triangleWaveform ||
+  self.sawtoothWaveform ||
+  self.pulseWaveform ||
+  self.noiseWaveform
 }
 
 // fn op_get(

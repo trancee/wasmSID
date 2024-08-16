@@ -120,9 +120,12 @@ pub fn reset(
   ~value : Int = 0x00
 ) -> Unit {
   println(
-    "Memory::reset $" + UInt16(offset).to_hex() + " - $" + UInt16(
-      offset + length,
-    ).to_hex() + " = #$" + UInt8(value).to_hex(),
+    "Memory::reset $" +
+    UInt16(offset).to_hex() +
+    " - $" +
+    UInt16(offset + length).to_hex() +
+    " = #$" +
+    UInt8(value).to_hex(),
   )
   for i = 0; i < length; i = i + 1 {
     self[offset + i] = value
@@ -194,9 +197,12 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   for i = 0; i < self.hooks.length(); i = i + 1 {
     if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
       println(
-        "R:HOOK $" + UInt16(self.hooks[i].start).to_hex() + " - $" + UInt16(
-          self.hooks[i].end,
-        ).to_hex() + " | $" + UInt16(addr).to_hex(),
+        "R:HOOK $" +
+        UInt16(self.hooks[i].start).to_hex() +
+        " - $" +
+        UInt16(self.hooks[i].end).to_hex() +
+        " | $" +
+        UInt16(addr).to_hex(),
       )
       return (self.hooks[i].r)(addr)
     }
@@ -272,9 +278,12 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   for i = 0; i < self.hooks.length(); i = i + 1 {
     if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
       println(
-        "W:HOOK $" + UInt16(self.hooks[i].start).to_hex() + " - $" + UInt16(
-          self.hooks[i].end,
-        ).to_hex() + " | $" + UInt16(addr).to_hex(),
+        "W:HOOK $" +
+        UInt16(self.hooks[i].start).to_hex() +
+        " - $" +
+        UInt16(self.hooks[i].end).to_hex() +
+        " | $" +
+        UInt16(addr).to_hex(),
       )
       return (self.hooks[i].w)(addr, value)
     }

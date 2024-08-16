@@ -30,7 +30,7 @@ pub struct PSID {
   mut sid3Address : UInt8
 }
 
-pub fn PSID::new(mem : @cpu.Memory, data : FixedArray[Int]) -> PSID!String {
+pub fn PSID::new(mem : @cpu.Memory, data : FixedArray[Int]) -> PSID! {
   let psid : PSID = {
     mem,
     data,
@@ -66,7 +66,7 @@ pub fn PSID::new(mem : @cpu.Memory, data : FixedArray[Int]) -> PSID!String {
   psid
 }
 
-pub fn process(self : PSID) -> Unit!String {
+pub fn process(self : PSID) -> Unit! {
   println(">> PSID::process")
 
   /// Valid values:
@@ -80,7 +80,7 @@ pub fn process(self : PSID) -> Unit!String {
   /// too.
   let magic = self.readString!(Magic)
   if magic != "PSID" && magic != "RSID" {
-    raise "no PSID or RSID file"
+    raise UnknownFile
   }
   self.realSID = magic[0] == 'R'
 
@@ -111,7 +111,7 @@ pub fn process(self : PSID) -> Unit!String {
     PSIDv1 => offset == 0x0076
     PSIDv2 | PSIDv3 | PSIDv4 => offset == 0x007C
     RSIDv2 | RSIDv3 | RSIDv4 => offset == 0x007C
-    _ => raise "invalid data offset for version " + self.version.to_string()
+    _ => raise InvalidVersionOffset(self.version.to_string())
   }
 
   /// Valid values:
@@ -190,47 +190,50 @@ pub fn process(self : PSID) -> Unit!String {
       self.sid2Address = self.readByte!(SID2Address)
       /// For v2NG, it should be set to 0.
       if self.sid2Address != 0x00 {
-        raise "address must not be set for PSID v2NG"
+        raise InvalidAddressV2
       }
 
       /// This is a v4 specific field.
       self.sid3Address = self.readByte!(SID3Address)
       /// For v2NG and v3, it should be set to 0.
       if self.sid3Address != 0x00 {
-        raise "address must not be set for PSID v2NG"
+        raise InvalidAddressV2
       }
     }
     PSIDv3 | RSIDv3 => {
       /// This is a v3 specific field.
       self.sid2Address = self.readByte!(SID2Address)
-      if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) && (self.sid2Address <
-      0xE0 || self.sid2Address > 0xFE) && (self.sid2Address & 1) == 1 {
-        raise "address must be set and an even number for PSID v3"
+      if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) &&
+        (self.sid2Address < 0xE0 || self.sid2Address > 0xFE) &&
+        (self.sid2Address & 1) == 1 {
+        raise InvalidAddressV3Even
       }
 
       /// This is a v4 specific field.
       self.sid3Address = self.readByte!(SID3Address)
       /// For v2NG and v3, it should be set to 0.
       if self.sid3Address != 0x00 {
-        raise "address must not be set for PSID v3"
+        raise InvalidAddressV3
       }
     }
     PSIDv4 | RSIDv4 => {
       /// This is a v3 specific field.
       self.sid2Address = self.readByte!(SID2Address)
-      if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) && (self.sid2Address <
-      0xE0 || self.sid2Address > 0xFE) && (self.sid2Address & 1) == 1 {
-        raise "address must be set and an even number for PSID v4"
+      if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) &&
+        (self.sid2Address < 0xE0 || self.sid2Address > 0xFE) &&
+        (self.sid2Address & 1) == 1 {
+        raise InvalidAddressV4Even
       }
 
       /// This is a v4 specific field.
       self.sid3Address = self.readByte!(SID3Address)
-      if (self.sid3Address < 0x42 || self.sid3Address > 0x7F) && (self.sid3Address <
-      0xE0 || self.sid3Address > 0xFE) && (self.sid3Address & 1) == 1 {
-        raise "address must be set and an even number for PSID v4"
+      if (self.sid3Address < 0x42 || self.sid3Address > 0x7F) &&
+        (self.sid3Address < 0xE0 || self.sid3Address > 0xFE) &&
+        (self.sid3Address & 1) == 1 {
+        raise InvalidAddressV4Even
       }
     }
-    _ => raise "unknown PSID or RSID version"
+    _ => raise UnknownVersionPSID
   }
 
   /// Valid values:
@@ -265,7 +268,7 @@ pub fn process(self : PSID) -> Unit!String {
   println("<< PSID::process")
 }
 
-fn readByte(self : PSID, header : SIDheader) -> Int!String {
+fn readByte(self : PSID, header : SIDheader) -> Int! {
   match header {
     StartPage => self[0x78]
     PageLength => self[0x79]
@@ -273,11 +276,11 @@ fn readByte(self : PSID, header : SIDheader) -> Int!String {
     SID2Address => self[0x7A]
     SID3Address => self[0x7B]
     //
-    _ => raise "unknown SID header: \(header)"
+    _ => raise UnknownHeader(header.to_string())
   }
 }
 
-fn readWord(self : PSID, header : SIDheader) -> Int!String {
+fn readWord(self : PSID, header : SIDheader) -> Int! {
   match header {
     Version => self.makeWord(0x04)
     DataOffset => self.makeWord(0x06)
@@ -289,7 +292,7 @@ fn readWord(self : PSID, header : SIDheader) -> Int!String {
     //
     Flags => self.makeWord(0x76)
     //
-    _ => raise "unknown SID header: \(header)"
+    _ => raise UnknownHeader(header.to_string())
   }
 }
 
@@ -297,7 +300,7 @@ fn makeWord(self : PSID, offset : Int) -> Int {
   (self[offset] << 8) | self[offset + 1]
 }
 
-fn readString(self : PSID, header : SIDheader) -> String!String {
+fn readString(self : PSID, header : SIDheader) -> String! {
   match header {
     Magic => self.makeString(0x00, 4)
     //
@@ -305,7 +308,7 @@ fn readString(self : PSID, header : SIDheader) -> String!String {
     Author => self.makeString(0x36, 32)
     ReleaseInfo => self.makeString(0x56, 32)
     //
-    _ => raise "unknown SID header: \(header)"
+    _ => raise UnknownHeader(header.to_string())
   }
 }
 

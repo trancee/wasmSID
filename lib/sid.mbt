@@ -166,7 +166,9 @@ pub fn SID::new(
     //
     register: SIDRegister::default(),
   }
-  cpu.mem().hook(
+  cpu
+  .mem()
+  .hook(
     sid_mem_start,
     sid_mem_end,
     mem,
@@ -179,7 +181,7 @@ pub fn SID::new(
       } catch {
         err => {
           println(err)
-          abort(err)
+          panic()
         }
       }
       sid[register].0
@@ -192,7 +194,7 @@ pub fn SID::new(
       } catch {
         err => {
           println(err)
-          abort(err)
+          panic()
         }
       }
       sid[register] = value
@@ -255,11 +257,12 @@ fn emulateADSR(self : SID, cycles : Int) -> Unit {
       adsr.rateCounter -= 0x8000
     }
     //
-    if prescalePeriod <= adsr.rateCounter && adsr.rateCounter < prescalePeriod +
-    cycles { //ratecounter shot (matches rateperiod) (in genuine SID ratecounter is LFSR)
+    if prescalePeriod <= adsr.rateCounter &&
+      adsr.rateCounter < prescalePeriod + cycles { //ratecounter shot (matches rateperiod) (in genuine SID ratecounter is LFSR)
       adsr.rateCounter -= prescalePeriod //reset rate-counter on period-match
       adsr.exponentCounter += 1
-      if adsr.state.attack || adsr.exponentCounter == adsrExponentPeriods[adsr.envelopeCounter] {
+      if adsr.state.attack ||
+        adsr.exponentCounter == adsrExponentPeriods[adsr.envelopeCounter] {
         adsr.exponentCounter = 0
         if adsr.state.holdZeroN {
           if adsr.state.attack {
@@ -267,7 +270,8 @@ fn emulateADSR(self : SID, cycles : Int) -> Unit {
             if adsr.envelopeCounter == 0xFF {
               adsr.state.attack = false
             }
-          } else if not(adsr.state.decaySustain) || adsr.envelopeCounter != voice.envelope.sustain { // FIXME: (SR&0xF0)+(SR>>4)
+          } else if not(adsr.state.decaySustain) ||
+            adsr.envelopeCounter != voice.envelope.sustain { // FIXME: (SR&0xF0)+(SR>>4)
             adsr.envelopeCounter -= 1
             if adsr.envelopeCounter == 0 {
               adsr.state.holdZeroN = false
@@ -305,8 +309,10 @@ fn emulateWaves(
       }
       let pitch = voice.frequency
       let filt = 0x7777 + 0x8888 / pitch.0
-      wave.prevWavData = (wfArray[oscval >> 4] * filt + wave.prevWavData * (0xFFFF -
-        filt)) >> 16
+      wave.prevWavData = (
+          wfArray[oscval >> 4] * filt + wave.prevWavData * (0xFFFF - filt)
+        ) >>
+        16
       wave.prevWavData.0 << 8
     }
     //
@@ -339,19 +345,25 @@ fn emulateWaves(
     //
     if voiceControl.noiseWaveform {
       tmp = wave.noiseLFSR //clock LFSR all time if clockrate exceeds observable at given samplerate (last term):
-      if (phaseAccuPtr & 0x1000000) != (wave.prevPhaseAccu & 0x1000000) || phaseAccuStep >=
-      0x1000000 {
+      if (phaseAccuPtr & 0x1000000) != (wave.prevPhaseAccu & 0x1000000) ||
+        phaseAccuStep >= 0x1000000 {
         feedback = ((tmp & 0x400000) ^ ((tmp & 0x20000) << 5)) != 0
         tmp = ((tmp << 1) | feedback.to_int() | testBit.to_int()) & 0x7FFFFF //TEST-bit turns all bits in noise LFSR to 1 (on real SID slowly, in approx. 8000 microseconds ~ 300 samples)
         wave.noiseLFSR = tmp
       } //we simply zero output when other waveform is mixed with noise. On real SID LFSR continuously gets filled by zero and locks up. ($C1 waveform with pw<8 can keep it for a while.)
-      wavGenOut = if voiceControl.triangleWaveform || voiceControl.sawtoothWaveform ||
-      voiceControl.pulseWaveform {
+      wavGenOut = if voiceControl.triangleWaveform ||
+        voiceControl.sawtoothWaveform ||
+        voiceControl.pulseWaveform {
         0
       } else {
-        ((tmp & 0x100000) >> 5) | ((tmp & 0x40000) >> 4) | ((tmp & 0x4000) >> 1) |
-        ((tmp & 0x800) << 1) | ((tmp & 0x200) << 2) | ((tmp & 0x20) << 5) | ((tmp &
-        0x04) << 7) | ((tmp & 0x01) << 8)
+        ((tmp & 0x100000) >> 5) |
+        ((tmp & 0x40000) >> 4) |
+        ((tmp & 0x4000) >> 1) |
+        ((tmp & 0x800) << 1) |
+        ((tmp & 0x200) << 2) |
+        ((tmp & 0x20) << 5) |
+        ((tmp & 0x04) << 7) |
+        ((tmp & 0x01) << 8)
       }
     } else if voiceControl.pulseWaveform { //simple pulse
       pw = voice.pulseWidth.0 //PW=0000..FFF0 from SID-register
@@ -365,9 +377,9 @@ fn emulateWaves(
       }
       utmp = phaseAccuPtr >> 12
       //
-      if not(voiceControl.triangleWaveform) && not(
-        voiceControl.sawtoothWaveform,
-      ) && not(voiceControl.noiseWaveform) { //simple pulse, most often used waveform, make it sound as clean as possible (by making it trapezoid)
+      if not(voiceControl.triangleWaveform) &&
+        not(voiceControl.sawtoothWaveform) &&
+        not(voiceControl.noiseWaveform) { //simple pulse, most often used waveform, make it sound as clean as possible (by making it trapezoid)
         steepness = if phaseAccuStep >= 4096 { //rising/falling-edge steepness (add/sub at samples)
           0xFFFFFFF / phaseAccuStep
         } else {
@@ -398,11 +410,8 @@ fn emulateWaves(
               wavGenOut = combinedWF(PulseSawTriangle, utmp)
             }
           } else { //pulse+triangle
-            tmp = phaseAccuPtr ^ if voiceControl.ringModulation {
-                wave.ringSourceMSB
-              } else {
-                0
-              }
+            tmp = phaseAccuPtr ^
+              if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
             if wavGenOut > 0 {
               wavGenOut = combinedWF(PulseTriangle, tmp >> 12)
             }
@@ -429,12 +438,10 @@ fn emulateWaves(
         }
       }
     } else if voiceControl.triangleWaveform { //triangle (this waveform has no harsh edges, so it doesn't suffer from strong aliasing at high pitches)
-      tmp = phaseAccuPtr ^ if voiceControl.ringModulation {
-          wave.ringSourceMSB
-        } else {
-          0
-        }
-      wavGenOut = (tmp ^ if (tmp & 0x8000000) > 0 { 0xFFFFFFF } else { 0 }) >> 11
+      tmp = phaseAccuPtr ^
+        if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
+      wavGenOut = (tmp ^ if (tmp & 0x8000000) > 0 { 0xFFFFFFF } else { 0 }) >>
+        11
     }
     //
     wavGenOut = wavGenOut & 0xFFFF
@@ -602,31 +609,36 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
         tmp = ((tmp << 1) | feedback.to_int() | testBit.to_int()) & 0x7FFFFF //TEST-bit turns all bits in noise LFSR to 1 (on real SID slowly, in approx. 8000 microseconds ~ 300 samples)
         wave.noiseLFSR = tmp
       } //we simply zero output when other waveform is mixed with noise. On real SID LFSR continuously gets filled by zero and locks up. ($C1 waveform with pw<8 can keep it for a while.)
-      wavGenOut = if voiceControl.triangleWaveform || voiceControl.sawtoothWaveform ||
-      voiceControl.pulseWaveform {
+      wavGenOut = if voiceControl.triangleWaveform ||
+        voiceControl.sawtoothWaveform ||
+        voiceControl.pulseWaveform {
         0
       } else {
-        ((tmp & 0x100000) >> 5) | ((tmp & 0x40000) >> 4) | ((tmp & 0x4000) >> 1) |
-        ((tmp & 0x800) << 1) | ((tmp & 0x200) << 2) | ((tmp & 0x20) << 5) | ((tmp &
-        0x04) << 7) | ((tmp & 0x01) << 8)
+        ((tmp & 0x100000) >> 5) |
+        ((tmp & 0x40000) >> 4) |
+        ((tmp & 0x4000) >> 1) |
+        ((tmp & 0x800) << 1) |
+        ((tmp & 0x200) << 2) |
+        ((tmp & 0x20) << 5) |
+        ((tmp & 0x04) << 7) |
+        ((tmp & 0x01) << 8)
       }
     } else if voiceControl.pulseWaveform { //simple pulse or pulse+combined
       pw = voice.pulseWidth.0 //PW=0000..FFF0 from SID-register
       utmp = phaseAccuStep >> 8
       wavGenOut = if utmp >= pw || testBit { 0xFFFF } else { 0 }
       //
-      if voiceControl.triangleWaveform || voiceControl.sawtoothWaveform || voiceControl.noiseWaveform { //combined pulse
+      if voiceControl.triangleWaveform ||
+        voiceControl.sawtoothWaveform ||
+        voiceControl.noiseWaveform { //combined pulse
         if voiceControl.triangleWaveform {
           if voiceControl.sawtoothWaveform { //pulse+saw+triangle (waveform nearly identical to tri+saw)
             if wavGenOut != 0 {
               wavGenOut = combinedHQWF(PulseSawTriangle, utmp)
             }
           } else { //pulse+triangle
-            tmp = phaseAccuPtr ^ if voiceControl.ringModulation {
-                wave.ringSourceMSB
-              } else {
-                0
-              }
+            tmp = phaseAccuPtr ^
+              if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
             if wavGenOut != 0 {
               wavGenOut = combinedHQWF(PulseTriangle, tmp >> 8)
             }
@@ -642,11 +654,8 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
       if voiceControl.triangleWaveform {
         wavGenOut = combinedHQWF(SawTriangle, wavGenOut) //saw+triangle
       } else if voiceControl.triangleWaveform { //triangle (this waveform has no harsh edges, so it doesn't suffer from strong aliasing at high pitches)
-        tmp = phaseAccuPtr ^ if voiceControl.ringModulation {
-            wave.ringSourceMSB
-          } else {
-            0
-          }
+        tmp = phaseAccuPtr ^
+          if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
         wavGenOut = (tmp ^ if (tmp & 0x800000) > 0 { 0xFFFFFF } else { 0 }) >> 7
       }
 
@@ -686,14 +695,19 @@ fn op_get(self : SID, register : SIDregister) -> UInt8 {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
   println(
-    "🎵 SID $" + UInt16(self.baseaddress + address).to_hex() + " → #$" + UInt8(
-      self.mem[address],
-    ).to_hex() + " | \(register)",
+    "🎵 SID $" +
+    UInt16(self.baseaddress + address).to_hex() +
+    " → #$" +
+    UInt8(self.mem[address]).to_hex() +
+    " | \{register}",
   )
-  if self.baseaddress + address < sid_mem_start || self.baseaddress + address > sid_mem_end {
+  if self.baseaddress + address < sid_mem_start ||
+    self.baseaddress + address > sid_mem_end {
     // self.dump()
     println(
-      "SID \(register) $" + UInt16(self.baseaddress + address).to_hex() + " → #$" +
+      "SID \{register} $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " → #$" +
       UInt8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
@@ -768,9 +782,11 @@ fn op_get(self : SID, register : SIDregister) -> UInt8 {
     /// Bit 6:  Select high-pass filter, 1=high-pass on
     /// Bit 7:  Disconnect output of voice 4, 1=voice 3 off
     SIGVOL =>
-      self.register.volume | (self.register.filterSelect.lowPass.to_int() << 4) |
-      (self.register.filterSelect.bandPass.to_int() << 5) | (self.register.filterSelect.highPass.to_int() <<
-      6) | (self.register.disconnectVoice.to_int() << 7)
+      self.register.volume |
+      (self.register.filterSelect.lowPass.to_int() << 4) |
+      (self.register.filterSelect.bandPass.to_int() << 5) |
+      (self.register.filterSelect.highPass.to_int() << 6) |
+      (self.register.disconnectVoice.to_int() << 7)
   }
 }
 
@@ -778,13 +794,19 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
   println(
-    "🎵 SID $" + UInt16(self.baseaddress + address).to_hex() + " ← #$" + value.to_hex() +
-    " | \(register)",
+    "🎵 SID $" +
+    UInt16(self.baseaddress + address).to_hex() +
+    " ← #$" +
+    value.to_hex() +
+    " | \{register}",
   )
-  if self.baseaddress + address < sid_mem_start || self.baseaddress + address > sid_mem_end {
+  if self.baseaddress + address < sid_mem_start ||
+    self.baseaddress + address > sid_mem_end {
     // self.dump()
     println(
-      "SID \(register) $" + UInt16(self.baseaddress + address).to_hex() + " ← #$" +
+      "SID \{register} $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " ← #$" +
       value.to_hex(),
     )
     abort("out of bounds")
@@ -798,7 +820,7 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       /// Voice 1 Frequency Control (high byte)
       /// 54273         $D401          FREHI1
       FREHI1 | FREHI2 | FREHI3 =>
-        voice.frequency = voice.frequency | u16(value << 8)
+        voice.frequency = voice.frequency | (u16(value) << 8)
 
       /// Voice 1 Pulse Waveform Width (low byte)
       /// 54274         $D402          PWLO1
@@ -807,7 +829,7 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       /// Voice 1 Pulse Waveform Width (high nybble)
       /// 54275         $D403          PWHI1
       PWHI1 | PWHI2 | PWHI3 =>
-        voice.pulseWidth = voice.pulseWidth | u16(value << 8)
+        voice.pulseWidth = voice.pulseWidth | (u16(value) << 8)
 
       // /// Voice 1 Control Register
       // /// 54276         $D404          VCREG1
@@ -844,9 +866,8 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     CUTLO =>
       self.register.cutoffFrequency = self.register.cutoffFrequency | u16(value)
     CUTHI =>
-      self.register.cutoffFrequency = self.register.cutoffFrequency | u16(
-          value << 8,
-        )
+      self.register.cutoffFrequency = self.register.cutoffFrequency |
+        (u16(value) << 8)
 
     /// Filter Resonance Control Register
     /// 54295         $D417          RESON

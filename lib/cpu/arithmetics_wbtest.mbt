@@ -1792,20 +1792,20 @@ fn testADCAbsolute(t : ADCTestData, ~ins : Instruction = ADC_ABS) -> Unit!Error 
   cpu.write(0x8000, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCAbsolute(t : ADCTestData) -> Unit!Error {
@@ -1837,20 +1837,20 @@ fn testADCImmediate(t : ADCTestData, ~ins : Instruction = ADC) -> Unit!Error {
   cpu.write(0xFF01, t.op)
 
   //
-  @test.eq!(cpu.step(), 2)
+  assert_eq!(cpu.step(), 2)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCImmediate(t : ADCTestData) -> Unit!Error {
@@ -1885,20 +1885,20 @@ fn testADCZeroPage(t : ADCTestData, ~ins : Instruction = ADC_ZP) -> Unit!Error {
   cpu.write(0x0042, t.op)
 
   //
-  @test.eq!(cpu.step(), 3)
+  assert_eq!(cpu.step(), 3)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCZeroPage(t : ADCTestData) -> Unit!Error {
@@ -1937,20 +1937,20 @@ fn testADCZeroPageX(
   cpu.write(0x0042 + cpu.registers[X].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCZeroPageX(t : ADCTestData) -> Unit!Error {
@@ -1990,20 +1990,20 @@ fn testADCAbsoluteX(
   cpu.write(0x8000 + cpu.registers[X].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCAbsoluteX(t : ADCTestData) -> Unit!Error {
@@ -2043,20 +2043,20 @@ fn testADCAbsoluteY(
   cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCAbsoluteY(t : ADCTestData) -> Unit!Error {
@@ -2099,20 +2099,20 @@ fn testADCIndirectX(
   cpu.write(0x8000, t.op)
 
   //
-  @test.eq!(cpu.step(), 6)
+  assert_eq!(cpu.step(), 6)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCIndirectX(t : ADCTestData) -> Unit!Error {
@@ -2155,20 +2155,20 @@ fn testADCIndirectY(
   cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 5)
+  assert_eq!(cpu.step(), 5)
 
   //
-  @test.eq!(cpu.registers[A], t.expectA)
+  assert_eq!(cpu.registers[A], t.expectA)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], t.expectV)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], t.expectV)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testSBCIndirectY(t : ADCTestData) -> Unit!Error {

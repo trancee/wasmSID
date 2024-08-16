@@ -121,8 +121,14 @@ fn is_set(self : Flags, flag : Flag) -> Bool {
 
 // Get status register value.
 pub fn get(self : Flags) -> UInt8 {
-  self.getC() | self.getZ() | self.getI() | self.getD() | self.getB() | self.getU() |
-  self.getV() | self.getN()
+  self.getC() |
+  self.getZ() |
+  self.getI() |
+  self.getD() |
+  self.getB() |
+  self.getU() |
+  self.getV() |
+  self.getN()
 }
 
 // Set status register value.

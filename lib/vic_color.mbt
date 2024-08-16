@@ -38,7 +38,7 @@ fn to_int(self : Color) -> Int {
   }
 }
 
-fn Color::from_int(value : Int) -> Color!String {
+fn Color::from_int(value : Int) -> Color! {
   match value & 0x0F {
     0 => Black
     1 => White
@@ -56,6 +56,6 @@ fn Color::from_int(value : Int) -> Color!String {
     13 => LightGreen
     14 => LightBlue
     15 => LightGray
-    _ => raise "unknown color \(value)"
+    _ => raise UnknownColor(value)
   }
 }

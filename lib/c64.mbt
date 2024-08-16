@@ -122,7 +122,7 @@ pub fn C64::new(
 }
 
 //set hardware-parameters (Models, SIDs) for playback of loaded SID-tune
-pub fn reset(self : C64) -> Unit!String {
+pub fn reset(self : C64) -> Unit! {
   println(">> C64::reset")
 
   //
@@ -188,7 +188,7 @@ pub fn reset(self : C64) -> Unit!String {
     1 => 26
     2 => 43 //increase for 2SID (to 43)
     3 => 137 //increase for 3SID (to 137)
-    _ => raise "unsupported number of SIDs"
+    _ => raise UnsupportedNoSIDs("SID", self.sid.length())
   }
 
   //

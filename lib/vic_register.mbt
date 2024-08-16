@@ -344,7 +344,7 @@ fn vic(register : VICregister) -> Int {
   }
 }
 
-fn VICregister::from_int(value : Int) -> VICregister!String {
+fn VICregister::from_int(value : Int) -> VICregister! {
   match value {
     0x00 => SP0X
     0x01 => SP0Y
@@ -405,7 +405,7 @@ fn VICregister::from_int(value : Int) -> VICregister!String {
     0x2E => SP7COL
 
     ///
-    _ => raise "unknown VIC register: \(value)"
+    _ => raise UnknownRegister("VIC", value)
   }
 }
 

@@ -268,7 +268,9 @@ fn dump_step(
 ) -> Unit {
   let read8 = fn() { "$" + self.mem[self.pc.0 + 1].to_hex() }
   let read16 = fn() {
-    "$" + self.mem[self.pc.0 + 1 + 1].to_hex() + self.mem[self.pc.0 + 1].to_hex()
+    "$" +
+    self.mem[self.pc.0 + 1 + 1].to_hex() +
+    self.mem[self.pc.0 + 1].to_hex()
   }
   let unofficial = if illegal { "*" } else { " " }
   let addr_mode = match mode {
@@ -299,21 +301,33 @@ fn dump_step(
       //
       // The given address is a vector to the effective address.
       // JMP
-      " (" + read16() + ")" + " = " + self.read16zp(self.read16(self.pc + 1)).to_hex()
+      " (" +
+      read16() +
+      ")" +
+      " = " +
+      self.read16zp(self.read16(self.pc + 1)).to_hex()
     IndexedIndirect =>
       // Indexed-Indirect Addressing
       // https://www.c64-wiki.com/wiki/Indexed-indirect_addressing
       //
       // The X index register is used to offset the zero page vector used to determine the effective address.
       // ADC, AND, CMP, EOR, LDA, ORA, SBC, STA.
-      " (" + read8() + ",X) @ " + (self.read(self.pc + 1) + self.registers[X]).to_hex() +
-      " = " + self.read16zp(
-        (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
-      ).to_hex() + " = " + self.read(
+      " (" +
+      read8() +
+      ",X) @ " +
+      (self.read(self.pc + 1) + self.registers[X]).to_hex() +
+      " = " +
+      self
+      .read16zp((self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16)
+      .to_hex() +
+      " = " +
+      self
+      .read(
         self.read16zp(
           (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
         ),
-      ).to_hex()
+      )
+      .to_hex()
     IndirectIndexed =>
       // Indirect-Indexed Addressing
       // https://www.c64-wiki.com/wiki/Indirect-indexed_addressing
@@ -321,18 +335,25 @@ fn dump_step(
       // The Y Index Register is used as an offset from the given zero page vector.
       // The effective address is calculated as the vector plus the value in Y.
       // ADC, AND, CMP, EOR, LDA, ORA, SBC, and STA.
-      " (" + read8() + "),Y = " + self.read16zp(self.read(self.pc + 1) |> u16).to_hex() +
-      " @ " + (self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y].0).to_hex() +
-      " = " + self.read(
-        self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y].0,
-      ).to_hex()
+      " (" +
+      read8() +
+      "),Y = " +
+      self.read16zp(self.read(self.pc + 1) |> u16).to_hex() +
+      " @ " +
+      (self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y].0).to_hex() +
+      " = " +
+      self
+      .read(self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y].0)
+      .to_hex()
     Absolute =>
       // Absolute Addressing
       // https://www.c64-wiki.com/wiki/Absolute_addressing
       //
       // Specifies an address in memory which is to be the "object" of the instruction.
       // ADC, AND, ASL, BIT, CMP, CPX, CPY, DEC, EOR, INC, JMP, JSR, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, and STY.
-      " " + read16() + match name {
+      " " +
+      read16() +
+      match name {
         "JMP" | "JSR" => ""
         _ => " = " + self.read(self.read16(self.pc + 1)).to_hex()
       }
@@ -342,43 +363,62 @@ fn dump_step(
       //
       // The contents of the X index register is added to a given base address.
       // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA.
-      " " + read16() + ",X @ " + (self.read16(self.pc + 1) + self.registers[X].0).to_hex() +
-      " = " + self.read(self.read16(self.pc + 1) + self.registers[X].0).to_hex()
+      " " +
+      read16() +
+      ",X @ " +
+      (self.read16(self.pc + 1) + self.registers[X].0).to_hex() +
+      " = " +
+      self.read(self.read16(self.pc + 1) + self.registers[X].0).to_hex()
     AbsoluteY =>
       // Indexed Absolute Addressing
       // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
       //
       // The contents of the Y index register is added to a given base address.
       // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA.
-      " " + read16() + ",Y @ " + (self.read16(self.pc + 1) + self.registers[Y].0).to_hex() +
-      " = " + self.read(self.read16(self.pc + 1) + self.registers[Y].0).to_hex()
+      " " +
+      read16() +
+      ",Y @ " +
+      (self.read16(self.pc + 1) + self.registers[Y].0).to_hex() +
+      " = " +
+      self.read(self.read16(self.pc + 1) + self.registers[Y].0).to_hex()
     ZeroPage =>
       // Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Zeropage_addressing
       //
       // Specifies an address in zero-page which is to be the "object" of the instruction.
       // ADC, AND, ASL, BIT, CMP, CPX, CPY, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, and STY.
-      " " + read8() + " = " + self.read(self.read(self.pc + 1) & 0xFF |> u16).to_hex()
+      " " +
+      read8() +
+      " = " +
+      self.read(self.read(self.pc + 1) & 0xFF |> u16).to_hex()
     ZeroPageX =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
       //
       // The contents of the X index register is added to a given base address in zero-page.
       // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, STY.
-      " " + read8() + ",X @ " + ((self.read(self.pc + 1) + self.registers[X]) & 0xFF).to_hex() +
-      " = " + self.read(
-        (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
-      ).to_hex()
+      " " +
+      read8() +
+      ",X @ " +
+      ((self.read(self.pc + 1) + self.registers[X]) & 0xFF).to_hex() +
+      " = " +
+      self
+      .read((self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16)
+      .to_hex()
     ZeroPageY =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
       //
       // The contents of the Y index register is added to a given base address in zero-page.
       // ADC, AND, ASL, CMP, DEC, EOR, INC, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, STY.
-      " " + read8() + ",Y @ " + ((self.read(self.pc + 1) + self.registers[Y]) & 0xFF).to_hex() +
-      " = " + self.read(
-        (self.read(self.pc + 1) + self.registers[Y]) & 0xFF |> u16,
-      ).to_hex()
+      " " +
+      read8() +
+      ",Y @ " +
+      ((self.read(self.pc + 1) + self.registers[Y]) & 0xFF).to_hex() +
+      " = " +
+      self
+      .read((self.read(self.pc + 1) + self.registers[Y]) & 0xFF |> u16)
+      .to_hex()
     Relative =>
       // Relative Addressing
       // https://www.c64-wiki.com/wiki/Relative_addressing
@@ -406,14 +446,33 @@ fn dump_step(
   //   stack += self.mem[i].to_hex()
   // }
   println(
-    self.pc.to_hex() + " " + instr + " " + unofficial + if opcode == 0xE3 || opcode ==
-    0xE7 || opcode == 0xEF || opcode == 0xF3 || opcode == 0xF7 || opcode == 0xFB ||
-    opcode == 0xFF {
+    self.pc.to_hex() +
+    " " +
+    instr +
+    " " +
+    unofficial +
+    if opcode == 0xE3 ||
+      opcode == 0xE7 ||
+      opcode == 0xEF ||
+      opcode == 0xF3 ||
+      opcode == 0xF7 ||
+      opcode == 0xFB ||
+      opcode == 0xFF {
       "ISB"
     } else {
       name
-    } + addr_mode + spaces + "A:" + self.registers[A].to_hex() + " X:" + self.registers[X].to_hex() +
-    " Y:" + self.registers[Y].to_hex() + " P:" + self.flags.get().to_hex() + " SP:" +
+    } +
+    addr_mode +
+    spaces +
+    "A:" +
+    self.registers[A].to_hex() +
+    " X:" +
+    self.registers[X].to_hex() +
+    " Y:" +
+    self.registers[Y].to_hex() +
+    " P:" +
+    self.flags.get().to_hex() +
+    " SP:" +
     self.registers[SP].to_hex(),
   )
   // + " P:" + self.flags.get().to_hex() + " " + self.flags.to_string(),

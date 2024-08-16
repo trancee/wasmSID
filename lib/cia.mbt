@@ -53,11 +53,12 @@ fn w(self : Memory, address : UInt16, value : UInt8) -> Unit {
 }
 
 fn op_get(self : Memory, register : Register) -> UInt8 {
-  println("CIA::get \(register)")
+  println("CIA::get \{register}")
   let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if self.baseaddress + address < cia_mem_start || self.baseaddress + address > cia_mem_end {
+  if self.baseaddress + address < cia_mem_start ||
+    self.baseaddress + address > cia_mem_end {
     // self.dump()
-    println("CIA \(register) → $" + UInt8(self.mem[address % 0x100]).to_hex())
+    println("CIA \{register} → $" + UInt8(self.mem[address % 0x100]).to_hex())
     abort("get out of bounds")
   }
   // println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
@@ -70,11 +71,12 @@ fn op_get(self : Memory, register : Register) -> UInt8 {
 }
 
 fn op_set(self : Memory, register : Register, value : UInt8) -> Unit {
-  println("CIA::set \(register) = #$" + value.to_hex())
+  println("CIA::set \{register} = #$" + value.to_hex())
   let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
-  if self.baseaddress + address < cia_mem_start || self.baseaddress + address > cia_mem_end {
+  if self.baseaddress + address < cia_mem_start ||
+    self.baseaddress + address > cia_mem_end {
     // self.dump()
-    println("CIA \(register) ← $" + value.to_hex())
+    println("CIA \{register} ← $" + value.to_hex())
     abort("set out of bounds")
   }
   // println("CIA \(register) ← $" + value.to_hex())
@@ -102,7 +104,9 @@ pub fn CIA::new(
   let ram = Memory::new(cia_mem_size + 1, ~baseaddress)
   let rom = Memory::new(cia_mem_size + 1, ~baseaddress)
   let cia : CIA = { ram, rom, baseaddress }
-  cpu.mem().hook(
+  cpu
+  .mem()
+  .hook(
     cia_mem_start,
     cia_mem_end,
     rom.mem,
@@ -228,7 +232,7 @@ pub fn emulate(self : CIA, cycles : UInt8) -> Bool {
 /// If bit 7 of the data written is a `ONE`, any mask bit written with a one will be set, while those mask bits written with a zero will be unaffected.
 /// In order for an interrupt flag to set `IR` and generate an Interrupt Request, the corresponding `MASK` bit must be set.
 pub fn writeCIAIRQmask(self : CIA, mask : UInt8) -> Unit {
-  println(">> writeCIAIRQmask $" + self.ram[ICR].to_hex() + " \(mask)")
+  println(">> writeCIAIRQmask $" + self.ram[ICR].to_hex() + " \{mask}")
   match mask.0 & 0x80 {
     0 => self.ram[ICR] = self.ram[ICR].clr(mask & 0x1F) // CLEAR
     _ => self.ram[ICR] = self.ram[ICR].set(mask & 0x1F) // SET
@@ -288,16 +292,16 @@ test "cia1_instantiate" {
   //
   cia.writeCIAIRQmask(0x00)
   //
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], 0)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], 0)
   //
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(NONE))
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(NONE))
   //
-  @test.eq!(cia.ram[ICR], icr(TA) | icr(IR)) // should be NONE
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(TA) | icr(IR)) // should be NONE
+  assert_eq!(cia.rom[ICR], icr(NONE))
 }
 
 test "cia1_timera" {
@@ -308,50 +312,50 @@ test "cia1_timera" {
   cia.ram[TA_LO] = timer
   //
   cia.writeCIAIRQmask(icr(SC) | icr(TA))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
   //
   cia.ram[CRA] = cra(START)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(NONE))
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], 0)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(NONE))
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], 0)
   //
-  @test.eq!(cia.emulate(1), true)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer - 1)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(TA) | icr(IR))
+  assert_eq!(cia.emulate(1), true)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer - 1)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
   //
-  @test.eq!(cia.emulate(1), true)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer - 2)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(TA) | icr(IR))
+  assert_eq!(cia.emulate(1), true)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer - 2)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
   //
-  @test.eq!(cia.emulate(1), true)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(TA) | icr(IR))
+  assert_eq!(cia.emulate(1), true)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
   //
   cia.acknowledgeCIAIRQ()
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
 }
 
 test "cia1_timera_forceload" {
@@ -362,60 +366,60 @@ test "cia1_timera_forceload" {
   cia.ram[TA_LO] = timer
   //
   cia.writeCIAIRQmask(icr(SC) | icr(TA))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
   //
   cia.ram[CRA] = cra(START) | cra(LOAD)
-  @test.eq!(cia.ram[CRA], cra(START) | cra(LOAD))
-  @test.eq!(cia.rom[CRA], cra(NONE))
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], 0)
+  assert_eq!(cia.ram[CRA], cra(START) | cra(LOAD))
+  assert_eq!(cia.rom[CRA], cra(NONE))
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], 0)
   //
-  @test.eq!(cia.emulate(1), false)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
   //
-  @test.eq!(cia.emulate(1), false)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer - 1)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer - 1)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
   //
-  @test.eq!(cia.emulate(1), false)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer - 2)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer - 2)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
   //
-  @test.eq!(cia.emulate(1), true) // interrupt happened
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer)
-  @test.eq!(cia.ram[CRA], cra(START))
-  @test.eq!(cia.rom[CRA], cra(START))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(TA) | icr(IR))
+  assert_eq!(cia.emulate(1), true) // interrupt happened
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer)
+  assert_eq!(cia.ram[CRA], cra(START))
+  assert_eq!(cia.rom[CRA], cra(START))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
   //
   cia.acknowledgeCIAIRQ()
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
 }
 
 test "cia1_timera_oneshot" {
@@ -426,28 +430,28 @@ test "cia1_timera_oneshot" {
   cia.ram[TA_LO] = timer
   //
   cia.writeCIAIRQmask(icr(SC) | icr(TA))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
   //
   cia.ram[CRA] = cra(START) | cra(RUNMODE)
-  @test.eq!(cia.ram[CRA], cra(START) | cra(RUNMODE))
-  @test.eq!(cia.rom[CRA], cra(NONE))
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], 0)
+  assert_eq!(cia.ram[CRA], cra(START) | cra(RUNMODE))
+  assert_eq!(cia.rom[CRA], cra(NONE))
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], 0)
   //
-  @test.eq!(cia.emulate(1), true)
-  @test.eq!(cia.ram[TA_HI], 0)
-  @test.eq!(cia.ram[TA_LO], timer)
-  @test.eq!(cia.rom[TA_HI], 0)
-  @test.eq!(cia.rom[TA_LO], timer - 1)
-  @test.eq!(cia.ram[CRA], cra(RUNMODE))
-  @test.eq!(cia.rom[CRA], cra(RUNMODE))
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(TA) | icr(IR))
+  assert_eq!(cia.emulate(1), true)
+  assert_eq!(cia.ram[TA_HI], 0)
+  assert_eq!(cia.ram[TA_LO], timer)
+  assert_eq!(cia.rom[TA_HI], 0)
+  assert_eq!(cia.rom[TA_LO], timer - 1)
+  assert_eq!(cia.ram[CRA], cra(RUNMODE))
+  assert_eq!(cia.rom[CRA], cra(RUNMODE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
   //
   cia.acknowledgeCIAIRQ()
-  @test.eq!(cia.ram[ICR], icr(SC) | icr(TA))
-  @test.eq!(cia.rom[ICR], icr(NONE))
+  assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia.rom[ICR], icr(NONE))
 }

@@ -69,8 +69,16 @@ fn lsl(self : UInt8, bit : UInt8) -> UInt8 {
   self.0 << bit.0
 }
 
+fn shl(self : UInt8, bit : UInt8) -> UInt8 {
+  self.0 << bit.0
+}
+
 // logic shift right
 fn lsr(self : UInt8, bit : UInt8) -> UInt8 {
+  self.0 >> bit.0
+}
+
+fn shr(self : UInt8, bit : UInt8) -> UInt8 {
   self.0 >> bit.0
 }
 
@@ -152,8 +160,16 @@ fn lsl(self : UInt16, bit : UInt16) -> UInt16 {
   self.0 << bit.0
 }
 
+fn shl(self : UInt16, bit : UInt16) -> UInt16 {
+  self.0 << bit.0
+}
+
 // logic shift right
 fn lsr(self : UInt16, bit : UInt16) -> UInt16 {
+  self.0 >> bit.0
+}
+
+fn shr(self : UInt16, bit : UInt16) -> UInt16 {
   self.0 >> bit.0
 }
 

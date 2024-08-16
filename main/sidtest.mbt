@@ -7,7 +7,7 @@ pub fn sidtest() -> Unit {
   } catch {
     err => {
       println(err)
-      abort(err)
+      panic()
     }
   }
   try {
@@ -15,7 +15,7 @@ pub fn sidtest() -> Unit {
   } catch {
     err => {
       println(err)
-      abort(err)
+      panic()
     }
   }
   println("---")
@@ -25,10 +25,14 @@ pub fn sidtest() -> Unit {
   let author = psid.author
   let title = psid.title
   let info = psid.info
-  println("Author: \(author) , Title: \(title) , Info: \(info)")
+  println("Author: \{author} , Title: \{title} , Info: \{info}")
   println(
-    "Load-address:$" + @lib.UInt16(psid.loadAddress).to_hex() + ", End-address:$" +
-    @lib.UInt16(psid.endAddress).to_hex() + ", Size:" + (psid.endAddress - psid.loadAddress).to_string() +
+    "Load-address:$" +
+    @lib.UInt16(psid.loadAddress).to_hex() +
+    ", End-address:$" +
+    @lib.UInt16(psid.endAddress).to_hex() +
+    ", Size:" +
+    (psid.endAddress - psid.loadAddress).to_string() +
     " bytes",
   )
   println("Init-address:$" + @lib.UInt16(psid.initAddress).to_hex())
@@ -41,7 +45,7 @@ pub fn sidtest() -> Unit {
   }
   let song = psid.defaultSong.0
   let songs = psid.songs.0
-  s += "Subtune:\(song) (of \(songs))"
+  s += "Subtune:\{song} (of \{songs})"
   if psid.realSID {
     s += ", RealSID"
   } else if psid.digiMode {

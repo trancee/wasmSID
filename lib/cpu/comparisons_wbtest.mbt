@@ -425,28 +425,28 @@ fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!Error {
   cpu.write(t.pc + 1, t.op)
 
   //
-  @test.eq!(cpu.step(), 2)
+  assert_eq!(cpu.step(), 2)
 
   //
-  @test.eq!(cpu.pc, t.pc + 2)
+  assert_eq!(cpu.pc, t.pc + 2)
 
   //
-  @test.eq!(cpu.registers[r], t.expectR.0)
+  assert_eq!(cpu.registers[r], t.expectR.0)
   // match r {
-  //   A => @test.eq!(cpu.a, t.expectR)?
-  //   X => @test.eq!(cpu.x, t.expectR)?
-  //   Y => @test.eq!(cpu.y, t.expectR)?
+  //   A => assert_eq!(cpu.a, t.expectR)?
+  //   X => assert_eq!(cpu.x, t.expectR)?
+  //   Y => assert_eq!(cpu.y, t.expectR)?
   // }
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareZeroPage(t : CMPTestData, ~r : Register = A) -> Unit!Error {
@@ -486,28 +486,28 @@ fn testCompareZeroPage(t : CMPTestData, ~r : Register = A) -> Unit!Error {
   cpu.write(0x0042, t.op)
 
   //
-  @test.eq!(cpu.step(), 3)
+  assert_eq!(cpu.step(), 3)
 
   //
-  @test.eq!(cpu.pc, t.pc + 2)
+  assert_eq!(cpu.pc, t.pc + 2)
 
   //
-  @test.eq!(cpu.registers[r], t.expectR.0)
+  assert_eq!(cpu.registers[r], t.expectR.0)
   // match r {
-  //   A => @test.eq!(cpu.a, t.expectR)?
-  //   X => @test.eq!(cpu.x, t.expectR)?
-  //   Y => @test.eq!(cpu.y, t.expectR)?
+  //   A => assert_eq!(cpu.a, t.expectR)?
+  //   X => assert_eq!(cpu.x, t.expectR)?
+  //   Y => assert_eq!(cpu.y, t.expectR)?
   // }
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
@@ -539,24 +539,24 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
   cpu.write(0x0042 + cpu.registers[X].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.pc, t.pc + 2)
+  assert_eq!(cpu.pc, t.pc + 2)
 
   //
-  @test.eq!(cpu.registers[A], t.expectR.0)
-  @test.eq!(cpu.registers[X], 0x04)
+  assert_eq!(cpu.registers[A], t.expectR.0)
+  assert_eq!(cpu.registers[X], 0x04)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareAbsolute(t : CMPTestData, ~r : Register = A) -> Unit!Error {
@@ -597,28 +597,28 @@ fn testCompareAbsolute(t : CMPTestData, ~r : Register = A) -> Unit!Error {
   cpu.write(0x8000, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.pc, t.pc + 3)
+  assert_eq!(cpu.pc, t.pc + 3)
 
   //
-  @test.eq!(cpu.registers[r], t.expectR.0)
+  assert_eq!(cpu.registers[r], t.expectR.0)
   // match r {
-  //   A => @test.eq!(cpu.a, t.expectR)?
-  //   X => @test.eq!(cpu.x, t.expectR)?
-  //   Y => @test.eq!(cpu.y, t.expectR)?
+  //   A => assert_eq!(cpu.a, t.expectR)?
+  //   X => assert_eq!(cpu.x, t.expectR)?
+  //   Y => assert_eq!(cpu.y, t.expectR)?
   // }
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
@@ -651,24 +651,24 @@ fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
   cpu.write(0x8000 + cpu.registers[X].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.pc, t.pc + 3)
+  assert_eq!(cpu.pc, t.pc + 3)
 
   //
-  @test.eq!(cpu.registers[A], t.expectR.0)
-  @test.eq!(cpu.registers[X], 0x04)
+  assert_eq!(cpu.registers[A], t.expectR.0)
+  assert_eq!(cpu.registers[X], 0x04)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
@@ -701,24 +701,24 @@ fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
   cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 4)
+  assert_eq!(cpu.step(), 4)
 
   //
-  @test.eq!(cpu.pc, t.pc + 3)
+  assert_eq!(cpu.pc, t.pc + 3)
 
   //
-  @test.eq!(cpu.registers[A], t.expectR.0)
-  @test.eq!(cpu.registers[Y], 0x04)
+  assert_eq!(cpu.registers[A], t.expectR.0)
+  assert_eq!(cpu.registers[Y], 0x04)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
@@ -754,24 +754,24 @@ fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
   cpu.write(0x8000, t.op)
 
   //
-  @test.eq!(cpu.step(), 6)
+  assert_eq!(cpu.step(), 6)
 
   //
-  @test.eq!(cpu.pc, t.pc + 2)
+  assert_eq!(cpu.pc, t.pc + 2)
 
   //
-  @test.eq!(cpu.registers[A], t.expectR.0)
-  @test.eq!(cpu.registers[X], 0x04)
+  assert_eq!(cpu.registers[A], t.expectR.0)
+  assert_eq!(cpu.registers[X], 0x04)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
 
 fn testCompareIndirectY(t : CMPTestData) -> Unit!Error {
@@ -807,22 +807,22 @@ fn testCompareIndirectY(t : CMPTestData) -> Unit!Error {
   cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  @test.eq!(cpu.step(), 5)
+  assert_eq!(cpu.step(), 5)
 
   //
-  @test.eq!(cpu.pc, t.pc + 2)
+  assert_eq!(cpu.pc, t.pc + 2)
 
   //
-  @test.eq!(cpu.registers[A], t.expectR.0)
-  @test.eq!(cpu.registers[Y], 0x04)
+  assert_eq!(cpu.registers[A], t.expectR.0)
+  assert_eq!(cpu.registers[Y], 0x04)
 
   //
-  @test.eq!(cpu.flags[C], t.expectC)
-  @test.eq!(cpu.flags[Z], t.expectZ)
-  @test.eq!(cpu.flags[I], i)
-  @test.eq!(cpu.flags[D], d)
-  @test.eq!(cpu.flags[B], b)
-  @test.eq!(cpu.flags[U], u)
-  @test.eq!(cpu.flags[V], v)
-  @test.eq!(cpu.flags[N], t.expectN)
+  assert_eq!(cpu.flags[C], t.expectC)
+  assert_eq!(cpu.flags[Z], t.expectZ)
+  assert_eq!(cpu.flags[I], i)
+  assert_eq!(cpu.flags[D], d)
+  assert_eq!(cpu.flags[B], b)
+  assert_eq!(cpu.flags[U], u)
+  assert_eq!(cpu.flags[V], v)
+  assert_eq!(cpu.flags[N], t.expectN)
 }
