@@ -111,6 +111,14 @@ fn op_mod(self : UInt8, other : UInt8) -> UInt8 {
   self.0 % other.0
 }
 
+fn op_shl(self : UInt8, bit : UInt8) -> UInt8 {
+  self.0 << bit.0
+}
+
+fn op_shr(self : UInt8, bit : UInt8) -> UInt8 {
+  self.0 >> bit.0
+}
+
 fn flip(self : UInt8, other : UInt8) -> UInt8 {
   self.0 & (-other.0 - 1)
 }
@@ -128,29 +136,6 @@ fn lor(self : UInt8, bit : UInt8) -> UInt8 {
 // bitwise xor
 fn lxor(self : UInt8, bit : UInt8) -> UInt8 {
   self.0 ^ bit.0
-}
-
-// logic shift left
-fn lsl(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 << bit.0
-}
-
-fn shl(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 << bit.0
-}
-
-// logic shift right
-fn lsr(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 >> bit.0
-}
-
-fn shr(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 >> bit.0
-}
-
-// arithmetic shift right
-fn asr(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0 >> bit.0
 }
 
 fn bit(self : UInt8, bit : UInt8) -> Bool {
@@ -237,11 +222,19 @@ fn op_sub(self : UInt16, other : UInt16) -> UInt16 {
 }
 
 fn op_mul(self : UInt16, other : UInt16) -> UInt16 {
-  self.0 * other.0 // handle overflow
+  self.0 * other.0 |> u16 // handle overflow
 }
 
 fn op_div(self : UInt16, other : UInt16) -> UInt16 {
-  self.0 / other.0 // handle underflow
+  self.0 / other.0 |> u16 // handle underflow
+}
+
+fn op_shl(self : UInt16, bit : UInt16) -> UInt16 {
+  self.0 << bit.0 |> u16
+}
+
+fn op_shr(self : UInt16, bit : UInt16) -> UInt16 {
+  self.0 >> bit.0 |> u16
 }
 
 // bitwise and
@@ -257,29 +250,6 @@ fn lor(self : UInt16, bit : UInt16) -> UInt16 {
 // bitwise xor
 fn lxor(self : UInt16, bit : UInt16) -> UInt16 {
   self.0 ^ bit.0
-}
-
-// logic shift left
-fn lsl(self : UInt16, bit : UInt16) -> UInt16 {
-  self.0 << bit.0
-}
-
-fn shl(self : UInt16, bit : UInt16) -> UInt16 {
-  self.0 << bit.0
-}
-
-// logic shift right
-fn lsr(self : UInt16, bit : UInt16) -> UInt16 {
-  self.0 >> bit.0
-}
-
-fn shr(self : UInt16, bit : UInt16) -> UInt16 {
-  self.0 >> bit.0
-}
-
-// arithmetic shift right
-fn asr(self : UInt16, bit : UInt16) -> UInt16 {
-  self.0 >> bit.0
 }
 
 fn has(self : UInt16, bit : UInt16) -> Bool {

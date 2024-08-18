@@ -50,7 +50,7 @@ impl C64 {
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
-  reset(Self) -> Unit!String
+  reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   step(Self) -> Int
@@ -112,6 +112,11 @@ impl Coordinate {
 type Envelope
 impl Envelope {
   default() -> Self
+  to_string(Self) -> String
+}
+
+type Exception
+impl Exception {
   to_string(Self) -> String
 }
 
@@ -214,8 +219,8 @@ pub struct PSID {
   pub sid3Address : UInt8
 }
 impl PSID {
-  new(@cpu.Memory, FixedArray[Int]) -> Self!String
-  process(Self) -> Unit!String
+  new(@cpu.Memory, FixedArray[Int]) -> Self!
+  process(Self) -> Unit!
 }
 
 type Register
@@ -340,6 +345,8 @@ impl Waveform {
   op_equal(Self, Self) -> Bool
 }
 
+// Type aliases
+
 // Traits
 
 // Extension Methods
@@ -348,6 +355,8 @@ impl Show for CPUClock
 impl Show for Channel
 
 impl Show for Envelope
+
+impl Show for Exception
 
 impl Show for FilterResonanceControl
 

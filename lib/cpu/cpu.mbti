@@ -82,6 +82,7 @@ type Registers
 pub type UInt16 Int
 impl UInt16 {
   compare(Self, Self) -> Int
+  default() -> Self
   op_equal(Self, Self) -> Bool
   to_hex(Self) -> String
   to_string(Self) -> String
@@ -90,12 +91,15 @@ impl UInt16 {
 pub type UInt8 Int
 impl UInt8 {
   compare(Self, Self) -> Int
+  default() -> Self
   op_equal(Self, Self) -> Bool
   to_hex(Self) -> String
   to_string(Self) -> String
 }
 
 type Vector
+
+// Type aliases
 
 // Traits
 

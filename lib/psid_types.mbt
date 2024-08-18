@@ -156,10 +156,10 @@ fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags! {
   }
 }
 
-fn land(self : Flags, bits : Int) -> Int {
-  self & bits
+fn op_shr(self : Flags, bits : Int) -> Int {
+  self >> bits
 }
 
-fn shr(self : Flags, bits : Int) -> Int {
-  self >> bits
+fn land(self : Flags, bits : Int) -> Int {
+  self & bits
 }

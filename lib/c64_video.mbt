@@ -72,7 +72,7 @@ test "error CPUClock::Both" {
   assert_eq!(value, Both)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownCPUClock)",
+    content="Err(unknown CPU clock)",
   )
 }
 
@@ -109,7 +109,7 @@ test "error ScanLines::None" {
   assert_eq!(value, Unknown)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownScanLines)",
+    content="Err(unknown scan lines)",
   )
 }
 
@@ -130,7 +130,7 @@ test "error ScanLines::Both" {
   assert_eq!(value, Both)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownScanLines)",
+    content="Err(unknown scan lines)",
   )
 }
 
@@ -155,7 +155,7 @@ test "error ScanLineCycles::None" {
   assert_eq!(value, Unknown)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownScanLineCycles)",
+    content="Err(unknown scan line cycles)",
   )
 }
 
@@ -176,7 +176,7 @@ test "error ScanLineCycles::Both" {
   assert_eq!(value, Both)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownScanLineCycles)",
+    content="Err(unknown scan line cycles)",
   )
 }
 
@@ -201,7 +201,7 @@ test "error FrameRate::None" {
   assert_eq!(value, Unknown)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownFrameRate)",
+    content="Err(unknown frame rate)",
   )
 }
 
@@ -222,6 +222,6 @@ test "error FrameRate::Both" {
   assert_eq!(value, Both)
   inspect!(
     value.to_int?(),
-    content="Err(trancee/wasmSID/lib.Exception.UnknownFrameRate)",
+    content="Err(unknown frame rate)",
   )
 }
