@@ -19,7 +19,12 @@ pub fn sidtest() -> Unit {
     }
   }
   println("---")
-  let c64 = @lib.C64::new(mem=Some(mem), ~psid)
+  let c64 = @lib.C64::new(
+    mem=Some(mem),
+    model=psid.flags.model,
+    videoStandard=psid.videoStandard(),
+    realSID=psid.realSID,
+  )
   initSIDtune(c64, psid, subtune)
   println("---")
   let author = psid.author
@@ -55,13 +60,13 @@ pub fn sidtest() -> Unit {
   println("---")
   c64.push16(0xFFFF)
   let mut i = 0
-  while c64.pc() != 0x0000 {
-    let _ = c64.step()
-    i = i + 1
-    // if i > 100 {
-    //   panic()
-    // }
+  while c64.pc() != 0x0000 && i < 1000 {
+    let _ = c64.emulate()
+    i += 1
   }
+  // if i > 100 {
+  //   panic()
+  // }
 }
 
 fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {
@@ -76,9 +81,10 @@ fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {
   c64.initCPU(baseaddress=Some(psid.initAddress))
   c64.setA(subtune - 1)
   c64.push16(0xFFFF)
-  while c64.pc() != 0x0000 {
-    let _ = c64.step()
-
+  let mut i = 0
+  while c64.pc() != 0x0000 && i < 1000 {
+    let _ = c64.emulate()
+    i += 1
   }
 
   //determine playaddress:

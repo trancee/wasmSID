@@ -148,7 +148,7 @@ fn carry(self : Flags) -> Bool {
 }
 
 fn not_carry(self : Flags) -> Bool {
-  self.carry().not()
+  not(self.carry())
 }
 
 fn clear_carry(self : Flags) -> Unit {
@@ -164,7 +164,7 @@ fn zero(self : Flags) -> Bool {
 }
 
 fn not_zero(self : Flags) -> Bool {
-  self.zero().not()
+  not(self.zero())
 }
 
 fn interrupt(self : Flags) -> Bool {
@@ -172,7 +172,7 @@ fn interrupt(self : Flags) -> Bool {
 }
 
 fn not_interrupt(self : Flags) -> Bool {
-  self.interrupt().not()
+  not(self.interrupt())
 }
 
 fn clear_interrupt(self : Flags) -> Unit {
@@ -200,7 +200,7 @@ fn set_decimal(self : Flags) -> Unit {
 }
 
 fn not_decimal(self : Flags) -> Bool {
-  self.decimal().not()
+  not(self.decimal())
 }
 
 fn overflow(self : Flags) -> Bool {
@@ -208,7 +208,7 @@ fn overflow(self : Flags) -> Bool {
 }
 
 fn not_overflow(self : Flags) -> Bool {
-  self.overflow().not()
+  not(self.overflow())
 }
 
 fn clear_overflow(self : Flags) -> Unit {
@@ -220,7 +220,7 @@ fn negative(self : Flags) -> Bool {
 }
 
 fn not_negative(self : Flags) -> Bool {
-  self.negative().not()
+  not(self.negative())
 }
 
 fn getC(self : Flags) -> Int {

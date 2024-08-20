@@ -20,7 +20,6 @@ pub struct PSID {
   mut defaultSong : UInt16
   //
   mut flags : Flags
-  mut model : FixedArray[Model]
   //
   mut sid2Flags : SIDFlags
   mut sid3Flags : SIDFlags
@@ -53,7 +52,6 @@ pub fn PSID::new(mem : @cpu.Memory, data : FixedArray[Int]) -> PSID! {
     defaultSong: 0,
     //
     flags: Flags::default!(),
-    model: [],
     //
     sid2Flags: SIDFlags::default!(),
     sid3Flags: SIDFlags::default!(),
@@ -250,7 +248,6 @@ pub fn process(self : PSID) -> Unit! {
   ///
   /// $02A6 : depending on the PAL/NTSC flag in the SID file header, it is set to
   ///         0x01 for PAL and set to 0x00 for NTSC.
-
   self[0x02A6] = match self.flags.videoStandard {
     NTSC => 0x00
     PAL => 0x01
@@ -318,6 +315,10 @@ fn makeString(self : PSID, offset : Int, length : Int) -> String {
     bytes[i << 1] = self[offset + i].to_byte()
   }
   bytes.to_string()
+}
+
+pub fn videoStandard(self : PSID) -> VideoStandard {
+  self.flags.videoStandard
 }
 
 fn op_get(self : PSID, address : Int) -> Int {

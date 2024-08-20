@@ -16,7 +16,8 @@ pub struct C64 {
   pub sid : Array[SID]
   pub cia : Array[CIA]
   pub vic : VIC
-  pub psid : PSID
+  pub model : FixedArray[Model]
+  pub realSID : Bool
   pub sampleRate : Int
   pub highQuality : Bool
   pub stereo : Bool
@@ -36,24 +37,23 @@ pub struct C64 {
   pub overSampleCycleCnt : Int
   pub finished : Bool
   pub returned : Bool
-  pub irq : Int
-  pub nmi : Int
-  pub prevNMI : Int
+  pub irq : Bool
+  pub nmi : Bool
+  pub prevNMI : Bool
 }
 impl C64 {
-  emulate(Self) -> Tuple[Int, Int]
+  emulate(Self) -> Output
   get_flags(Self) -> @cpu.UInt8
   initC64(Self) -> Unit
   initCPU(Self, ~baseaddress : Int? = ..) -> Unit
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
-  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~psid : PSID) -> Self
+  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = ..) -> Self
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
-  step(Self) -> Int
 }
 
 type CIA
@@ -131,7 +131,12 @@ impl FilterSelect {
   to_string(Self) -> String
 }
 
-type Flags
+pub struct Flags {
+  pub player : Int
+  pub mode : Mode
+  pub videoStandard : VideoStandard
+  pub model : FixedArray[Model]
+}
 impl Flags {
   op_equal(Self, Self) -> Bool
   to_string(Self) -> String
@@ -195,6 +200,11 @@ impl NES {
   step(Self) -> Int
 }
 
+type Output
+impl Output {
+  default() -> Self
+}
+
 pub struct PSID {
   pub mem : @cpu.Memory
   pub data : FixedArray[Int]
@@ -211,7 +221,6 @@ pub struct PSID {
   pub songs : UInt16
   pub defaultSong : UInt16
   pub flags : Flags
-  pub model : FixedArray[Model]
   pub sid2Flags : SIDFlags
   pub sid3Flags : SIDFlags
   pub sid4Flags : SIDFlags
@@ -221,6 +230,7 @@ pub struct PSID {
 impl PSID {
   new(@cpu.Memory, FixedArray[Int]) -> Self!
   process(Self) -> Unit!
+  videoStandard(Self) -> VideoStandard
 }
 
 type Register
@@ -261,6 +271,9 @@ impl SIDregister {
 type SIDspecs
 
 type SIDwavOutput
+impl SIDwavOutput {
+  default() -> Self
+}
 
 type ScanLineCycles
 impl ScanLineCycles {

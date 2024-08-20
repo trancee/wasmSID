@@ -22,10 +22,15 @@ fn op_get(self : SIDspecs, value : SIDspecs) -> Int {
   }
 }
 
+struct Output {
+  mut left : Int
+  mut right : Int
+} derive(Default)
+
 struct SIDwavOutput {
   mut nonFilted : Int
   mut filterInput : Int
-}
+} derive(Default)
 
 /// 54295         $D417          RESON
 /// Filter Resonance Control Register
@@ -80,30 +85,14 @@ fn FilterResonanceControl::from_u8(value : UInt8) -> FilterResonanceControl {
 
 fn to_u8(self : FilterResonanceControl) -> UInt8 {
   /// Bit 0:  Filter the output of voice 1?  1=yes
-  (
-    self.voice[0].to_int() <<
-
-    /// Bit 1:  Filter the output of voice 2?  1=yes
-    0
-  ) |
-  (
-    self.voice[1].to_int() <<
-
-    /// Bit 2:  Filter the output of voice 3?  1=yes
-    1
-  ) |
-  (
-    self.voice[2].to_int() <<
-
-    /// Bit 3:  Filter the output from the external input?  1=yes
-    2
-  ) |
-  (
-    self.external.to_int() <<
-
-    /// Bits 4-7:  Select filter resonance 0-15
-    3
-  ) |
+  (self.voice[0].to_int() << 0) |
+  /// Bit 1:  Filter the output of voice 2?  1=yes
+  (self.voice[1].to_int() << 1) |
+  /// Bit 2:  Filter the output of voice 3?  1=yes
+  (self.voice[2].to_int() << 2) |
+  /// Bit 3:  Filter the output from the external input?  1=yes
+  (self.external.to_int() << 3) |
+  /// Bits 4-7:  Select filter resonance 0-15
   (self.resonance << 4)
 }
 
@@ -197,12 +186,12 @@ struct SIDRegister {
 
   /// $1B
   /// Read Oscillator 3/Random Number Generator
-  random : UInt8
-  oscillator : UInt8
+  mut random : UInt8
+  // oscillator : UInt8
 
   /// $1C
   /// Envelope Generator 3 Output
-  envelope : UInt8
+  mut envelope : UInt8
 } derive(Show)
 
 fn SIDRegister::default() -> SIDRegister {
@@ -218,8 +207,8 @@ fn SIDRegister::default() -> SIDRegister {
     //
     input: [UInt8::default(), UInt8::default()],
     //
-    oscillator: UInt8::default(),
     random: UInt8::default(),
+    // oscillator: UInt8::default(),
     //
     envelope: UInt8::default(),
   }
@@ -291,7 +280,7 @@ enum SIDregister {
   ENV3
 
   /// Not Connected
-  UNUSED
+  // UNUSED
 } derive(Show, Compare, Eq)
 
 fn sid(register : SIDregister) -> Int {
@@ -338,7 +327,7 @@ fn sid(register : SIDregister) -> Int {
     ENV3 => 0x1C
 
     ///
-    UNUSED => 0x1D
+    // UNUSED => 0x1D
   }
 }
 
@@ -386,7 +375,7 @@ fn SIDregister::from_int(value : Int) -> SIDregister! {
     0x1C => ENV3
 
     ///
-    0x1D => UNUSED
+    // 0x1D => UNUSED
 
     ///
     _ => raise UnknownRegister("SID", value)
@@ -481,48 +470,20 @@ fn VoiceControl::from_u8(value : UInt8) -> VoiceControl {
 
 fn to_u8(self : VoiceControl) -> UInt8 {
   /// Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
-  (
-    self.gateBit.to_int() <<
-
-    /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency
-    0
-  ) |
-  (
-    self.syncBit.to_int() <<
-
-    /// Bit 2:  Ring Modulation:  1=Ring modulate Oscillators 1 and 3
-    1
-  ) |
-  (
-    self.ringModulation.to_int() <<
-
-    /// Bit 3:  Test Bit:  1=Disable Oscillator 1
-    2
-  ) |
-  (
-    self.testBit.to_int() <<
-
-    /// Bit 4:  Select triangle waveform
-    3
-  ) |
-  (
-    self.triangleWaveform.to_int() <<
-
-    /// Bit 5:  Select sawtooth waveform
-    4
-  ) |
-  (
-    self.sawtoothWaveform.to_int() <<
-
-    /// Bit 6:  Select pulse waveform
-    5
-  ) |
-  (
-    self.pulseWaveform.to_int() <<
-
-    /// Bit 7:  Select random noise waveform
-    6
-  ) |
+  (self.gateBit.to_int() << 0) |
+  /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency
+  (self.syncBit.to_int() << 1) |
+  /// Bit 2:  Ring Modulation:  1=Ring modulate Oscillators 1 and 3
+  (self.ringModulation.to_int() << 2) |
+  /// Bit 3:  Test Bit:  1=Disable Oscillator 1
+  (self.testBit.to_int() << 3) |
+  /// Bit 4:  Select triangle waveform
+  (self.triangleWaveform.to_int() << 4) |
+  /// Bit 5:  Select sawtooth waveform
+  (self.sawtoothWaveform.to_int() << 5) |
+  /// Bit 6:  Select pulse waveform
+  (self.pulseWaveform.to_int() << 6) |
+  /// Bit 7:  Select random noise waveform
   (self.noiseWaveform.to_int() << 7)
 }
 
@@ -537,130 +498,3 @@ fn hasWaveform(self : VoiceControl) -> Bool {
   self.pulseWaveform ||
   self.noiseWaveform
 }
-
-// fn op_get(
-//   self : VoiceControl,
-//   register : VoiceControl
-// ) -> UInt8 {
-//   match register {
-//     /// Gate Bit: 1 = Start Attack/Decay/Sustain
-//     ///           0 = Start Release
-//     GateBit => 1 << 0
-//     /// Sync Bit: 1 = Synchronize Oscillator with Oscillator 3 Frequency
-//     SyncBit => 1 << 1
-//     /// Ring Modulation: 1 = Ring modulate Oscillators 1 and 3
-//     RingModulation => 1 << 2
-//     /// Test Bit: 1 = Disable Oscillator 1
-//     TestBit => 1 << 3
-//     SelectTriangleWaveform => 1 << 4
-//     SelectSawtoothWaveform => 1 << 5
-//     SelectPulseWaveform => 1 << 6
-//     SelectRandomNoiseWaveform => 1 << 7
-//   }
-// }
-
-// fn land(self : VoiceControl, mask : Int) -> UInt8 {
-//   self & mask
-// }
-
-// enum AttackDecayCycleControl {
-//   SelectAttackCycleDuration
-//   SelectDecayCycleDuration
-// }
-
-// fn op_get(
-//   self : AttackDecayCycleControl,
-//   flag : AttackDecayCycleControl
-// ) -> Int {
-//   match flag {
-//     SelectAttackCycleDuration => (1 << 7) | (1 << 6) | (1 << 5) | (1 << 4)
-//     SelectDecayCycleDuration => (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0)
-//   }
-// }
-
-// enum SustainReleaseCycleControl {
-//   SelectSustainCycleDuration
-//   SelectReleaseCycleDuration
-// }
-
-// fn op_get(
-//   self : SustainReleaseCycleControl,
-//   flag : SustainReleaseCycleControl
-// ) -> Int {
-//   match flag {
-//     SelectSustainCycleDuration => (1 << 7) | (1 << 6) | (1 << 5) | (1 << 4)
-//     SelectReleaseCycleDuration => (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0)
-//   }
-// }
-
-// enum FilterResonanceControlRegister {
-//   /// Bits 0-3 are used to control which of the voices will be altered by
-//   /// the filters.  If one of these bits is set to 1, the corresponding
-//   /// voice will be processed through the filter, and its harmonic content
-//   /// will be changed accordingly.  If the bit is set to 0, the voice will
-//   /// pass directly to the audio output.  Note that there is also a
-//   /// provision for processing an external audio signal which is brought
-//   /// through pin 5 of the Audio/Video Port.
-//   FilterVoice1Output
-//   FilterVoice2Output
-//   FilterVoice3Output
-//   FilterExternalInput
-
-//   /// Bits 4-7 control the resonance of the filter.  By placing a number
-//   /// from 0 to 15 in these four bits, you may peak the volume of those
-//   /// frequencies nearest the cutoff.  This creates an even sharper
-//   /// filtering effect.  A setting of 0 causes no resonance, while a setting
-//   /// of 15 gives maximum resonance.
-//   SelectFilterResonance
-// }
-
-// fn op_get(
-//   self : FilterResonanceControlRegister,
-//   flag : FilterResonanceControlRegister
-// ) -> Int {
-//   match flag {
-//     FilterVoice1Output => 1 << 0
-//     FilterVoice2Output => 1 << 1
-//     FilterVoice3Output => 1 << 2
-//     FilterExternalInput => 1 << 3
-//     SelectFilterResonance => (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7)
-//   }
-// }
-
-// enum VolumeFilterSelectRegister {
-//   /// Bits 0-3 control the volume of all outputs.  The possible volume
-//   /// levels range from 0 (no volume) to 15 (maximum volume).  Some level of
-//   /// volume must be set here before any sound can be heard.
-//   SelectOutputVolume
-
-//   /// Bits 4-6 control the selection of the low-pass, band-pass, or
-//   /// high-pass filter.  A 1 in any of these bits turns the corresponding
-//   /// filter on.  These filters can be combined, although only one cutoff
-//   /// frequency can be chosen.  In order for the filter to have any effect,
-//   /// at least one of the voices must be routed through it using the Filter
-//   /// Resonance Control Register at 54295 ($D417).
-//   SelectFilterLowPassMode
-//   SelectFilterBandPassMode
-//   SelectFilterHighPassMode
-
-//   /// When Bit 7 is set to 1,  it disconnects the output of voice 3.  This
-//   /// allows you to use the output of the oscillator for modulating the
-//   /// frequency of the other voices, or for generating random number,
-//   /// without any undesired audio output.
-//   CutOffVoice3Output
-// }
-
-// fn op_get(
-//   self : VolumeFilterSelectRegister,
-//   flag : VolumeFilterSelectRegister
-// ) -> Int {
-//   match flag {
-//     SelectOutputVolume => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)
-//     //
-//     SelectFilterLowPassMode => 1 << 4
-//     SelectFilterBandPassMode => 1 << 5
-//     SelectFilterHighPassMode => 1 << 6
-//     //
-//     CutOffVoice3Output => 1 << 7
-//   }
-// }

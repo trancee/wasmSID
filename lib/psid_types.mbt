@@ -132,11 +132,11 @@ fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
   }
 }
 
-struct Flags {
+pub struct Flags {
   player : Int
   mode : Mode
   videoStandard : VideoStandard
-  model : Array[Model]
+  model : FixedArray[Model]
 } derive(Show, Eq)
 
 fn Flags::default() -> Flags! {

@@ -289,6 +289,9 @@ fn emulateWaves(
   attenuation : Int,
   realSID : Bool
 ) -> Int {
+  // println(">> SID::emulateWaves")
+  //
+
   self.nonFiltedSample = 0
   self.filterInputSample = 0
   let filterSwitchReso = self.register.filterResonanceControl
@@ -302,6 +305,7 @@ fn emulateWaves(
     let adsr = self.adsr[channel]
     let wave = self.wave[channel]
     //
+
     fn combinedWF(wfArray : Waveform, oscval : Int) -> Int {
       let mut oscval = oscval
       if self.model == MOS6581 && wfArray != PulseTriangle {
@@ -315,20 +319,24 @@ fn emulateWaves(
         16
       wave.prevWavData.0 << 8
     }
+
     //
     let mut utmp = 0
     let mut msb = 0
     let mut pw = 0
+
     //
     let mut tmp = 0
     let mut envelope = 0
     let mut feedback = false
     let mut steepness = 0
     let mut pulsePeak = 0
+
     //
     let voiceControl = voice.control
     let testBit = voiceControl.testBit
     let mut phaseAccuPtr = wave.phaseAccu // FIXME: better direct access instead of Ptr?
+
     //
     let phaseAccuStep = voice.frequency.0 * sampleClockRatio
     if testBit || (voiceControl.syncBit && wave.syncSourceMSBrise) {
@@ -342,6 +350,7 @@ fn emulateWaves(
       msb = phaseAccuPtr & 0x8000000
       wave.syncSourceMSBrise = msb > (wave.prevPhaseAccu & 0x8000000)
     }
+
     //
     if voiceControl.noiseWaveform {
       tmp = wave.noiseLFSR //clock LFSR all time if clockrate exceeds observable at given samplerate (last term):
@@ -443,6 +452,7 @@ fn emulateWaves(
       wavGenOut = (tmp ^ if (tmp & 0x8000000) > 0 { 0xFFFFFFF } else { 0 }) >>
         11
     }
+
     //
     wavGenOut = wavGenOut & 0xFFFF
     if voiceControl.hasWaveform() {
@@ -471,17 +481,24 @@ fn emulateWaves(
   self[ENV3] = self.adsr[2].envelopeCounter //Envelope
 
   //
+  // println("<< SID::emulateWaves")
+
+  //
   self.emulateSIDoutputStage(attenuation, realSID)
 }
 
 fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
+  // println(
+  //   ">> SID::emulateSIDoutputStage attenuation[\{attenuation}] realSID[\{realSID}]",
+  // )
+  //
+
   let mut mainVolume = 0
   //
   let mut tmp = 0
   let mut nonFilted = 0
   let mut filterInput = 0
   let mut filterOutput = 0
-  let output = 0
 
   //
   let filterSwitchReso = self.register.filterResonanceControl
@@ -500,15 +517,20 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
       cutoff = cutoffMul8580_44100Hz[cutoff.0]
       resonance = resonances8580[resonance].0
     }
-    MOS6581 => { //6581
+    MOS6581 => {
+      //MOSFET-VCR control-voltage calculation
       cutoff += (filterInput * 105) >> 16
       if cutoff > 0x7FF {
         cutoff = 0x7FF
       } else if cutoff < 0 {
         cutoff = 0
-      } //MOSFET-VCR control-voltage calculation
+      }
       cutoff = cutoffMul6581_44100Hz[cutoff.0] //(resistance-modulation aka 6581 filter distortion) emulation
       resonance = resonances6581[resonance].0
+    }
+    _ => {
+      println("unknown SID model")
+      abort("unknown SID model")
     }
   }
 
@@ -543,6 +565,9 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
   } else { //lowpass is main volume
     mainVolume = self.register.volume.0
   }
+
+  //
+  // println("<< SID::emulateSIDoutputStage")
 
   //
   self.output = (nonFilted + filterOutput) * mainVolume
@@ -871,11 +896,6 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
 
     /// Filter Resonance Control Register
     /// 54295         $D417          RESON
-    /// Bit 0:  Filter the output of voice 1?  1=yes
-    /// Bit 1:  Filter the output of voice 2?  1=yes
-    /// Bit 2:  Filter the output of voice 3?  1=yes
-    /// Bit 3:  Filter the output from the external input?  1=yes
-    /// Bits 4-7:  Select filter resonance 0-15
     RESON =>
       self.register.filterResonanceControl = FilterResonanceControl::from_u8(
         value,
@@ -883,12 +903,6 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
 
     /// Volume and Filter Select Register
     /// 54296         $D418          SIGVOL
-    ///
-    /// Bits 0-3:  Select output volume (0-15)
-    /// Bit 4:  Select low-pass filter, 1=low-pass on
-    /// Bit 5:  Select band-pass filter, 1=band-pass on
-    /// Bit 6:  Select high-pass filter, 1=high-pass on
-    /// Bit 7:  Disconnect output of voice 4, 1=voice 3 off
     SIGVOL => {
       self.register.volume = value & 0x0F
       self.register.filterSelect.lowPass = (value & (1 << 4)) != 0
@@ -896,5 +910,20 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       self.register.filterSelect.highPass = (value & (1 << 6)) != 0
       self.register.disconnectVoice = (value & (1 << 7)) != 0
     }
+
+    /// Read Game Paddle 1 (or 3) Position
+    /// 54297         $D419          POTX
+    POTX => self.register.input[0] = value
+    /// Read Game Paddle 2 (or 4) Position
+    /// 54298         $D41A          POTY
+    POTY => self.register.input[1] = value
+
+    /// Read Oscillator 3/Random Number Generator
+    /// 54299         $D41B          RANDOM
+    RANDOM => self.register.random = value
+
+    /// Envelope Generator 3 Output
+    /// 54300         $D41C          ENV3
+    ENV3 => self.register.envelope = value
   }
 }

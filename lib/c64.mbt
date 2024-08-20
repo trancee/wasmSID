@@ -15,7 +15,8 @@ pub struct C64 {
   cia : Array[CIA]
   vic : VIC
   //
-  psid : PSID
+  model : FixedArray[Model]
+  realSID : Bool
   //
   mut sampleRate : Int
   mut highQuality : Bool
@@ -47,13 +48,13 @@ pub struct C64 {
   mut finished : Bool
   mut returned : Bool
   //
-  mut irq : Int //collected IRQ line from devices
-  mut nmi : Int //collected NMI line from devices
+  mut irq : Bool //collected IRQ line from devices
+  mut nmi : Bool //collected NMI line from devices
   //
-  mut prevNMI : Int //used for NMI leading edge detection
+  mut prevNMI : Bool //used for NMI leading edge detection
 }
 
-let default_samplerate = 44100
+let defaultSampleRate = 44100
 
 pub fn C64::new(
   ~baseaddress : Int = 0x0000,
@@ -61,15 +62,16 @@ pub fn C64::new(
   ~data : FixedArray[Int] = [],
   ~offset : Int = 0x0000,
   ~length : Int = data.length(),
-  ~sampleRate : Int = default_samplerate,
-  ~psid : PSID
+  ~sampleRate : Int = defaultSampleRate,
+  ~model : FixedArray[Model] = [MOS6581],
+  ~videoStandard : VideoStandard = Unknown,
+  ~realSID : Bool = false
 ) -> C64 {
   let cpu = @cpu.CPU::new(pc=baseaddress, ~mem)
   cpu.load(offset, data, ~length)
   let mem = cpu.mem()
   mem.setROM()
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let videoStandard = psid.flags.videoStandard
   let sid = [SID::new(cpu, 0xD400, ~videoStandard)]
   let cia = [
     CIA::new(cpu, 0xDC00, ~videoStandard),
@@ -86,7 +88,8 @@ pub fn C64::new(
     cia,
     vic,
     //
-    psid,
+    model,
+    realSID,
     //
     sampleRate,
     highQuality: false,
@@ -112,12 +115,20 @@ pub fn C64::new(
     finished: false,
     returned: false,
     //
-    irq: 0,
-    nmi: 0,
+    irq: false,
+    nmi: false,
     //
-    prevNMI: 0,
+    prevNMI: false,
   }
-  c64.initC64()
+  // c64.initC64()
+  try {
+    c64.reset!()
+  } catch {
+    err => {
+      println(err)
+      panic()
+    }
+  }
   c64
 }
 
@@ -126,12 +137,11 @@ pub fn reset(self : C64) -> Unit! {
   println(">> C64::reset")
 
   //
-  self.videoStandard = self.psid.flags.videoStandard
   if self.sampleRate == 0 {
     self.sampleRate = 44100
   }
   self.cpuFrequency = CPUClock(self.videoStandard)
-  self.sampleClockRatio = self.cpuFrequency.lsl!(4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
+  self.sampleClockRatio = (self.cpuFrequency << 4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
   //
   self.vic.rasterLines = ScanLines(self.videoStandard).to_int!() // HINT: should be inferred
   self.vic.rasterRowCycles = ScanLineCycles(self.videoStandard).to_int!() // HINT: should be inferred
@@ -139,7 +149,8 @@ pub fn reset(self : C64) -> Unit! {
   //
   self.prevRasterLine = -1 //so if $d012 is set once only don't disturb FrameCycleCnt
   //
-  let model = self.psid.flags.model[0]
+
+  let model = self.model[0]
   self.sid[0].model = if self.selectedModel != Unknown {
     self.selectedModel
   } else {
@@ -147,42 +158,44 @@ pub fn reset(self : C64) -> Unit! {
   }
 
   //
-  self.sid[0].channel = Channel::Left
+  self.sid[0].channel = Channel::Both
 
-  // SID #2
-  let mut model = self.psid.flags.model[1]
-  if model == Unknown {
-    model = self.sid[0].model
-  }
-  if self.selectedModel != Unknown {
-    model = self.selectedModel
-  }
-  self.sid[1] = SID::new(
-    self.cpu,
-    0xD000 + (self.psid.sid2Address << 4).0,
-    ~model,
-    channel=Channel::Right,
-  )
+  // // SID #2
+  // let mut model = self.psid.flags.model[1]
+  // if model == Unknown {
+  //   model = self.sid[0].model
+  // }
+  // if self.selectedModel != Unknown {
+  //   model = self.selectedModel
+  // }
+  // self.sid[1] = SID::new(
+  //   self.cpu,
+  //   0xD000 + (self.psid.sid2Address << 4).0,
+  //   ~model,
+  //   channel=Channel::Right,
+  // )
 
-  // SID #3
-  let mut model = self.psid.flags.model[2]
-  if model == Unknown {
-    model = self.sid[0].model
-  }
-  if self.selectedModel != Unknown {
-    model = self.selectedModel
-  }
-  self.sid[2] = SID::new(
-    self.cpu,
-    0xD000 + (self.psid.sid3Address << 4).0,
-    ~model,
-    channel=Channel::Both,
-  )
+  // // SID #3
+  // let mut model = self.psid.flags.model[2]
+  // if model == Unknown {
+  //   model = self.sid[0].model
+  // }
+  // if self.selectedModel != Unknown {
+  //   model = self.selectedModel
+  // }
+  // self.sid[2] = SID::new(
+  //   self.cpu,
+  //   0xD000 + (self.psid.sid3Address << 4).0,
+  //   ~model,
+  //   channel=Channel::Both,
+  // )
 
   //
-  if self.sid.length() == 1 {
-    self.sid[0].channel = Channel::Both
+  if self.sid.length() > 1 {
+    self.sid[0].channel = Channel::Left
   }
+
+  //
   self.attenuation = match self.sid.length() {
     0 => 0
     1 => 26
@@ -201,7 +214,7 @@ pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
   //
   self.cpu.reset(~baseaddress)
   //
-  self.prevNMI = 0
+  self.prevNMI = false
 
   //
   println("<< C64::initCPU")
@@ -219,8 +232,8 @@ pub fn initC64(self : C64) -> Unit {
   // self.mem.reset()
 
   self.initCPU()
-  self.irq = 0
-  self.nmi = 0
+  self.irq = false
+  self.nmi = false
   if self.highQuality {
     // FIXME
     // self.sid[0].nonFiltedSample = 0
@@ -231,12 +244,37 @@ pub fn initC64(self : C64) -> Unit {
   self.sampleCycleCnt = 0
   self.overSampleCycleCnt = 0
 
+  /// 6510 On-Chip I/O DATA Direction Register
+  /// 0             $0             D6510
+  /// 1             $1             R6510
+  ///
+  /// Bit 0: LORAM signal.  Selects ROM or RAM at 40960 ($A000).  1=BASIC, 0=RAM
+  /// Bit 1: HIRAM signal.  Selects ROM or RAM at 57344 ($E000).  1=Kernal, 0=RAM
+  /// Bit 2: CHAREN signal.  Selects character ROM or I/O devices.  1=I/O, 0=ROM
+  /// Bit 3: Cassette Data Output line.
+  /// Bit 4: Cassette Switch Sense.  Reads 0 if a button is pressed, 1 if not.
+  /// Bit 5: Cassette Motor Switch Control.  A 1 turns the motor on, 0 turns it off.
+  /// Bits 6-7: Not connected--no function presently defined.
+
   //initialize bank-reg. (ROM-banks and IO enabled)
   self[0x0001] = 0x37
+
+  /// Vector to IRQ Interrupt Routine
+  /// 788-789       $314-$315      CINV
+  ///
+  /// This vector points to the address of the routine that is executed when
+  /// an IRQ interrupt occurs (normally 59953 ($FA31)).
 
   //IRQ
   self[0x0314] = 0x31
   self[0x0315] = 0xEA
+
+  /// Vector: Non-Maskable Interrupt
+  /// 792-793       $318-$319      NMINV
+  ///
+  /// This vector points to the address of the routine that will be executed
+  /// when a Non-Maskable Interrupt (NMI) occurs (currently at 65095
+  /// ($FE47)).
 
   //NMI
   self[0x0318] = 0x81
@@ -246,29 +284,44 @@ pub fn initC64(self : C64) -> Unit {
   println("<< C64::initC64")
 }
 
-pub fn emulate(self : C64) -> (Int, Int) {
+pub fn emulate(self : C64) -> Output {
+  println(">> C64::emulate")
+  //
+
+  let cpuClock = try {
+    self.cpuFrequency.to_int!()
+  } catch {
+    err => {
+      println(err)
+      panic()
+    }
+  }
+  let oversamplingRatio = 7
+  let oversamplingCycles = cpuClock / defaultSampleRate / oversamplingRatio
+  //
+
   let mut instructionCycles = 0
+
   //
   //Cycle-based part of emulations:
   //
   while self.sampleCycleCnt <= self.sampleClockRatio {
-    if self.psid.realSID.not() {
+    if not(self.realSID) {
       if self.frameCycleCnt >= self.frameCycles {
         self.frameCycleCnt -= self.frameCycles
         if self.finished { //some tunes (e.g. Barbarian, A-Maze-Ing) doesn't always finish in 1 frame
-          self.initCPU(baseaddress=Some(self.psid.playAddress)) //(PSID docs say bank-register should always be set for each call's region)
+          // FIXME: self.initCPU(baseaddress=Some(self.psid.playAddress)) //(PSID docs say bank-register should always be set for each call's region)
           self.finished = false
-          // FIXME
-          // if self.timerSource == 0 {
-          //   self[0xD019] = 0x81 //always simulate to player-calls that VIC-IRQ happened
-          // } else {
-          //   self[0xDC0D] = 0x83 //always simulate to player-calls that CIA TIMERA/TIMERB-IRQ happened
-          // }
+          if self.timerSource == 0 {
+            self[0xD019] = 0x81 //always simulate to player-calls that VIC-IRQ happened
+          } else {
+            self[0xDC0D] = 0x83 //always simulate to player-calls that CIA TIMERA/TIMERB-IRQ happened
+          }
         }
       }
-      if self.finished.not() {
-        instructionCycles = self.cpu.step()
-        if instructionCycles >= 0xFE {
+      if not(self.finished) {
+        instructionCycles = self.step()
+        if self.pc() == 0x0000 {
           instructionCycles = 6
           self.finished = true
         }
@@ -276,39 +329,149 @@ pub fn emulate(self : C64) -> (Int, Int) {
         instructionCycles = 7 //idle between player-calls
       }
       self.frameCycleCnt += instructionCycles
-      // FIXME
-      // self[0xDC04] += instructionCycles //very simple CIA1 TimerA simulation for PSID (e.g. Delta-Mix_E-Load_loader)
-
+      // FIXME: self[0xDC04] += instructionCycles //very simple CIA1 TimerA simulation for PSID (e.g. Delta-Mix_E-Load_loader)
     } else { //RealSID emulations:
       if self.interrupts() {
         self.finished = false
         instructionCycles = 7
-      } else if self.finished.not() {
-        instructionCycles = self.cpu.step()
-        if instructionCycles >= 0xFE {
+      } else if not(self.finished) {
+        instructionCycles = self.step()
+        if self.pc() == 0x0000 {
           instructionCycles = 6
           self.finished = true
         }
       } else {
         instructionCycles = 7 //idle between IRQ-calls
       }
-      self.irq = 0 //prepare for collecting IRQ sources
-      self.nmi = 0 //prepare for collecting NMI sources
-      self.irq += if self.cia[0].emulate(instructionCycles) { 1 } else { 0 }
-      self.nmi += if self.cia[1].emulate(instructionCycles) { 1 } else { 0 }
-      self.irq += if self.vic.emulate(instructionCycles) { 1 } else { 0 }
+      self.irq = false //prepare for collecting IRQ sources
+      self.nmi = false //prepare for collecting NMI sources
+      self.irq = self.irq || self.cia[0].emulate(instructionCycles)
+      self.nmi = self.nmi || self.cia[1].emulate(instructionCycles)
+      self.irq = self.irq || self.vic.emulate(instructionCycles)
     }
+
+    //
     self.sampleCycleCnt += instructionCycles << 4
-    // self.sid.emulateADSRs(instructionCycles)
-    // if ( C64->SID[2].BaseAddress != 0 ) cRSID_emulateADSRs (&C64->SID[2], InstructionCycles);
-    // if ( C64->SID[3].BaseAddress != 0 ) cRSID_emulateADSRs (&C64->SID[3], InstructionCycles);
-    // if ( C64->SID[4].BaseAddress != 0 ) cRSID_emulateADSRs (&C64->SID[4], InstructionCycles);
+
+    //
+    self.sid.each(fn(sid) { sid.emulateADSR(instructionCycles) })
   }
   self.sampleCycleCnt -= self.sampleClockRatio
+
+  //
+  let mut hqSampleCount = 0
+  if self.highQuality { //oversampled waveform-generation
+    hqSampleCount = 0
+    self.sid.each(
+      fn(sid) {
+        sid.nonFiltedSample = 0
+        sid.filterInputSample = 0
+      },
+    )
+
+    //
+    while self.overSampleCycleCnt <= self.sampleClockRatio {
+      self.sid.each(
+        fn(sid) {
+          let output = sid.emulateHQWaves(oversamplingCycles)
+          sid.nonFiltedSample += output.nonFilted
+          sid.filterInputSample += output.filterInput
+        },
+      )
+      hqSampleCount += 1
+      self.overSampleCycleCnt += oversamplingCycles << 4
+    }
+    self.overSampleCycleCnt -= self.sampleClockRatio
+  }
+
   //
   //Samplerate-based part of emulations:
   //
-  (0, 0)
+  let output = Output::default()
+  if not(self.highQuality) {
+    if not(self.stereo) || self.sid.length() == 1 {
+      self.sid.each(
+        fn(sid) {
+          let tmp = sid.emulateWaves(
+            self.sampleClockRatio,
+            self.attenuation,
+            self.realSID,
+          )
+          output.left = tmp
+          output.right = tmp
+        },
+      )
+    } else {
+      let mut tmp = 0
+      output.left = tmp
+      output.right = tmp
+      self.sid.each(
+        fn(sid) {
+          tmp = sid.emulateWaves(
+            self.sampleClockRatio,
+            self.attenuation,
+            self.realSID,
+          )
+          match sid.channel {
+            Left => output.left += tmp * 2
+            Right => output.right += tmp * 2
+            _ => {
+              output.left += tmp
+              output.right += tmp
+            }
+          }
+        },
+      )
+    }
+  } else {
+    //SID output-stages and mono/stereo handling for High-Quality SID-emulation
+    self.sid.each(
+      fn(sid) {
+        sid.nonFiltedSample /= hqSampleCount
+        sid.filterInputSample /= hqSampleCount
+      },
+    )
+    if not(self.stereo) || self.sid.length() == 1 {
+      let mut tmp = 0
+      self.sid.each(
+        fn(sid) {
+          tmp += sid.emulateSIDoutputStage(self.attenuation, self.realSID)
+        },
+      )
+      output.left = tmp
+      output.right = tmp
+    } else {
+      let mut tmp = 0
+      output.left = tmp
+      output.right = tmp
+      self.sid.each(
+        fn(sid) {
+          tmp = sid.emulateSIDoutputStage(self.attenuation, self.realSID)
+          match sid.channel {
+            Left => output.left += tmp * 2
+            Right => output.right += tmp * 2
+            _ => {
+              output.left += tmp
+              output.right += tmp
+            }
+          }
+        },
+      )
+    }
+  }
+
+  //average level (for VU-meter)
+  self.sid.each(fn(sid) { sid.level += ((sid.output >> 4) - sid.level) >> 32 })
+  println(
+    "<< C64::emulate [" +
+    output.left.to_string() +
+    ", " +
+    output.right.to_string() +
+    "]",
+  )
+
+  //
+  output
 }
 
 pub fn load(
@@ -320,7 +483,7 @@ pub fn load(
   self.cpu.load(offset, data, ~length)
 }
 
-pub fn step(self : C64) -> Int {
+fn step(self : C64) -> Int {
   self.cpu.step()
 }
 
@@ -349,11 +512,11 @@ pub fn push16(self : C64, value : @cpu.UInt16) -> Unit {
 }
 
 fn interrupts(self : C64) -> Bool {
-  if self.nmi > self.prevNMI { //if IRQ and NMI at the same time, NMI is serviced first
+  if self.nmi != self.prevNMI { //if IRQ and NMI at the same time, NMI is serviced first
     self.cpu.nmi() //NMI-vector
     self.prevNMI = self.nmi
     return true
-  } else if self.irq != 0 && self.cpu.has_interrupt().not() {
+  } else if self.irq != false && not(self.cpu.has_interrupt()) {
     self.cpu.irq() //maskable IRQ-vector
     self.prevNMI = self.nmi
     return true
