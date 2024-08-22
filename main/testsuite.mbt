@@ -4,7 +4,10 @@ let irq : FixedArray[Int] = [
 ]
 
 let testcases : Map[String, FixedArray[Int]] = {
-  // LOAD
+  "START": @testsuite._start
+
+  // LDA
+  ,
   "LDAB": @testsuite.ldab,
   "LDAZ": @testsuite.ldaz,
   "LDAZX": @testsuite.ldazx,
@@ -12,24 +15,343 @@ let testcases : Map[String, FixedArray[Int]] = {
   "LDAAX": @testsuite.ldaax,
   "LDAAY": @testsuite.ldaay,
   "LDAIX": @testsuite.ldaix,
-  "LDAIY": @testsuite.ldaiy,
+  "LDAIY": @testsuite.ldaiy
 
-  // STORE
+  // STA
+  ,
   "STAZ": @testsuite.staz,
   "STAZX": @testsuite.stazx,
   "STAA": @testsuite.staa,
   "STAAX": @testsuite.staax,
   "STAAY": @testsuite.staay,
   "STAIX": @testsuite.staix,
-  "STAIY": @testsuite.staiy,
+  "STAIY": @testsuite.staiy
+
+  // LDX
+  ,
+  "LDXB": @testsuite.ldxb,
+  "LDXZ": @testsuite.ldxz,
+  "LDXZY": @testsuite.ldxzy,
+  "LDXA": @testsuite.ldxa,
+  "LDXAY": @testsuite.ldxay
+
+  // STX
+  ,
+  "STXZ": @testsuite.stxz,
+  "STXZY": @testsuite.stxzy,
+  "STXA": @testsuite.stxa
+
+  // LDY
+  ,
+  "LDYB": @testsuite.ldyb,
+  "LDYZ": @testsuite.ldyz,
+  "LDYZX": @testsuite.ldyzx,
+  "LDYA": @testsuite.ldya,
+  "LDYAX": @testsuite.ldyax
+
+  // STY
+  ,
+  "STYZ": @testsuite.styz,
+  "STYZX": @testsuite.styzx,
+  "STYA": @testsuite.stya
+
+  // Transfer
+  ,
+  "TAXN": @testsuite.taxn,
+  "TAYN": @testsuite.tayn,
+  "TXAN": @testsuite.txan,
+  "TYAN": @testsuite.tyan,
+  "TSXN": @testsuite.tsxn,
+  "TXSN": @testsuite.txsn
+
+  // Push
+  ,
+  "PHAN": @testsuite.phan,
+  "PLAN": @testsuite.plan,
+  "PHPN": @testsuite.phpn,
+  "PLPN": @testsuite.plpn
+
+  // Increment
+  ,
+  "INXN": @testsuite.inxn,
+  "INYN": @testsuite.inyn
+
+  // Decrement
+  ,
+  "DEXN": @testsuite.dexn,
+  "DEYN": @testsuite.deyn
+
+  // Increment
+  ,
+  "INCZ": @testsuite.incz,
+  "INCZX": @testsuite.inczx,
+  "INCA": @testsuite.inca,
+  "INCAX": @testsuite.incax
+
+  // Decrement
+  ,
+  "DECZ": @testsuite.decz,
+  "DECZX": @testsuite.deczx,
+  "DECA": @testsuite.deca,
+  "DECAX": @testsuite.decax
+
+  // Arithmetic Shift
+  ,
+  "ASLN": @testsuite.asln,
+  "ASLZ": @testsuite.aslz,
+  "ASLZX": @testsuite.aslzx,
+  "ASLA": @testsuite.asla,
+  "ASLAX": @testsuite.aslax
+
+  // Logical Shift
+  ,
+  "LSRN": @testsuite.lsrn,
+  "LSRZ": @testsuite.lsrz,
+  "LSRZX": @testsuite.lsrzx,
+  "LSRA": @testsuite.lsra,
+  "LSRAX": @testsuite.lsrax
+
+  // Rotate Left
+  ,
+  "ROLN": @testsuite.roln,
+  "ROLZ": @testsuite.rolz,
+  "ROLZX": @testsuite.rolzx,
+  "ROLA": @testsuite.rola,
+  "ROLAX": @testsuite.rolax
+
+  // Rotate Right
+  ,
+  "RORN": @testsuite.rorn,
+  "RORZ": @testsuite.rorz,
+  "RORZX": @testsuite.rorzx,
+  "RORA": @testsuite.rora,
+  "RORAX": @testsuite.rorax
+
+  // AND
+  ,
+  "ANDB": @testsuite.andb,
+  "ANDZ": @testsuite.andz,
+  "ANDZX": @testsuite.andzx,
+  "ANDA": @testsuite.anda,
+  "ANDAX": @testsuite.andax,
+  "ANDAY": @testsuite.anday,
+  "ANDIX": @testsuite.andix,
+  "ANDIY": @testsuite.andiy
+
+  // OR
+  ,
+  "ORAB": @testsuite.orab,
+  "ORAZ": @testsuite.oraz,
+  "ORAZX": @testsuite.orazx,
+  "ORAA": @testsuite.oraa,
+  "ORAAX": @testsuite.oraax,
+  "ORAAY": @testsuite.oraay,
+  "ORAIX": @testsuite.oraix,
+  "ORAIY": @testsuite.oraiy
+
+  // Exclusive OR
+  ,
+  "EORB": @testsuite.eorb,
+  "EORZ": @testsuite.eorz,
+  "EORZX": @testsuite.eorzx,
+  "EORA": @testsuite.eora,
+  "EORAX": @testsuite.eorax,
+  "EORAY": @testsuite.eoray,
+  "EORIX": @testsuite.eorix,
+  "EORIY": @testsuite.eoriy
+
+  // Clear & Set
+  ,
+  "CLCN": @testsuite.clcn,
+  "SECN": @testsuite.secn,
+  "CLDN": @testsuite.cldn,
+  "SEDN": @testsuite.sedn,
+  "CLIN": @testsuite.clin,
+  "SEIN": @testsuite.sein,
+  "CLVN": @testsuite.clvn
+
+  // Addition
+  ,
+  "ADCB": @testsuite.adcb,
+  "ADCZ": @testsuite.adcz,
+  "ADCZX": @testsuite.adczx,
+  "ADCA": @testsuite.adca,
+  "ADCAX": @testsuite.adcax,
+  "ADCAY": @testsuite.adcay,
+  "ADCIX": @testsuite.adcix,
+  "ADCIY": @testsuite.adciy
+
+  // Subtraction
+  ,
+  "SBCB": @testsuite.sbcb,
+  "SBCZ": @testsuite.sbcz,
+  "SBCZX": @testsuite.sbczx,
+  "SBCA": @testsuite.sbca,
+  "SBCAX": @testsuite.sbcax,
+  "SBCAY": @testsuite.sbcay,
+  "SBCIX": @testsuite.sbcix,
+  "SBCIY": @testsuite.sbciy
+
+  // Comparison
+  ,
+  "CMPB": @testsuite.cmpb,
+  "CMPZ": @testsuite.cmpz,
+  "CMPZX": @testsuite.cmpzx,
+  "CMPA": @testsuite.cmpa,
+  "CMPAX": @testsuite.cmpax,
+  "CMPAY": @testsuite.cmpay,
+  "CMPIX": @testsuite.cmpix,
+  "CMPIY": @testsuite.cmpiy
+
+  // Copy
+  ,
+  "CPXB": @testsuite.cpxb,
+  "CPXZ": @testsuite.cpxz,
+  "CPXA": @testsuite.cpxa,
+  "CPYB": @testsuite.cpyb,
+  "CPYZ": @testsuite.cpyz,
+  "CPYA": @testsuite.cpya
+
+  // Bit
+  ,
+  "BITZ": @testsuite.bitz,
+  "BITA": @testsuite.bita
+
+  // Break / Return / Jump
+  ,
+  "BRKN": @testsuite.brkn,
+  "RTIN": @testsuite.rtin,
+  "JSRW": @testsuite.jsrw,
+  "RTSN": @testsuite.rtsn,
+  "JMPW": @testsuite.jmpw,
+  "JMPI": @testsuite.jmpi
+
+  // Branch
+  ,
+  "BEQR": @testsuite.beqr,
+  "BNER": @testsuite.bner,
+  "BMIR": @testsuite.bmir,
+  "BPLR": @testsuite.bplr,
+  "BCSR": @testsuite.bcsr,
+  "BCCR": @testsuite.bccr,
+  "BVSR": @testsuite.bvsr,
+  "BVCR": @testsuite.bvcr
+
+  // No Operation
+  ,
+  "NOPN": @testsuite.nopn,
+  "NOPB": @testsuite.nopb // FIXME
+  ,
+  "NOPZ": @testsuite.nopz,
+  "NOPZX": @testsuite.nopzx,
+  "NOPA": @testsuite.nopa,
+  "NOPAX": @testsuite.nopax
+
+  // Arithmetic Shift
+  ,
+  "ASOZ": @testsuite.asoz,
+  "ASOZX": @testsuite.asozx,
+  "ASOA": @testsuite.asoa,
+  "ASOAX": @testsuite.asoax,
+  "ASOAY": @testsuite.asoay,
+  "ASOIX": @testsuite.asoix,
+  "ASOIY": @testsuite.asoiy
+
+  // Rotate Left
+  ,
+  "RLAZ": @testsuite.rlaz,
+  "RLAZX": @testsuite.rlazx,
+  "RLAA": @testsuite.rlaa,
+  "RLAAX": @testsuite.rlaax,
+  "RLAAY": @testsuite.rlaay,
+  "RLAIX": @testsuite.rlaix,
+  "RLAIY": @testsuite.rlaiy
+
+  // Logical Shift
+  ,
+  "LSEZ": @testsuite.lsez,
+  "LSEZX": @testsuite.lsezx,
+  "LSEA": @testsuite.lsea,
+  "LSEAX": @testsuite.lseax,
+  "LSEAY": @testsuite.lseay,
+  "LSEIX": @testsuite.lseix,
+  "LSEIY": @testsuite.lseiy
+
+  // Rotate Right
+  ,
+  "RRAZ": @testsuite.rraz,
+  "RRAZX": @testsuite.rrazx,
+  "RRAA": @testsuite.rraa,
+  "RRAAX": @testsuite.rraax,
+  "RRAAY": @testsuite.rraay,
+  "RRAIX": @testsuite.rraix,
+  "RRAIY": @testsuite.rraiy
+
+  // Decrement
+  ,
+  "DCMZ": @testsuite.dcmz,
+  "DCMZX": @testsuite.dcmzx,
+  "DCMA": @testsuite.dcma,
+  "DCMAX": @testsuite.dcmax,
+  "DCMAY": @testsuite.dcmay,
+  "DCMIX": @testsuite.dcmix,
+  "DCMIY": @testsuite.dcmiy
+
+  // Increment
+  ,
+  "INSZ": @testsuite.insz,
+  "INSZX": @testsuite.inszx,
+  "INSA": @testsuite.insa,
+  "INSAX": @testsuite.insax,
+  "INSAY": @testsuite.insay,
+  "INSIX": @testsuite.insix,
+  "INSIY": @testsuite.insiy
+
+  // Load
+  ,
+  "LAXZ": @testsuite.laxz,
+  "LAXZY": @testsuite.laxzy,
+  "LAXA": @testsuite.laxa,
+  "LAXAY": @testsuite.laxay,
+  "LAXIX": @testsuite.laxix,
+  "LAXIY": @testsuite.laxiy
+
+  // AXS
+  ,
+  "AXSZ": @testsuite.axsz,
+  "AXSZY": @testsuite.axszy,
+  "AXSA": @testsuite.axsa,
+  "AXSIX": @testsuite.axsix
+
+  // Arithmetic Left
+  ,
+  "ALRB": @testsuite.alrb // UNIMPLEMENTED
+  // Arithmetic Right
+  ,
+  "ARRB": @testsuite.arrb // UNIMPLEMENTED
+  // ANE
+  ,
+  "ANEB": @testsuite.aneb // FIXME(VIC)
+
+  // Load
+  ,
+  "LXAB": @testsuite.lxab // FIXME(VIC)
+  // Store
+  ,
+  "SBXB": @testsuite.sbxb // UNIMPLEMENTED
+
+  // Shift
+  ,
+  "SHAAY": @testsuite.shaay // FIXME(VIC)
+  ,
 }
 
 pub fn testsuite() -> Unit {
-  let c64 = @lib.C64::new()
+  let c64 = @lib.C64::new(debug=true)
   c64.load(irq, offset=0xFF48)
 
   //
-  let data = @testsuite._start
+  let data = testcases["ANEB"].or_default()
   let addr = load(c64, data)
 
   //
@@ -113,11 +435,25 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Int {
     fn(pc) {
       let a = c64.cpu.a().0
       match a {
-        0x0D => {
+        13 => {
           println("\n\x1b[33;1;6m\{output}\x1b[0m\n")
           output = ""
         }
-        _ => output += Char::from_int(a).to_string()
+        14 => output += "" // text mode
+        145 => output += "" // up arrow
+        147 => output += "\n-------\n" // Clear
+        _ => {
+          let a = if a >= 0xC1 && a <= 0xDA {
+            a - 0xC1 + 65
+          } else if a >= 0x41 && a <= 0x5A {
+            a - 0x41 + 97
+          } else if a < 32 || a >= 127 {
+            46
+          } else {
+            46
+          }
+          output += Char::from_int(a).to_string()
+        }
       }
       c64[0x030C] = 0x00
     },

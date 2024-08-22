@@ -65,9 +65,10 @@ pub fn C64::new(
   ~sampleRate : Int = defaultSampleRate,
   ~model : FixedArray[Model] = [MOS6581],
   ~videoStandard : VideoStandard = VideoStandard::NTSC,
-  ~realSID : Bool = false
+  ~realSID : Bool = false,
+  ~debug : Bool = false
 ) -> C64 {
-  let cpu = @cpu.CPU::new(pc=baseaddress, ~mem)
+  let cpu = @cpu.CPU::new(pc=baseaddress, ~mem, ~debug)
   cpu.load(offset, data, ~length)
   let mem = cpu.mem()
   mem.setROM()
