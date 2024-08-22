@@ -179,7 +179,7 @@ fn clear_interrupt(self : Flags) -> Unit {
   self[I] = false
 }
 
-fn set_interrupt(self : Flags) -> Unit {
+pub fn set_interrupt(self : Flags) -> Unit {
   self[I] = true
 }
 

@@ -476,9 +476,9 @@ fn emulateWaves(
     }
   }
 
-  //update readable SID1-registers (some SID tunes might use 3rd channel ENV3/OSC3 value as control)
-  self[RANDOM] = wavGenOut >> 8 //OSC3, ENV3 (some players rely on it, unfortunately even for timing)
-  self[ENV3] = self.adsr[2].envelopeCounter //Envelope
+  // //update readable SID1-registers (some SID tunes might use 3rd channel ENV3/OSC3 value as control)
+  // self[RANDOM] = wavGenOut >> 8 //OSC3, ENV3 (some players rely on it, unfortunately even for timing)
+  // self[ENV3] = self.adsr[2].envelopeCounter //Envelope
 
   //
   // println("<< SID::emulateWaves")

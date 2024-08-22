@@ -3,14 +3,21 @@ package trancee/wasmSID/lib/cpu
 // Values
 
 // Types and methods
+type AddressHook
+
 type CPU
 impl CPU {
-  get_flags(Self) -> UInt8
+  a(Self) -> UInt8
+  clear_flags(Self) -> Unit
+  clear_registers(Self) -> Unit
+  get_flags(Self) -> Flags
+  get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
+  hook(Self, Int, (Int) -> Unit) -> Unit
   irq(Self, ~pc : Int? = ..) -> Unit
-  load(Self, UInt16, FixedArray[Int], ~length : Int = ..) -> Unit
+  load(Self, UInt16, FixedArray[Int], ~length : Int = .., ~has_load_address : Bool = ..) -> Unit
   mem(Self) -> Memory
-  new(~pc : Int = .., ~mem : Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = ..) -> Self
+  new(~pc : Int = .., ~mem : Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~decimal_mode : Bool = .., ~debug : Bool = ..) -> Self
   nmi(Self, ~pc : Int? = ..) -> Unit
   pc(Self) -> Int
   push(Self, UInt8) -> Unit
@@ -22,6 +29,7 @@ impl CPU {
   setNMI(Self, UInt16) -> Unit
   setRESET(Self, UInt16) -> Unit
   set_flags(Self, UInt8) -> Unit
+  set_interrupt(Self) -> Unit
   step(Self) -> Int
   write(Self, UInt16, UInt8) -> Unit
   write16(Self, UInt16, UInt16) -> Unit
@@ -47,10 +55,9 @@ impl Flags {
   get(Self) -> UInt8
   op_equal(Self, Self) -> Bool
   set(Self, UInt8) -> Unit
+  set_interrupt(Self) -> Unit
   to_string(Self) -> String
 }
-
-type Hook
 
 type Instruction
 
@@ -64,6 +71,8 @@ impl Memory {
   reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
   setROM(Self) -> Unit
 }
+
+type MemoryHook
 
 type Mode
 impl Mode {

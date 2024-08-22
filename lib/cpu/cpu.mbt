@@ -1,3 +1,12 @@
+struct AddressHook {
+  address : Int
+  hook : (Int) -> Unit
+}
+
+fn AddressHook::new(address : Int, hook : (Int) -> Unit) -> AddressHook {
+  { address, hook }
+}
+
 struct CPU {
   mem : Memory
   //
@@ -9,6 +18,10 @@ struct CPU {
   //
   decimal_mode : Bool
   mut needs_interrupt : Vector
+  //
+  hooks : Array[AddressHook]
+  //
+  debug : Bool
 }
 
 pub fn CPU::new(
@@ -17,7 +30,8 @@ pub fn CPU::new(
   ~data : FixedArray[Int] = [],
   ~offset : Int = 0,
   ~length : Int = data.length(),
-  ~decimal_mode : Bool = true
+  ~decimal_mode : Bool = true,
+  ~debug : Bool = false
 ) -> CPU {
   let mem = match mem {
     Some(mem) => mem
@@ -36,6 +50,10 @@ pub fn CPU::new(
     //
     decimal_mode,
     needs_interrupt: None,
+    //
+    hooks: [],
+    //
+    debug,
   }
   cpu.write16(RESET.addr(), pc)
   if data.length() > 0 {
@@ -78,8 +96,20 @@ pub fn mem(self : CPU) -> Memory {
   self.mem
 }
 
-pub fn get_flags(self : CPU) -> UInt8 {
-  self.flags.get()
+pub fn clear_registers(self : CPU) -> Unit {
+  self.registers.reset()
+}
+
+pub fn get_registers(self : CPU) -> Registers {
+  self.registers
+}
+
+pub fn clear_flags(self : CPU) -> Unit {
+  self.flags.reset()
+}
+
+pub fn get_flags(self : CPU) -> Flags {
+  self.flags
 }
 
 pub fn set_flags(self : CPU, flags : UInt8) -> Unit {
@@ -90,8 +120,20 @@ pub fn has_interrupt(self : CPU) -> Bool {
   self.flags[I]
 }
 
+pub fn set_interrupt(self : CPU) -> Unit {
+  self.flags[I] = true
+}
+
+pub fn hook(self : CPU, address : Int, hook : (Int) -> Unit) -> Unit {
+  self.hooks.push(AddressHook::new(address, hook))
+}
+
 pub fn pc(self : CPU) -> Int {
   self.pc.0
+}
+
+pub fn a(self : CPU) -> UInt8 {
+  self.registers[A]
 }
 
 pub fn register(self : CPU, register : Register, value : Int) -> Unit {
@@ -103,17 +145,25 @@ pub fn load(
   self : CPU,
   addr : UInt16,
   data : FixedArray[Int],
-  ~length : Int = data.length()
+  ~length : Int = data.length(),
+  ~has_load_address : Bool = false
 ) -> Unit {
   // println(
   //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
   // )
-  for i = 0; i < length; i = i + 1 {
-    self.mem[(addr + i).0] = data[i]
+  let mut addr = addr
+  let start = if has_load_address {
+    addr = data[0] + (data[1] << 8)
+    2
+  } else {
+    0
+  }
+  for i = 0; i < length - start; i = i + 1 {
+    self.mem[(addr + i).0] = data[i + start]
     // if i == 0x1000 {
     //   break
     // }
-    // println("$" + UInt16(i + offset).to_hex() + " < " + UInt8(data[i]).to_hex())
+    // println("$" + (addr + i).to_hex() + " < " + UInt8(data[i + start]).to_hex())
   }
 }
 
@@ -221,17 +271,33 @@ pub fn step(self : CPU) -> Int {
     _ => ()
   }
   self.needs_interrupt = None
+
+  //
+  for i = 0; i < self.hooks.length(); i = i + 1 {
+    if self.pc == self.hooks[i].address {
+      (self.hooks[i].hook)(self.pc.0)
+    }
+  }
+
+  //
   let cycles = self.cycles
   let opcode = self.read(self.pc)
+
   //
   let (name, op, mode, _size, _cycles, _, illegal) = instructions[opcode.0]
-  self.dump_step(opcode, name, mode, _size, _cycles, illegal)
+  if self.debug {
+    self.dump_step(opcode, name, mode, _size, _cycles, illegal)
+  }
+
   //
   let addr = self.get_addr(mode)
+
   //
   self.pc += _size
+
   //
   op(self, addr, mode)
+
   //
   self.cycles += _cycles
   self.cycles - cycles

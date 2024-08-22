@@ -34,9 +34,9 @@ pub fn pc(self : NES) -> Int {
   self.cpu.pc()
 }
 
-pub fn get_flags(self : NES) -> @cpu.UInt8 {
-  self.cpu.get_flags()
-}
+// pub fn get_flags(self : NES) -> @cpu.UInt8 {
+//   self.cpu.get_flags()
+// }
 
 pub fn set_flags(self : NES, flags : @cpu.UInt8) -> Unit {
   self.cpu.set_flags(flags)

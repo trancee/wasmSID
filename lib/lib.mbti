@@ -42,18 +42,25 @@ pub struct C64 {
   pub prevNMI : Bool
 }
 impl C64 {
+  clear_flags(Self) -> Unit
+  clear_registers(Self) -> Unit
   emulate(Self) -> Output
-  get_flags(Self) -> @cpu.UInt8
+  get_flags(Self) -> @cpu.Flags
+  get_registers(Self) -> @cpu.Registers
+  hook(Self, Int, (Int) -> Unit) -> Unit
   initC64(Self) -> Unit
   initCPU(Self, ~baseaddress : Int? = ..) -> Unit
-  load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
+  load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Unit
   new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = ..) -> Self
+  op_get(Self, UInt16) -> UInt8
+  op_set(Self, UInt16, UInt8) -> Unit
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
+  set_interrupt_flag(Self) -> Unit
 }
 
 type CIA
@@ -190,7 +197,6 @@ pub struct NES {
   pub cpu : @cpu.CPU
 }
 impl NES {
-  get_flags(Self) -> @cpu.UInt8
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = ..) -> Unit
   new(~baseaddress : Int = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = ..) -> Self
   pc(Self) -> Int

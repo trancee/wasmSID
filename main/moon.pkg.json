@@ -1,4 +1,4 @@
 {
   "is-main": true,
-  "import": ["trancee/wasmSID/lib", "trancee/wasmSID/lib/cpu"]
+  "import": ["trancee/wasmSID/lib", "trancee/wasmSID/lib/cpu", "trancee/wasmSID/testsuite"]
 }

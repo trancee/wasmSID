@@ -64,7 +64,7 @@ pub fn C64::new(
   ~length : Int = data.length(),
   ~sampleRate : Int = defaultSampleRate,
   ~model : FixedArray[Model] = [MOS6581],
-  ~videoStandard : VideoStandard = Unknown,
+  ~videoStandard : VideoStandard = VideoStandard::NTSC,
   ~realSID : Bool = false
 ) -> C64 {
   let cpu = @cpu.CPU::new(pc=baseaddress, ~mem)
@@ -285,7 +285,7 @@ pub fn initC64(self : C64) -> Unit {
 }
 
 pub fn emulate(self : C64) -> Output {
-  println(">> C64::emulate")
+  // println(">> C64::emulate")
   //
 
   let cpuClock = try {
@@ -462,13 +462,13 @@ pub fn emulate(self : C64) -> Output {
 
   //average level (for VU-meter)
   self.sid.each(fn(sid) { sid.level += ((sid.output >> 4) - sid.level) >> 32 })
-  println(
-    "<< C64::emulate [" +
-    output.left.to_string() +
-    ", " +
-    output.right.to_string() +
-    "]",
-  )
+  // println(
+  //   "<< C64::emulate [" +
+  //   output.left.to_string() +
+  //   ", " +
+  //   output.right.to_string() +
+  //   "]",
+  // )
 
   //
   output
@@ -478,25 +478,46 @@ pub fn load(
   self : C64,
   data : FixedArray[Int],
   ~offset : Int = 0,
-  ~length : Int = data.length()
+  ~length : Int = data.length(),
+  ~has_load_address : Bool = false
 ) -> Unit {
-  self.cpu.load(offset, data, ~length)
+  self.cpu.load(offset, data, ~length, ~has_load_address)
 }
 
 fn step(self : C64) -> Int {
   self.cpu.step()
 }
 
+pub fn hook(self : C64, address : Int, hook : (Int) -> Unit) -> Unit {
+  self.cpu.hook(address, hook)
+}
+
 pub fn pc(self : C64) -> Int {
   self.cpu.pc()
 }
 
-pub fn get_flags(self : C64) -> @cpu.UInt8 {
+pub fn clear_registers(self : C64) -> Unit {
+  self.cpu.clear_registers()
+}
+
+pub fn get_registers(self : C64) -> @cpu.Registers {
+  self.cpu.get_registers()
+}
+
+pub fn clear_flags(self : C64) -> Unit {
+  self.cpu.clear_flags()
+}
+
+pub fn get_flags(self : C64) -> @cpu.Flags {
   self.cpu.get_flags()
 }
 
 pub fn set_flags(self : C64, flags : @cpu.UInt8) -> Unit {
   self.cpu.set_flags(flags)
+}
+
+pub fn set_interrupt_flag(self : C64) -> Unit {
+  self.cpu.set_interrupt()
 }
 
 pub fn setA(self : C64, value : Int) -> Unit {
@@ -525,7 +546,7 @@ fn interrupts(self : C64) -> Bool {
   false
 }
 
-fn op_get(self : C64, address : UInt16) -> UInt8 {
+pub fn op_get(self : C64, address : UInt16) -> UInt8 {
   if address < c64_mem_start || address > c64_mem_end {
     // self.dump()
     println(
@@ -537,7 +558,7 @@ fn op_get(self : C64, address : UInt16) -> UInt8 {
   self.mem[address.0].0
 }
 
-fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
+pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
   if address < c64_mem_start || address > c64_mem_end {
     // self.dump()
     println("C64 $" + address.to_hex() + " ← $" + value.to_hex())

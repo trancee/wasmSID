@@ -15,5 +15,6 @@ fn main {
   // }
 
   // nestest()
-  sidtest()
+  // sidtest()
+  testsuite()
 }

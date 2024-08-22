@@ -5,6 +5,8 @@ fn nestest() -> Unit
 
 fn sidtest() -> Unit
 
+fn testsuite() -> Unit
+
 // Types and methods
 
 // Type aliases

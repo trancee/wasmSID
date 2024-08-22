@@ -1,0 +1,43 @@
+package trancee/wasmSID/testsuite
+
+// Values
+let _start : FixedArray[Int]
+
+let ldaa : FixedArray[Int]
+
+let ldaax : FixedArray[Int]
+
+let ldaay : FixedArray[Int]
+
+let ldab : FixedArray[Int]
+
+let ldaix : FixedArray[Int]
+
+let ldaiy : FixedArray[Int]
+
+let ldaz : FixedArray[Int]
+
+let ldazx : FixedArray[Int]
+
+let staa : FixedArray[Int]
+
+let staax : FixedArray[Int]
+
+let staay : FixedArray[Int]
+
+let staix : FixedArray[Int]
+
+let staiy : FixedArray[Int]
+
+let staz : FixedArray[Int]
+
+let stazx : FixedArray[Int]
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+
+// Extension Methods
+
