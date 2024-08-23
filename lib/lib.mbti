@@ -51,7 +51,7 @@ impl C64 {
   initC64(Self) -> Unit
   initCPU(Self, ~baseaddress : Int? = ..) -> Unit
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Unit
-  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = ..) -> Self
+  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~offset : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
   op_get(Self, UInt16) -> UInt8
   op_set(Self, UInt16, UInt8) -> Unit
   pc(Self) -> Int

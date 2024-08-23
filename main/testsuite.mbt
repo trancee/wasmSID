@@ -325,13 +325,13 @@ let testcases : Map[String, FixedArray[Int]] = {
 
   // Arithmetic Left
   ,
-  "ALRB": @testsuite.alrb // UNIMPLEMENTED
+  "ALRB": @testsuite.alrb
   // Arithmetic Right
   ,
   "ARRB": @testsuite.arrb // UNIMPLEMENTED
   // ANE
   ,
-  "ANEB": @testsuite.aneb // FIXME(VIC)
+  "ANEB": @testsuite.aneb
 
   // Load
   ,
@@ -351,7 +351,7 @@ pub fn testsuite() -> Unit {
   c64.load(irq, offset=0xFF48)
 
   //
-  let data = testcases["ANEB"].or_default()
+  let data = testcases["ARRB"].or_default()
   let addr = load(c64, data)
 
   //

@@ -1113,27 +1113,93 @@ fn opTYA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 fn opAHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: AHX")
-  //abort("AHX")
+  abort("unimplemented: AHX")
 }
 
+/// `ASR` - `AND` then Logical Shift Right
+/// Operation: (A ∧ M) / 2 → A
+///
+/// N	V	-	B	D	I	Z	C
+/// 0	-	-	-	-	-	✓	✓
+///
+/// The undocumented `ASR` instruction performs a bit-by-bit `AND` operation of the accumulator and memory, then shifts the accumulator 1 bit to the right, with the higher bit of the result always being set to 0, and the low bit which is shifted out of the field being stored in the carry flag.
+///
+/// This instruction affects the accumulator.
+/// It does not affect the overflow flag.
+/// The `N` flag is always reset.
+/// The `Z` flag is set if the result of the shift is 0 and reset otherwise.
+/// The carry is set equal to bit 0 of the result of the `AND` operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ASR
 fn opALR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: ALR")
-  //abort("ALR")
+  self.opAND(addr, mode)
+  self.opLSR(addr, Mode::Accumulator)
+
+  // println("unimplemented: ALR")
+  // abort("unimplemented: ALR")
 }
 
 fn opANC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: ANC")
-  //abort("ANC")
+  abort("unimplemented: ANC")
 }
 
+/// `ARR` - `AND` Accumulator then Rotate Right
+/// Operation: (A ∧ M) / 2 → A
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	✓	-	-	-	-	✓	✓
+///
+/// The undocumented `ARR` instruction performs a bit-by-bit `AND` operation of the accumulator and memory, then shifts the result right 1 bit with bit 0 shifted into the carry and carry shifted into bit 7.
+/// It then stores the result back in the accumulator.
+///
+/// If bit 7 of the result is on, then the `N` flag is set, otherwise it is reset.
+/// The instruction sets the `Z` flag if the result is 0;  otherwise it resets `Z`.
+///
+/// The `V` and `C` flags depend on the Decimal Mode Flag:
+/// In decimal mode, the `V` flag is set if bit 6 is different than the original data's bit 6, otherwise the `V` flag is reset.
+///   The `C` flag is set if (operand & 0xF0) + (operand & 0x10) is greater than 0x50, otherwise the `C` flag is reset.
+/// In binary mode, the `V` flag is set if bit 6 of the result is different than bit 5 of the result, otherwise the `V` flag is reset.
+///   The `C` flag is set if the result in the accumulator has bit 6 on, otherwise it is reset.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ARR
 fn opARR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: ARR")
-  //abort("ARR")
+  if self.flags.decimal() && self.decimal_mode {
+    println("DECIMAL")
+    panic()
+  }
+  // self.opAND(addr, mode)
+  println(
+    "(A#$" +
+    self.registers[A].to_hex() +
+    " ^ M#$" +
+    self.read(addr).to_hex() +
+    ")" +
+    "[#$" +
+    (self.registers[A] & self.read(addr)).to_hex() +
+    "] " +
+    self.flags.to_string(),
+  )
+  self.registers[A] = self.registers[A] & self.read(addr)
+  self.flags.setC((self.registers[A] & 0b10000000) != 0)
+  self.flags.setV(
+    (
+      ((self.registers[A] & 0b10000000) >> 7) ^
+      ((self.registers[A] & 0b01000000) >> 6)
+    ) !=
+    0,
+  )
+  self.registers[A] = self.registers[A] >> 1
+  self.flags.setZN(self.registers[A])
+  println("A#$" + self.registers[A].to_hex() + " " + self.flags.to_string())
+
+  // println("unimplemented: ARR")
+  // abort("unimplemented: ARR")
 }
 
 fn opAXS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: AXS")
-  //abort("AXS")
+  abort("unimplemented: AXS")
 }
 
 fn opDCP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1151,12 +1217,12 @@ fn opISC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 fn opJAM(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: JAM")
-  //abort("JAM")
+  abort("unimplemented: JAM")
 }
 
 fn opLAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: LAS")
-  //abort("LAS")
+  abort("unimplemented: LAS")
 }
 
 fn opLAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1188,12 +1254,12 @@ fn opSAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 fn opSHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: SHX")
-  //abort("SHX")
+  abort("unimplemented: SHX")
 }
 
 fn opSHY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: SHY")
-  //abort("SHY")
+  abort("unimplemented: SHY")
 }
 
 fn opSLO(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1212,12 +1278,32 @@ fn opSRE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 fn opTAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: TAS")
-  //abort("TAS")
+  abort("unimplemented: TAS")
 }
 
+/// `XAA` - Non-deterministic Operation of Accumulator, Index Register `X`, Memory and Bus Contents
+/// Operation: (A ∨ V) ∧ X ∧ M → A
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+///
+/// The operation of the undocumented `XAA` instruction depends on the individual microprocessor.
+/// On most machines, it performs a bit-by-bit `AND` operation of the following three operands:
+/// The first two are the index register `X` and memory.
+/// The third operand is the result of a bit-by-bit `AND` operation of the accumulator and a magic component.
+/// This magic component depends on the individual microprocessor and is usually one of `$00`, `$EE`, `$EF`, `$FE` and `$FF`, and may be influenced by the `RDY` pin, leftover contents of the data bus, the temperature of the microprocessor, the supplied voltage, and other factors.
+///
+/// On some machines, additional bits of the result may be set or reset depending on non-deterministic factors.
+///
+/// It then transfers the result to the accumulator.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#XAA
 fn opXAA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: XAA")
-  //abort("XAA")
+  let magic = 0xEE
+  self.registers[A] = (self.registers[A] | magic) &
+    self.registers[X] &
+    self.read(addr)
+  self.flags.setZN(self.registers[A])
 }
 
 enum Mode {
@@ -1320,7 +1406,7 @@ let instructions : FixedArray[
   ("PHA", opPHA, Implied, 1, 3, 0, false),
   ("EOR", opEOR, Immediate, 2, 2, 0, false),
   ("LSR", opLSR, Accumulator, 1, 2, 0, false),
-  ("ALR", opALR, Immediate, 0, 2, 0, true),
+  ("ALR", opALR, Immediate, 2, 2, 0, true),
   ("JMP", opJMP, Absolute, 3, 3, 0, false),
   ("EOR", opEOR, Absolute, 3, 4, 0, false),
   ("LSR", opLSR, Absolute, 3, 6, 0, false),
@@ -1354,7 +1440,7 @@ let instructions : FixedArray[
   ("PLA", opPLA, Implied, 1, 4, 0, false),
   ("ADC", opADC, Immediate, 2, 2, 0, false),
   ("ROR", opROR, Accumulator, 1, 2, 0, false),
-  ("ARR", opARR, Immediate, 0, 2, 0, true),
+  ("ARR", opARR, Immediate, 2, 2, 0, true),
   ("JMP", opJMP, Indirect, 3, 5, 0, false),
   ("ADC", opADC, Absolute, 3, 4, 0, false),
   ("ROR", opROR, Absolute, 3, 6, 0, false),
@@ -1388,7 +1474,7 @@ let instructions : FixedArray[
   ("DEY", opDEY, Implied, 1, 2, 0, false),
   ("NOP", opNOP, Immediate, 0, 2, 0, true),
   ("TXA", opTXA, Implied, 1, 2, 0, false),
-  ("XAA", opXAA, Immediate, 0, 2, 0, true), // FIXME: ANE
+  ("XAA", opXAA, Immediate, 2, 2, 0, true), // FIXME: ANE
   ("STY", opSTY, Absolute, 3, 4, 0, false),
   ("STA", opSTA, Absolute, 3, 4, 0, false),
   ("STX", opSTX, Absolute, 3, 4, 0, false),

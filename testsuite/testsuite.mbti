@@ -3,6 +3,266 @@ package trancee/wasmSID/testsuite
 // Values
 let _start : FixedArray[Int]
 
+let adca : FixedArray[Int]
+
+let adcax : FixedArray[Int]
+
+let adcay : FixedArray[Int]
+
+let adcb : FixedArray[Int]
+
+let adcix : FixedArray[Int]
+
+let adciy : FixedArray[Int]
+
+let adcz : FixedArray[Int]
+
+let adczx : FixedArray[Int]
+
+let alrb : FixedArray[Int]
+
+let ancb : FixedArray[Int]
+
+let anda : FixedArray[Int]
+
+let andax : FixedArray[Int]
+
+let anday : FixedArray[Int]
+
+let andb : FixedArray[Int]
+
+let andix : FixedArray[Int]
+
+let andiy : FixedArray[Int]
+
+let andz : FixedArray[Int]
+
+let andzx : FixedArray[Int]
+
+let aneb : FixedArray[Int]
+
+let arrb : FixedArray[Int]
+
+let asla : FixedArray[Int]
+
+let aslax : FixedArray[Int]
+
+let asln : FixedArray[Int]
+
+let aslz : FixedArray[Int]
+
+let aslzx : FixedArray[Int]
+
+let asoa : FixedArray[Int]
+
+let asoax : FixedArray[Int]
+
+let asoay : FixedArray[Int]
+
+let asoix : FixedArray[Int]
+
+let asoiy : FixedArray[Int]
+
+let asoz : FixedArray[Int]
+
+let asozx : FixedArray[Int]
+
+let axsa : FixedArray[Int]
+
+let axsix : FixedArray[Int]
+
+let axsz : FixedArray[Int]
+
+let axszy : FixedArray[Int]
+
+let bccr : FixedArray[Int]
+
+let bcsr : FixedArray[Int]
+
+let beqr : FixedArray[Int]
+
+let bita : FixedArray[Int]
+
+let bitz : FixedArray[Int]
+
+let bmir : FixedArray[Int]
+
+let bner : FixedArray[Int]
+
+let bplr : FixedArray[Int]
+
+let branchwrap : FixedArray[Int]
+
+let brkn : FixedArray[Int]
+
+let bvcr : FixedArray[Int]
+
+let bvsr : FixedArray[Int]
+
+let cia1pb6 : FixedArray[Int]
+
+let cia1pb7 : FixedArray[Int]
+
+let cia1ta : FixedArray[Int]
+
+let cia1tab : FixedArray[Int]
+
+let cia1tb : FixedArray[Int]
+
+let cia1tb123 : FixedArray[Int]
+
+let cia2pb6 : FixedArray[Int]
+
+let cia2pb7 : FixedArray[Int]
+
+let cia2ta : FixedArray[Int]
+
+let cia2tb : FixedArray[Int]
+
+let cia2tb123 : FixedArray[Int]
+
+let clcn : FixedArray[Int]
+
+let cldn : FixedArray[Int]
+
+let clin : FixedArray[Int]
+
+let clvn : FixedArray[Int]
+
+let cmpa : FixedArray[Int]
+
+let cmpax : FixedArray[Int]
+
+let cmpay : FixedArray[Int]
+
+let cmpb : FixedArray[Int]
+
+let cmpix : FixedArray[Int]
+
+let cmpiy : FixedArray[Int]
+
+let cmpz : FixedArray[Int]
+
+let cmpzx : FixedArray[Int]
+
+let cntdef : FixedArray[Int]
+
+let cnto2 : FixedArray[Int]
+
+let cpuport : FixedArray[Int]
+
+let cputiming : FixedArray[Int]
+
+let cpxa : FixedArray[Int]
+
+let cpxb : FixedArray[Int]
+
+let cpxz : FixedArray[Int]
+
+let cpya : FixedArray[Int]
+
+let cpyb : FixedArray[Int]
+
+let cpyz : FixedArray[Int]
+
+let dcma : FixedArray[Int]
+
+let dcmax : FixedArray[Int]
+
+let dcmay : FixedArray[Int]
+
+let dcmix : FixedArray[Int]
+
+let dcmiy : FixedArray[Int]
+
+let dcmz : FixedArray[Int]
+
+let dcmzx : FixedArray[Int]
+
+let deca : FixedArray[Int]
+
+let decax : FixedArray[Int]
+
+let decz : FixedArray[Int]
+
+let deczx : FixedArray[Int]
+
+let dexn : FixedArray[Int]
+
+let deyn : FixedArray[Int]
+
+let eora : FixedArray[Int]
+
+let eorax : FixedArray[Int]
+
+let eoray : FixedArray[Int]
+
+let eorb : FixedArray[Int]
+
+let eorix : FixedArray[Int]
+
+let eoriy : FixedArray[Int]
+
+let eorz : FixedArray[Int]
+
+let eorzx : FixedArray[Int]
+
+let finish : FixedArray[Int]
+
+let flipos : FixedArray[Int]
+
+let icr01 : FixedArray[Int]
+
+let imr : FixedArray[Int]
+
+let inca : FixedArray[Int]
+
+let incax : FixedArray[Int]
+
+let incz : FixedArray[Int]
+
+let inczx : FixedArray[Int]
+
+let insa : FixedArray[Int]
+
+let insax : FixedArray[Int]
+
+let insay : FixedArray[Int]
+
+let insix : FixedArray[Int]
+
+let insiy : FixedArray[Int]
+
+let insz : FixedArray[Int]
+
+let inszx : FixedArray[Int]
+
+let inxn : FixedArray[Int]
+
+let inyn : FixedArray[Int]
+
+let irq : FixedArray[Int]
+
+let jmpi : FixedArray[Int]
+
+let jmpw : FixedArray[Int]
+
+let jsrw : FixedArray[Int]
+
+let lasay : FixedArray[Int]
+
+let laxa : FixedArray[Int]
+
+let laxay : FixedArray[Int]
+
+let laxix : FixedArray[Int]
+
+let laxiy : FixedArray[Int]
+
+let laxz : FixedArray[Int]
+
+let laxzy : FixedArray[Int]
+
 let ldaa : FixedArray[Int]
 
 let ldaax : FixedArray[Int]
@@ -19,6 +279,186 @@ let ldaz : FixedArray[Int]
 
 let ldazx : FixedArray[Int]
 
+let ldxa : FixedArray[Int]
+
+let ldxay : FixedArray[Int]
+
+let ldxb : FixedArray[Int]
+
+let ldxz : FixedArray[Int]
+
+let ldxzy : FixedArray[Int]
+
+let ldya : FixedArray[Int]
+
+let ldyax : FixedArray[Int]
+
+let ldyb : FixedArray[Int]
+
+let ldyz : FixedArray[Int]
+
+let ldyzx : FixedArray[Int]
+
+let loadth : FixedArray[Int]
+
+let lsea : FixedArray[Int]
+
+let lseax : FixedArray[Int]
+
+let lseay : FixedArray[Int]
+
+let lseix : FixedArray[Int]
+
+let lseiy : FixedArray[Int]
+
+let lsez : FixedArray[Int]
+
+let lsezx : FixedArray[Int]
+
+let lsra : FixedArray[Int]
+
+let lsrax : FixedArray[Int]
+
+let lsrn : FixedArray[Int]
+
+let lsrz : FixedArray[Int]
+
+let lsrzx : FixedArray[Int]
+
+let lxab : FixedArray[Int]
+
+let mmu : FixedArray[Int]
+
+let mmufetch : FixedArray[Int]
+
+let nmi : FixedArray[Int]
+
+let nopa : FixedArray[Int]
+
+let nopax : FixedArray[Int]
+
+let nopb : FixedArray[Int]
+
+let nopn : FixedArray[Int]
+
+let nopz : FixedArray[Int]
+
+let nopzx : FixedArray[Int]
+
+let oneshot : FixedArray[Int]
+
+let oraa : FixedArray[Int]
+
+let oraax : FixedArray[Int]
+
+let oraay : FixedArray[Int]
+
+let orab : FixedArray[Int]
+
+let oraix : FixedArray[Int]
+
+let oraiy : FixedArray[Int]
+
+let oraz : FixedArray[Int]
+
+let orazx : FixedArray[Int]
+
+let phan : FixedArray[Int]
+
+let phpn : FixedArray[Int]
+
+let plan : FixedArray[Int]
+
+let plpn : FixedArray[Int]
+
+let rlaa : FixedArray[Int]
+
+let rlaax : FixedArray[Int]
+
+let rlaay : FixedArray[Int]
+
+let rlaix : FixedArray[Int]
+
+let rlaiy : FixedArray[Int]
+
+let rlaz : FixedArray[Int]
+
+let rlazx : FixedArray[Int]
+
+let rola : FixedArray[Int]
+
+let rolax : FixedArray[Int]
+
+let roln : FixedArray[Int]
+
+let rolz : FixedArray[Int]
+
+let rolzx : FixedArray[Int]
+
+let rora : FixedArray[Int]
+
+let rorax : FixedArray[Int]
+
+let rorn : FixedArray[Int]
+
+let rorz : FixedArray[Int]
+
+let rorzx : FixedArray[Int]
+
+let rraa : FixedArray[Int]
+
+let rraax : FixedArray[Int]
+
+let rraay : FixedArray[Int]
+
+let rraix : FixedArray[Int]
+
+let rraiy : FixedArray[Int]
+
+let rraz : FixedArray[Int]
+
+let rrazx : FixedArray[Int]
+
+let rtin : FixedArray[Int]
+
+let rtsn : FixedArray[Int]
+
+let sbca : FixedArray[Int]
+
+let sbcax : FixedArray[Int]
+
+let sbcay : FixedArray[Int]
+
+let sbcb : FixedArray[Int]
+
+let sbcbeb : FixedArray[Int]
+
+let sbcix : FixedArray[Int]
+
+let sbciy : FixedArray[Int]
+
+let sbcz : FixedArray[Int]
+
+let sbczx : FixedArray[Int]
+
+let sbxb : FixedArray[Int]
+
+let secn : FixedArray[Int]
+
+let sedn : FixedArray[Int]
+
+let sein : FixedArray[Int]
+
+let shaay : FixedArray[Int]
+
+let shaiy : FixedArray[Int]
+
+let shsay : FixedArray[Int]
+
+let shxay : FixedArray[Int]
+
+let shyax : FixedArray[Int]
+
 let staa : FixedArray[Int]
 
 let staax : FixedArray[Int]
@@ -32,6 +472,64 @@ let staiy : FixedArray[Int]
 let staz : FixedArray[Int]
 
 let stazx : FixedArray[Int]
+
+let stxa : FixedArray[Int]
+
+let stxz : FixedArray[Int]
+
+let stxzy : FixedArray[Int]
+
+let stya : FixedArray[Int]
+
+let styz : FixedArray[Int]
+
+let styzx : FixedArray[Int]
+
+let taxn : FixedArray[Int]
+
+let tayn : FixedArray[Int]
+
+let trap1 : FixedArray[Int]
+
+let trap10 : FixedArray[Int]
+
+let trap11 : FixedArray[Int]
+
+let trap12 : FixedArray[Int]
+
+let trap13 : FixedArray[Int]
+
+let trap14 : FixedArray[Int]
+
+let trap15 : FixedArray[Int]
+
+let trap16 : FixedArray[Int]
+
+let trap17 : FixedArray[Int]
+
+let trap2 : FixedArray[Int]
+
+let trap3 : FixedArray[Int]
+
+let trap4 : FixedArray[Int]
+
+let trap5 : FixedArray[Int]
+
+let trap6 : FixedArray[Int]
+
+let trap7 : FixedArray[Int]
+
+let trap8 : FixedArray[Int]
+
+let trap9 : FixedArray[Int]
+
+let tsxn : FixedArray[Int]
+
+let txan : FixedArray[Int]
+
+let txsn : FixedArray[Int]
+
+let tyan : FixedArray[Int]
 
 // Types and methods
 

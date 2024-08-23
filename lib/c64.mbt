@@ -307,6 +307,10 @@ pub fn emulate(self : C64) -> Output {
   //Cycle-based part of emulations:
   //
   while self.sampleCycleCnt <= self.sampleClockRatio {
+    self.irq = false //prepare for collecting IRQ sources
+    self.nmi = false //prepare for collecting NMI sources
+
+    //
     if not(self.realSID) {
       if self.frameCycleCnt >= self.frameCycles {
         self.frameCycleCnt -= self.frameCycles
@@ -331,25 +335,24 @@ pub fn emulate(self : C64) -> Output {
       }
       self.frameCycleCnt += instructionCycles
       // FIXME: self[0xDC04] += instructionCycles //very simple CIA1 TimerA simulation for PSID (e.g. Delta-Mix_E-Load_loader)
-    } else { //RealSID emulations:
-      if self.interrupts() {
-        self.finished = false
-        instructionCycles = 7
-      } else if not(self.finished) {
-        instructionCycles = self.step()
-        if self.pc() == 0x0000 {
-          instructionCycles = 6
-          self.finished = true
-        }
-      } else {
-        instructionCycles = 7 //idle between IRQ-calls
+      //RealSID emulations:
+    } else if self.interrupts() {
+      self.finished = false
+      instructionCycles = 7
+    } else if not(self.finished) {
+      instructionCycles = self.step()
+      if self.pc() == 0x0000 {
+        instructionCycles = 6
+        self.finished = true
       }
-      self.irq = false //prepare for collecting IRQ sources
-      self.nmi = false //prepare for collecting NMI sources
+    } else {
+      instructionCycles = 7 //idle between IRQ-calls
       self.irq = self.irq || self.cia[0].emulate(instructionCycles)
       self.nmi = self.nmi || self.cia[1].emulate(instructionCycles)
-      self.irq = self.irq || self.vic.emulate(instructionCycles)
     }
+
+    //
+    self.irq = self.irq || self.vic.emulate(instructionCycles)
 
     //
     self.sampleCycleCnt += instructionCycles << 4

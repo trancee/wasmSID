@@ -169,15 +169,20 @@ fn dump(
   ~rows : Int = 0x10
 ) -> Unit {
   let mut i = 0
-  let mut str = "     "
-  while i < cols {
-    str += UInt8(i).to_hex() + " "
-    i = i + 1
+  let mut str = ""
+  if rows > 1 {
+    str = "     "
+    while i < cols {
+      str += UInt8(i).to_hex() + " "
+      i = i + 1
+    }
+    i = 0
   }
-  i = 0
   while i <= cols * rows {
     if i % cols == 0 {
-      println(str)
+      if str.length() > 0 {
+        println(str)
+      }
       str = (addr + i).to_hex() + "|"
     }
     str += self.mem[(addr + i).0].to_hex() + " "
