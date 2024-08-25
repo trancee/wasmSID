@@ -201,14 +201,14 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   //
   for i = 0; i < self.hooks.length(); i = i + 1 {
     if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-      println(
-        "R:HOOK $" +
-        UInt16(self.hooks[i].start).to_hex() +
-        " - $" +
-        UInt16(self.hooks[i].end).to_hex() +
-        " | $" +
-        UInt16(addr).to_hex(),
-      )
+      // println(
+      //   "R:HOOK $" +
+      //   UInt16(self.hooks[i].start).to_hex() +
+      //   " - $" +
+      //   UInt16(self.hooks[i].end).to_hex() +
+      //   " | $" +
+      //   UInt16(addr).to_hex(),
+      // )
       return (self.hooks[i].r)(addr)
     }
   }
@@ -282,14 +282,14 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   //
   for i = 0; i < self.hooks.length(); i = i + 1 {
     if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-      println(
-        "W:HOOK $" +
-        UInt16(self.hooks[i].start).to_hex() +
-        " - $" +
-        UInt16(self.hooks[i].end).to_hex() +
-        " | $" +
-        UInt16(addr).to_hex(),
-      )
+      // println(
+      //   "W:HOOK $" +
+      //   UInt16(self.hooks[i].start).to_hex() +
+      //   " - $" +
+      //   UInt16(self.hooks[i].end).to_hex() +
+      //   " | $" +
+      //   UInt16(addr).to_hex(),
+      // )
       return (self.hooks[i].w)(addr, value)
     }
   }

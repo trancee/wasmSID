@@ -62,11 +62,16 @@ fn lxor(self : UInt8, bit : UInt8) -> UInt8 {
 }
 
 fn bit(self : UInt8, bit : UInt8) -> Bool {
-  if bit >= 8 {
-    println("UInt8::bit out of bounds")
-    abort("out of bounds")
-  }
+  // disabled for overflow check
+  // if bit >= 8 {
+  //   println("UInt8::bit out of bounds")
+  //   abort("out of bounds")
+  // }
   ((self >> bit) & 1) == 1
+}
+
+fn bitn(self : UInt8, bit : UInt8) -> UInt8 {
+  (self >> bit) & 1
 }
 
 fn clr(self : UInt8, mask : UInt8) -> UInt8 {
@@ -79,6 +84,14 @@ fn set(self : UInt8, mask : UInt8) -> UInt8 {
 
 fn has(self : UInt8, mask : UInt8) -> Bool {
   (self.0 & mask.0) != 0
+}
+
+fn overflow(self : UInt8) -> Bool {
+  self.bit(8)
+}
+
+fn borrow(self : UInt8) -> Bool {
+  self.0.is_neg()
 }
 
 // fn to_byte(

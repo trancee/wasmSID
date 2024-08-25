@@ -60,16 +60,16 @@ pub fn C64::new(
   ~baseaddress : Int = 0x0000,
   ~mem : @cpu.Memory? = None,
   ~data : FixedArray[Int] = [],
-  ~offset : Int = 0x0000,
+  ~addr : Int = 0x0000,
   ~length : Int = data.length(),
   ~sampleRate : Int = defaultSampleRate,
   ~model : FixedArray[Model] = [MOS6581],
-  ~videoStandard : VideoStandard = VideoStandard::NTSC,
+  ~videoStandard : VideoStandard = VideoStandard::PAL,
   ~realSID : Bool = false,
   ~debug : Bool = false
 ) -> C64 {
   let cpu = @cpu.CPU::new(pc=baseaddress, ~mem, ~debug)
-  cpu.load(offset, data, ~length)
+  let addr = cpu.load(addr, data, ~length)
   let mem = cpu.mem()
   mem.setROM()
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
@@ -205,12 +205,145 @@ pub fn reset(self : C64) -> Unit! {
     _ => raise UnsupportedNoSIDs("SID", self.sid.length())
   }
 
+  // https://sta.c64.org/cbm64mem.html
+
+  /// Zero page
+  /// Processor port data direction register.
+  self[0x0000] = 0x2F // %00101111
+  /// Processor port.
+  self[0x0001] = 0x37 // %00110111
+
+  /// Execution address of routine converting floating point to integer.
+  self[0x0003] = 0xAA
+  self[0x0004] = 0xB1
+  /// Execution address of routine converting integer to floating point.
+  self[0x0005] = 0x91
+  self[0x0006] = 0xB3
+
+  /// Current I/O device number.
+  self[0x0013] = 0x00 // Keyboard for input and screen for output.
+  /// Pointer to next expression in string stack.
+  /// Values: $19; $1C; $1F; $22.
+  self[0x0016] = 0x19
+
+  /// Pointer to beginning of BASIC area.
+  self[0x002B] = 0x01
+  self[0x002C] = 0x08
+  /// Pointer to end of BASIC area.
+  self[0x0037] = 0x00
+  self[0x0038] = 0xA0
+
+  /// Current input device number.
+  self[0x0099] = 0x00 // Keyboard.
+  /// Current output device number.
+  self[0x009A] = 0x03 // Screen.
+
+  /// Pointer to datasette buffer.
+  self[0x00B2] = 0x3C
+  self[0x00B3] = 0x03
+
+  /// Pointer to beginning of BASIC area after memory test.
+  self[0x0281] = 0x00
+  self[0x0282] = 0x08
+  /// Pointer to end of BASIC area after memory test.
+  self[0x0283] = 0x00
+  self[0x0284] = 0xA0
+
+  /// High byte of pointer to screen memory for screen input/output.
+  self[0x0288] = 0x04
+
+  /// Execution address of routine that, based on the status of shift keys, sets the pointer at memory address $00F5-$00F6 to the appropriate conversion table for converting keyboard matrix codes to PETSCII codes.
+  self[0x028F] = 0x48
+  self[0x0290] = 0xEB
+
+  /// Execution address of warm reset, displaying optional BASIC error message and entering BASIC idle loop.
+  self[0x0300] = 0x8B
+  self[0x0301] = 0xE3
+  /// Execution address of BASIC idle loop.
+  self[0x0302] = 0x83
+  self[0x0303] = 0xA4
+  /// Execution address of BASIC line tokenizater routine.
+  self[0x0304] = 0x7C
+  self[0x0305] = 0xA5
+  /// Execution address of BASIC token decoder routine.
+  self[0x0306] = 0x1A
+  self[0x0307] = 0xA7
+  /// Execution address of BASIC instruction executor routine.
+  self[0x0308] = 0xE4
+  self[0x0309] = 0xA7
+  /// Execution address of routine reading next item of BASIC expression.
+  self[0x030A] = 0x86
+  self[0x030B] = 0xAE
+
+  /// Execution address of interrupt service routine.
+  self[0x0314] = 0x31
+  self[0x0315] = 0xEA
+  /// Execution address of BRK service routine.
+  self[0x0316] = 0x66
+  self[0x0317] = 0xFE
+  /// Execution address of non-maskable interrupt service routine.
+  self[0x0318] = 0x47
+  self[0x0319] = 0xFE
+  /// Execution address of OPEN, routine opening files.
+  self[0x031A] = 0x4A
+  self[0x031B] = 0xF3
+  /// Execution address of CLOSE, routine closing files.
+  self[0x031C] = 0x91
+  self[0x031D] = 0xF2
+  /// Execution address of CHKIN, routine defining file as default input.
+  self[0x031E] = 0x0E
+  self[0x031F] = 0xF2
+  /// Execution address of CHKOUT, routine defining file as default output.
+  self[0x0320] = 0x50
+  self[0x0321] = 0xF2
+  /// Execution address of CLRCHN, routine initializating input/output.
+  self[0x0322] = 0x33
+  self[0x0323] = 0xF3
+  /// Execution address of CHRIN, data input routine, except for keyboard and RS232 input.
+  self[0x0324] = 0x57
+  self[0x0325] = 0xF1
+  /// Execution address of CHROUT, general purpose data output routine.
+  self[0x0326] = 0xCA
+  self[0x0327] = 0xF1
+  /// Execution address of STOP, routine checking the status of Stop key indicator, at memory address $0091.
+  self[0x0328] = 0xED
+  self[0x0329] = 0xF6
+  /// Execution address of GETIN, general purpose data input routine.
+  self[0x032A] = 0x3E
+  self[0x032B] = 0xF1
+  /// Execution address of CLALL, routine initializing input/output and clearing all file assignment tables.
+  self[0x032C] = 0x2F
+  self[0x032D] = 0xF3
+  /// Unused.
+  self[0x032E] = 0x66
+  self[0x032F] = 0xFE
+  /// Execution address of LOAD, routine loading files.
+  self[0x0330] = 0xA5
+  self[0x0331] = 0xF4
+  /// Execution address of SAVE, routine saving files.
+  self[0x0332] = 0xED
+  self[0x0333] = 0xF5
+
+  /// VIC-II; video display
+  /// Screen control register #1.
+  self[0xD011] = 0x1B // %00011011
+  /// Screen control register #2.
+  self[0xD016] = 0xC8 // %11001000
+
+  /// Hardware vectors
+  /// Execution address of non-maskable interrupt service routine.
+  self.cpu.setNMI(0xFE43)
+  /// Execution address of cold reset.
+  self.cpu.setRESET(0xFCE2)
+  /// Execution address of interrupt service routine.
+  self.cpu.setIRQ(0xFF48)
+
   //
   println("<< C64::reset")
 }
 
 pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
-  println(">> C64::initCPU")
+  // println(">> C64::initCPU")
 
   //
   self.cpu.reset(~baseaddress)
@@ -218,7 +351,7 @@ pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
   self.prevNMI = false
 
   //
-  println("<< C64::initCPU")
+  // println("<< C64::initCPU")
 }
 
 //C64 Reset
@@ -347,11 +480,11 @@ pub fn emulate(self : C64) -> Output {
       }
     } else {
       instructionCycles = 7 //idle between IRQ-calls
-      self.irq = self.irq || self.cia[0].emulate(instructionCycles)
-      self.nmi = self.nmi || self.cia[1].emulate(instructionCycles)
     }
 
     //
+    self.irq = self.irq || self.cia[0].emulate(instructionCycles)
+    self.nmi = self.nmi || self.cia[1].emulate(instructionCycles)
     self.irq = self.irq || self.vic.emulate(instructionCycles)
 
     //
@@ -484,7 +617,7 @@ pub fn load(
   ~offset : Int = 0,
   ~length : Int = data.length(),
   ~has_load_address : Bool = false
-) -> Unit {
+) -> Int {
   self.cpu.load(offset, data, ~length, ~has_load_address)
 }
 
@@ -558,7 +691,7 @@ pub fn op_get(self : C64, address : UInt16) -> UInt8 {
     )
     abort("out of bounds")
   }
-  println("C64 $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
+  // println("C64 $" + address.to_hex() + " → $" + self.mem[address.0].to_hex())
   self.mem[address.0].0
 }
 
@@ -568,6 +701,6 @@ pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
     println("C64 $" + address.to_hex() + " ← $" + value.to_hex())
     abort("out of bounds")
   }
-  println("C64 $" + address.to_hex() + " ← $" + value.to_hex())
+  // println("C64 $" + address.to_hex() + " ← $" + value.to_hex())
   self.mem[address.0] = value.0
 }

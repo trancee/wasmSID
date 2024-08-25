@@ -255,9 +255,8 @@ fn getN(self : Flags) -> Int {
   self[N].to_int() << 7
 }
 
-fn setN(self : Flags, value : UInt8) -> Unit {
-  // self[N] = (value & 0b10000000) != 0
-  self[N] = value.bit(7)
+fn setN(self : Flags, value : Bool) -> Unit {
+  self[N] = value
 }
 
 fn setB(self : Flags, value : Bool) -> Unit {
@@ -276,12 +275,12 @@ fn setC(self : Flags, value : Bool) -> Unit {
   self[C] = value
 }
 
-fn setZ(self : Flags, value : UInt8) -> Unit {
-  self[Z] = (value & 0b11111111) == 0
+fn setZ(self : Flags, value : Bool) -> Unit {
+  self[Z] = value
 }
 
 // Set N and Z flag values.
 fn setZN(self : Flags, value : UInt8) -> Unit {
-  self.setZ(value)
-  self.setN(value)
+  self.setZ(value == 0)
+  self.setN(value.bit(7))
 }

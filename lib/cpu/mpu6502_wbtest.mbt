@@ -2,7 +2,7 @@
 // https://github.com/mnaberez/py65/blob/main/py65/tests/devices/test_mpu6502.py
 
 test "reset_sets_registers_to_initial_states" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.reset()
   assert_eq!(cpu.registers[SP], 0xFF)
   assert_eq!(cpu.registers[A], 0)
@@ -12,7 +12,7 @@ test "reset_sets_registers_to_initial_states" {
 }
 
 test "reset_sets_pc_to_0_by_default" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.reset()
   assert_eq!(cpu.pc, 0)
 }
@@ -24,25 +24,26 @@ test "reset_sets_pc_to_start_pc_if_not_None" {
 }
 
 test "reset_reads_reset_vector_if_start_pc_is_None" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.write16(RESET.addr(), 0xABCD)
   cpu.reset()
   assert_eq!(cpu.pc, 0xABCD)
 }
 
 test "adc_bcd_off_absolute_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+
 }
 
 test "adc_bcd_off_absolute_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.flags[C] = true
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -53,10 +54,10 @@ test "adc_bcd_off_absolute_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_absolute_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0xFE
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -67,10 +68,10 @@ test "adc_bcd_off_absolute_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_absolute_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -81,11 +82,11 @@ test "adc_bcd_off_absolute_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_absolute_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -94,11 +95,11 @@ test "adc_bcd_off_absolute_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_absolute_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0xff
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -107,11 +108,11 @@ test "adc_bcd_off_absolute_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_absolute_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -120,11 +121,11 @@ test "adc_bcd_off_absolute_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_absolute_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0xff
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -133,11 +134,11 @@ test "adc_bcd_off_absolute_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_absolute_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.registers[A] = 0x40
   // $0000 ADC $C000
-  cpu.load(0x0000, [0x6D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x6D, 0x00, 0xC0])
   cpu.mem[0xC000] = 0x40
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -148,10 +149,10 @@ test "adc_bcd_off_absolute_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_off_zp_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -162,11 +163,11 @@ test "adc_bcd_off_zp_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_zp_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.flags[C] = true
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -177,10 +178,10 @@ test "adc_bcd_off_zp_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_zp_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0xFE
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -191,10 +192,10 @@ test "adc_bcd_off_zp_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_zp_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0xFF
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -205,11 +206,11 @@ test "adc_bcd_off_zp_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_zp_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0x01
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -218,11 +219,11 @@ test "adc_bcd_off_zp_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_zp_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0xff
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -231,11 +232,11 @@ test "adc_bcd_off_zp_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_zp_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0x01
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -244,11 +245,11 @@ test "adc_bcd_off_zp_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_zp_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0xff
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -257,11 +258,11 @@ test "adc_bcd_off_zp_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_zp_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x40
   cpu.flags[V] = false
   // $0000 ADC $00B0
-  cpu.load(0x0000, [0x65, 0xB0])
+  let _ = cpu.load(0x0000, [0x65, 0xB0])
   cpu.mem[0x00B0] = 0x40
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -272,10 +273,10 @@ test "adc_bcd_off_zp_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_off_immediate_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   // $0000 ADC #$00
-  cpu.load(0x0000, [0x69, 0x00])
+  let _ = cpu.load(0x0000, [0x69, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x00)
@@ -285,11 +286,11 @@ test "adc_bcd_off_immediate_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_immediate_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.flags[C] = true
   // $0000 ADC #$00
-  cpu.load(0x0000, [0x69, 0x00])
+  let _ = cpu.load(0x0000, [0x69, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x01)
@@ -299,10 +300,10 @@ test "adc_bcd_off_immediate_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_immediate_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   // $0000 ADC #$FE
-  cpu.load(0x0000, [0x69, 0xFE])
+  let _ = cpu.load(0x0000, [0x69, 0xFE])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0xFF)
@@ -312,10 +313,10 @@ test "adc_bcd_off_immediate_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_immediate_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   // $0000 ADC #$FF
-  cpu.load(0x0000, [0x69, 0xFF])
+  let _ = cpu.load(0x0000, [0x69, 0xFF])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x01)
@@ -325,11 +326,11 @@ test "adc_bcd_off_immediate_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_immediate_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC #$01
-  cpu.load(0x000, [0x69, 0x01])
+  let _ = cpu.load(0x000, [0x69, 0x01])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x02)
@@ -337,11 +338,11 @@ test "adc_bcd_off_immediate_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_immediate_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC #$FF
-  cpu.load(0x000, [0x69, 0xff])
+  let _ = cpu.load(0x000, [0x69, 0xff])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x00)
@@ -349,11 +350,11 @@ test "adc_bcd_off_immediate_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_immediate_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   // $0000 ADC #$01
-  cpu.load(0x000, [0x69, 0x01])
+  let _ = cpu.load(0x000, [0x69, 0x01])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x80)
@@ -361,11 +362,11 @@ test "adc_bcd_off_immediate_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_immediate_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   // $0000 ADC #$FF
-  cpu.load(0x000, [0x69, 0xff])
+  let _ = cpu.load(0x000, [0x69, 0xff])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x7f)
@@ -373,10 +374,10 @@ test "adc_bcd_off_immediate_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_immediate_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x40
   // $0000 ADC #$40
-  cpu.load(0x0000, [0x69, 0x40])
+  let _ = cpu.load(0x0000, [0x69, 0x40])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x80)
@@ -386,12 +387,12 @@ test "adc_bcd_off_immediate_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_on_immediate_79_plus_00_carry_set" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.flags[C] = true
   cpu.registers[A] = 0x79
   // $0000 ADC #$00
-  cpu.load(0x0000, [0x69, 0x00])
+  let _ = cpu.load(0x0000, [0x69, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x80)
@@ -402,12 +403,12 @@ test "adc_bcd_on_immediate_79_plus_00_carry_set" {
 }
 
 test "adc_bcd_on_immediate_6f_plus_00_carry_set" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.flags[C] = true
   cpu.registers[A] = 0x6f
   // $0000 ADC #$00
-  cpu.load(0x0000, [0x69, 0x00])
+  let _ = cpu.load(0x0000, [0x69, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x76)
@@ -418,14 +419,14 @@ test "adc_bcd_on_immediate_6f_plus_00_carry_set" {
 }
 
 test "adc_bcd_on_immediate_9c_plus_9d" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.flags[C] = false
   cpu.registers[A] = 0x9c
   // $0000 ADC #$9d
   // $0002 ADC #$9d
-  cpu.load(0x0000, [0x69, 0x9d])
-  cpu.load(0x0002, [0x69, 0x9d])
+  let _ = cpu.load(0x0000, [0x69, 0x9d])
+  let _ = cpu.load(0x0002, [0x69, 0x9d])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.registers[A], 0x9f)
   assert_eq!(cpu.flags[C], true)
@@ -439,11 +440,11 @@ test "adc_bcd_on_immediate_9c_plus_9d" {
 }
 
 test "adc_bcd_off_abs_x_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -454,12 +455,12 @@ test "adc_bcd_off_abs_x_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_abs_x_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -470,11 +471,11 @@ test "adc_bcd_off_abs_x_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_abs_x_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0xFE
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -485,11 +486,11 @@ test "adc_bcd_off_abs_x_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_abs_x_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   cpu.registers[X] = 0x03
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -500,11 +501,11 @@ test "adc_bcd_off_abs_x_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_abs_x_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -513,11 +514,11 @@ test "adc_bcd_off_abs_x_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_abs_x_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0xff
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -526,11 +527,11 @@ test "adc_bcd_off_abs_x_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_abs_x_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -539,11 +540,11 @@ test "adc_bcd_off_abs_x_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_abs_x_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0xff
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -552,12 +553,12 @@ test "adc_bcd_off_abs_x_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_abs_x_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.registers[A] = 0x40
   cpu.registers[X] = 0x03
   // $0000 ADC $C000,X
-  cpu.load(0x0000, [0x7D, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x7D, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[X].0] = 0x40
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -568,11 +569,11 @@ test "adc_bcd_off_abs_x_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_off_abs_y_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -583,12 +584,12 @@ test "adc_bcd_off_abs_y_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_abs_y_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[Y] = 0x03
   cpu.flags[C] = true
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -599,11 +600,11 @@ test "adc_bcd_off_abs_y_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_abs_y_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   cpu.registers[Y] = 0x03
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0xFE
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -614,11 +615,11 @@ test "adc_bcd_off_abs_y_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_abs_y_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   cpu.registers[Y] = 0x03
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -629,11 +630,11 @@ test "adc_bcd_off_abs_y_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_abs_y_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -642,11 +643,11 @@ test "adc_bcd_off_abs_y_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_abs_y_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -655,11 +656,11 @@ test "adc_bcd_off_abs_y_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_abs_y_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -668,11 +669,11 @@ test "adc_bcd_off_abs_y_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_abs_y_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -681,12 +682,12 @@ test "adc_bcd_off_abs_y_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_abs_y_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.registers[A] = 0x40
   cpu.registers[Y] = 0x03
   // $0000 ADC $C000,Y
-  cpu.load(0x0000, [0x79, 0x00, 0xC0])
+  let _ = cpu.load(0x0000, [0x79, 0x00, 0xC0])
   cpu.mem[0xC000 + cpu.registers[Y].0] = 0x40
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -697,11 +698,11 @@ test "adc_bcd_off_abs_y_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_off_zp_x_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -712,12 +713,12 @@ test "adc_bcd_off_zp_x_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_zp_x_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -728,11 +729,11 @@ test "adc_bcd_off_zp_x_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_zp_x_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFE
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -743,11 +744,11 @@ test "adc_bcd_off_zp_x_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_zp_x_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -758,12 +759,12 @@ test "adc_bcd_off_zp_x_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_zp_x_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -772,12 +773,12 @@ test "adc_bcd_off_zp_x_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_zp_x_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -786,12 +787,12 @@ test "adc_bcd_off_zp_x_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_zp_x_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -800,12 +801,12 @@ test "adc_bcd_off_zp_x_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_zp_x_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xff
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -814,12 +815,12 @@ test "adc_bcd_off_zp_x_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_zp_x_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.registers[A] = 0x40
   cpu.registers[X] = 0x03
   // $0000 ADC $0010,X
-  cpu.load(0x0000, [0x75, 0x10])
+  let _ = cpu.load(0x0000, [0x75, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x40
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -830,13 +831,13 @@ test "adc_bcd_off_zp_x_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_off_ind_indexed_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -847,14 +848,14 @@ test "adc_bcd_off_ind_indexed_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_ind_indexed_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -865,13 +866,13 @@ test "adc_bcd_off_ind_indexed_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_ind_indexed_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFE
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -882,13 +883,13 @@ test "adc_bcd_off_ind_indexed_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_ind_indexed_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -899,14 +900,14 @@ test "adc_bcd_off_ind_indexed_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_ind_indexed_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x01
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -915,14 +916,14 @@ test "adc_bcd_off_ind_indexed_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_ind_indexed_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -931,14 +932,14 @@ test "adc_bcd_off_ind_indexed_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_ind_indexed_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x01
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -947,14 +948,14 @@ test "adc_bcd_off_ind_indexed_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_ind_indexed_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -963,14 +964,14 @@ test "adc_bcd_off_ind_indexed_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_ind_indexed_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.registers[A] = 0x40
   cpu.registers[X] = 0x03
   // $0000 ADC ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x61, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x40
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -981,13 +982,13 @@ test "adc_bcd_off_ind_indexed_overflow_set_on_40_plus_40" {
 }
 
 test "adc_bcd_off_indexed_ind_carry_clear_in_accumulator_zeroes" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -998,14 +999,14 @@ test "adc_bcd_off_indexed_ind_carry_clear_in_accumulator_zeroes" {
 }
 
 test "adc_bcd_off_indexed_ind_carry_set_in_accumulator_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[Y] = 0x03
   cpu.flags[C] = true
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1016,13 +1017,13 @@ test "adc_bcd_off_indexed_ind_carry_set_in_accumulator_zero" {
 }
 
 test "adc_bcd_off_indexed_ind_carry_clear_in_no_carry_clear_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x01
   cpu.registers[Y] = 0x03
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFE
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1033,13 +1034,13 @@ test "adc_bcd_off_indexed_ind_carry_clear_in_no_carry_clear_out" {
 }
 
 test "adc_bcd_off_indexed_ind_carry_clear_in_carry_set_out" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   cpu.registers[Y] = 0x03
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1050,14 +1051,14 @@ test "adc_bcd_off_indexed_ind_carry_clear_in_carry_set_out" {
 }
 
 test "adc_bcd_off_indexed_ind_overflow_clr_no_carry_01_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   cpu.registers[Y] = 0x03
   // $0000 $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x01
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1066,14 +1067,14 @@ test "adc_bcd_off_indexed_ind_overflow_clr_no_carry_01_plus_01" {
 }
 
 test "adc_bcd_off_indexed_ind_overflow_clr_no_carry_01_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x01
   cpu.registers[Y] = 0x03
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1082,14 +1083,14 @@ test "adc_bcd_off_indexed_ind_overflow_clr_no_carry_01_plus_ff" {
 }
 
 test "adc_bcd_off_indexed_ind_overflow_set_no_carry_7f_plus_01" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x7f
   cpu.registers[Y] = 0x03
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x01
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1098,14 +1099,14 @@ test "adc_bcd_off_indexed_ind_overflow_set_no_carry_7f_plus_01" {
 }
 
 test "adc_bcd_off_indexed_ind_overflow_set_no_carry_80_plus_ff" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[A] = 0x80
   cpu.registers[Y] = 0x03
   // $0000 $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1114,14 +1115,14 @@ test "adc_bcd_off_indexed_ind_overflow_set_no_carry_80_plus_ff" {
 }
 
 test "adc_bcd_off_indexed_ind_overflow_set_on_40_plus_40" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.registers[A] = 0x40
   cpu.registers[Y] = 0x03
   // $0000 ADC ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x71, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x71, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x40
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1132,10 +1133,10 @@ test "adc_bcd_off_indexed_ind_overflow_set_on_40_plus_40" {
 }
 
 test "and_absolute_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 AND $ABCD
-  cpu.load(0x0000, [0x2D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -1145,10 +1146,10 @@ test "and_absolute_all_zeros_setting_zero_flag" {
 }
 
 test "and_absolute_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 AND $ABCD
-  cpu.load(0x0000, [0x2D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xAA
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -1158,10 +1159,10 @@ test "and_absolute_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_zp_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 AND $0010
-  cpu.load(0x0000, [0x25, 0x10])
+  let _ = cpu.load(0x0000, [0x25, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -1171,10 +1172,10 @@ test "and_zp_all_zeros_setting_zero_flag" {
 }
 
 test "and_zp_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 AND $0010
-  cpu.load(0x0000, [0x25, 0x10])
+  let _ = cpu.load(0x0000, [0x25, 0x10])
   cpu.mem[0x0010] = 0xAA
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -1184,10 +1185,10 @@ test "and_zp_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_immediate_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 AND #$00
-  cpu.load(0x0000, [0x29, 0x00])
+  let _ = cpu.load(0x0000, [0x29, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x00)
@@ -1196,10 +1197,10 @@ test "and_immediate_all_zeros_setting_zero_flag" {
 }
 
 test "and_immediate_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 AND #$AA
-  cpu.load(0x0000, [0x29, 0xAA])
+  let _ = cpu.load(0x0000, [0x29, 0xAA])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0xAA)
@@ -1208,11 +1209,11 @@ test "and_immediate_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_abs_x_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 AND $ABCD,X
-  cpu.load(0x0000, [0x3d, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3d, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -1222,11 +1223,11 @@ test "and_abs_x_all_zeros_setting_zero_flag" {
 }
 
 test "and_abs_x_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 AND $ABCD,X
-  cpu.load(0x0000, [0x3d, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3d, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xAA
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -1236,11 +1237,11 @@ test "and_abs_x_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_abs_y_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 AND $ABCD,X
-  cpu.load(0x0000, [0x39, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x39, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -1250,11 +1251,11 @@ test "and_abs_y_all_zeros_setting_zero_flag" {
 }
 
 test "and_abs_y_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 AND $ABCD,X
-  cpu.load(0x0000, [0x39, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x39, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xAA
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -1264,13 +1265,13 @@ test "and_abs_y_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_ind_indexed_x_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 AND ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x21, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x21, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -1280,13 +1281,13 @@ test "and_ind_indexed_x_all_zeros_setting_zero_flag" {
 }
 
 test "and_ind_indexed_x_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 AND ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x21, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x21, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xAA
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -1296,13 +1297,13 @@ test "and_ind_indexed_x_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_indexed_ind_y_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 AND ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x31, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x31, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1312,13 +1313,13 @@ test "and_indexed_ind_y_all_zeros_setting_zero_flag" {
 }
 
 test "and_indexed_ind_y_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 AND ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x31, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x31, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xAA
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1328,11 +1329,11 @@ test "and_indexed_ind_y_zeros_and_ones_setting_negative_flag" {
 }
 
 test "and_zp_x_all_zeros_setting_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 AND $0010,X
-  cpu.load(0x0000, [0x35, 0x10])
+  let _ = cpu.load(0x0000, [0x35, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -1342,11 +1343,11 @@ test "and_zp_x_all_zeros_setting_zero_flag" {
 }
 
 test "and_zp_x_all_zeros_and_ones_setting_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 AND $0010,X
-  cpu.load(0x0000, [0x35, 0x10])
+  let _ = cpu.load(0x0000, [0x35, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xAA
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -1356,7 +1357,7 @@ test "and_zp_x_all_zeros_and_ones_setting_negative_flag" {
 }
 
 test "asl_accumulator_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   // $0000 ASL A
   cpu.mem[0x0000] = 0x0A
@@ -1368,7 +1369,7 @@ test "asl_accumulator_sets_z_flag" {
 }
 
 test "asl_accumulator_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x40
   // $0000 ASL A
   cpu.mem[0x0000] = 0x0A
@@ -1380,7 +1381,7 @@ test "asl_accumulator_sets_n_flag" {
 }
 
 test "asl_accumulator_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x7F
   // $0000 ASL A
   cpu.mem[0x0000] = 0x0A
@@ -1391,7 +1392,7 @@ test "asl_accumulator_shifts_out_zero" {
 }
 
 test "asl_accumulator_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 ASL A
   cpu.mem[0x0000] = 0x0A
@@ -1402,7 +1403,7 @@ test "asl_accumulator_shifts_out_one" {
 }
 
 test "asl_accumulator_80_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x80
   cpu.flags[Z] = false
   // $0000 ASL A
@@ -1414,9 +1415,9 @@ test "asl_accumulator_80_sets_z_flag" {
 }
 
 test "asl_absolute_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 ASL $ABCD
-  cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -1426,9 +1427,9 @@ test "asl_absolute_sets_z_flag" {
 }
 
 test "asl_absolute_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 ASL $ABCD
-  cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x40
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -1438,10 +1439,10 @@ test "asl_absolute_sets_n_flag" {
 }
 
 test "asl_absolute_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAA
   // $0000 ASL $ABCD
-  cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x7F
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -1451,10 +1452,10 @@ test "asl_absolute_shifts_out_zero" {
 }
 
 test "asl_absolute_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAA
   // $0000 ASL $ABCD
-  cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x0E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -1464,9 +1465,9 @@ test "asl_absolute_shifts_out_one" {
 }
 
 test "asl_zp_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 ASL $0010
-  cpu.load(0x0000, [0x06, 0x10])
+  let _ = cpu.load(0x0000, [0x06, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1476,9 +1477,9 @@ test "asl_zp_sets_z_flag" {
 }
 
 test "asl_zp_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 ASL $0010
-  cpu.load(0x0000, [0x06, 0x10])
+  let _ = cpu.load(0x0000, [0x06, 0x10])
   cpu.mem[0x0010] = 0x40
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1488,10 +1489,10 @@ test "asl_zp_sets_n_flag" {
 }
 
 test "asl_zp_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAA
   // $0000 ASL $0010
-  cpu.load(0x0000, [0x06, 0x10])
+  let _ = cpu.load(0x0000, [0x06, 0x10])
   cpu.mem[0x0010] = 0x7F
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1501,10 +1502,10 @@ test "asl_zp_shifts_out_zero" {
 }
 
 test "asl_zp_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAA
   // $0000 ASL $0010
-  cpu.load(0x0000, [0x06, 0x10])
+  let _ = cpu.load(0x0000, [0x06, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -1514,10 +1515,10 @@ test "asl_zp_shifts_out_one" {
 }
 
 test "asl_abs_x_indexed_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   // $0000 ASL $ABCD,X
-  cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -1527,10 +1528,10 @@ test "asl_abs_x_indexed_sets_z_flag" {
 }
 
 test "asl_abs_x_indexed_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   // $0000 ASL $ABCD,X
-  cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x40
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -1540,11 +1541,11 @@ test "asl_abs_x_indexed_sets_n_flag" {
 }
 
 test "asl_abs_x_indexed_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAA
   cpu.registers[X] = 0x03
   // $0000 ASL $ABCD,X
-  cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x7F
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -1554,11 +1555,11 @@ test "asl_abs_x_indexed_shifts_out_zero" {
 }
 
 test "asl_abs_x_indexed_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAA
   cpu.registers[X] = 0x03
   // $0000 ASL $ABCD,X
-  cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x1E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -1568,10 +1569,10 @@ test "asl_abs_x_indexed_shifts_out_one" {
 }
 
 test "asl_zp_x_indexed_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   // $0000 ASL $0010,X
-  cpu.load(0x0000, [0x16, 0x10])
+  let _ = cpu.load(0x0000, [0x16, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -1581,10 +1582,10 @@ test "asl_zp_x_indexed_sets_z_flag" {
 }
 
 test "asl_zp_x_indexed_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   // $0000 ASL $0010,X
-  cpu.load(0x0000, [0x16, 0x10])
+  let _ = cpu.load(0x0000, [0x16, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x40
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -1594,11 +1595,11 @@ test "asl_zp_x_indexed_sets_n_flag" {
 }
 
 test "asl_zp_x_indexed_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.registers[A] = 0xAA
   // $0000 ASL $0010,X
-  cpu.load(0x0000, [0x16, 0x10])
+  let _ = cpu.load(0x0000, [0x16, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x7F
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -1608,11 +1609,11 @@ test "asl_zp_x_indexed_shifts_out_zero" {
 }
 
 test "asl_zp_x_indexed_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.registers[A] = 0xAA
   // $0000 ASL $0010,X
-  cpu.load(0x0000, [0x16, 0x10])
+  let _ = cpu.load(0x0000, [0x16, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -1622,97 +1623,97 @@ test "asl_zp_x_indexed_shifts_out_one" {
 }
 
 test "bcc_carry_clear_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 BCC +6
-  cpu.load(0x0000, [0x90, 0x06])
+  let _ = cpu.load(0x0000, [0x90, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bcc_carry_clear_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0000 BCC -6
-  cpu.load(0x0050, [0x90, rel])
+  let _ = cpu.load(0x0050, [0x90, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bcc_carry_set_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 BCC +6
-  cpu.load(0x0000, [0x90, 0x06])
+  let _ = cpu.load(0x0000, [0x90, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "bcs_carry_set_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 BCS +6
-  cpu.load(0x0000, [0xB0, 0x06])
+  let _ = cpu.load(0x0000, [0xB0, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bcs_carry_set_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0000 BCS -6
-  cpu.load(0x0050, [0xB0, rel])
+  let _ = cpu.load(0x0050, [0xB0, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bcs_carry_clear_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 BCS +6
-  cpu.load(0x0000, [0xB0, 0x06])
+  let _ = cpu.load(0x0000, [0xB0, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "beq_zero_set_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = true
   // $0000 BEQ +6
-  cpu.load(0x0000, [0xF0, 0x06])
+  let _ = cpu.load(0x0000, [0xF0, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "beq_zero_set_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = true
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0000 BEQ -6
-  cpu.load(0x0050, [0xF0, rel])
+  let _ = cpu.load(0x0050, [0xF0, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "beq_zero_clear_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   // $0000 BEQ +6
-  cpu.load(0x0000, [0xF0, 0x06])
+  let _ = cpu.load(0x0000, [0xF0, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "bit_abs_copies_bit_7_of_memory_to_n_flag_when_0" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0xFF
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 4)
@@ -1720,10 +1721,10 @@ test "bit_abs_copies_bit_7_of_memory_to_n_flag_when_0" {
 }
 
 test "bit_abs_copies_bit_7_of_memory_to_n_flag_when_1" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = true
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0x00
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 4)
@@ -1731,10 +1732,10 @@ test "bit_abs_copies_bit_7_of_memory_to_n_flag_when_1" {
 }
 
 test "bit_abs_copies_bit_6_of_memory_to_v_flag_when_0" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0xFF
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 4)
@@ -1742,10 +1743,10 @@ test "bit_abs_copies_bit_6_of_memory_to_v_flag_when_0" {
 }
 
 test "bit_abs_copies_bit_6_of_memory_to_v_flag_when_1" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = true
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0x00
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 4)
@@ -1753,10 +1754,10 @@ test "bit_abs_copies_bit_6_of_memory_to_v_flag_when_1" {
 }
 
 test "bit_abs_stores_result_of_and_in_z_preserves_a_when_1" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0x00
   cpu.registers[A] = 0x01
   assert_eq!(cpu.step(), 4)
@@ -1766,10 +1767,10 @@ test "bit_abs_stores_result_of_and_in_z_preserves_a_when_1" {
 }
 
 test "bit_abs_stores_result_of_and_when_nonzero_in_z_preserves_a" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = true
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0x01
   cpu.registers[A] = 0x01
   assert_eq!(cpu.step(), 4)
@@ -1779,10 +1780,10 @@ test "bit_abs_stores_result_of_and_when_nonzero_in_z_preserves_a" {
 }
 
 test "bit_abs_stores_result_of_and_when_zero_in_z_preserves_a" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   // $0000 BIT $FEED
-  cpu.load(0x0000, [0x2C, 0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x2C, 0xED, 0xFE])
   cpu.mem[0xFEED] = 0x00
   cpu.registers[A] = 0x01
   assert_eq!(cpu.step(), 4)
@@ -1792,10 +1793,10 @@ test "bit_abs_stores_result_of_and_when_zero_in_z_preserves_a" {
 }
 
 test "bit_zp_copies_bit_7_of_memory_to_n_flag_when_0" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0xFF
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 3)
@@ -1805,10 +1806,10 @@ test "bit_zp_copies_bit_7_of_memory_to_n_flag_when_0" {
 }
 
 test "bit_zp_copies_bit_7_of_memory_to_n_flag_when_1" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = true
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0x00
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 3)
@@ -1818,10 +1819,10 @@ test "bit_zp_copies_bit_7_of_memory_to_n_flag_when_1" {
 }
 
 test "bit_zp_copies_bit_6_of_memory_to_v_flag_when_0" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0xFF
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 3)
@@ -1831,10 +1832,10 @@ test "bit_zp_copies_bit_6_of_memory_to_v_flag_when_0" {
 }
 
 test "bit_zp_copies_bit_6_of_memory_to_v_flag_when_1" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = true
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0x00
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 3)
@@ -1844,10 +1845,10 @@ test "bit_zp_copies_bit_6_of_memory_to_v_flag_when_1" {
 }
 
 test "bit_zp_stores_result_of_and_in_z_preserves_a_when_1" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0x00
   cpu.registers[A] = 0x01
   assert_eq!(cpu.step(), 3)
@@ -1859,10 +1860,10 @@ test "bit_zp_stores_result_of_and_in_z_preserves_a_when_1" {
 }
 
 test "bit_zp_stores_result_of_and_when_nonzero_in_z_preserves_a" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = true
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0x01
   cpu.registers[A] = 0x01
   assert_eq!(cpu.step(), 3)
@@ -1874,10 +1875,10 @@ test "bit_zp_stores_result_of_and_when_nonzero_in_z_preserves_a" {
 }
 
 test "bit_zp_stores_result_of_and_when_zero_in_z_preserves_a" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   // $0000 BIT $0010
-  cpu.load(0x0000, [0x24, 0x10])
+  let _ = cpu.load(0x0000, [0x24, 0x10])
   cpu.mem[0x0010] = 0x00
   cpu.registers[A] = 0x01
   assert_eq!(cpu.step(), 3)
@@ -1889,96 +1890,96 @@ test "bit_zp_stores_result_of_and_when_zero_in_z_preserves_a" {
 }
 
 test "bmi_negative_set_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = true
   // $0000 BMI +06
-  cpu.load(0x0000, [0x30, 0x06])
+  let _ = cpu.load(0x0000, [0x30, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bmi_negative_set_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = true
   cpu.pc = 0x0050
   // $0000 BMI -6
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
-  cpu.load(0x0050, [0x30, rel])
+  let _ = cpu.load(0x0050, [0x30, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bmi_negative_clear_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   // $0000 BEQ +6
-  cpu.load(0x0000, [0x30, 0x06])
+  let _ = cpu.load(0x0000, [0x30, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "bne_zero_clear_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   // $0000 BNE +6
-  cpu.load(0x0000, [0xD0, 0x06])
+  let _ = cpu.load(0x0000, [0xD0, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bne_zero_clear_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.pc = 0x0050
   // $0050 BNE -6
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
-  cpu.load(0x0050, [0xD0, rel])
+  let _ = cpu.load(0x0050, [0xD0, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bne_zero_set_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = true
   // $0000 BNE +6
-  cpu.load(0x0000, [0xD0, 0x06])
+  let _ = cpu.load(0x0000, [0xD0, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "bpl_negative_clear_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   // $0000 BPL +06
-  cpu.load(0x0000, [0x10, 0x06])
+  let _ = cpu.load(0x0000, [0x10, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bpl_negative_clear_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.pc = 0x0050
   // $0050 BPL -6
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
-  cpu.load(0x0050, [0x10, rel])
+  let _ = cpu.load(0x0050, [0x10, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bpl_negative_set_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = true
   // $0000 BPL +6
-  cpu.load(0x0000, [0x10, 0x06])
+  let _ = cpu.load(0x0000, [0x10, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "brk_pushes_pc_plus_2_and_status_then_sets_pc_to_irq_vector" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0b00100000)
-  cpu.load(IRQ.addr(), [0xCD, 0xAB])
+  let _ = cpu.load(IRQ.addr(), [0xCD, 0xAB])
   // $C000 BRK
   cpu.mem[0xC000] = 0x00
   cpu.pc = 0xC000
@@ -1987,10 +1988,10 @@ test "brk_pushes_pc_plus_2_and_status_then_sets_pc_to_irq_vector" {
 }
 
 test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0b00100000)
-  cpu.load(NMI.addr(), [0x88, 0x77])
-  cpu.load(IRQ.addr(), [0xCD, 0xAB])
+  let _ = cpu.load(NMI.addr(), [0x88, 0x77])
+  let _ = cpu.load(IRQ.addr(), [0xCD, 0xAB])
   cpu.pc = 0xC123
   cpu.irq()
   assert_eq!(cpu.pc, 0xABCD)
@@ -2003,10 +2004,10 @@ test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
 }
 
 test "nmi_pushes_pc_and_correct_status_then_sets_pc_to_nmi_vector" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0b00100000)
-  cpu.load(NMI.addr(), [0x88, 0x77])
-  cpu.load(IRQ.addr(), [0xCD, 0xAB])
+  let _ = cpu.load(NMI.addr(), [0x88, 0x77])
+  let _ = cpu.load(IRQ.addr(), [0xCD, 0xAB])
   cpu.pc = 0xC123
   cpu.nmi()
   assert_eq!(cpu.pc, 0x7788)
@@ -2019,65 +2020,65 @@ test "nmi_pushes_pc_and_correct_status_then_sets_pc_to_nmi_vector" {
 }
 
 test "bvc_overflow_clear_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   // $0000 BVC +6
-  cpu.load(0x0000, [0x50, 0x06])
+  let _ = cpu.load(0x0000, [0x50, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bvc_overflow_clear_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0050 BVC -6
-  cpu.load(0x0050, [0x50, rel])
+  let _ = cpu.load(0x0050, [0x50, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bvc_overflow_set_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = true
   // $0000 BVC +6
-  cpu.load(0x0000, [0x50, 0x06])
+  let _ = cpu.load(0x0000, [0x50, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "bvs_overflow_set_branches_relative_forward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = true
   // $0000 BVS +6
-  cpu.load(0x0000, [0x70, 0x06])
+  let _ = cpu.load(0x0000, [0x70, 0x06])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002 + 0x06)
 }
 
 test "bvs_overflow_set_branches_relative_backward" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = true
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0050 BVS -6
-  cpu.load(0x0050, [0x70, rel])
+  let _ = cpu.load(0x0050, [0x70, rel])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
 
 test "bvs_overflow_clear_does_not_branch" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = false
   // $0000 BVS +6
-  cpu.load(0x0000, [0x70, 0x06])
+  let _ = cpu.load(0x0000, [0x70, 0x06])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
 }
 
 test "clc_clears_carry_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 CLC
   cpu.mem[0x0000] = 0x18
@@ -2087,7 +2088,7 @@ test "clc_clears_carry_flag" {
 }
 
 test "cld_clears_decimal_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   // $0000 CLD
   cpu.mem[0x0000] = 0xD8
@@ -2097,7 +2098,7 @@ test "cld_clears_decimal_flag" {
 }
 
 test "cli_clears_interrupt_mask_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[I] = true
   // $0000 CLI
   cpu.mem[0x0000] = 0x58
@@ -2107,7 +2108,7 @@ test "cli_clears_interrupt_mask_flag" {
 }
 
 test "clv_clears_overflow_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[V] = true
   // $0000 CLV
   cpu.mem[0x0000] = 0xB8
@@ -2118,9 +2119,9 @@ test "clv_clears_overflow_flag" {
 
 test "cmp_imm_sets_zero_carry_clears_neg_flags_if_equal" {
   // Comparison: A == m
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #10 , A will be 10
-  cpu.load(0x0000, [0xC9, 10])
+  let _ = cpu.load(0x0000, [0xC9, 10])
   cpu.registers[A] = 10
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2131,9 +2132,9 @@ test "cmp_imm_sets_zero_carry_clears_neg_flags_if_equal" {
 
 test "cmp_imm_clears_zero_carry_takes_neg_if_less_unsigned" {
   // Comparison: A < m (unsigned)
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #10 , A will be 1
-  cpu.load(0x0000, [0xC9, 10])
+  let _ = cpu.load(0x0000, [0xC9, 10])
   cpu.registers[A] = 1
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2144,9 +2145,9 @@ test "cmp_imm_clears_zero_carry_takes_neg_if_less_unsigned" {
 
 test "cmp_imm_clears_zero_sets_carry_takes_neg_if_less_signed" {
   // Comparison: A < //nn (signed), A negative
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #1, A will be -1 (0xFF)
-  cpu.load(0x0000, [0xC9, 1])
+  let _ = cpu.load(0x0000, [0xC9, 1])
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2157,9 +2158,9 @@ test "cmp_imm_clears_zero_sets_carry_takes_neg_if_less_signed" {
 
 test "cmp_imm_clears_zero_carry_takes_neg_if_less_signed_nega" {
   // Comparison: A < m (signed), A and m both negative
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #0xFF (-1), A will be -2 (0xFE)
-  cpu.load(0x0000, [0xC9, 0xFF])
+  let _ = cpu.load(0x0000, [0xC9, 0xFF])
   cpu.registers[A] = 0xFE
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2170,9 +2171,9 @@ test "cmp_imm_clears_zero_carry_takes_neg_if_less_signed_nega" {
 
 test "cmp_imm_clears_zero_sets_carry_takes_neg_if_more_unsigned" {
   // Comparison: A > m (unsigned)
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #1 , A will be 10
-  cpu.load(0x0000, [0xC9, 1])
+  let _ = cpu.load(0x0000, [0xC9, 1])
   cpu.registers[A] = 10
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2183,9 +2184,9 @@ test "cmp_imm_clears_zero_sets_carry_takes_neg_if_more_unsigned" {
 
 test "cmp_imm_clears_zero_carry_takes_neg_if_more_signed" {
   // Comparison: A > m (signed), memory negative
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #$FF (-1), A will be 2
-  cpu.load(0x0000, [0xC9, 0xFF])
+  let _ = cpu.load(0x0000, [0xC9, 0xFF])
   cpu.registers[A] = 2
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2196,9 +2197,9 @@ test "cmp_imm_clears_zero_carry_takes_neg_if_more_signed" {
 
 test "cmp_imm_clears_zero_carry_takes_neg_if_more_signed_nega" {
   // Comparison: A > m (signed), A and m both negative
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CMP #$FE (-2), A will be -1 (0xFF)
-  cpu.load(0x0000, [0xC9, 0xFE])
+  let _ = cpu.load(0x0000, [0xC9, 0xFE])
   cpu.registers[A] = 0xFF
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2209,9 +2210,9 @@ test "cmp_imm_clears_zero_carry_takes_neg_if_more_signed_nega" {
 
 test "cpx_imm_sets_zero_carry_clears_neg_flags_if_equal" {
   // Comparison: X == m
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CPX #$20
-  cpu.load(0x0000, [0xE0, 0x20])
+  let _ = cpu.load(0x0000, [0xE0, 0x20])
   cpu.registers[X] = 0x20
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2222,9 +2223,9 @@ test "cpx_imm_sets_zero_carry_clears_neg_flags_if_equal" {
 
 test "cpy_imm_sets_zero_carry_clears_neg_flags_if_equal" {
   // Comparison: Y == m
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 CPY #$30
-  cpu.load(0x0000, [0xC0, 0x30])
+  let _ = cpu.load(0x0000, [0xC0, 0x30])
   cpu.registers[Y] = 0x30
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -2234,9 +2235,9 @@ test "cpy_imm_sets_zero_carry_clears_neg_flags_if_equal" {
 }
 
 test "dec_abs_decrements_memory" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0xABCD
-  cpu.load(0x0000, [0xCE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xCE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x10
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -2246,9 +2247,9 @@ test "dec_abs_decrements_memory" {
 }
 
 test "dec_abs_below_00_rolls_over_and_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0xABCD
-  cpu.load(0x0000, [0xCE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xCE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -2258,9 +2259,9 @@ test "dec_abs_below_00_rolls_over_and_sets_negative_flag" {
 }
 
 test "dec_abs_sets_zero_flag_when_decrementing_to_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0xABCD
-  cpu.load(0x0000, [0xCE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xCE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x01
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -2270,9 +2271,9 @@ test "dec_abs_sets_zero_flag_when_decrementing_to_zero" {
 }
 
 test "dec_zp_decrements_memory" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0x0010
-  cpu.load(0x0000, [0xC6, 0x10])
+  let _ = cpu.load(0x0000, [0xC6, 0x10])
   cpu.mem[0x0010] = 0x10
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2282,9 +2283,9 @@ test "dec_zp_decrements_memory" {
 }
 
 test "dec_zp_below_00_rolls_over_and_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0x0010
-  cpu.load(0x0000, [0xC6, 0x10])
+  let _ = cpu.load(0x0000, [0xC6, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2294,9 +2295,9 @@ test "dec_zp_below_00_rolls_over_and_sets_negative_flag" {
 }
 
 test "dec_zp_sets_zero_flag_when_decrementing_to_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0x0010
-  cpu.load(0x0000, [0xC6, 0x10])
+  let _ = cpu.load(0x0000, [0xC6, 0x10])
   cpu.mem[0x0010] = 0x01
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2306,9 +2307,9 @@ test "dec_zp_sets_zero_flag_when_decrementing_to_zero" {
 }
 
 test "dec_abs_x_decrements_memory" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0xABCD,X
-  cpu.load(0x0000, [0xDE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xDE, 0xCD, 0xAB])
   cpu.registers[X] = 0x03
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x10
   assert_eq!(cpu.step(), 7)
@@ -2319,9 +2320,9 @@ test "dec_abs_x_decrements_memory" {
 }
 
 test "dec_abs_x_below_00_rolls_over_and_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0xABCD,X
-  cpu.load(0x0000, [0xDE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xDE, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -2331,9 +2332,9 @@ test "dec_abs_x_below_00_rolls_over_and_sets_negative_flag" {
 }
 
 test "dec_abs_x_sets_zero_flag_when_decrementing_to_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0xABCD,X
-  cpu.load(0x0000, [0xDE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xDE, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -2343,9 +2344,9 @@ test "dec_abs_x_sets_zero_flag_when_decrementing_to_zero" {
 }
 
 test "dec_zp_x_decrements_memory" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0x0010,X
-  cpu.load(0x0000, [0xD6, 0x10])
+  let _ = cpu.load(0x0000, [0xD6, 0x10])
   cpu.registers[X] = 0x03
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x10
   assert_eq!(cpu.step(), 6)
@@ -2356,9 +2357,9 @@ test "dec_zp_x_decrements_memory" {
 }
 
 test "dec_zp_x_below_00_rolls_over_and_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0x0010,X
-  cpu.load(0x0000, [0xD6, 0x10])
+  let _ = cpu.load(0x0000, [0xD6, 0x10])
   cpu.registers[X] = 0x03
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
@@ -2369,9 +2370,9 @@ test "dec_zp_x_below_00_rolls_over_and_sets_negative_flag" {
 }
 
 test "dec_zp_x_sets_zero_flag_when_decrementing_to_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 DEC 0x0010,X
-  cpu.load(0x0000, [0xD6, 0x10])
+  let _ = cpu.load(0x0000, [0xD6, 0x10])
   cpu.registers[X] = 0x03
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 6)
@@ -2382,7 +2383,7 @@ test "dec_zp_x_sets_zero_flag_when_decrementing_to_zero" {
 }
 
 test "dex_decrements_x" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x10
   // $0000 DEX
   cpu.mem[0x0000] = 0xCA
@@ -2394,7 +2395,7 @@ test "dex_decrements_x" {
 }
 
 test "dex_below_00_rolls_over_and_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x00
   // $0000 DEX
   cpu.mem[0x0000] = 0xCA
@@ -2406,7 +2407,7 @@ test "dex_below_00_rolls_over_and_sets_negative_flag" {
 }
 
 test "dex_sets_zero_flag_when_decrementing_to_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x01
   // $0000 DEX
   cpu.mem[0x0000] = 0xCA
@@ -2418,7 +2419,7 @@ test "dex_sets_zero_flag_when_decrementing_to_zero" {
 }
 
 test "dey_decrements_y" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x10
   // $0000 DEY
   cpu.mem[0x0000] = 0x88
@@ -2430,7 +2431,7 @@ test "dey_decrements_y" {
 }
 
 test "dey_below_00_rolls_over_and_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x00
   // $0000 DEY
   cpu.mem[0x0000] = 0x88
@@ -2441,7 +2442,7 @@ test "dey_below_00_rolls_over_and_sets_negative_flag" {
 }
 
 test "dey_sets_zero_flag_when_decrementing_to_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x01
   // $0000 DEY
   cpu.mem[0x0000] = 0x88
@@ -2452,9 +2453,9 @@ test "dey_sets_zero_flag_when_decrementing_to_zero" {
 }
 
 test "eor_absolute_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
-  cpu.load(0x0000, [0x4D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x4D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2464,9 +2465,9 @@ test "eor_absolute_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_absolute_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
-  cpu.load(0x0000, [0x4D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x4D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2477,9 +2478,9 @@ test "eor_absolute_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_zp_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
-  cpu.load(0x0000, [0x45, 0x10])
+  let _ = cpu.load(0x0000, [0x45, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -2489,9 +2490,9 @@ test "eor_zp_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_zp_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
-  cpu.load(0x0000, [0x45, 0x10])
+  let _ = cpu.load(0x0000, [0x45, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -2502,9 +2503,9 @@ test "eor_zp_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_immediate_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
-  cpu.load(0x0000, [0x49, 0xFF])
+  let _ = cpu.load(0x0000, [0x49, 0xFF])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x00)
@@ -2512,9 +2513,9 @@ test "eor_immediate_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_immediate_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
-  cpu.load(0x0000, [0x49, 0xFF])
+  let _ = cpu.load(0x0000, [0x49, 0xFF])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0xFF)
@@ -2523,10 +2524,10 @@ test "eor_immediate_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_abs_x_indexed_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x5D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x5D, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2536,10 +2537,10 @@ test "eor_abs_x_indexed_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_abs_x_indexed_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x5D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x5D, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2550,10 +2551,10 @@ test "eor_abs_x_indexed_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_abs_y_indexed_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
-  cpu.load(0x0000, [0x59, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x59, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2563,10 +2564,10 @@ test "eor_abs_y_indexed_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_abs_y_indexed_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
-  cpu.load(0x0000, [0x59, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x59, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2577,11 +2578,11 @@ test "eor_abs_y_indexed_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_ind_indexed_x_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x41, 0x10]) // => EOR ($0010,X)
-  cpu.load(0x0013, [0xCD, 0xAB]) // => Vector to $ABCD
+  let _ = cpu.load(0x0000, [0x41, 0x10]) // => EOR ($0010,X)
+  let _ = cpu.load(0x0013, [0xCD, 0xAB]) // => Vector to $ABCD
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -2591,11 +2592,11 @@ test "eor_ind_indexed_x_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_ind_indexed_x_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x41, 0x10]) // => EOR ($0010,X)
-  cpu.load(0x0013, [0xCD, 0xAB]) // => Vector to $ABCD
+  let _ = cpu.load(0x0000, [0x41, 0x10]) // => EOR ($0010,X)
+  let _ = cpu.load(0x0013, [0xCD, 0xAB]) // => Vector to $ABCD
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -2606,11 +2607,11 @@ test "eor_ind_indexed_x_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_indexed_ind_y_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
-  cpu.load(0x0000, [0x51, 0x10]) // => EOR ($0010),Y
-  cpu.load(0x0010, [0xCD, 0xAB]) // => Vector to $ABCD
+  let _ = cpu.load(0x0000, [0x51, 0x10]) // => EOR ($0010),Y
+  let _ = cpu.load(0x0010, [0xCD, 0xAB]) // => Vector to $ABCD
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2620,11 +2621,11 @@ test "eor_indexed_ind_y_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_indexed_ind_y_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
-  cpu.load(0x0000, [0x51, 0x10]) // => EOR ($0010),Y
-  cpu.load(0x0010, [0xCD, 0xAB]) // => Vector to $ABCD
+  let _ = cpu.load(0x0000, [0x51, 0x10]) // => EOR ($0010),Y
+  let _ = cpu.load(0x0010, [0xCD, 0xAB]) // => Vector to $ABCD
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2635,10 +2636,10 @@ test "eor_indexed_ind_y_flips_bits_over_setting_n_flag" {
 }
 
 test "eor_zp_x_indexed_flips_bits_over_setting_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x55, 0x10])
+  let _ = cpu.load(0x0000, [0x55, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -2648,10 +2649,10 @@ test "eor_zp_x_indexed_flips_bits_over_setting_z_flag" {
 }
 
 test "eor_zp_x_indexed_flips_bits_over_setting_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x55, 0x10])
+  let _ = cpu.load(0x0000, [0x55, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -2662,8 +2663,8 @@ test "eor_zp_x_indexed_flips_bits_over_setting_n_flag" {
 }
 
 test "inc_abs_increments_memory" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xEE, 0xCD, 0xAB])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xEE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x09
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -2673,8 +2674,8 @@ test "inc_abs_increments_memory" {
 }
 
 test "inc_abs_increments_memory_rolls_over_and_sets_zero_flag" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xEE, 0xCD, 0xAB])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xEE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -2684,8 +2685,8 @@ test "inc_abs_increments_memory_rolls_over_and_sets_zero_flag" {
 }
 
 test "inc_abs_sets_negative_flag_when_incrementing_above_7F" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xEE, 0xCD, 0xAB])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xEE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x7F
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -2695,8 +2696,8 @@ test "inc_abs_sets_negative_flag_when_incrementing_above_7F" {
 }
 
 test "inc_zp_increments_memory" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xE6, 0x10])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xE6, 0x10])
   cpu.mem[0x0010] = 0x09
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2706,8 +2707,8 @@ test "inc_zp_increments_memory" {
 }
 
 test "inc_zp_increments_memory_rolls_over_and_sets_zero_flag" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xE6, 0x10])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xE6, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2717,8 +2718,8 @@ test "inc_zp_increments_memory_rolls_over_and_sets_zero_flag" {
 }
 
 test "inc_zp_sets_negative_flag_when_incrementing_above_7F" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xE6, 0x10])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xE6, 0x10])
   cpu.mem[0x0010] = 0x7F
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -2728,8 +2729,8 @@ test "inc_zp_sets_negative_flag_when_incrementing_above_7F" {
 }
 
 test "inc_abs_x_increments_memory" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xFE, 0xCD, 0xAB])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xFE, 0xCD, 0xAB])
   cpu.registers[X] = 0x03
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x09
   assert_eq!(cpu.step(), 7)
@@ -2740,8 +2741,8 @@ test "inc_abs_x_increments_memory" {
 }
 
 test "inc_abs_x_increments_memory_rolls_over_and_sets_zero_flag" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xFE, 0xCD, 0xAB])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xFE, 0xCD, 0xAB])
   cpu.registers[X] = 0x03
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 7)
@@ -2752,8 +2753,8 @@ test "inc_abs_x_increments_memory_rolls_over_and_sets_zero_flag" {
 }
 
 test "inc_abs_x_sets_negative_flag_when_incrementing_above_7F" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xFE, 0xCD, 0xAB])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xFE, 0xCD, 0xAB])
   cpu.registers[X] = 0x03
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x7F
   assert_eq!(cpu.step(), 7)
@@ -2764,8 +2765,8 @@ test "inc_abs_x_sets_negative_flag_when_incrementing_above_7F" {
 }
 
 test "inc_zp_x_increments_memory" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xF6, 0x10])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xF6, 0x10])
   cpu.registers[X] = 0x03
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x09
   assert_eq!(cpu.step(), 6)
@@ -2776,8 +2777,8 @@ test "inc_zp_x_increments_memory" {
 }
 
 test "inc_zp_x_increments_memory_rolls_over_and_sets_zero_flag" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xF6, 0x10])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xF6, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -2787,8 +2788,8 @@ test "inc_zp_x_increments_memory_rolls_over_and_sets_zero_flag" {
 }
 
 test "inc_zp_x_sets_negative_flag_when_incrementing_above_7F" {
-  let cpu = CPU::new()
-  cpu.load(0x0000, [0xF6, 0x10])
+  let cpu = CPU::new(debug=true)
+  let _ = cpu.load(0x0000, [0xF6, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x7F
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -2798,7 +2799,7 @@ test "inc_zp_x_sets_negative_flag_when_incrementing_above_7F" {
 }
 
 test "inx_increments_x" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x09
   cpu.mem[0x0000] = 0xE8 // => INX
   assert_eq!(cpu.step(), 2)
@@ -2809,7 +2810,7 @@ test "inx_increments_x" {
 }
 
 test "inx_above_FF_rolls_over_and_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xFF
   cpu.mem[0x0000] = 0xE8 // => INX
   assert_eq!(cpu.step(), 2)
@@ -2819,7 +2820,7 @@ test "inx_above_FF_rolls_over_and_sets_zero_flag" {
 }
 
 test "inx_sets_negative_flag_when_incrementing_above_7F" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x7f
   cpu.mem[0x0000] = 0xE8 // => INX
   assert_eq!(cpu.step(), 2)
@@ -2829,7 +2830,7 @@ test "inx_sets_negative_flag_when_incrementing_above_7F" {
 }
 
 test "iny_increments_y" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x09
   cpu.mem[0x0000] = 0xC8 // => INY
   assert_eq!(cpu.step(), 2)
@@ -2840,7 +2841,7 @@ test "iny_increments_y" {
 }
 
 test "iny_above_FF_rolls_over_and_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xFF
   cpu.mem[0x0000] = 0xC8 // => INY
   assert_eq!(cpu.step(), 2)
@@ -2850,7 +2851,7 @@ test "iny_above_FF_rolls_over_and_sets_zero_flag" {
 }
 
 test "iny_sets_negative_flag_when_incrementing_above_7F" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x7f
   cpu.mem[0x0000] = 0xC8 // => INY
   assert_eq!(cpu.step(), 2)
@@ -2860,26 +2861,26 @@ test "iny_sets_negative_flag_when_incrementing_above_7F" {
 }
 
 test "jmp_abs_jumps_to_absolute_address" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 JMP $ABCD
-  cpu.load(0x0000, [0x4C, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x4C, 0xCD, 0xAB])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0xABCD)
 }
 
 test "jmp_ind_jumps_to_indirect_address" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 JMP ($ABCD)
-  cpu.load(0x0000, [0x6C, 0x00, 0x02])
-  cpu.load(0x0200, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x6C, 0x00, 0x02])
+  let _ = cpu.load(0x0200, [0xCD, 0xAB])
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0xABCD)
 }
 
 test "jsr_pushes_pc_plus_2_and_sets_pc" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $C000 JSR $FFD2
-  cpu.load(0xC000, [0x20, 0xD2, 0xFF])
+  let _ = cpu.load(0xC000, [0x20, 0xD2, 0xFF])
   cpu.pc = 0xC000
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0xFFD2)
@@ -2889,10 +2890,10 @@ test "jsr_pushes_pc_plus_2_and_sets_pc" {
 }
 
 test "lda_absolute_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   // $0000 LDA $ABCD
-  cpu.load(0x0000, [0xAD, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xAD, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2902,10 +2903,10 @@ test "lda_absolute_loads_a_sets_n_flag" {
 }
 
 test "lda_absolute_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 LDA $ABCD
-  cpu.load(0x0000, [0xAD, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xAD, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2915,10 +2916,10 @@ test "lda_absolute_loads_a_sets_z_flag" {
 }
 
 test "lda_zp_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   // $0000 LDA $0010
-  cpu.load(0x0000, [0xA5, 0x10])
+  let _ = cpu.load(0x0000, [0xA5, 0x10])
   cpu.mem[0x0010] = 0x80
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -2928,10 +2929,10 @@ test "lda_zp_loads_a_sets_n_flag" {
 }
 
 test "lda_zp_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 LDA $0010
-  cpu.load(0x0000, [0xA5, 0x10])
+  let _ = cpu.load(0x0000, [0xA5, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -2941,10 +2942,10 @@ test "lda_zp_loads_a_sets_z_flag" {
 }
 
 test "lda_immediate_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   // $0000 LDA #$80
-  cpu.load(0x0000, [0xA9, 0x80])
+  let _ = cpu.load(0x0000, [0xA9, 0x80])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x80)
@@ -2953,10 +2954,10 @@ test "lda_immediate_loads_a_sets_n_flag" {
 }
 
 test "lda_immediate_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   // $0000 LDA #$00
-  cpu.load(0x0000, [0xA9, 0x00])
+  let _ = cpu.load(0x0000, [0xA9, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x00)
@@ -2965,11 +2966,11 @@ test "lda_immediate_loads_a_sets_z_flag" {
 }
 
 test "lda_abs_x_indexed_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 LDA $ABCD,X
-  cpu.load(0x0000, [0xBD, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xBD, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2979,11 +2980,11 @@ test "lda_abs_x_indexed_loads_a_sets_n_flag" {
 }
 
 test "lda_abs_x_indexed_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 LDA $ABCD,X
-  cpu.load(0x0000, [0xBD, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xBD, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -2993,11 +2994,11 @@ test "lda_abs_x_indexed_loads_a_sets_z_flag" {
 }
 
 test "lda_abs_x_indexed_does_not_page_wrap" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[X] = 0xFF
   // $0000 LDA $0080,X
-  cpu.load(0x0000, [0xBD, 0x80, 0x00])
+  let _ = cpu.load(0x0000, [0xBD, 0x80, 0x00])
   cpu.mem[0x0080 + cpu.registers[X].0] = 0x42
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3005,11 +3006,11 @@ test "lda_abs_x_indexed_does_not_page_wrap" {
 }
 
 test "lda_abs_y_indexed_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 LDA $ABCD,Y
-  cpu.load(0x0000, [0xB9, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xB9, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3019,11 +3020,11 @@ test "lda_abs_y_indexed_loads_a_sets_n_flag" {
 }
 
 test "lda_abs_y_indexed_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 LDA $ABCD,Y
-  cpu.load(0x0000, [0xB9, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xB9, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3033,11 +3034,11 @@ test "lda_abs_y_indexed_loads_a_sets_z_flag" {
 }
 
 test "lda_abs_y_indexed_does_not_page_wrap" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0
   cpu.registers[Y] = 0xFF
   // $0000 LDA $0080,X
-  cpu.load(0x0000, [0xB9, 0x80, 0x00])
+  let _ = cpu.load(0x0000, [0xB9, 0x80, 0x00])
   cpu.mem[0x0080 + cpu.registers[Y].0] = 0x42
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3045,13 +3046,13 @@ test "lda_abs_y_indexed_does_not_page_wrap" {
 }
 
 test "lda_ind_indexed_x_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 LDA ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0xA1, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xA1, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x80
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3061,13 +3062,13 @@ test "lda_ind_indexed_x_loads_a_sets_n_flag" {
 }
 
 test "lda_ind_indexed_x_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 LDA ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0xA1, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xA1, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3077,13 +3078,13 @@ test "lda_ind_indexed_x_loads_a_sets_z_flag" {
 }
 
 test "lda_indexed_ind_y_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 LDA ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0xB1, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xB1, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x80
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3093,13 +3094,13 @@ test "lda_indexed_ind_y_loads_a_sets_n_flag" {
 }
 
 test "lda_indexed_ind_y_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 LDA ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0xB1, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xB1, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3109,11 +3110,11 @@ test "lda_indexed_ind_y_loads_a_sets_z_flag" {
 }
 
 test "lda_zp_x_indexed_loads_a_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 LDA $10,X
-  cpu.load(0x0000, [0xB5, 0x10])
+  let _ = cpu.load(0x0000, [0xB5, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3123,11 +3124,11 @@ test "lda_zp_x_indexed_loads_a_sets_n_flag" {
 }
 
 test "lda_zp_x_indexed_loads_a_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 LDA $10,X
-  cpu.load(0x0000, [0xB5, 0x10])
+  let _ = cpu.load(0x0000, [0xB5, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3137,10 +3138,10 @@ test "lda_zp_x_indexed_loads_a_sets_z_flag" {
 }
 
 test "ldx_absolute_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x00
   // $0000 LDX $ABCD
-  cpu.load(0x0000, [0xAE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xAE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3150,10 +3151,10 @@ test "ldx_absolute_loads_x_sets_n_flag" {
 }
 
 test "ldx_absolute_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xFF
   // $0000 LDX $ABCD
-  cpu.load(0x0000, [0xAE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xAE, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3163,10 +3164,10 @@ test "ldx_absolute_loads_x_sets_z_flag" {
 }
 
 test "ldx_zp_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x00
   // $0000 LDX $0010
-  cpu.load(0x0000, [0xA6, 0x10])
+  let _ = cpu.load(0x0000, [0xA6, 0x10])
   cpu.mem[0x0010] = 0x80
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -3176,10 +3177,10 @@ test "ldx_zp_loads_x_sets_n_flag" {
 }
 
 test "ldx_zp_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xFF
   // $0000 LDX $0010
-  cpu.load(0x0000, [0xA6, 0x10])
+  let _ = cpu.load(0x0000, [0xA6, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -3189,10 +3190,10 @@ test "ldx_zp_loads_x_sets_z_flag" {
 }
 
 test "ldx_immediate_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x00
   // $0000 LDX #$80
-  cpu.load(0x0000, [0xA2, 0x80])
+  let _ = cpu.load(0x0000, [0xA2, 0x80])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[X], 0x80)
@@ -3201,10 +3202,10 @@ test "ldx_immediate_loads_x_sets_n_flag" {
 }
 
 test "ldx_immediate_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xFF
   // $0000 LDX #$00
-  cpu.load(0x0000, [0xA2, 0x00])
+  let _ = cpu.load(0x0000, [0xA2, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[X], 0x00)
@@ -3213,11 +3214,11 @@ test "ldx_immediate_loads_x_sets_z_flag" {
 }
 
 test "ldx_abs_y_indexed_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 LDX $ABCD,Y
-  cpu.load(0x0000, [0xBE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xBE, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3227,11 +3228,11 @@ test "ldx_abs_y_indexed_loads_x_sets_n_flag" {
 }
 
 test "ldx_abs_y_indexed_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 LDX $ABCD,Y
-  cpu.load(0x0000, [0xBE, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xBE, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3241,11 +3242,11 @@ test "ldx_abs_y_indexed_loads_x_sets_z_flag" {
 }
 
 test "ldx_zp_y_indexed_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 LDX $0010,Y
-  cpu.load(0x0000, [0xB6, 0x10])
+  let _ = cpu.load(0x0000, [0xB6, 0x10])
   cpu.mem[0x0010 + cpu.registers[Y].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3255,11 +3256,11 @@ test "ldx_zp_y_indexed_loads_x_sets_n_flag" {
 }
 
 test "ldx_zp_y_indexed_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 LDX $0010,Y
-  cpu.load(0x0000, [0xB6, 0x10])
+  let _ = cpu.load(0x0000, [0xB6, 0x10])
   cpu.mem[0x0010 + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3269,10 +3270,10 @@ test "ldx_zp_y_indexed_loads_x_sets_z_flag" {
 }
 
 test "ldy_absolute_loads_y_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x00
   // $0000 LDY $ABCD
-  cpu.load(0x0000, [0xAC, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xAC, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3282,10 +3283,10 @@ test "ldy_absolute_loads_y_sets_n_flag" {
 }
 
 test "ldy_absolute_loads_y_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xFF
   // $0000 LDY $ABCD
-  cpu.load(0x0000, [0xAC, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xAC, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3295,10 +3296,10 @@ test "ldy_absolute_loads_y_sets_z_flag" {
 }
 
 test "ldy_zp_loads_y_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x00
   // $0000 LDY $0010
-  cpu.load(0x0000, [0xA4, 0x10])
+  let _ = cpu.load(0x0000, [0xA4, 0x10])
   cpu.mem[0x0010] = 0x80
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -3308,10 +3309,10 @@ test "ldy_zp_loads_y_sets_n_flag" {
 }
 
 test "ldy_zp_loads_y_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xFF
   // $0000 LDY $0010
-  cpu.load(0x0000, [0xA4, 0x10])
+  let _ = cpu.load(0x0000, [0xA4, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -3321,10 +3322,10 @@ test "ldy_zp_loads_y_sets_z_flag" {
 }
 
 test "ldy_immediate_loads_y_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x00
   // $0000 LDY #$80
-  cpu.load(0x0000, [0xA0, 0x80])
+  let _ = cpu.load(0x0000, [0xA0, 0x80])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[Y], 0x80)
@@ -3333,10 +3334,10 @@ test "ldy_immediate_loads_y_sets_n_flag" {
 }
 
 test "ldy_immediate_loads_y_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xFF
   // $0000 LDY #$00
-  cpu.load(0x0000, [0xA0, 0x00])
+  let _ = cpu.load(0x0000, [0xA0, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[Y], 0x00)
@@ -3345,11 +3346,11 @@ test "ldy_immediate_loads_y_sets_z_flag" {
 }
 
 test "ldy_abs_x_indexed_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x00
   cpu.registers[X] = 0x03
   // $0000 LDY $ABCD,X
-  cpu.load(0x0000, [0xBC, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xBC, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3359,11 +3360,11 @@ test "ldy_abs_x_indexed_loads_x_sets_n_flag" {
 }
 
 test "ldy_abs_x_indexed_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 LDY $ABCD,X
-  cpu.load(0x0000, [0xBC, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xBC, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3373,11 +3374,11 @@ test "ldy_abs_x_indexed_loads_x_sets_z_flag" {
 }
 
 test "ldy_zp_x_indexed_loads_x_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0x00
   cpu.registers[X] = 0x03
   // $0000 LDY $0010,X
-  cpu.load(0x0000, [0xB4, 0x10])
+  let _ = cpu.load(0x0000, [0xB4, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x80
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3387,11 +3388,11 @@ test "ldy_zp_x_indexed_loads_x_sets_n_flag" {
 }
 
 test "ldy_zp_x_indexed_loads_x_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 LDY $0010,X
-  cpu.load(0x0000, [0xB4, 0x10])
+  let _ = cpu.load(0x0000, [0xB4, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3401,7 +3402,7 @@ test "ldy_zp_x_indexed_loads_x_sets_z_flag" {
 }
 
 test "lsr_accumulator_rotates_in_zero_not_carry" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR A
   cpu.mem[0x0000] = 0x4A
@@ -3415,7 +3416,7 @@ test "lsr_accumulator_rotates_in_zero_not_carry" {
 }
 
 test "lsr_accumulator_sets_carry_and_zero_flags_after_rotation" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 LSR A
   cpu.mem[0x0000] = 0x4A
@@ -3429,7 +3430,7 @@ test "lsr_accumulator_sets_carry_and_zero_flags_after_rotation" {
 }
 
 test "lsr_accumulator_rotates_bits_right" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR A
   cpu.mem[0x0000] = 0x4A
@@ -3443,10 +3444,10 @@ test "lsr_accumulator_rotates_bits_right" {
 }
 
 test "lsr_absolute_rotates_in_zero_not_carry" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR $ABCD
-  cpu.load(0x0000, [0x4E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x4E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -3457,10 +3458,10 @@ test "lsr_absolute_rotates_in_zero_not_carry" {
 }
 
 test "lsr_absolute_sets_carry_and_zero_flags_after_rotation" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 LSR $ABCD
-  cpu.load(0x0000, [0x4E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x4E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x01
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -3471,10 +3472,10 @@ test "lsr_absolute_sets_carry_and_zero_flags_after_rotation" {
 }
 
 test "lsr_absolute_rotates_bits_right" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR $ABCD
-  cpu.load(0x0000, [0x4E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x4E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x04
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -3485,10 +3486,10 @@ test "lsr_absolute_rotates_bits_right" {
 }
 
 test "lsr_zp_rotates_in_zero_not_carry" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR $0010
-  cpu.load(0x0000, [0x46, 0x10])
+  let _ = cpu.load(0x0000, [0x46, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3499,10 +3500,10 @@ test "lsr_zp_rotates_in_zero_not_carry" {
 }
 
 test "lsr_zp_sets_carry_and_zero_flags_after_rotation" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 LSR $0010
-  cpu.load(0x0000, [0x46, 0x10])
+  let _ = cpu.load(0x0000, [0x46, 0x10])
   cpu.mem[0x0010] = 0x01
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3513,10 +3514,10 @@ test "lsr_zp_sets_carry_and_zero_flags_after_rotation" {
 }
 
 test "lsr_zp_rotates_bits_right" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR $0010
-  cpu.load(0x0000, [0x46, 0x10])
+  let _ = cpu.load(0x0000, [0x46, 0x10])
   cpu.mem[0x0010] = 0x04
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3527,11 +3528,11 @@ test "lsr_zp_rotates_bits_right" {
 }
 
 test "lsr_abs_x_indexed_rotates_in_zero_not_carry" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   cpu.registers[X] = 0x03
   // $0000 LSR $ABCD,X
-  cpu.load(0x0000, [0x5E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x5E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -3542,11 +3543,11 @@ test "lsr_abs_x_indexed_rotates_in_zero_not_carry" {
 }
 
 test "lsr_abs_x_indexed_sets_c_and_z_flags_after_rotation" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[X] = 0x03
   // $0000 LSR $ABCD,X
-  cpu.load(0x0000, [0x5E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x5E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -3557,10 +3558,10 @@ test "lsr_abs_x_indexed_sets_c_and_z_flags_after_rotation" {
 }
 
 test "lsr_abs_x_indexed_rotates_bits_right" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 LSR $ABCD,X
-  cpu.load(0x0000, [0x5E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x5E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x04
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -3571,11 +3572,11 @@ test "lsr_abs_x_indexed_rotates_bits_right" {
 }
 
 test "lsr_zp_x_indexed_rotates_in_zero_not_carry" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   cpu.registers[X] = 0x03
   // $0000 LSR $0010,X
-  cpu.load(0x0000, [0x56, 0x10])
+  let _ = cpu.load(0x0000, [0x56, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3586,11 +3587,11 @@ test "lsr_zp_x_indexed_rotates_in_zero_not_carry" {
 }
 
 test "lsr_zp_x_indexed_sets_carry_and_zero_flags_after_rotation" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[X] = 0x03
   // $0000 LSR $0010,X
-  cpu.load(0x0000, [0x56, 0x10])
+  let _ = cpu.load(0x0000, [0x56, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x01
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3601,11 +3602,11 @@ test "lsr_zp_x_indexed_sets_carry_and_zero_flags_after_rotation" {
 }
 
 test "lsr_zp_x_indexed_rotates_bits_right" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   cpu.registers[X] = 0x03
   // $0000 LSR $0010,X
-  cpu.load(0x0000, [0x56, 0x10])
+  let _ = cpu.load(0x0000, [0x56, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x04
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3616,7 +3617,7 @@ test "lsr_zp_x_indexed_rotates_bits_right" {
 }
 
 test "nop_does_nothing" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 NOP
   cpu.mem[0x0000] = 0xEA
   assert_eq!(cpu.step(), 2)
@@ -3624,11 +3625,11 @@ test "nop_does_nothing" {
 }
 
 test "ora_absolute_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   // $0000 ORA $ABCD
-  cpu.load(0x0000, [0x0D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x0D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3637,11 +3638,11 @@ test "ora_absolute_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_absolute_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   // $0000 ORA $ABCD
-  cpu.load(0x0000, [0x0D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x0D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x82
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3651,11 +3652,11 @@ test "ora_absolute_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_zp_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   // $0000 ORA $0010
-  cpu.load(0x0000, [0x05, 0x10])
+  let _ = cpu.load(0x0000, [0x05, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -3664,11 +3665,11 @@ test "ora_zp_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_zp_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   // $0000 ORA $0010
-  cpu.load(0x0000, [0x05, 0x10])
+  let _ = cpu.load(0x0000, [0x05, 0x10])
   cpu.mem[0x0010] = 0x82
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -3678,11 +3679,11 @@ test "ora_zp_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_immediate_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   // $0000 ORA #$00
-  cpu.load(0x0000, [0x09, 0x00])
+  let _ = cpu.load(0x0000, [0x09, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x00)
@@ -3690,11 +3691,11 @@ test "ora_immediate_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_immediate_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   // $0000 ORA #$82
-  cpu.load(0x0000, [0x09, 0x82])
+  let _ = cpu.load(0x0000, [0x09, 0x82])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x83)
@@ -3703,12 +3704,12 @@ test "ora_immediate_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_abs_x_indexed_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 ORA $ABCD,X
-  cpu.load(0x0000, [0x1D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x1D, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3717,12 +3718,12 @@ test "ora_abs_x_indexed_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_abs_x_indexed_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   cpu.registers[X] = 0x03
   // $0000 ORA $ABCD,X
-  cpu.load(0x0000, [0x1D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x1D, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x82
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3732,12 +3733,12 @@ test "ora_abs_x_indexed_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_abs_y_indexed_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 ORA $ABCD,Y
-  cpu.load(0x0000, [0x19, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x19, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3746,12 +3747,12 @@ test "ora_abs_y_indexed_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_abs_y_indexed_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   cpu.registers[Y] = 0x03
   // $0000 ORA $ABCD,Y
-  cpu.load(0x0000, [0x19, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x19, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x82
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -3761,14 +3762,14 @@ test "ora_abs_y_indexed_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_ind_indexed_x_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 ORA ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x01, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x01, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3777,14 +3778,14 @@ test "ora_ind_indexed_x_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_ind_indexed_x_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   cpu.registers[X] = 0x03
   // $0000 ORA ($0010,X)
   // $0013 Vector to $ABCD
-  cpu.load(0x0000, [0x01, 0x10])
-  cpu.load(0x0013, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x01, 0x10])
+  let _ = cpu.load(0x0013, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x82
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -3794,14 +3795,14 @@ test "ora_ind_indexed_x_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_indexed_ind_y_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 ORA ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x11, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x11, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3810,14 +3811,14 @@ test "ora_indexed_ind_y_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_indexed_ind_y_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   cpu.registers[Y] = 0x03
   // $0000 ORA ($0010),Y
   // $0010 Vector to $ABCD
-  cpu.load(0x0000, [0x11, 0x10])
-  cpu.load(0x0010, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x11, 0x10])
+  let _ = cpu.load(0x0010, [0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x82
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -3827,12 +3828,12 @@ test "ora_indexed_ind_y_turns_bits_on_sets_n_flag" {
 }
 
 test "ora_zp_x_indexed_zeroes_or_zeros_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 ORA $0010,X
-  cpu.load(0x0000, [0x15, 0x10])
+  let _ = cpu.load(0x0000, [0x15, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3841,12 +3842,12 @@ test "ora_zp_x_indexed_zeroes_or_zeros_sets_z_flag" {
 }
 
 test "ora_zp_x_indexed_turns_bits_on_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x03
   cpu.registers[X] = 0x03
   // $0000 ORA $0010,X
-  cpu.load(0x0000, [0x15, 0x10])
+  let _ = cpu.load(0x0000, [0x15, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x82
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -3856,7 +3857,7 @@ test "ora_zp_x_indexed_turns_bits_on_sets_n_flag" {
 }
 
 test "pha_pushes_a_and_updates_sp" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAB
   // $0000 PHA
   cpu.mem[0x0000] = 0x48
@@ -3870,7 +3871,7 @@ test "pha_pushes_a_and_updates_sp" {
 test "php_pushes_processor_status_and_updates_sp" {
   let mut flags = 0x00
   while flags < 0x100 {
-    let cpu = CPU::new()
+    let cpu = CPU::new(debug=true)
     cpu.flags.set(flags | (B | U))
     // $0000 PHP
     cpu.mem[0x0000] = 0x08
@@ -3883,7 +3884,7 @@ test "php_pushes_processor_status_and_updates_sp" {
 }
 
 test "pla_pulls_top_byte_from_stack_into_a_and_updates_sp" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 PLA
   cpu.mem[0x0000] = 0x68
   cpu.mem[0x01FF] = 0xAB
@@ -3895,7 +3896,7 @@ test "pla_pulls_top_byte_from_stack_into_a_and_updates_sp" {
 }
 
 test "plp_pulls_top_byte_from_stack_into_flags_and_updates_sp" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 PLP
   cpu.mem[0x0000] = 0x28
   cpu.mem[0x01FF] = 0xBA // must have BREAK and UNUSED set
@@ -3907,7 +3908,7 @@ test "plp_pulls_top_byte_from_stack_into_flags_and_updates_sp" {
 }
 
 test "rol_accumulator_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.flags[C] = false
   // $0000 ROL A
@@ -3920,7 +3921,7 @@ test "rol_accumulator_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_accumulator_80_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x80
   cpu.flags[C] = false
   cpu.flags[Z] = false
@@ -3934,7 +3935,7 @@ test "rol_accumulator_80_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_accumulator_zero_and_carry_one_clears_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.flags[C] = true
   // $0000 ROL A
@@ -3947,7 +3948,7 @@ test "rol_accumulator_zero_and_carry_one_clears_z_flag" {
 }
 
 test "rol_accumulator_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x40
   cpu.flags[C] = true
   // $0000 ROL A
@@ -3960,7 +3961,7 @@ test "rol_accumulator_sets_n_flag" {
 }
 
 test "rol_accumulator_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x7F
   cpu.flags[C] = false
   // $0000 ROL A
@@ -3972,7 +3973,7 @@ test "rol_accumulator_shifts_out_zero" {
 }
 
 test "rol_accumulator_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xFF
   cpu.flags[C] = false
   // $0000 ROL A
@@ -3984,10 +3985,10 @@ test "rol_accumulator_shifts_out_one" {
 }
 
 test "rol_absolute_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROL $ABCD
-  cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -3997,11 +3998,11 @@ test "rol_absolute_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_absolute_80_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.flags[Z] = false
   // $0000 ROL $ABCD
-  cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x80
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4011,11 +4012,11 @@ test "rol_absolute_80_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_absolute_zero_and_carry_one_clears_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.flags[C] = true
   // $0000 ROL $ABCD
-  cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4025,10 +4026,10 @@ test "rol_absolute_zero_and_carry_one_clears_z_flag" {
 }
 
 test "rol_absolute_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROL $ABCD
-  cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x40
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4038,10 +4039,10 @@ test "rol_absolute_sets_n_flag" {
 }
 
 test "rol_absolute_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROL $ABCD
-  cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x7F
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4050,10 +4051,10 @@ test "rol_absolute_shifts_out_zero" {
 }
 
 test "rol_absolute_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROL $ABCD
-  cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x2E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4062,10 +4063,10 @@ test "rol_absolute_shifts_out_one" {
 }
 
 test "rol_zp_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROL $0010
-  cpu.load(0x0000, [0x26, 0x10])
+  let _ = cpu.load(0x0000, [0x26, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4075,11 +4076,11 @@ test "rol_zp_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_zp_80_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.flags[Z] = false
   // $0000 ROL $0010
-  cpu.load(0x0000, [0x26, 0x10])
+  let _ = cpu.load(0x0000, [0x26, 0x10])
   cpu.mem[0x0010] = 0x80
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4089,11 +4090,11 @@ test "rol_zp_80_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_zp_zero_and_carry_one_clears_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.flags[C] = true
   // $0000 ROL $0010
-  cpu.load(0x0000, [0x26, 0x10])
+  let _ = cpu.load(0x0000, [0x26, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4103,10 +4104,10 @@ test "rol_zp_zero_and_carry_one_clears_z_flag" {
 }
 
 test "rol_zp_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROL $0010
-  cpu.load(0x0000, [0x26, 0x10])
+  let _ = cpu.load(0x0000, [0x26, 0x10])
   cpu.mem[0x0010] = 0x40
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4116,10 +4117,10 @@ test "rol_zp_sets_n_flag" {
 }
 
 test "rol_zp_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROL $0010
-  cpu.load(0x0000, [0x26, 0x10])
+  let _ = cpu.load(0x0000, [0x26, 0x10])
   cpu.mem[0x0010] = 0x7F
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4128,10 +4129,10 @@ test "rol_zp_shifts_out_zero" {
 }
 
 test "rol_zp_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROL $0010
-  cpu.load(0x0000, [0x26, 0x10])
+  let _ = cpu.load(0x0000, [0x26, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4140,11 +4141,11 @@ test "rol_zp_shifts_out_one" {
 }
 
 test "rol_abs_x_indexed_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[X] = 0x03
   // $0000 ROL $ABCD,X
-  cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4154,12 +4155,12 @@ test "rol_abs_x_indexed_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_abs_x_indexed_80_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.flags[Z] = false
   cpu.registers[X] = 0x03
   // $0000 ROL $ABCD,X
-  cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x80
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4169,11 +4170,11 @@ test "rol_abs_x_indexed_80_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_abs_x_indexed_zero_and_carry_one_clears_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROL $ABCD,X
-  cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4183,11 +4184,11 @@ test "rol_abs_x_indexed_zero_and_carry_one_clears_z_flag" {
 }
 
 test "rol_abs_x_indexed_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROL $ABCD,X
-  cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x40
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4197,11 +4198,11 @@ test "rol_abs_x_indexed_sets_n_flag" {
 }
 
 test "rol_abs_x_indexed_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = false
   // $0000 ROL $ABCD,X
-  cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x7F
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4210,11 +4211,11 @@ test "rol_abs_x_indexed_shifts_out_zero" {
 }
 
 test "rol_abs_x_indexed_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = false
   // $0000 ROL $ABCD,X
-  cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x3E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4223,10 +4224,10 @@ test "rol_abs_x_indexed_shifts_out_one" {
 }
 
 test "rol_zp_x_indexed_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x36, 0x10])
+  let _ = cpu.load(0x0000, [0x36, 0x10])
   // $0000 ROL $0010,X
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
@@ -4237,11 +4238,11 @@ test "rol_zp_x_indexed_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_zp_x_indexed_80_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   cpu.flags[Z] = false
   cpu.registers[X] = 0x03
-  cpu.load(0x0000, [0x36, 0x10])
+  let _ = cpu.load(0x0000, [0x36, 0x10])
   // $0000 ROL $0010,X
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x80
   assert_eq!(cpu.step(), 6)
@@ -4252,10 +4253,10 @@ test "rol_zp_x_indexed_80_and_carry_zero_sets_z_flag" {
 }
 
 test "rol_zp_x_indexed_zero_and_carry_one_clears_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
-  cpu.load(0x0000, [0x36, 0x10])
+  let _ = cpu.load(0x0000, [0x36, 0x10])
   // $0000 ROL $0010,X
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
@@ -4266,11 +4267,11 @@ test "rol_zp_x_indexed_zero_and_carry_one_clears_z_flag" {
 }
 
 test "rol_zp_x_indexed_sets_n_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROL $0010,X
-  cpu.load(0x0000, [0x36, 0x10])
+  let _ = cpu.load(0x0000, [0x36, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x40
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4280,11 +4281,11 @@ test "rol_zp_x_indexed_sets_n_flag" {
 }
 
 test "rol_zp_x_indexed_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = false
   // $0000 ROL $0010,X
-  cpu.load(0x0000, [0x36, 0x10])
+  let _ = cpu.load(0x0000, [0x36, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x7F
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4293,11 +4294,11 @@ test "rol_zp_x_indexed_shifts_out_zero" {
 }
 
 test "rol_zp_x_indexed_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = false
   // $0000 ROL $0010,X
-  cpu.load(0x0000, [0x36, 0x10])
+  let _ = cpu.load(0x0000, [0x36, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4306,7 +4307,7 @@ test "rol_zp_x_indexed_shifts_out_one" {
 }
 
 test "ror_accumulator_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.flags[C] = false
   // $0000 ROR A
@@ -4319,7 +4320,7 @@ test "ror_accumulator_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "ror_accumulator_zero_and_carry_one_rotates_in_sets_n_flags" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.flags[C] = true
   // $0000 ROR A
@@ -4332,7 +4333,7 @@ test "ror_accumulator_zero_and_carry_one_rotates_in_sets_n_flags" {
 }
 
 test "ror_accumulator_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x02
   cpu.flags[C] = true
   // $0000 ROR A
@@ -4344,7 +4345,7 @@ test "ror_accumulator_shifts_out_zero" {
 }
 
 test "ror_accumulator_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x03
   cpu.flags[C] = true
   // $0000 ROR A
@@ -4356,10 +4357,10 @@ test "ror_accumulator_shifts_out_one" {
 }
 
 test "ror_absolute_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROR $ABCD
-  cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4369,10 +4370,10 @@ test "ror_absolute_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "ror_absolute_zero_and_carry_one_rotates_in_sets_n_flags" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROR $ABCD
-  cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4382,10 +4383,10 @@ test "ror_absolute_zero_and_carry_one_rotates_in_sets_n_flags" {
 }
 
 test "ror_absolute_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROR $ABCD
-  cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x02
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4394,10 +4395,10 @@ test "ror_absolute_shifts_out_zero" {
 }
 
 test "ror_absolute_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROR $ABCD
-  cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x6E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x03
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0003)
@@ -4406,10 +4407,10 @@ test "ror_absolute_shifts_out_one" {
 }
 
 test "ror_zp_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 ROR $0010
-  cpu.load(0x0000, [0x66, 0x10])
+  let _ = cpu.load(0x0000, [0x66, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4419,10 +4420,10 @@ test "ror_zp_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "ror_zp_zero_and_carry_one_rotates_in_sets_n_flags" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROR $0010
-  cpu.load(0x0000, [0x66, 0x10])
+  let _ = cpu.load(0x0000, [0x66, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4432,10 +4433,10 @@ test "ror_zp_zero_and_carry_one_rotates_in_sets_n_flags" {
 }
 
 test "ror_zp_zero_absolute_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROR $0010
-  cpu.load(0x0000, [0x66, 0x10])
+  let _ = cpu.load(0x0000, [0x66, 0x10])
   cpu.mem[0x0010] = 0x02
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4444,10 +4445,10 @@ test "ror_zp_zero_absolute_shifts_out_zero" {
 }
 
 test "ror_zp_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = true
   // $0000 ROR $0010
-  cpu.load(0x0000, [0x66, 0x10])
+  let _ = cpu.load(0x0000, [0x66, 0x10])
   cpu.mem[0x0010] = 0x03
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0002)
@@ -4456,11 +4457,11 @@ test "ror_zp_shifts_out_one" {
 }
 
 test "ror_abs_x_indexed_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = false
   // $0000 ROR $ABCD,X
-  cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4470,11 +4471,11 @@ test "ror_abs_x_indexed_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "ror_abs_x_indexed_z_and_c_1_rotates_in_sets_n_flags" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROR $ABCD,X
-  cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4484,11 +4485,11 @@ test "ror_abs_x_indexed_z_and_c_1_rotates_in_sets_n_flags" {
 }
 
 test "ror_abs_x_indexed_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROR $ABCD,X
-  cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x02
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4497,11 +4498,11 @@ test "ror_abs_x_indexed_shifts_out_zero" {
 }
 
 test "ror_abs_x_indexed_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROR $ABCD,X
-  cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x7E, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x03
   assert_eq!(cpu.step(), 7)
   assert_eq!(cpu.pc, 0x0003)
@@ -4510,11 +4511,11 @@ test "ror_abs_x_indexed_shifts_out_one" {
 }
 
 test "ror_zp_x_indexed_zero_and_carry_zero_sets_z_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = false
   // $0000 ROR $0010,X
-  cpu.load(0x0000, [0x76, 0x10])
+  let _ = cpu.load(0x0000, [0x76, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4524,11 +4525,11 @@ test "ror_zp_x_indexed_zero_and_carry_zero_sets_z_flag" {
 }
 
 test "ror_zp_x_indexed_zero_and_carry_one_rotates_in_sets_n_flags" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROR $0010,X
-  cpu.load(0x0000, [0x76, 0x10])
+  let _ = cpu.load(0x0000, [0x76, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4538,11 +4539,11 @@ test "ror_zp_x_indexed_zero_and_carry_one_rotates_in_sets_n_flags" {
 }
 
 test "ror_zp_x_indexed_zero_absolute_shifts_out_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROR $0010,X
-  cpu.load(0x0000, [0x76, 0x10])
+  let _ = cpu.load(0x0000, [0x76, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x02
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4551,11 +4552,11 @@ test "ror_zp_x_indexed_zero_absolute_shifts_out_zero" {
 }
 
 test "ror_zp_x_indexed_shifts_out_one" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0x03
   cpu.flags[C] = true
   // $0000 ROR $0010,X
-  cpu.load(0x0000, [0x76, 0x10])
+  let _ = cpu.load(0x0000, [0x76, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x03
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -4564,10 +4565,10 @@ test "ror_zp_x_indexed_shifts_out_one" {
 }
 
 test "rti_restores_status_and_pc_and_updates_sp" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 RTI
   cpu.mem[0x0000] = 0x40
-  cpu.load(0x01FD, [0xFC, 0x03, 0xC0]) // Status, PCL, PCH
+  let _ = cpu.load(0x01FD, [0xFC, 0x03, 0xC0]) // Status, PCL, PCH
   cpu.registers[SP] = 0xFC
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0xC003)
@@ -4576,10 +4577,10 @@ test "rti_restores_status_and_pc_and_updates_sp" {
 }
 
 test "rti_forces_break_and_unused_flags_high" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 RTI
   cpu.mem[0x0000] = 0x40
-  cpu.load(0x01FD, [0x00, 0x03, 0xC0]) // Status, PCL, PCH
+  let _ = cpu.load(0x01FD, [0x00, 0x03, 0xC0]) // Status, PCL, PCH
   cpu.registers[SP] = 0xFC
   assert_eq!(cpu.step(), 6)
   // assert_eq!(cpu.flags[B], true) // FIXME (nestest)
@@ -4587,10 +4588,10 @@ test "rti_forces_break_and_unused_flags_high" {
 }
 
 test "rts_restores_pc_and_increments_then_updates_sp" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $0000 RTS
   cpu.mem[0x0000] = 0x60
-  cpu.load(0x01FE, [0x03, 0xC0]) // PCL, PCH
+  let _ = cpu.load(0x01FE, [0x03, 0xC0]) // PCL, PCH
   cpu.pc = 0x0000
   cpu.registers[SP] = 0xFD
   assert_eq!(cpu.step(), 6)
@@ -4599,10 +4600,10 @@ test "rts_restores_pc_and_increments_then_updates_sp" {
 }
 
 test "rts_wraps_around_top_of_memory" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   // $1000 RTS
   cpu.mem[0x1000] = 0x60
-  cpu.load(0x01FE, [0xFF, 0xFF]) // PCL, PCH
+  let _ = cpu.load(0x01FE, [0xFF, 0xFF]) // PCL, PCH
   cpu.pc = 0x1000
   cpu.registers[SP] = 0xFD
   assert_eq!(cpu.step(), 6)
@@ -4611,12 +4612,12 @@ test "rts_wraps_around_top_of_memory" {
 }
 
 test "sbc_abs_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC $ABCD
-  cpu.load(0x0000, [0xED, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xED, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.registers[A], 0x00)
@@ -4626,12 +4627,12 @@ test "sbc_abs_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_abs_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC $ABCD
-  cpu.load(0x0000, [0xED, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xED, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x01
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.registers[A], 0x00)
@@ -4641,12 +4642,12 @@ test "sbc_abs_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_abs_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC $ABCD
-  cpu.load(0x0000, [0xED, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xED, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.registers[A], 0x00)
@@ -4656,12 +4657,12 @@ test "sbc_abs_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_abs_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC $ABCD
-  cpu.load(0x0000, [0xED, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xED, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x02
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.registers[A], 0x04)
@@ -4671,12 +4672,12 @@ test "sbc_abs_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_zp_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC $10
-  cpu.load(0x0000, [0xE5, 0x10])
+  let _ = cpu.load(0x0000, [0xE5, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.registers[A], 0x00)
@@ -4686,12 +4687,12 @@ test "sbc_zp_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_zp_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC $10
-  cpu.load(0x0000, [0xE5, 0x10])
+  let _ = cpu.load(0x0000, [0xE5, 0x10])
   cpu.mem[0x0010] = 0x01
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.registers[A], 0x00)
@@ -4701,12 +4702,12 @@ test "sbc_zp_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_zp_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // => SBC $10
-  cpu.load(0x0000, [0xE5, 0x10])
+  let _ = cpu.load(0x0000, [0xE5, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.registers[A], 0x00)
@@ -4716,12 +4717,12 @@ test "sbc_zp_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_zp_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // => SBC $10
-  cpu.load(0x0000, [0xE5, 0x10])
+  let _ = cpu.load(0x0000, [0xE5, 0x10])
   cpu.mem[0x0010] = 0x02
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.registers[A], 0x04)
@@ -4731,12 +4732,12 @@ test "sbc_zp_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_imm_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC #$00
-  cpu.load(0x0000, [0xE9, 0x00])
+  let _ = cpu.load(0x0000, [0xE9, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.registers[A], 0x00)
   assert_eq!(cpu.flags[N], false)
@@ -4745,12 +4746,12 @@ test "sbc_imm_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_imm_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC #$01
-  cpu.load(0x0000, [0xE9, 0x01])
+  let _ = cpu.load(0x0000, [0xE9, 0x01])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.registers[A], 0x00)
   assert_eq!(cpu.flags[N], false)
@@ -4759,12 +4760,12 @@ test "sbc_imm_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_imm_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC #$00
-  cpu.load(0x0000, [0xE9, 0x00])
+  let _ = cpu.load(0x0000, [0xE9, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.registers[A], 0x00)
   assert_eq!(cpu.flags[N], false)
@@ -4773,12 +4774,12 @@ test "sbc_imm_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_imm_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC #$02
-  cpu.load(0x0000, [0xE9, 0x02])
+  let _ = cpu.load(0x0000, [0xE9, 0x02])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.registers[A], 0x04)
   assert_eq!(cpu.flags[N], false)
@@ -4787,12 +4788,12 @@ test "sbc_imm_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_bcd_on_immediate_0a_minus_00_carry_set" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.flags[C] = true
   cpu.registers[A] = 0x0a
   // $0000 SBC #$00
-  cpu.load(0x0000, [0xe9, 0x00])
+  let _ = cpu.load(0x0000, [0xe9, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x0a)
@@ -4803,12 +4804,12 @@ test "sbc_bcd_on_immediate_0a_minus_00_carry_set" {
 }
 
 test "sbc_bcd_on_immediate_9a_minus_00_carry_set" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.flags[C] = true
   cpu.registers[A] = 0x9a
   //$0000 SBC #$00
-  cpu.load(0x0000, [0xe9, 0x00])
+  let _ = cpu.load(0x0000, [0xe9, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x9a)
@@ -4819,14 +4820,14 @@ test "sbc_bcd_on_immediate_9a_minus_00_carry_set" {
 }
 
 test "sbc_bcd_on_immediate_00_minus_01_carry_set" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.flags[V] = true
   cpu.flags[Z] = true
   cpu.flags[C] = true
   cpu.registers[A] = 0x00
   // => $0000 SBC #$00
-  cpu.load(0x0000, [0xe9, 0x01])
+  let _ = cpu.load(0x0000, [0xe9, 0x01])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x99)
@@ -4837,11 +4838,11 @@ test "sbc_bcd_on_immediate_00_minus_01_carry_set" {
 }
 
 test "sbc_bcd_on_immediate_20_minus_0a_carry_unset" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   cpu.registers[A] = 0x20
   // $0000 SBC #$00
-  cpu.load(0x0000, [0xe9, 0x0a])
+  let _ = cpu.load(0x0000, [0xe9, 0x0a])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
   assert_eq!(cpu.registers[A], 0x1f)
@@ -4852,12 +4853,12 @@ test "sbc_bcd_on_immediate_20_minus_0a_carry_unset" {
 }
 
 test "sbc_abs_x_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC $FEE0,X
-  cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
   cpu.registers[X] = 0x0D
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 4)
@@ -4868,12 +4869,12 @@ test "sbc_abs_x_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_abs_x_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC $FEE0,X
-  cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
   cpu.registers[X] = 0x0D
   cpu.mem[0xFEED] = 0x01
   assert_eq!(cpu.step(), 4)
@@ -4884,12 +4885,12 @@ test "sbc_abs_x_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_abs_x_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC $FEE0,X
-  cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
   cpu.registers[X] = 0x0D
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 4)
@@ -4900,12 +4901,12 @@ test "sbc_abs_x_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_abs_x_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC $FEE0,X
-  cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xFD, 0xE0, 0xFE])
   cpu.registers[X] = 0x0D
   cpu.mem[0xFEED] = 0x02
   assert_eq!(cpu.step(), 4)
@@ -4916,12 +4917,12 @@ test "sbc_abs_x_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_abs_y_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC $FEE0,Y
-  cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
   cpu.registers[Y] = 0x0D
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 4)
@@ -4932,12 +4933,12 @@ test "sbc_abs_y_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_abs_y_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC $FEE0,Y
-  cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
   cpu.registers[Y] = 0x0D
   cpu.mem[0xFEED] = 0x01
   assert_eq!(cpu.step(), 4)
@@ -4948,12 +4949,12 @@ test "sbc_abs_y_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_abs_y_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC $FEE0,Y
-  cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
   cpu.registers[Y] = 0x0D
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 4)
@@ -4964,12 +4965,12 @@ test "sbc_abs_y_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_abs_y_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC $FEE0,Y
-  cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
+  let _ = cpu.load(0x0000, [0xF9, 0xE0, 0xFE])
   cpu.registers[Y] = 0x0D
   cpu.mem[0xFEED] = 0x02
   assert_eq!(cpu.step(), 4)
@@ -4980,14 +4981,14 @@ test "sbc_abs_y_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_ind_x_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC ($10,X)
   // $0013 Vector to $FEED
-  cpu.load(0x0000, [0xE1, 0x10])
-  cpu.load(0x0013, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xE1, 0x10])
+  let _ = cpu.load(0x0013, [0xED, 0xFE])
   cpu.registers[X] = 0x03
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 6)
@@ -4998,14 +4999,14 @@ test "sbc_ind_x_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_ind_x_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC ($10,X)
   // $0013 Vector to $FEED
-  cpu.load(0x0000, [0xE1, 0x10])
-  cpu.load(0x0013, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xE1, 0x10])
+  let _ = cpu.load(0x0013, [0xED, 0xFE])
   cpu.registers[X] = 0x03
   cpu.mem[0xFEED] = 0x01
   assert_eq!(cpu.step(), 6)
@@ -5016,14 +5017,14 @@ test "sbc_ind_x_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_ind_x_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC ($10,X)
   // $0013 Vector to $FEED
-  cpu.load(0x0000, [0xE1, 0x10])
-  cpu.load(0x0013, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xE1, 0x10])
+  let _ = cpu.load(0x0013, [0xED, 0xFE])
   cpu.registers[X] = 0x03
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 6)
@@ -5034,14 +5035,14 @@ test "sbc_ind_x_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_ind_x_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC ($10,X)
   // $0013 Vector to $FEED
-  cpu.load(0x0000, [0xE1, 0x10])
-  cpu.load(0x0013, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xE1, 0x10])
+  let _ = cpu.load(0x0013, [0xED, 0xFE])
   cpu.registers[X] = 0x03
   cpu.mem[0xFEED] = 0x02
   assert_eq!(cpu.step(), 6)
@@ -5052,15 +5053,15 @@ test "sbc_ind_x_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_ind_y_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 SBC ($10),Y
   // $0010 Vector to $FEED
-  cpu.load(0x0000, [0xF1, 0x10])
-  cpu.load(0x0010, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xF1, 0x10])
+  let _ = cpu.load(0x0010, [0xED, 0xFE])
   cpu.mem[0xFEED + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.registers[A], 0x00)
@@ -5070,14 +5071,14 @@ test "sbc_ind_y_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_ind_y_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC ($10),Y
   // $0010 Vector to $FEED
-  cpu.load(0x0000, [0xF1, 0x10])
-  cpu.load(0x0010, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xF1, 0x10])
+  let _ = cpu.load(0x0010, [0xED, 0xFE])
   cpu.mem[0xFEED + cpu.registers[Y].0] = 0x01
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.registers[A], 0x00)
@@ -5087,14 +5088,14 @@ test "sbc_ind_y_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_ind_y_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC ($10),Y
   // $0010 Vector to $FEED
-  cpu.load(0x0000, [0xF1, 0x10])
-  cpu.load(0x0010, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xF1, 0x10])
+  let _ = cpu.load(0x0010, [0xED, 0xFE])
   cpu.mem[0xFEED + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.registers[A], 0x00)
@@ -5104,14 +5105,14 @@ test "sbc_ind_y_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_ind_y_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC ($10),Y
   // $0010 Vector to $FEED
-  cpu.load(0x0000, [0xF1, 0x10])
-  cpu.load(0x0010, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0xF1, 0x10])
+  let _ = cpu.load(0x0010, [0xED, 0xFE])
   cpu.mem[0xFEED + cpu.registers[Y].0] = 0x02
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.registers[A], 0x04)
@@ -5121,12 +5122,12 @@ test "sbc_ind_y_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sbc_zp_x_all_zeros_and_no_borrow_is_zero" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x00
   // $0000 SBC $10,X
-  cpu.load(0x0000, [0xF5, 0x10])
+  let _ = cpu.load(0x0000, [0xF5, 0x10])
   cpu.registers[X] = 0x0D
   cpu.mem[0x001D] = 0x00
   assert_eq!(cpu.step(), 4)
@@ -5137,12 +5138,12 @@ test "sbc_zp_x_all_zeros_and_no_borrow_is_zero" {
 }
 
 test "sbc_zp_x_downto_zero_no_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = true // borrow = 0
   cpu.registers[A] = 0x01
   // $0000 SBC $10,X
-  cpu.load(0x0000, [0xF5, 0x10])
+  let _ = cpu.load(0x0000, [0xF5, 0x10])
   cpu.registers[X] = 0x0D
   cpu.mem[0x001D] = 0x01
   assert_eq!(cpu.step(), 4)
@@ -5153,12 +5154,12 @@ test "sbc_zp_x_downto_zero_no_borrow_sets_z_clears_n" {
 }
 
 test "sbc_zp_x_downto_zero_with_borrow_sets_z_clears_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x01
   // $0000 SBC $10,X
-  cpu.load(0x0000, [0xF5, 0x10])
+  let _ = cpu.load(0x0000, [0xF5, 0x10])
   cpu.registers[X] = 0x0D
   cpu.mem[0x001D] = 0x00
   assert_eq!(cpu.step(), 4)
@@ -5169,12 +5170,12 @@ test "sbc_zp_x_downto_zero_with_borrow_sets_z_clears_n" {
 }
 
 test "sbc_zp_x_downto_four_with_borrow_clears_z_n" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   cpu.flags[C] = false // borrow = 1
   cpu.registers[A] = 0x07
   // $0000 SBC $10,X
-  cpu.load(0x0000, [0xF5, 0x10])
+  let _ = cpu.load(0x0000, [0xF5, 0x10])
   cpu.registers[X] = 0x0D
   cpu.mem[0x001D] = 0x02
   assert_eq!(cpu.step(), 4)
@@ -5185,7 +5186,7 @@ test "sbc_zp_x_downto_four_with_borrow_clears_z_n" {
 }
 
 test "sec_sets_carry_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[C] = false
   // $0000 SEC
   cpu.mem[0x0000] = 0x038
@@ -5195,7 +5196,7 @@ test "sec_sets_carry_flag" {
 }
 
 test "sed_sets_decimal_mode_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = false
   // $0000 SED
   cpu.mem[0x0000] = 0xF8
@@ -5205,7 +5206,7 @@ test "sed_sets_decimal_mode_flag" {
 }
 
 test "sei_sets_interrupt_disable_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[I] = false
   // $0000 SEI
   cpu.mem[0x0000] = 0x78
@@ -5215,13 +5216,13 @@ test "sei_sets_interrupt_disable_flag" {
 }
 
 test "sta_absolute_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0xFF
   // $0000 STA $ABCD
-  cpu.load(0x0000, [0x8D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x8D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -5231,13 +5232,13 @@ test "sta_absolute_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_absolute_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0x00
   // $0000 STA $ABCD
-  cpu.load(0x0000, [0x8D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x8D, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -5247,13 +5248,13 @@ test "sta_absolute_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "sta_zp_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0xFF
   // $0000 STA $0010
-  cpu.load(0x0000, [0x85, 0x10])
+  let _ = cpu.load(0x0000, [0x85, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -5263,13 +5264,13 @@ test "sta_zp_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_zp_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0x00
   // $0000 STA $0010
-  cpu.load(0x0000, [0x85, 0x10])
+  let _ = cpu.load(0x0000, [0x85, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -5279,14 +5280,14 @@ test "sta_zp_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "sta_abs_x_indexed_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 STA $ABCD,X
-  cpu.load(0x0000, [0x9D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x9D, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0003)
@@ -5296,14 +5297,14 @@ test "sta_abs_x_indexed_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_abs_x_indexed_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 STA $ABCD,X
-  cpu.load(0x0000, [0x9D, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x9D, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0003)
@@ -5313,14 +5314,14 @@ test "sta_abs_x_indexed_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "sta_abs_y_indexed_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 STA $ABCD,Y
-  cpu.load(0x0000, [0x99, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x99, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0003)
@@ -5330,14 +5331,14 @@ test "sta_abs_y_indexed_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_abs_y_indexed_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 STA $ABCD,Y
-  cpu.load(0x0000, [0x99, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x99, 0xCD, 0xAB])
   cpu.mem[0xABCD + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x0003)
@@ -5347,7 +5348,7 @@ test "sta_abs_y_indexed_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "sta_ind_indexed_x_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
@@ -5355,8 +5356,8 @@ test "sta_ind_indexed_x_stores_a_leaves_a_and_n_flag_unchanged" {
   cpu.registers[X] = 0x03
   // $0000 STA ($0010,X)
   // $0013 Vector to $FEED
-  cpu.load(0x0000, [0x81, 0x10])
-  cpu.load(0x0013, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x81, 0x10])
+  let _ = cpu.load(0x0013, [0xED, 0xFE])
   cpu.mem[0xFEED] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -5366,7 +5367,7 @@ test "sta_ind_indexed_x_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_ind_indexed_x_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
@@ -5374,8 +5375,8 @@ test "sta_ind_indexed_x_stores_a_leaves_a_and_z_flag_unchanged" {
   cpu.registers[X] = 0x03
   // $0000 STA ($0010,X)
   // $0013 Vector to $FEED
-  cpu.load(0x0000, [0x81, 0x10])
-  cpu.load(0x0013, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x81, 0x10])
+  let _ = cpu.load(0x0013, [0xED, 0xFE])
   cpu.mem[0xFEED] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -5385,7 +5386,7 @@ test "sta_ind_indexed_x_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "sta_indexed_ind_y_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
@@ -5393,8 +5394,8 @@ test "sta_indexed_ind_y_stores_a_leaves_a_and_n_flag_unchanged" {
   cpu.registers[Y] = 0x03
   // $0000 STA ($0010),Y
   // $0010 Vector to $FEED
-  cpu.load(0x0000, [0x91, 0x10])
-  cpu.load(0x0010, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x91, 0x10])
+  let _ = cpu.load(0x0010, [0xED, 0xFE])
   cpu.mem[0xFEED + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -5404,7 +5405,7 @@ test "sta_indexed_ind_y_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_indexed_ind_y_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
@@ -5412,8 +5413,8 @@ test "sta_indexed_ind_y_stores_a_leaves_a_and_z_flag_unchanged" {
   cpu.registers[Y] = 0x03
   // $0000 STA ($0010),Y
   // $0010 Vector to $FEED
-  cpu.load(0x0000, [0x91, 0x10])
-  cpu.load(0x0010, [0xED, 0xFE])
+  let _ = cpu.load(0x0000, [0x91, 0x10])
+  let _ = cpu.load(0x0010, [0xED, 0xFE])
   cpu.mem[0xFEED + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0x0002)
@@ -5423,14 +5424,14 @@ test "sta_indexed_ind_y_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "sta_zp_x_indexed_stores_a_leaves_a_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 STA $0010,X
-  cpu.load(0x0000, [0x95, 0x10])
+  let _ = cpu.load(0x0000, [0x95, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5440,14 +5441,14 @@ test "sta_zp_x_indexed_stores_a_leaves_a_and_n_flag_unchanged" {
 }
 
 test "sta_zp_x_indexed_stores_a_leaves_a_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0x03
   // $0000 STA $0010,X
-  cpu.load(0x0000, [0x95, 0x10])
+  let _ = cpu.load(0x0000, [0x95, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5457,13 +5458,13 @@ test "sta_zp_x_indexed_stores_a_leaves_a_and_z_flag_unchanged" {
 }
 
 test "stx_absolute_stores_x_leaves_x_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[X] = 0xFF
   // $0000 STX $ABCD
-  cpu.load(0x0000, [0x8E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x8E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -5473,13 +5474,13 @@ test "stx_absolute_stores_x_leaves_x_and_n_flag_unchanged" {
 }
 
 test "stx_absolute_stores_x_leaves_x_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[X] = 0x00
   // $0000 STX $ABCD
-  cpu.load(0x0000, [0x8E, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x8E, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -5489,13 +5490,13 @@ test "stx_absolute_stores_x_leaves_x_and_z_flag_unchanged" {
 }
 
 test "stx_zp_stores_x_leaves_x_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[X] = 0xFF
   // $0000 STX $0010
-  cpu.load(0x0000, [0x86, 0x10])
+  let _ = cpu.load(0x0000, [0x86, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -5505,13 +5506,13 @@ test "stx_zp_stores_x_leaves_x_and_n_flag_unchanged" {
 }
 
 test "stx_zp_stores_x_leaves_x_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[X] = 0x00
   // $0000 STX $0010
-  cpu.load(0x0000, [0x86, 0x10])
+  let _ = cpu.load(0x0000, [0x86, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -5521,14 +5522,14 @@ test "stx_zp_stores_x_leaves_x_and_z_flag_unchanged" {
 }
 
 test "stx_zp_y_indexed_stores_x_leaves_x_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[X] = 0xFF
   cpu.registers[Y] = 0x03
   // $0000 STX $0010,Y
-  cpu.load(0x0000, [0x96, 0x10])
+  let _ = cpu.load(0x0000, [0x96, 0x10])
   cpu.mem[0x0010 + cpu.registers[Y].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5538,14 +5539,14 @@ test "stx_zp_y_indexed_stores_x_leaves_x_and_n_flag_unchanged" {
 }
 
 test "stx_zp_y_indexed_stores_x_leaves_x_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[X] = 0x00
   cpu.registers[Y] = 0x03
   // $0000 STX $0010,Y
-  cpu.load(0x0000, [0x96, 0x10])
+  let _ = cpu.load(0x0000, [0x96, 0x10])
   cpu.mem[0x0010 + cpu.registers[Y].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5555,13 +5556,13 @@ test "stx_zp_y_indexed_stores_x_leaves_x_and_z_flag_unchanged" {
 }
 
 test "sty_absolute_stores_y_leaves_y_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[Y] = 0xFF
   // $0000 STY $ABCD
-  cpu.load(0x0000, [0x8C, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x8C, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -5571,13 +5572,13 @@ test "sty_absolute_stores_y_leaves_y_and_n_flag_unchanged" {
 }
 
 test "sty_absolute_stores_y_leaves_y_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[Y] = 0x00
   // $0000 STY $ABCD
-  cpu.load(0x0000, [0x8C, 0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x8C, 0xCD, 0xAB])
   cpu.mem[0xABCD] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0003)
@@ -5587,13 +5588,13 @@ test "sty_absolute_stores_y_leaves_y_and_z_flag_unchanged" {
 }
 
 test "sty_zp_stores_y_leaves_y_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[Y] = 0xFF
   // $0000 STY $0010
-  cpu.load(0x0000, [0x84, 0x10])
+  let _ = cpu.load(0x0000, [0x84, 0x10])
   cpu.mem[0x0010] = 0x00
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -5603,13 +5604,13 @@ test "sty_zp_stores_y_leaves_y_and_n_flag_unchanged" {
 }
 
 test "sty_zp_stores_y_leaves_y_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[Y] = 0x00
   // $0000 STY $0010
-  cpu.load(0x0000, [0x84, 0x10])
+  let _ = cpu.load(0x0000, [0x84, 0x10])
   cpu.mem[0x0010] = 0xFF
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0002)
@@ -5619,14 +5620,14 @@ test "sty_zp_stores_y_leaves_y_and_z_flag_unchanged" {
 }
 
 test "sty_zp_x_indexed_stores_y_leaves_y_and_n_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[N] = false
   let flags = cpu.flags.get()
   cpu.registers[Y] = 0xFF
   cpu.registers[X] = 0x03
   // $0000 STY $0010,X
-  cpu.load(0x0000, [0x94, 0x10])
+  let _ = cpu.load(0x0000, [0x94, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0x00
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5636,14 +5637,14 @@ test "sty_zp_x_indexed_stores_y_leaves_y_and_n_flag_unchanged" {
 }
 
 test "sty_zp_x_indexed_stores_y_leaves_y_and_z_flag_unchanged" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0xFF)
   cpu.flags[Z] = false
   let flags = cpu.flags.get()
   cpu.registers[Y] = 0x00
   cpu.registers[X] = 0x03
   // $0000 STY $0010,X
-  cpu.load(0x0000, [0x94, 0x10])
+  let _ = cpu.load(0x0000, [0x94, 0x10])
   cpu.mem[0x0010 + cpu.registers[X].0] = 0xFF
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5653,7 +5654,7 @@ test "sty_zp_x_indexed_stores_y_leaves_y_and_z_flag_unchanged" {
 }
 
 test "tax_transfers_accumulator_into_x" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAB
   cpu.registers[X] = 0x00
   // $0000 TAX
@@ -5665,7 +5666,7 @@ test "tax_transfers_accumulator_into_x" {
 }
 
 test "tax_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x80
   cpu.registers[X] = 0x00
@@ -5679,7 +5680,7 @@ test "tax_sets_negative_flag" {
 }
 
 test "tax_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0xFF
@@ -5693,7 +5694,7 @@ test "tax_sets_zero_flag" {
 }
 
 test "tay_transfers_accumulator_into_y" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0xAB
   cpu.registers[Y] = 0x00
   // $0000 TAY
@@ -5705,7 +5706,7 @@ test "tay_transfers_accumulator_into_y" {
 }
 
 test "tay_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[A] = 0x80
   cpu.registers[Y] = 0x00
@@ -5719,7 +5720,7 @@ test "tay_sets_negative_flag" {
 }
 
 test "tay_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0xFF
@@ -5733,7 +5734,7 @@ test "tay_sets_zero_flag" {
 }
 
 test "tsx_transfers_stack_pointer_into_x" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[SP] = 0xAB
   cpu.registers[X] = 0x00
   // $0000 TSX
@@ -5745,7 +5746,7 @@ test "tsx_transfers_stack_pointer_into_x" {
 }
 
 test "tsx_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[SP] = 0x80
   cpu.registers[X] = 0x00
@@ -5759,7 +5760,7 @@ test "tsx_sets_negative_flag" {
 }
 
 test "tsx_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[SP] = 0x00
   cpu.registers[Y] = 0xFF
@@ -5773,7 +5774,7 @@ test "tsx_sets_zero_flag" {
 }
 
 test "txa_transfers_x_into_a" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xAB
   cpu.registers[A] = 0x00
   // $0000 TXA
@@ -5785,7 +5786,7 @@ test "txa_transfers_x_into_a" {
 }
 
 test "txa_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[X] = 0x80
   cpu.registers[A] = 0x00
@@ -5799,7 +5800,7 @@ test "txa_sets_negative_flag" {
 }
 
 test "txa_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[X] = 0x00
   cpu.registers[A] = 0xFF
@@ -5813,7 +5814,7 @@ test "txa_sets_zero_flag" {
 }
 
 test "txs_transfers_x_into_stack_pointer" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[X] = 0xAB
   // $0000 TXS
   cpu.mem[0x0000] = 0x9A
@@ -5824,7 +5825,7 @@ test "txs_transfers_x_into_stack_pointer" {
 }
 
 test "txs_does_not_set_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[X] = 0x80
   // $0000 TXS
@@ -5837,7 +5838,7 @@ test "txs_does_not_set_negative_flag" {
 }
 
 test "txs_does_not_set_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[X] = 0x00
   // $0000 TXS
@@ -5850,7 +5851,7 @@ test "txs_does_not_set_zero_flag" {
 }
 
 test "tya_transfers_y_into_a" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[Y] = 0xAB
   cpu.registers[A] = 0x00
   // $0000 TYA
@@ -5862,7 +5863,7 @@ test "tya_transfers_y_into_a" {
 }
 
 test "tya_sets_negative_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[N] = false
   cpu.registers[Y] = 0x80
   cpu.registers[A] = 0x00
@@ -5876,7 +5877,7 @@ test "tya_sets_negative_flag" {
 }
 
 test "tya_sets_zero_flag" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[Z] = false
   cpu.registers[Y] = 0x00
   cpu.registers[A] = 0xFF
@@ -5897,10 +5898,10 @@ test "tya_sets_zero_flag" {
 // }
 
 test "brk_interrupt" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0x00)
-  cpu.load(IRQ.addr(), [0x00, 0x04])
-  cpu.load(
+  let _ = cpu.load(IRQ.addr(), [0x00, 0x04])
+  let _ = cpu.load(
     0x0000,
     [
       0xA9, 0x01, // LDA #$01
@@ -5909,7 +5910,7 @@ test "brk_interrupt" {
        0xA9, 0x03,
     ],
   ) // LDA #$03
-  cpu.load(
+  let _ = cpu.load(
     0x0400,
     [
       0xA9, 0x02, // LDA #$02
@@ -5939,16 +5940,16 @@ test "brk_interrupt" {
 // }
 
 test "adc_ind_indexed_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0x00)
   cpu.registers[A] = 0x01
   cpu.registers[X] = 0xFF
   // $0000 ADC ($80,X)
   // $007f Vector to $BBBB (read if page wrapped)
   // $017f Vector to $ABCD (read if no page wrap)
-  cpu.load(0x0000, [0x61, 0x80])
-  cpu.load(0x007f, [0xBB, 0xBB])
-  cpu.load(0x017f, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x61, 0x80])
+  let _ = cpu.load(0x007f, [0xBB, 0xBB])
+  let _ = cpu.load(0x017f, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x01
   cpu.mem[0xBBBB] = 0x02
   assert_eq!(cpu.step(), 6)
@@ -5956,13 +5957,13 @@ test "adc_ind_indexed_has_page_wrap_bug" {
 }
 
 test "adc_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.flags.set(0)
   cpu.registers[A] = 0x42
   cpu.registers[Y] = 0x02
   // $1000 ADC ($FF),Y
-  cpu.load(0x1000, [0x71, 0xff])
+  let _ = cpu.load(0x1000, [0x71, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap
@@ -5975,11 +5976,11 @@ test "adc_indexed_ind_y_has_page_wrap_bug" {
 }
 
 test "lda_zp_x_indexed_page_wraps" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0xFF
   // $0000 LDA $80,X
-  cpu.load(0x0000, [0xB5, 0x80])
+  let _ = cpu.load(0x0000, [0xB5, 0x80])
   cpu.mem[0x007F] = 0x42
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -5987,12 +5988,12 @@ test "lda_zp_x_indexed_page_wraps" {
 }
 
 test "and_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.registers[A] = 0x42
   cpu.registers[Y] = 0x02
   // $1000 AND ($FF),Y
-  cpu.load(0x1000, [0x31, 0xff])
+  let _ = cpu.load(0x1000, [0x31, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap
@@ -6005,7 +6006,7 @@ test "and_indexed_ind_y_has_page_wrap_bug" {
 }
 
 test "brk_preserves_decimal_flag_when_it_is_set" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags[D] = true
   // $C000 BRK
   cpu.mem[0xC000] = 0x00
@@ -6016,7 +6017,7 @@ test "brk_preserves_decimal_flag_when_it_is_set" {
 }
 
 test "brk_preserves_decimal_flag_when_it_is_clear" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0)
   // $C000 BRK
   cpu.mem[0xC000] = 0x00
@@ -6027,16 +6028,16 @@ test "brk_preserves_decimal_flag_when_it_is_clear" {
 }
 
 test "cmp_ind_x_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0)
   cpu.registers[A] = 0x42
   cpu.registers[X] = 0xFF
   // $0000 CMP ($80,X)
   // $007f Vector to $BBBB (read if page wrapped)
   // $017f Vector to $ABCD (read if no page wrap)
-  cpu.load(0x0000, [0xC1, 0x80])
-  cpu.load(0x007f, [0xBB, 0xBB])
-  cpu.load(0x017f, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xC1, 0x80])
+  let _ = cpu.load(0x007f, [0xBB, 0xBB])
+  let _ = cpu.load(0x017f, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   cpu.mem[0xBBBB] = 0x42
   assert_eq!(cpu.step(), 6)
@@ -6044,13 +6045,13 @@ test "cmp_ind_x_has_page_wrap_bug" {
 }
 
 test "cmp_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.flags.set(0)
   cpu.registers[A] = 0x42
   cpu.registers[Y] = 0x02
   // $1000 CMP ($FF),Y
-  cpu.load(0x1000, [0xd1, 0xff])
+  let _ = cpu.load(0x1000, [0xd1, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap
@@ -6063,16 +6064,16 @@ test "cmp_indexed_ind_y_has_page_wrap_bug" {
 }
 
 test "eor_ind_x_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.flags.set(0)
   cpu.registers[A] = 0xAA
   cpu.registers[X] = 0xFF
   // $0000 EOR ($80,X)
   // $007f Vector to $BBBB (read if page wrapped)
   // $017f Vector to $ABCD (read if no page wrap)
-  cpu.load(0x0000, [0x41, 0x80])
-  cpu.load(0x007f, [0xBB, 0xBB])
-  cpu.load(0x017f, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0x41, 0x80])
+  let _ = cpu.load(0x007f, [0xBB, 0xBB])
+  let _ = cpu.load(0x017f, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x00
   cpu.mem[0xBBBB] = 0xFF
   assert_eq!(cpu.step(), 6)
@@ -6080,12 +6081,12 @@ test "eor_ind_x_has_page_wrap_bug" {
 }
 
 test "eor_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.registers[A] = 0xAA
   cpu.registers[Y] = 0x02
   // $1000 EOR ($FF),Y
-  cpu.load(0x1000, [0x51, 0xff])
+  let _ = cpu.load(0x1000, [0x51, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap
@@ -6098,15 +6099,15 @@ test "eor_indexed_ind_y_has_page_wrap_bug" {
 }
 
 test "lda_ind_indexed_x_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0xff
   // $0000 LDA ($80,X)
   // $007f Vector to $BBBB (read if page wrapped)
   // $017f Vector to $ABCD (read if no page wrap)
-  cpu.load(0x0000, [0xA1, 0x80])
-  cpu.load(0x007f, [0xBB, 0xBB])
-  cpu.load(0x017f, [0xCD, 0xAB])
+  let _ = cpu.load(0x0000, [0xA1, 0x80])
+  let _ = cpu.load(0x007f, [0xBB, 0xBB])
+  let _ = cpu.load(0x017f, [0xCD, 0xAB])
   cpu.mem[0xABCD] = 0x42
   cpu.mem[0xBBBB] = 0xEF
   assert_eq!(cpu.step(), 6)
@@ -6114,12 +6115,12 @@ test "lda_ind_indexed_x_has_page_wrap_bug" {
 }
 
 test "lda_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x02
   // $1000 LDA ($FF),Y
-  cpu.load(0x1000, [0xb1, 0xff])
+  let _ = cpu.load(0x1000, [0xb1, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap
@@ -6132,11 +6133,11 @@ test "lda_indexed_ind_y_has_page_wrap_bug" {
 }
 
 test "lda_zp_x_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.registers[A] = 0x00
   cpu.registers[X] = 0xFF
   // $0000 LDA $80,X
-  cpu.load(0x0000, [0xB5, 0x80])
+  let _ = cpu.load(0x0000, [0xB5, 0x80])
   cpu.mem[0x007F] = 0x42
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0002)
@@ -6144,22 +6145,22 @@ test "lda_zp_x_has_page_wrap_bug" {
 }
 
 test "jmp_jumps_to_address_with_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.mem[0x00ff] = 0
   // $0000 JMP ($00)
-  cpu.load(0, [0x6c, 0xff, 0x00])
+  let _ = cpu.load(0, [0x6c, 0xff, 0x00])
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x6c00)
   assert_eq!(cpu.cycles, 5)
 }
 
 test "ora_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.registers[A] = 0x00
   cpu.registers[Y] = 0x02
   // $1000 ORA ($FF),Y
-  cpu.load(0x1000, [0x11, 0xff])
+  let _ = cpu.load(0x1000, [0x11, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap
@@ -6172,13 +6173,13 @@ test "ora_indexed_ind_y_has_page_wrap_bug" {
 }
 
 test "sbc_indexed_ind_y_has_page_wrap_bug" {
-  let cpu = CPU::new()
+  let cpu = CPU::new(debug=true)
   cpu.pc = 0x1000
   cpu.flags[C] = true
   cpu.registers[A] = 0x42
   cpu.registers[Y] = 0x02
   // $1000 SBC ($FF),Y
-  cpu.load(0x1000, [0xf1, 0xff])
+  let _ = cpu.load(0x1000, [0xf1, 0xff])
   // Vector
   cpu.mem[0x00ff] = 0x10 // low byte
   cpu.mem[0x0100] = 0x20 // high byte if no page wrap

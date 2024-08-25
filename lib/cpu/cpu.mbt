@@ -28,7 +28,7 @@ pub fn CPU::new(
   ~pc : Int = 0x0000,
   ~mem : Memory? = None,
   ~data : FixedArray[Int] = [],
-  ~offset : Int = 0,
+  ~addr : Int = 0,
   ~length : Int = data.length(),
   ~decimal_mode : Bool = true,
   ~debug : Bool = false
@@ -57,7 +57,8 @@ pub fn CPU::new(
   }
   cpu.write16(RESET.addr(), pc)
   if data.length() > 0 {
-    cpu.load(offset, data, ~length)
+    let addr = cpu.load(addr, data, ~length)
+
   }
   cpu
 }
@@ -143,28 +144,20 @@ pub fn register(self : CPU, register : Register, value : Int) -> Unit {
 // Load a program into memory
 pub fn load(
   self : CPU,
-  addr : UInt16,
+  addr : Int,
   data : FixedArray[Int],
   ~length : Int = data.length(),
   ~has_load_address : Bool = false
-) -> Unit {
+) -> Int {
   // println(
   //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
   // )
-  let mut addr = addr
-  let start = if has_load_address {
-    addr = data[0] + (data[1] << 8)
-    2
-  } else {
-    0
-  }
+  let addr = if has_load_address { data[0] | (data[1] << 8) } else { addr }
+  let start = if has_load_address { 2 } else { 0 }
   for i = 0; i < length - start; i = i + 1 {
-    self.mem[(addr + i).0] = data[i + start]
-    // if i == 0x1000 {
-    //   break
-    // }
-    // println("$" + (addr + i).to_hex() + " < " + UInt8(data[i + start]).to_hex())
+    self.mem[addr + i] = data[i + start]
   }
+  addr
 }
 
 pub fn read(self : CPU, addr : UInt16) -> UInt8 {
@@ -178,7 +171,7 @@ fn read16(self : CPU, addr : UInt16) -> UInt16 {
   // println(
   //   "$" + u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
-  (self.read(addr + 1) << 8) | self.read(addr) |> u16
+  self.read(addr) | (self.read(addr + 1) << 8) |> u16
 }
 
 fn read16zp(self : CPU, addr : UInt16) -> UInt16 {
@@ -188,7 +181,7 @@ fn read16zp(self : CPU, addr : UInt16) -> UInt16 {
   //     (addr + 1)&(0x00FF) | addr&(0xFF00),
   //   ).to_hex()),
   // )
-  (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00)) << 8) | self.read(addr)
+  self.read(addr) | (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00)) << 8)
   |> u16
 }
 
@@ -231,11 +224,9 @@ pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
 /// triggers a NMI IRQ in the processor
 /// this is very similar to the BRK instruction
 pub fn nmi(self : CPU, ~pc : Int? = None) -> Unit {
-  self.push16(self.pc)
-  // self.flags.clear(B)
-  // self.push(self.flags.get()|(U.bits()))
-  self.opPHP(0, Mode::None)
   self.flags.set_interrupt()
+  self.push16(self.pc)
+  self.opPHP(0x0000, Mode::None) // stores flags and sets break and unused flags
   self.pc = match pc {
     Some(pc) => pc
     None => self.read16(NMI.addr())
@@ -251,11 +242,9 @@ pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
 /// this is very similar to the BRK instruction
 pub fn irq(self : CPU, ~pc : Int? = None) -> Unit {
   if self.flags.not_interrupt() {
-    self.push16(self.pc)
-    // self.flags.clear(B)
-    // self.push(self.flags.get()|(U.bits()))
-    self.opPHP(0, Mode::None)
     self.flags.set_interrupt()
+    self.push16(self.pc)
+    self.opPHP(0x0000, Mode::None) // stores flags and sets break and unused flags
     self.pc = match pc {
       Some(pc) => pc
       None => self.read16(IRQ.addr())
@@ -500,7 +489,7 @@ fn dump_step(
   }
   let mut spaces = ""
   for i = 32 - name.length() - addr_mode.length(); i > 0; i = i - 1 {
-    spaces = spaces + " "
+    spaces += " "
   }
   // let mut stack = ""
   // for i = 0x01FF; i > 0x01F8; i = i - 1 {
@@ -599,8 +588,8 @@ fn opADC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
     if lo > 0x0F {
       hi += 0x10
     }
-    self.flags.setZ(self.registers[A])
-    self.flags.setN(hi & 0x80)
+    self.flags.setZ(self.registers[A] == 0)
+    self.flags.setN(hi.bit(7))
     self.flags.setV(((a ^ b) & 0x80) == 0 && ((hi ^ a) & 0x80) != 0)
     if hi > 0x90 {
       hi += 0x60
@@ -650,13 +639,13 @@ fn opASL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   match mode {
     Accumulator => {
       self.flags.setC((self.registers[A] & N.bits()) != 0)
-      self.registers[A] = self.registers[A] << 1
+      self.registers[A] = self.registers[A].0 << 1 |> u8 // overflow
       self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
       self.flags.setC((value & N.bits()) != 0)
-      value = value << 1
+      value = value.0 << 1 |> u8 // overflow
       self.write(addr, value)
       self.flags.setZN(value)
     }
@@ -688,8 +677,8 @@ fn opBEQ(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 fn opBIT(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   let value = self.read(addr)
   self.flags.setV((value & V.bits()) != 0)
-  self.flags.setZ(value & self.registers[A])
-  self.flags.setN(value)
+  self.flags.setZ((value & self.registers[A]) == 0)
+  self.flags.setN(value.bit(7))
 }
 
 // BMI - Branch if minus
@@ -724,13 +713,20 @@ fn opBPL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// Note on the MOS 6502:
 /// If an IRQ happens at the same time as a `BRK` instruction, the `BRK` instruction is ignored.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
 fn opBRK(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  self.flags.set_break()
   self.push16(self.pc + 1)
-  self.opPHP(addr, mode)
-  self.opSEI(addr, mode)
-  self.flags.set_break() // FIXME: really needs B?
-  self.flags.set_interrupt() // FIXME: really needs I?
-  self.pc = self.read16(IRQ.addr())
+  //
+  self.opPHP(addr, mode) // stores flags and sets break and unused flags
+  self.opSEI(addr, mode) // sets interrupt flag
+  //
+  self.pc = match self.needs_interrupt {
+    NMI => self.read16(NMI.addr())
+    IRQ => self.read16(IRQ.addr())
+    _ => self.read16(IRQ.addr())
+  }
 }
 
 // BVC - Branch if overflow clear
@@ -791,20 +787,20 @@ fn opCPY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 // If the byte is taken as a signed integer, DEC will "count down" from +127 thru −128, or +$7F thru −$80.
 // If a byte already holding the value −128/−$80 is DECremented, it "wraps over" to the value +127/$7F.
 fn opDEC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let value = self.read(addr) - 1 // FIXME: underflow
+  let value = self.read(addr).0 - 1 |> u8 // underflow
   self.write(addr, value)
   self.flags.setZN(value)
 }
 
 // DEX - Decrement x register
 fn opDEX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[X] -= 1 |> u8
+  self.registers[X] -= 1 |> u8 // underflow
   self.flags.setZN(self.registers[X])
 }
 
 // DEY - Decrement y register
 fn opDEY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[Y] -= 1 |> u8
+  self.registers[Y] -= 1 |> u8 // underflow
   self.flags.setZN(self.registers[Y])
 }
 
@@ -814,29 +810,34 @@ fn opEOR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-// INC - Increment memory
-// https://www.c64-wiki.com/wiki/INC
-//
-// If the byte in question is taken as an unsigned integer, INC "counts" from 0 thru 255/$0 thru $FF.
-// If a byte already containing the value 255/$FF is INCremented, it "wraps over" to the value 0.
-//
-// If the byte is taken as a signed integer, INC will "count" from −128 thru +127, or −$80 thru +$7F.
-// If a byte already holding the value 127/$7F is INCremented, it "wraps over" to the value −128/−$80.
+/// `INC` - Increment Memory By One
+/// Operation: M + 1 → M
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+///
+/// This instruction adds `1` to the contents of the addressed memory loca­tion.
+///
+/// The increment memory instruction does not affect any internal registers and does not affect the carry or overflow flags.
+/// If bit `7` is on as the result of the increment, `N` is set, otherwise it is reset;
+/// if the increment causes the result to become `0`, the `Z` flag is set on, otherwise it is reset.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#INC
 fn opINC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let value = self.read(addr) + 1 // FIXME: overflow
+  let value = self.read(addr).0 + 1 |> u8 // overflow
   self.write(addr, value)
   self.flags.setZN(value)
 }
 
 // INX - Increment x register
 fn opINX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[X] += 1
+  self.registers[X] += 1 |> u8 // overflow
   self.flags.setZN(self.registers[X])
 }
 
 // INY - Increment y register
 fn opINY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[Y] += 1
+  self.registers[Y] += 1 |> u8 // overflow
   self.flags.setZN(self.registers[Y])
 }
 
@@ -874,13 +875,13 @@ fn opLSR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   match mode {
     Accumulator => {
       self.flags.setC((self.registers[A] & C.bits()) != 0)
-      self.registers[A] = self.registers[A] >> 1
+      self.registers[A] = self.registers[A].0 >> 1 |> u8 // underflow
       self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
       self.flags.setC((value & C.bits()) != 0)
-      value = value >> 1
+      value = value.0 >> 1 |> u8 // underflow
       self.write(addr, value)
       self.flags.setZN(value)
     }
@@ -910,8 +911,7 @@ fn opPHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// The `PHP` instruction affects no registers or flags in the micropro­cessor.
 fn opPHP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // self.push(self.flags.get()|(B.bits())) // FIXME: really needs B?
-  self.push(self.flags.get() | B.bits() | U.bits()) // FIXME: really needs U?
+  self.push(self.flags.get() | B.bits() | U.bits())
 }
 
 // PLA - Pull accumulator
@@ -938,13 +938,13 @@ fn opROL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   match mode {
     Accumulator => {
       self.flags.setC((self.registers[A] & N.bits()) != 0)
-      self.registers[A] = (self.registers[A] << 1) | c
+      self.registers[A] = (self.registers[A].0 << 1 |> u8) | c // overflow
       self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
       self.flags.setC((value & N.bits()) != 0)
-      value = (value << 1) | c
+      value = (value.0 << 1 |> u8) | c // overflow
       self.write(addr, value)
       self.flags.setZN(value)
     }
@@ -957,13 +957,13 @@ fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   match mode {
     Accumulator => {
       self.flags.setC((self.registers[A] & C.bits()) != 0)
-      self.registers[A] = (self.registers[A] >> 1) | (c << 7)
+      self.registers[A] = (self.registers[A].0 >> 1 |> u8) | (c << 7) // underflow
       self.flags.setZN(self.registers[A])
     }
     _ => {
       let mut value = self.read(addr)
       self.flags.setC((value & C.bits()) != 0)
-      value = (value >> 1) | (c << 7)
+      value = (value.0 >> 1 |> u8) | (c << 7) // underflow
       self.write(addr, value)
       self.flags.setZN(value)
     }
@@ -986,7 +986,7 @@ fn opRTI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // RTS - Return from subrouting
 fn opRTS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.pc = self.pop16() + 1 // handle overflow
+  self.pc = self.pop16().0 + 1 |> u16 // overflow
 }
 
 // SBC - Subtract with carry
@@ -1139,9 +1139,33 @@ fn opALR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   // abort("unimplemented: ALR")
 }
 
+/// `ANC` - `"AND"` Memory with Accumulator then Move Negative Flag to Carry Flag
+/// Operation: A ∧ M → A, N → C
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+///
+/// The undocumented `ANC` instruction performs a bit-by-bit `AND` operation of the accumulator and memory and stores the result back in the accumulator.
+///
+/// This instruction affects the accumulator;
+///
+/// sets the zero flag if the result in the accumulator is `0`,
+/// otherwise resets the zero flag;
+///
+/// sets the negative flag and the carry flag if the result in the accumulator has bit `7` on,
+/// otherwise resets the negative flag and the carry flag.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ANC
 fn opANC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: ANC")
-  abort("unimplemented: ANC")
+  let tmp = self.registers[A] & self.read(addr)
+
+  //
+  self.registers[A] = tmp
+  self.flags.setZN(tmp)
+  self.flags.setC(tmp.bit(7))
+
+  // println("unimplemented: ANC")
+  // abort("unimplemented: ANC")
 }
 
 /// `ARR` - `AND` Accumulator then Rotate Right
@@ -1164,34 +1188,34 @@ fn opANC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ARR
 fn opARR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  let mut tmp = self.registers[A] & self.read(addr)
+
+  //
   if self.flags.decimal() && self.decimal_mode {
-    println("DECIMAL")
-    panic()
+    let mut tmp2 = tmp
+    tmp2 = tmp2 | (self.flags.carry().to_int() << 8)
+    tmp2 = tmp2 >> 1
+    self.flags.setN(self.flags.carry())
+    self.flags.setZ(tmp2 == 0)
+    self.flags.setV((tmp2 ^ tmp).bit(6))
+    if (tmp & 0x0F) + (tmp & 0x01) > 0x05 {
+      tmp2 = (tmp2 & 0xF0) | ((tmp2 + 0x06) & 0x0F)
+    }
+    if (tmp & 0xF0) + (tmp & 0x10) > 0x50 {
+      tmp2 = (tmp2 & 0x0F) | ((tmp2 + 0x60) & 0xF0)
+      self.flags.set_carry()
+    } else {
+      self.flags.clear_carry()
+    }
+    self.registers[A] = tmp2
+  } else {
+    tmp = tmp | (self.flags.carry().to_int() << 8)
+    tmp = tmp >> 1
+    self.flags.setZN(tmp)
+    self.flags.setC(tmp.bit(6))
+    self.flags.setV((tmp.bitn(6) ^ tmp.bitn(5)) != 0)
+    self.registers[A] = tmp
   }
-  // self.opAND(addr, mode)
-  println(
-    "(A#$" +
-    self.registers[A].to_hex() +
-    " ^ M#$" +
-    self.read(addr).to_hex() +
-    ")" +
-    "[#$" +
-    (self.registers[A] & self.read(addr)).to_hex() +
-    "] " +
-    self.flags.to_string(),
-  )
-  self.registers[A] = self.registers[A] & self.read(addr)
-  self.flags.setC((self.registers[A] & 0b10000000) != 0)
-  self.flags.setV(
-    (
-      ((self.registers[A] & 0b10000000) >> 7) ^
-      ((self.registers[A] & 0b01000000) >> 6)
-    ) !=
-    0,
-  )
-  self.registers[A] = self.registers[A] >> 1
-  self.flags.setZN(self.registers[A])
-  println("A#$" + self.registers[A].to_hex() + " " + self.flags.to_string())
 
   // println("unimplemented: ARR")
   // abort("unimplemented: ARR")
@@ -1200,6 +1224,45 @@ fn opARR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 fn opAXS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   println("unimplemented: AXS")
   abort("unimplemented: AXS")
+}
+
+/// `SBX` - Subtract Memory from Accumulator `"AND"` Index Register `X`
+/// Operation: (A ∧ X) - M → X
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+///
+/// This undocumented instruction performs a bit-by-bit `"AND"` of the value of the accumulator and the index register `X` and subtracts the value of memory from this result,
+/// using two's complement arithmetic, and stores the result in the index register `X`.
+///
+/// This instruction affects the index register `X`.
+/// The `C` flag is set if the result is greater than or equal to `0`.
+/// The `C` flag is reset when the result is less than `0`, indicating a borrow.
+/// The `N` flag is set if the result in index register `X` has bit `7` on, otherwise it is reset.
+/// The `Z` flag is set if the result in index register `X` is `0`, otherwise it is reset.
+/// The `V` flag not affected at all.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SBX
+fn opSBX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  // println(
+  //   "SBX A#$" +
+  //   self.registers[A].to_hex() +
+  //   " X#$" +
+  //   self.registers[X].to_hex() +
+  //   " - #$" +
+  //   self.read(addr).to_hex() +
+  //   " = #$" +
+  //   (self.registers[A] & self.registers[X]).to_hex() +
+  //   " = #$" +
+  //   ((self.registers[A] & self.registers[X]) - self.read(addr)).to_hex(),
+  // )
+  let tmp = (self.registers[A] & self.registers[X]) - self.read(addr) // underflow
+  self.flags.setC(not(tmp.borrow()))
+  self.registers[X] = tmp
+  self.flags.setZN(tmp)
+
+  // println("unimplemented: SBX")
+  // abort("unimplemented: SBX")
 }
 
 fn opDCP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1220,17 +1283,62 @@ fn opJAM(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   abort("unimplemented: JAM")
 }
 
+/// `LAS` - `"AND"` Memory with Stack Pointer
+/// Operation: M ∧ S → A, X, S
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+///
+/// This undocumented instruction performs a bit-by-bit `"AND"` operation of the stack pointer and memory and stores the result back in the accumulator,
+/// the index register `X` and the stack pointer.
+///
+/// The `LAS` instruction does not affect the carry or overflow flags.
+/// It sets `N` if the bit `7` of the result is on, otherwise it is reset.
+/// If the result is zero, then the `Z` flag is set, otherwise it is reset.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#LAS
 fn opLAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: LAS")
-  abort("unimplemented: LAS")
+  let tmp = self.registers[SP] & self.read(addr)
+
+  //
+  self.registers[X] = tmp
+  self.registers[A] = tmp
+  self.flags.setZN(tmp)
+
+  //
+  self.registers[SP] = tmp
+
+  // println("unimplemented: LAS")
+  // abort("unimplemented: LAS")
 }
 
+/// `LAX` - Load Accumulator and Index Register `X` From Memory
+/// Operation: M → A, X
+///
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+///
+/// The undocumented `LAX` instruction loads the accumulator and the index register `X` from memory.
+///
+/// `LAX` does not affect the `C` or `V` flags;
+/// sets `Z` if the value loaded was zero, otherwise resets it;
+/// sets `N` if the value loaded in bit `7` is a `1`;
+/// otherwise `N` is reset, and affects only the `X` register.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#LAX
 fn opLAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Shortcut for LDA value then TAX. Saves a byte and two cycles and allows use of the X register with the (d),Y addressing mode.
-  // Notice that the immediate is missing; the opcode that would have been LAX is affected by line noise on the data bus.
-  // MOS 6502: even the bugs have bugs.
-  self.opLDA(addr, mode)
-  self.opTAX(addr, mode)
+  let magic = 0xEE // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/lax/
+
+  //
+  let tmp = match mode {
+    Immediate => (self.registers[A] | magic) & self.read(addr) & self.read(addr)
+    _ => self.read(addr)
+  }
+
+  //
+  self.registers[X] = tmp
+  self.registers[A] = tmp
+  self.flags.setZN(tmp)
 }
 
 fn opRLA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1252,14 +1360,93 @@ fn opSAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   self.write(addr, self.registers[A] & self.registers[X])
 }
 
-fn opSHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: SHX")
-  abort("unimplemented: SHX")
+/// `SHA` - Store Accumulator `"AND"` Index Register `X` `"AND"` Value
+/// Operation: A ∧ X ∧ V → M
+///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+///
+/// The undocumented `SHA` instruction performs a bit-by-bit `AND` operation of the following three operands:
+/// The first two are the accumulator and the index register `X`.
+///
+/// The third operand depends on the addressing mode.
+/// In the zero page indirect Y-indexed case, the third operand is the data in memory at the given zero page address (ignoring the addressing mode's Y offset) plus 1.
+/// In the Y-indexed absolute case, it is the upper 8 bits of the given address (ignoring the addressing mode's Y offset), plus 1.
+///
+/// It then transfers the result to the addressed memory location.
+///
+/// No flags or registers in the microprocessor are affected by the store operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SHA
+fn opSHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/sha/
+  // println(
+  //   "SHA A#$" +
+  //   self.registers[A].to_hex() +
+  //   " X#$" +
+  //   self.registers[X].to_hex() +
+  //   " Y#$" +
+  //   self.registers[Y].to_hex() +
+  //   " $" +
+  //   addr.to_hex() +
+  //   " \{mode}",
+  // )
+
+  let tmp = self.registers[A] &
+    self.registers[X] &
+    match mode {
+      AbsoluteY => (addr >> 8) + 1 |> u8 // overflow
+      IndirectIndexed => (addr >> 8) + 1 |> u8 // overflow
+      _ => {
+        println("unimplemented: SHA \{mode}")
+        abort("unimplemented: SHA \{mode}")
+      }
+    }
+  self.write(addr, tmp)
 }
 
+/// `SHX` - Store Index Register `X` `"AND"` Value
+/// Operation: X ∧ (H + 1) → M
+///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+///
+/// The undocumented `SHX` instruction performs a bit-by-bit `AND` operation of the index register `X` and the upper 8 bits of the given address (ignoring the addressing mode's Y offset), plus 1.
+/// It then transfers the result to the addressed memory location.
+///
+/// No flags or registers in the microprocessor are affected by the store operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SHX
+fn opSHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  // println("SHX X#$" + self.registers[X].to_hex() + " $" + addr.to_hex())
+
+  let tmp = self.registers[X].0 & ((addr.0 >> 8) + 1) |> u8 // overflow
+  self.write(addr, tmp)
+
+  // println("unimplemented: SHX")
+  // abort("unimplemented: SHX")
+}
+
+/// `SHY` - Store Index Register `Y` `"AND"` Value
+/// Operation: Y ∧ (H + 1) → M
+///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+///
+/// The undocumented `SHY` instruction performs a bit-by-bit `AND` operation of the index register `Y` and the upper 8 bits of the given address (ignoring the addressing mode's X offset), plus 1.
+/// It then transfers the result to the addressed memory location.
+///
+/// No flags or registers in the microprocessor are affected by the store operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SHY
 fn opSHY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: SHY")
-  abort("unimplemented: SHY")
+  // println("SHY X#$" + self.registers[Y].to_hex() + " $" + addr.to_hex())
+
+  let tmp = self.registers[Y].0 & ((addr.0 >> 8) + 1) |> u8 // overflow
+  self.write(addr, tmp)
+
+  // println("unimplemented: SHY")
+  // abort("unimplemented: SHY")
 }
 
 fn opSLO(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1274,6 +1461,40 @@ fn opSRE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   // LDA #0 followed by SRE is an efficient way to shift a variable while also loading it in A.
   self.opLSR(addr, mode)
   self.opEOR(addr, mode)
+}
+
+/// `SHS` - Transfer Accumulator `"AND"` Index Register `X` to Stack Pointer then Store Stack Pointer `"AND"` Hi-Byte In Memory
+/// Operation: A ∧ X → S, S ∧ (H + 1) → M
+///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+///
+/// The undocumented `SHS` instruction performs a bit-by-bit `AND` operation of the value of the accumulator and the value of the index register `X` and stores the result in the stack pointer.
+/// It then performs a bit-by-bit `AND` operation of the resulting stack pointer and the upper 8 bits of the given address (ignoring the addressing mode's `Y` offset), plus 1,
+/// and transfers the result to the addressed memory location.
+///
+/// No flags or registers in the microprocessor are affected by the store operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SHS
+fn opSHS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  // println(
+  //   "SHS A#$" +
+  //   self.registers[A].to_hex() +
+  //   " X#$" +
+  //   self.registers[X].to_hex() +
+  //   " $" +
+  //   addr.to_hex(),
+  // )
+
+  let tmp = (self.registers[A] & self.registers[X]).0 & ((addr.0 >> 8) + 1)
+    |> u8 // overflow
+  self.write(addr, tmp)
+
+  //
+  self.registers[SP] = self.registers[A] & self.registers[X]
+
+  // println("unimplemented: SHS")
+  // abort("unimplemented: SHS")
 }
 
 fn opTAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
@@ -1299,11 +1520,14 @@ fn opTAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#XAA
 fn opXAA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let magic = 0xEE
-  self.registers[A] = (self.registers[A] | magic) &
-    self.registers[X] &
-    self.read(addr)
-  self.flags.setZN(self.registers[A])
+  let magic = 0xEF // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/ane/
+
+  //
+  let tmp = (self.registers[A] | magic) & self.registers[X] & self.read(addr)
+
+  //
+  self.registers[A] = tmp
+  self.flags.setZN(tmp)
 }
 
 enum Mode {
@@ -1321,7 +1545,7 @@ enum Mode {
   ZeroPage // 10
   ZeroPageX // 11
   ZeroPageY // 12
-} derive(Eq)
+} derive(Eq, Show)
 
 let instructions : FixedArray[
   (String, (CPU, UInt16, Mode) -> Unit, Mode, Int, Int, Int, Bool),
@@ -1338,7 +1562,7 @@ let instructions : FixedArray[
   ("PHP", opPHP, Implied, 1, 3, 0, false),
   ("ORA", opORA, Immediate, 2, 2, 0, false),
   ("ASL", opASL, Accumulator, 1, 2, 0, false),
-  ("ANC", opANC, Immediate, 0, 2, 0, true),
+  ("ANC", opANC, Immediate, 2, 2, 0, true),
   ("NOP", opNOP, Absolute, 3, 4, 0, true),
   ("ORA", opORA, Absolute, 3, 4, 0, false),
   ("ASL", opASL, Absolute, 3, 6, 0, false),
@@ -1372,7 +1596,7 @@ let instructions : FixedArray[
   ("PLP", opPLP, Implied, 1, 4, 0, false),
   ("AND", opAND, Immediate, 2, 2, 0, false),
   ("ROL", opROL, Accumulator, 1, 2, 0, false),
-  ("ANC", opANC, Immediate, 0, 2, 0, true),
+  ("ANC", opANC, Immediate, 2, 2, 0, true),
   ("BIT", opBIT, Absolute, 3, 4, 0, false),
   ("AND", opAND, Absolute, 3, 4, 0, false),
   ("ROL", opROL, Absolute, 3, 6, 0, false),
@@ -1465,14 +1689,14 @@ let instructions : FixedArray[
   // 0x80
   ("NOP", opNOP, Immediate, 2, 2, 0, true),
   ("STA", opSTA, IndexedIndirect, 2, 6, 0, false),
-  ("NOP", opNOP, Immediate, 0, 2, 0, true),
+  ("NOP", opNOP, Immediate, 2, 2, 0, true),
   ("SAX", opSAX, IndexedIndirect, 2, 6, 0, true),
   ("STY", opSTY, ZeroPage, 2, 3, 0, false),
   ("STA", opSTA, ZeroPage, 2, 3, 0, false),
   ("STX", opSTX, ZeroPage, 2, 3, 0, false),
   ("SAX", opSAX, ZeroPage, 2, 3, 0, true),
   ("DEY", opDEY, Implied, 1, 2, 0, false),
-  ("NOP", opNOP, Immediate, 0, 2, 0, true),
+  ("NOP", opNOP, Immediate, 2, 2, 0, true),
   ("TXA", opTXA, Implied, 1, 2, 0, false),
   ("XAA", opXAA, Immediate, 2, 2, 0, true), // FIXME: ANE
   ("STY", opSTY, Absolute, 3, 4, 0, false),
@@ -1483,7 +1707,7 @@ let instructions : FixedArray[
   ("BCC", opBCC, Relative, 2, 2, 1, false),
   ("STA", opSTA, IndirectIndexed, 2, 6, 0, false),
   ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("AHX", opAHX, IndirectIndexed, 0, 6, 0, true),
+  ("SHA", opSHA, IndirectIndexed, 2, 6, 0, true), // AHX
   ("STY", opSTY, ZeroPageX, 2, 4, 0, false),
   ("STA", opSTA, ZeroPageX, 2, 4, 0, false),
   ("STX", opSTX, ZeroPageY, 2, 4, 0, false),
@@ -1491,11 +1715,11 @@ let instructions : FixedArray[
   ("TYA", opTYA, Implied, 1, 2, 0, false),
   ("STA", opSTA, AbsoluteY, 3, 5, 0, false),
   ("TXS", opTXS, Implied, 1, 2, 0, false),
-  ("TAS", opTAS, AbsoluteY, 0, 5, 0, true),
-  ("SHY", opSHY, AbsoluteX, 0, 5, 0, true),
+  ("SHS", opSHS, AbsoluteY, 3, 5, 0, true), // TAS
+  ("SHY", opSHY, AbsoluteX, 3, 5, 0, true),
   ("STA", opSTA, AbsoluteX, 3, 5, 0, false),
-  ("SHX", opSHX, AbsoluteY, 0, 5, 0, true),
-  ("AHX", opAHX, AbsoluteY, 0, 5, 0, true), // FIXME: SHA
+  ("SHX", opSHX, AbsoluteY, 3, 5, 0, true),
+  ("SHA", opSHA, AbsoluteY, 3, 5, 0, true), // AHX
   // 0xA0
   ("LDY", opLDY, Immediate, 2, 2, 0, false),
   ("LDA", opLDA, IndexedIndirect, 2, 6, 0, false),
@@ -1508,7 +1732,7 @@ let instructions : FixedArray[
   ("TAY", opTAY, Implied, 1, 2, 0, false),
   ("LDA", opLDA, Immediate, 2, 2, 0, false),
   ("TAX", opTAX, Implied, 1, 2, 0, false),
-  ("LAX", opLAX, Immediate, 0, 2, 0, true),
+  ("LAX", opLAX, Immediate, 2, 2, 0, true),
   ("LDY", opLDY, Absolute, 3, 4, 0, false),
   ("LDA", opLDA, Absolute, 3, 4, 0, false),
   ("LDX", opLDX, Absolute, 3, 4, 0, false),
@@ -1525,7 +1749,7 @@ let instructions : FixedArray[
   ("CLV", opCLV, Implied, 1, 2, 0, false),
   ("LDA", opLDA, AbsoluteY, 3, 4, 1, false),
   ("TSX", opTSX, Implied, 1, 2, 0, false),
-  ("LAS", opLAS, AbsoluteY, 0, 4, 1, true),
+  ("LAS", opLAS, AbsoluteY, 3, 4, 1, true),
   ("LDY", opLDY, AbsoluteX, 3, 4, 1, false),
   ("LDA", opLDA, AbsoluteX, 3, 4, 1, false),
   ("LDX", opLDX, AbsoluteY, 3, 4, 1, false),
@@ -1533,7 +1757,7 @@ let instructions : FixedArray[
   // 0xC0
   ("CPY", opCPY, Immediate, 2, 2, 0, false),
   ("CMP", opCMP, IndexedIndirect, 2, 6, 0, false),
-  ("NOP", opNOP, Immediate, 0, 2, 0, true),
+  ("NOP", opNOP, Immediate, 2, 2, 0, true),
   ("DCP", opDCP, IndexedIndirect, 2, 8, 0, true),
   ("CPY", opCPY, ZeroPage, 2, 3, 0, false),
   ("CMP", opCMP, ZeroPage, 2, 3, 0, false),
@@ -1542,7 +1766,7 @@ let instructions : FixedArray[
   ("INY", opINY, Implied, 1, 2, 0, false),
   ("CMP", opCMP, Immediate, 2, 2, 0, false),
   ("DEX", opDEX, Implied, 1, 2, 0, false),
-  ("AXS", opAXS, Immediate, 0, 2, 0, true), // FIXME: SBX
+  ("SBX", opSBX, Immediate, 2, 2, 0, true), // AXS
   ("CPY", opCPY, Absolute, 3, 4, 0, false),
   ("CMP", opCMP, Absolute, 3, 4, 0, false),
   ("DEC", opDEC, Absolute, 3, 6, 0, false),
@@ -1567,7 +1791,7 @@ let instructions : FixedArray[
   // 0xE0
   ("CPX", opCPX, Immediate, 2, 2, 0, false),
   ("SBC", opSBC, IndexedIndirect, 2, 6, 0, false),
-  ("NOP", opNOP, Immediate, 0, 2, 0, true),
+  ("NOP", opNOP, Immediate, 2, 2, 0, true),
   ("ISC", opISC, IndexedIndirect, 2, 8, 0, true),
   ("CPX", opCPX, ZeroPage, 2, 3, 0, false),
   ("SBC", opSBC, ZeroPage, 2, 3, 0, false),

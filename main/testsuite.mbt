@@ -4,370 +4,397 @@ let irq : FixedArray[Int] = [
 ]
 
 let testcases : Map[String, FixedArray[Int]] = {
-  "START": @testsuite._start
+  "start": @testsuite._start
 
-  // LDA
+  /// LDA
   ,
-  "LDAB": @testsuite.ldab,
-  "LDAZ": @testsuite.ldaz,
-  "LDAZX": @testsuite.ldazx,
-  "LDAA": @testsuite.ldaa,
-  "LDAAX": @testsuite.ldaax,
-  "LDAAY": @testsuite.ldaay,
-  "LDAIX": @testsuite.ldaix,
-  "LDAIY": @testsuite.ldaiy
+  "ldab": @testsuite.ldab,
+  "ldaz": @testsuite.ldaz,
+  "ldazx": @testsuite.ldazx,
+  "ldaa": @testsuite.ldaa,
+  "ldaax": @testsuite.ldaax,
+  "ldaay": @testsuite.ldaay,
+  "ldaix": @testsuite.ldaix,
+  "ldaiy": @testsuite.ldaiy
 
   // STA
   ,
-  "STAZ": @testsuite.staz,
-  "STAZX": @testsuite.stazx,
-  "STAA": @testsuite.staa,
-  "STAAX": @testsuite.staax,
-  "STAAY": @testsuite.staay,
-  "STAIX": @testsuite.staix,
-  "STAIY": @testsuite.staiy
+  "staz": @testsuite.staz,
+  "stazx": @testsuite.stazx,
+  "staa": @testsuite.staa,
+  "staax": @testsuite.staax,
+  "staay": @testsuite.staay,
+  "staix": @testsuite.staix,
+  "staiy": @testsuite.staiy
 
   // LDX
   ,
-  "LDXB": @testsuite.ldxb,
-  "LDXZ": @testsuite.ldxz,
-  "LDXZY": @testsuite.ldxzy,
-  "LDXA": @testsuite.ldxa,
-  "LDXAY": @testsuite.ldxay
+  "ldxb": @testsuite.ldxb,
+  "ldxz": @testsuite.ldxz,
+  "ldxzy": @testsuite.ldxzy,
+  "ldxa": @testsuite.ldxa,
+  "ldxay": @testsuite.ldxay
 
   // STX
   ,
-  "STXZ": @testsuite.stxz,
-  "STXZY": @testsuite.stxzy,
-  "STXA": @testsuite.stxa
+  "stxz": @testsuite.stxz,
+  "stxzy": @testsuite.stxzy,
+  "stxa": @testsuite.stxa
 
   // LDY
   ,
-  "LDYB": @testsuite.ldyb,
-  "LDYZ": @testsuite.ldyz,
-  "LDYZX": @testsuite.ldyzx,
-  "LDYA": @testsuite.ldya,
-  "LDYAX": @testsuite.ldyax
+  "ldyb": @testsuite.ldyb,
+  "ldyz": @testsuite.ldyz,
+  "ldyzx": @testsuite.ldyzx,
+  "ldya": @testsuite.ldya,
+  "ldyax": @testsuite.ldyax
 
   // STY
   ,
-  "STYZ": @testsuite.styz,
-  "STYZX": @testsuite.styzx,
-  "STYA": @testsuite.stya
+  "styz": @testsuite.styz,
+  "styzx": @testsuite.styzx,
+  "stya": @testsuite.stya
 
   // Transfer
   ,
-  "TAXN": @testsuite.taxn,
-  "TAYN": @testsuite.tayn,
-  "TXAN": @testsuite.txan,
-  "TYAN": @testsuite.tyan,
-  "TSXN": @testsuite.tsxn,
-  "TXSN": @testsuite.txsn
+  "taxn": @testsuite.taxn,
+  "tayn": @testsuite.tayn,
+  "txan": @testsuite.txan,
+  "tyan": @testsuite.tyan,
+  "tsxn": @testsuite.tsxn,
+  "txsn": @testsuite.txsn
 
-  // Push
+  // Push & Pull
   ,
-  "PHAN": @testsuite.phan,
-  "PLAN": @testsuite.plan,
-  "PHPN": @testsuite.phpn,
-  "PLPN": @testsuite.plpn
-
-  // Increment
-  ,
-  "INXN": @testsuite.inxn,
-  "INYN": @testsuite.inyn
-
-  // Decrement
-  ,
-  "DEXN": @testsuite.dexn,
-  "DEYN": @testsuite.deyn
+  "phan": @testsuite.phan,
+  "plan": @testsuite.plan,
+  "phpn": @testsuite.phpn,
+  "plpn": @testsuite.plpn
 
   // Increment
   ,
-  "INCZ": @testsuite.incz,
-  "INCZX": @testsuite.inczx,
-  "INCA": @testsuite.inca,
-  "INCAX": @testsuite.incax
+  "inxn": @testsuite.inxn,
+  "inyn": @testsuite.inyn
 
   // Decrement
   ,
-  "DECZ": @testsuite.decz,
-  "DECZX": @testsuite.deczx,
-  "DECA": @testsuite.deca,
-  "DECAX": @testsuite.decax
+  "dexn": @testsuite.dexn,
+  "deyn": @testsuite.deyn
+
+  // Increment
+  ,
+  "incz": @testsuite.incz,
+  "inczx": @testsuite.inczx,
+  "inca": @testsuite.inca,
+  "incax": @testsuite.incax
+
+  // Decrement
+  ,
+  "decz": @testsuite.decz,
+  "deczx": @testsuite.deczx,
+  "deca": @testsuite.deca,
+  "decax": @testsuite.decax
 
   // Arithmetic Shift
   ,
-  "ASLN": @testsuite.asln,
-  "ASLZ": @testsuite.aslz,
-  "ASLZX": @testsuite.aslzx,
-  "ASLA": @testsuite.asla,
-  "ASLAX": @testsuite.aslax
+  "asln": @testsuite.asln,
+  "aslz": @testsuite.aslz,
+  "aslzx": @testsuite.aslzx,
+  "asla": @testsuite.asla,
+  "aslax": @testsuite.aslax
 
   // Logical Shift
   ,
-  "LSRN": @testsuite.lsrn,
-  "LSRZ": @testsuite.lsrz,
-  "LSRZX": @testsuite.lsrzx,
-  "LSRA": @testsuite.lsra,
-  "LSRAX": @testsuite.lsrax
+  "lsrn": @testsuite.lsrn,
+  "lsrz": @testsuite.lsrz,
+  "lsrzx": @testsuite.lsrzx,
+  "lsra": @testsuite.lsra,
+  "lsrax": @testsuite.lsrax
 
   // Rotate Left
   ,
-  "ROLN": @testsuite.roln,
-  "ROLZ": @testsuite.rolz,
-  "ROLZX": @testsuite.rolzx,
-  "ROLA": @testsuite.rola,
-  "ROLAX": @testsuite.rolax
+  "roln": @testsuite.roln,
+  "rolz": @testsuite.rolz,
+  "rolzx": @testsuite.rolzx,
+  "rola": @testsuite.rola,
+  "rolax": @testsuite.rolax
 
   // Rotate Right
   ,
-  "RORN": @testsuite.rorn,
-  "RORZ": @testsuite.rorz,
-  "RORZX": @testsuite.rorzx,
-  "RORA": @testsuite.rora,
-  "RORAX": @testsuite.rorax
+  "rorn": @testsuite.rorn,
+  "rorz": @testsuite.rorz,
+  "rorzx": @testsuite.rorzx,
+  "rora": @testsuite.rora,
+  "rorax": @testsuite.rorax
 
   // AND
   ,
-  "ANDB": @testsuite.andb,
-  "ANDZ": @testsuite.andz,
-  "ANDZX": @testsuite.andzx,
-  "ANDA": @testsuite.anda,
-  "ANDAX": @testsuite.andax,
-  "ANDAY": @testsuite.anday,
-  "ANDIX": @testsuite.andix,
-  "ANDIY": @testsuite.andiy
+  "andb": @testsuite.andb,
+  "andz": @testsuite.andz,
+  "andzx": @testsuite.andzx,
+  "anda": @testsuite.anda,
+  "andax": @testsuite.andax,
+  "anday": @testsuite.anday,
+  "andix": @testsuite.andix,
+  "andiy": @testsuite.andiy
 
   // OR
   ,
-  "ORAB": @testsuite.orab,
-  "ORAZ": @testsuite.oraz,
-  "ORAZX": @testsuite.orazx,
-  "ORAA": @testsuite.oraa,
-  "ORAAX": @testsuite.oraax,
-  "ORAAY": @testsuite.oraay,
-  "ORAIX": @testsuite.oraix,
-  "ORAIY": @testsuite.oraiy
+  "orab": @testsuite.orab,
+  "oraz": @testsuite.oraz,
+  "orazx": @testsuite.orazx,
+  "oraa": @testsuite.oraa,
+  "oraax": @testsuite.oraax,
+  "oraay": @testsuite.oraay,
+  "oraix": @testsuite.oraix,
+  "oraiy": @testsuite.oraiy
 
   // Exclusive OR
   ,
-  "EORB": @testsuite.eorb,
-  "EORZ": @testsuite.eorz,
-  "EORZX": @testsuite.eorzx,
-  "EORA": @testsuite.eora,
-  "EORAX": @testsuite.eorax,
-  "EORAY": @testsuite.eoray,
-  "EORIX": @testsuite.eorix,
-  "EORIY": @testsuite.eoriy
+  "eorb": @testsuite.eorb,
+  "eorz": @testsuite.eorz,
+  "eorzx": @testsuite.eorzx,
+  "eora": @testsuite.eora,
+  "eorax": @testsuite.eorax,
+  "eoray": @testsuite.eoray,
+  "eorix": @testsuite.eorix,
+  "eoriy": @testsuite.eoriy
 
   // Clear & Set
   ,
-  "CLCN": @testsuite.clcn,
-  "SECN": @testsuite.secn,
-  "CLDN": @testsuite.cldn,
-  "SEDN": @testsuite.sedn,
-  "CLIN": @testsuite.clin,
-  "SEIN": @testsuite.sein,
-  "CLVN": @testsuite.clvn
+  "clcn": @testsuite.clcn,
+  "secn": @testsuite.secn,
+  "cldn": @testsuite.cldn,
+  "sedn": @testsuite.sedn,
+  "clin": @testsuite.clin,
+  "sein": @testsuite.sein,
+  "clvn": @testsuite.clvn
 
   // Addition
   ,
-  "ADCB": @testsuite.adcb,
-  "ADCZ": @testsuite.adcz,
-  "ADCZX": @testsuite.adczx,
-  "ADCA": @testsuite.adca,
-  "ADCAX": @testsuite.adcax,
-  "ADCAY": @testsuite.adcay,
-  "ADCIX": @testsuite.adcix,
-  "ADCIY": @testsuite.adciy
+  "adcb": @testsuite.adcb,
+  "adcz": @testsuite.adcz,
+  "adczx": @testsuite.adczx,
+  "adca": @testsuite.adca,
+  "adcax": @testsuite.adcax,
+  "adcay": @testsuite.adcay,
+  "adcix": @testsuite.adcix,
+  "adciy": @testsuite.adciy
 
   // Subtraction
   ,
-  "SBCB": @testsuite.sbcb,
-  "SBCZ": @testsuite.sbcz,
-  "SBCZX": @testsuite.sbczx,
-  "SBCA": @testsuite.sbca,
-  "SBCAX": @testsuite.sbcax,
-  "SBCAY": @testsuite.sbcay,
-  "SBCIX": @testsuite.sbcix,
-  "SBCIY": @testsuite.sbciy
+  "sbcb": @testsuite.sbcb,
+  "sbcz": @testsuite.sbcz,
+  "sbczx": @testsuite.sbczx,
+  "sbca": @testsuite.sbca,
+  "sbcax": @testsuite.sbcax,
+  "sbcay": @testsuite.sbcay,
+  "sbcix": @testsuite.sbcix,
+  "sbciy": @testsuite.sbciy
 
   // Comparison
   ,
-  "CMPB": @testsuite.cmpb,
-  "CMPZ": @testsuite.cmpz,
-  "CMPZX": @testsuite.cmpzx,
-  "CMPA": @testsuite.cmpa,
-  "CMPAX": @testsuite.cmpax,
-  "CMPAY": @testsuite.cmpay,
-  "CMPIX": @testsuite.cmpix,
-  "CMPIY": @testsuite.cmpiy
+  "cmpb": @testsuite.cmpb,
+  "cmpz": @testsuite.cmpz,
+  "cmpzx": @testsuite.cmpzx,
+  "cmpa": @testsuite.cmpa,
+  "cmpax": @testsuite.cmpax,
+  "cmpay": @testsuite.cmpay,
+  "cmpix": @testsuite.cmpix,
+  "cmpiy": @testsuite.cmpiy
 
   // Copy
   ,
-  "CPXB": @testsuite.cpxb,
-  "CPXZ": @testsuite.cpxz,
-  "CPXA": @testsuite.cpxa,
-  "CPYB": @testsuite.cpyb,
-  "CPYZ": @testsuite.cpyz,
-  "CPYA": @testsuite.cpya
+  "cpxb": @testsuite.cpxb,
+  "cpxz": @testsuite.cpxz,
+  "cpxa": @testsuite.cpxa,
+  "cpyb": @testsuite.cpyb,
+  "cpyz": @testsuite.cpyz,
+  "cpya": @testsuite.cpya
 
   // Bit
   ,
-  "BITZ": @testsuite.bitz,
-  "BITA": @testsuite.bita
+  "bitz": @testsuite.bitz,
+  "bita": @testsuite.bita
 
   // Break / Return / Jump
   ,
-  "BRKN": @testsuite.brkn,
-  "RTIN": @testsuite.rtin,
-  "JSRW": @testsuite.jsrw,
-  "RTSN": @testsuite.rtsn,
-  "JMPW": @testsuite.jmpw,
-  "JMPI": @testsuite.jmpi
+  "brkn": @testsuite.brkn,
+  "rtin": @testsuite.rtin,
+  "jsrw": @testsuite.jsrw,
+  "rtsn": @testsuite.rtsn,
+  "jmpw": @testsuite.jmpw,
+  "jmpi": @testsuite.jmpi
 
   // Branch
   ,
-  "BEQR": @testsuite.beqr,
-  "BNER": @testsuite.bner,
-  "BMIR": @testsuite.bmir,
-  "BPLR": @testsuite.bplr,
-  "BCSR": @testsuite.bcsr,
-  "BCCR": @testsuite.bccr,
-  "BVSR": @testsuite.bvsr,
-  "BVCR": @testsuite.bvcr
+  "beqr": @testsuite.beqr,
+  "bner": @testsuite.bner,
+  "bmir": @testsuite.bmir,
+  "bplr": @testsuite.bplr,
+  "bcsr": @testsuite.bcsr,
+  "bccr": @testsuite.bccr,
+  "bvsr": @testsuite.bvsr,
+  "bvcr": @testsuite.bvcr
 
   // No Operation
   ,
-  "NOPN": @testsuite.nopn,
-  "NOPB": @testsuite.nopb // FIXME
-  ,
-  "NOPZ": @testsuite.nopz,
-  "NOPZX": @testsuite.nopzx,
-  "NOPA": @testsuite.nopa,
-  "NOPAX": @testsuite.nopax
+  "nopn": @testsuite.nopn,
+  "nopb": @testsuite.nopb,
+  "nopz": @testsuite.nopz,
+  "nopzx": @testsuite.nopzx,
+  "nopa": @testsuite.nopa,
+  "nopax": @testsuite.nopax
 
   // Arithmetic Shift
   ,
-  "ASOZ": @testsuite.asoz,
-  "ASOZX": @testsuite.asozx,
-  "ASOA": @testsuite.asoa,
-  "ASOAX": @testsuite.asoax,
-  "ASOAY": @testsuite.asoay,
-  "ASOIX": @testsuite.asoix,
-  "ASOIY": @testsuite.asoiy
+  "asoz": @testsuite.asoz,
+  "asozx": @testsuite.asozx,
+  "asoa": @testsuite.asoa,
+  "asoax": @testsuite.asoax,
+  "asoay": @testsuite.asoay,
+  "asoix": @testsuite.asoix,
+  "asoiy": @testsuite.asoiy
 
   // Rotate Left
   ,
-  "RLAZ": @testsuite.rlaz,
-  "RLAZX": @testsuite.rlazx,
-  "RLAA": @testsuite.rlaa,
-  "RLAAX": @testsuite.rlaax,
-  "RLAAY": @testsuite.rlaay,
-  "RLAIX": @testsuite.rlaix,
-  "RLAIY": @testsuite.rlaiy
+  "rlaz": @testsuite.rlaz,
+  "rlazx": @testsuite.rlazx,
+  "rlaa": @testsuite.rlaa,
+  "rlaax": @testsuite.rlaax,
+  "rlaay": @testsuite.rlaay,
+  "rlaix": @testsuite.rlaix,
+  "rlaiy": @testsuite.rlaiy
 
   // Logical Shift
   ,
-  "LSEZ": @testsuite.lsez,
-  "LSEZX": @testsuite.lsezx,
-  "LSEA": @testsuite.lsea,
-  "LSEAX": @testsuite.lseax,
-  "LSEAY": @testsuite.lseay,
-  "LSEIX": @testsuite.lseix,
-  "LSEIY": @testsuite.lseiy
+  "lsez": @testsuite.lsez,
+  "lsezx": @testsuite.lsezx,
+  "lsea": @testsuite.lsea,
+  "lseax": @testsuite.lseax,
+  "lseay": @testsuite.lseay,
+  "lseix": @testsuite.lseix,
+  "lseiy": @testsuite.lseiy
 
   // Rotate Right
   ,
-  "RRAZ": @testsuite.rraz,
-  "RRAZX": @testsuite.rrazx,
-  "RRAA": @testsuite.rraa,
-  "RRAAX": @testsuite.rraax,
-  "RRAAY": @testsuite.rraay,
-  "RRAIX": @testsuite.rraix,
-  "RRAIY": @testsuite.rraiy
+  "rraz": @testsuite.rraz,
+  "rrazx": @testsuite.rrazx,
+  "rraa": @testsuite.rraa,
+  "rraax": @testsuite.rraax,
+  "rraay": @testsuite.rraay,
+  "rraix": @testsuite.rraix,
+  "rraiy": @testsuite.rraiy
 
   // Decrement
   ,
-  "DCMZ": @testsuite.dcmz,
-  "DCMZX": @testsuite.dcmzx,
-  "DCMA": @testsuite.dcma,
-  "DCMAX": @testsuite.dcmax,
-  "DCMAY": @testsuite.dcmay,
-  "DCMIX": @testsuite.dcmix,
-  "DCMIY": @testsuite.dcmiy
+  "dcmz": @testsuite.dcmz,
+  "dcmzx": @testsuite.dcmzx,
+  "dcma": @testsuite.dcma,
+  "dcmax": @testsuite.dcmax,
+  "dcmay": @testsuite.dcmay,
+  "dcmix": @testsuite.dcmix,
+  "dcmiy": @testsuite.dcmiy
 
   // Increment
   ,
-  "INSZ": @testsuite.insz,
-  "INSZX": @testsuite.inszx,
-  "INSA": @testsuite.insa,
-  "INSAX": @testsuite.insax,
-  "INSAY": @testsuite.insay,
-  "INSIX": @testsuite.insix,
-  "INSIY": @testsuite.insiy
+  "insz": @testsuite.insz,
+  "inszx": @testsuite.inszx,
+  "insa": @testsuite.insa,
+  "insax": @testsuite.insax,
+  "insay": @testsuite.insay,
+  "insix": @testsuite.insix,
+  "insiy": @testsuite.insiy
 
   // Load
   ,
-  "LAXZ": @testsuite.laxz,
-  "LAXZY": @testsuite.laxzy,
-  "LAXA": @testsuite.laxa,
-  "LAXAY": @testsuite.laxay,
-  "LAXIX": @testsuite.laxix,
-  "LAXIY": @testsuite.laxiy
+  "laxz": @testsuite.laxz,
+  "laxzy": @testsuite.laxzy,
+  "laxa": @testsuite.laxa,
+  "laxay": @testsuite.laxay,
+  "laxix": @testsuite.laxix,
+  "laxiy": @testsuite.laxiy
 
   // AXS
   ,
-  "AXSZ": @testsuite.axsz,
-  "AXSZY": @testsuite.axszy,
-  "AXSA": @testsuite.axsa,
-  "AXSIX": @testsuite.axsix
+  "axsz": @testsuite.axsz,
+  "axszy": @testsuite.axszy,
+  "axsa": @testsuite.axsa,
+  "axsix": @testsuite.axsix
 
   // Arithmetic Left
   ,
-  "ALRB": @testsuite.alrb
+  "alrb": @testsuite.alrb
   // Arithmetic Right
   ,
-  "ARRB": @testsuite.arrb // UNIMPLEMENTED
+  "arrb": @testsuite.arrb
   // ANE
   ,
-  "ANEB": @testsuite.aneb
+  "aneb": @testsuite.aneb
 
   // Load
   ,
-  "LXAB": @testsuite.lxab // FIXME(VIC)
+  "lxab": @testsuite.lxab
   // Store
   ,
-  "SBXB": @testsuite.sbxb // UNIMPLEMENTED
+  "sbxb": @testsuite.sbxb
 
-  // Shift
+  // Store A
   ,
-  "SHAAY": @testsuite.shaay // FIXME(VIC)
+  "shaay": @testsuite.shaay,
+  "shaiy": @testsuite.shaiy
+
+  // Store X
   ,
+  "shxay": @testsuite.shxay
+  // Store Y
+  ,
+  "shyax": @testsuite.shyax
+  // Store S
+  ,
+  "shsay": @testsuite.shsay
+
+  // ANC
+  ,
+  "ancb": @testsuite.ancb
+
+  // LAS
+  ,
+  "lasay": @testsuite.lasay
+
+  // SBC
+  ,
+  "sbcb(eb)": @testsuite.sbcbeb
+
+  // Trap
+  ,
+  "trap1": @testsuite.trap1, // FIXME
+
+  "branchwrap": @testsuite.branchwrap,
+  "mmufetch": @testsuite.mmufetch, // FIXME
+  "mmu": @testsuite.mmu, // FIXME
+  "cpuport": @testsuite.cpuport, // FIXME
+  "cputiming": @testsuite.cputiming, // FIXME
+  "irq": @testsuite.irq,
 }
 
 pub fn testsuite() -> Unit {
-  let c64 = @lib.C64::new(debug=true)
-  c64.load(irq, offset=0xFF48)
+  let c64 = @lib.C64::new(debug=false)
+  let _ = c64.load(irq, offset=0xFF48)
 
   //
-  let data = testcases["ARRB"].or_default()
-  let addr = load(c64, data)
+  let data = testcases["irq"].or_default()
+  load(c64, data)
 
   //
-  let mut i = 0
-  while c64.pc() != 0x0000 && i >= 0 {
+  while c64.pc() != 0x0000 {
     let _ = c64.emulate()
-    i += 1
+
   }
 }
 
-fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Int {
-  let mut output = ""
-  let addr = data[0] + (data[1] << 8)
-
-  //
-  c64.load(data, has_load_address=true)
+fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
+  let addr = c64.load(data, has_load_address=true)
 
   //
   c64[0x0002] = 0x00
@@ -394,37 +421,28 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Int {
   c64[0xFFFF] = 0xFF
 
   //
-  c64.clear_flags()
-  c64.set_interrupt_flag()
+  c64.initCPU(baseaddress=Some(addr))
 
   //
-  c64.initCPU(baseaddress=Some(addr))
+  c64.clear_flags()
+  c64.set_interrupt_flag()
+}
+
+fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
+  let mut output = ""
+
+  //
+  setup(c64, data)
 
   //
   c64.hook(
     0xE16F,
     fn(pc) {
-      // let addr = c64[0xBB].0 + (c64[0xBC].0 << 8)
-      // let len = c64[0xB7].0
-      // let mut testcase = ""
-      // for i = 0; i < len; i = i + 1 {
-      //   testcase += Char::from_int(c64[addr + i].0).to_string()
-      // }
       let testcase = output
       match testcases[testcase] {
-        Some(data) => {
-          let addr = data[0] + (data[1] << 8)
-          c64.load(data, has_load_address=true)
-
-          //
-          c64.clear_flags()
-          c64.set_interrupt_flag()
-
-          //
-          c64.initCPU(baseaddress=Some(addr))
-        }
+        Some(data) => setup(c64, data)
         _ => {
-          println("\n\x1b[31;1;6m\{output} not found\x1b[0m\n")
+          println("\x1b[31;1;6m\{output} not found\x1b[0m")
           abort("test not found")
         }
       }
@@ -436,12 +454,12 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Int {
       let a = c64.cpu.a().0
       match a {
         13 => {
-          println("\n\x1b[33;1;6m\{output}\x1b[0m\n")
+          println("\x1b[33m\{output}\x1b[0m")
           output = ""
         }
         14 => output += "" // text mode
-        145 => output += "" // up arrow
-        147 => output += "\n-------\n" // Clear
+        145 => output += "\x1b[1A\x1b[1m" // ↑ up arrow
+        147 => output += "\x1bc" // Clear
         _ => {
           let a = if a >= 0xC1 && a <= 0xDA {
             a - 0xC1 + 65
@@ -450,7 +468,7 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Int {
           } else if a < 32 || a >= 127 {
             46
           } else {
-            46
+            a
           }
           output += Char::from_int(a).to_string()
         }
@@ -461,20 +479,17 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Int {
   c64.hook(
     0x8000,
     fn(pc) {
-      println("\n\x1b[31;1;6m\{output}\x1b[0m\n")
+      println("\x1b[31;1;6m\{output}\x1b[0m")
       abort("test failed")
     },
   )
   c64.hook(
     0xA474,
     fn(pc) {
-      println("\n\x1b[31;1;6m\{output}\x1b[0m\n")
+      println("\x1b[31;1;6m\{output}\x1b[0m")
       abort("test failed")
     },
   )
-
-  //
-  addr
 }
 
 // const processor = fake6502();
