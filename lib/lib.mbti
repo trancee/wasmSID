@@ -66,10 +66,18 @@ impl C64 {
 type CIA
 impl CIA {
   acknowledgeCIAIRQ(Self) -> Unit
-  emulate(Self, UInt8) -> Bool
+  emulate(Self, Int) -> Bool
   new(@cpu.CPU, Int, ~videoStandard : VideoStandard = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
   writeCIAIRQmask(Self, UInt8) -> Unit
+}
+
+type CIARegister
+
+type CIAregister
+impl CIAregister {
+  op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
 }
 
 type CPUClock
@@ -101,6 +109,10 @@ impl Channel {
 }
 
 type Color
+
+type ControlA
+
+type ControlB
 
 type ControlRegister
 impl ControlRegister {
@@ -170,12 +182,12 @@ impl IRQMask {
 
 type IRQMaskRegister
 
-type InterruptFlagRegister
-
-type Memory
-impl Memory {
-  new(Int, ~value : Int = .., ~baseaddress : Int) -> Self
+type InterruptControl
+impl InterruptControl {
+  default() -> Self
 }
+
+type InterruptFlagRegister
 
 type MemoryControlRegister
 
@@ -239,12 +251,6 @@ impl PSID {
   videoStandard(Self) -> VideoStandard
 }
 
-type Register
-impl Register {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
-
 type SID
 impl SID {
   new(@cpu.CPU, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = ..) -> Self
@@ -292,6 +298,15 @@ impl ScanLines {
   op_equal(Self, Self) -> Bool
   to_string(Self) -> String
 }
+
+type TimeOfDay
+impl TimeOfDay {
+  default() -> Self
+}
+
+type TimerAInputMode
+
+type TimerBInputMode
 
 pub type UInt16 Int
 impl UInt16 {
@@ -369,6 +384,8 @@ impl Waveform {
 // Traits
 
 // Extension Methods
+impl Show for CIAregister
+
 impl Show for CPUClock
 
 impl Show for Channel
@@ -388,8 +405,6 @@ impl Show for FrameRate
 impl Show for Mode
 
 impl Show for Model
-
-impl Show for Register
 
 impl Show for SIDFlags
 

@@ -1997,7 +1997,7 @@ test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
   assert_eq!(cpu.pc, 0xABCD)
   assert_eq!(cpu.mem[0x1FF], 0xC1) // PCH
   assert_eq!(cpu.mem[0x1FE], 0x23) // PCL
-  assert_eq!(cpu.mem[0x1FD], B | U) // Status
+  assert_eq!(cpu.mem[0x1FD], 0b00110100) // Status [I B U]
   assert_eq!(cpu.registers[SP], 0xFC)
   assert_eq!(cpu.flags.get(), U | I)
   assert_eq!(cpu.cycles, 7)
@@ -2013,7 +2013,7 @@ test "nmi_pushes_pc_and_correct_status_then_sets_pc_to_nmi_vector" {
   assert_eq!(cpu.pc, 0x7788)
   assert_eq!(cpu.mem[0x1FF], 0xC1) // PCH
   assert_eq!(cpu.mem[0x1FE], 0x23) // PCL
-  assert_eq!(cpu.mem[0x1FD], B | U) // Status
+  assert_eq!(cpu.mem[0x1FD], 0b00110100) // Status [I B U]
   assert_eq!(cpu.registers[SP], 0xFC)
   assert_eq!(cpu.flags.get(), U | I)
   assert_eq!(cpu.cycles, 7)

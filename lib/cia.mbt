@@ -754,7 +754,8 @@ test "cia1_instantiate" {
   let cpu = @cpu.CPU::new()
   let cia = CIA::new(cpu, cia_mem_start)
   //
-  cia.register.timerA = timer
+  cia[TA_HI] = timer >> 8
+  cia[TA_LO] = timer
   //
   cia.writeCIAIRQmask(0x00)
   //
@@ -762,12 +763,12 @@ test "cia1_instantiate" {
   assert_eq!(cia[TA_LO], timer)
   assert_eq!(cia.register.timerA, timer)
   //
-  assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.controlA.start)
+  assert_eq!(cia[CRA], cra(INMODE))
+  assert_false!(cia.register.controlA.start)
   //
-  assert_eq!(cia[ICR], icr(TA) | icr(IR))
-  assert_true!(cia.register.interruptControl.timerA)
-  assert_true!(cia.register.interruptControl.interrupt) // SC
+  assert_eq!(cia[ICR], icr(NONE))
+  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt) // SC
 }
 
 test "cia1_timera" {
@@ -781,9 +782,8 @@ test "cia1_timera" {
   //
   cia.writeCIAIRQmask(icr(SC) | icr(TA))
   //
-  assert_eq!(cia[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia[ICR], icr(TA))
   assert_true!(cia.register.interruptControl.timerA)
-  assert_true!(cia.register.interruptControl.interrupt) // SC
   //
   cia[CRA] = cra(START)
   assert_eq!(cia[CRA], cra(START))
@@ -792,38 +792,38 @@ test "cia1_timera" {
   assert_eq!(cia[TA_LO], timer)
   assert_eq!(cia.register.timerA, timer)
   //
-  assert_eq!(cia.emulate(1), true)
+  assert_eq!(cia.emulate(1), false)
   assert_eq!(cia[TA_HI], 0)
   assert_eq!(cia[TA_LO], timer - 1)
   assert_eq!(cia.register.timerA, timer - 1)
   assert_eq!(cia[CRA], cra(START))
-  assert_eq!(cia[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia[ICR], icr(TA))
   assert_true!(cia.register.interruptControl.timerA)
-  assert_true!(cia.register.interruptControl.interrupt) // SC
+  assert_false!(cia.register.interruptControl.interrupt)
   //
-  assert_eq!(cia.emulate(1), true)
+  assert_eq!(cia.emulate(1), false)
   assert_eq!(cia[TA_HI], 0)
   assert_eq!(cia[TA_LO], timer - 2)
   assert_eq!(cia.register.timerA, timer - 2)
   assert_eq!(cia[CRA], cra(START))
-  assert_eq!(cia[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia[ICR], icr(TA))
   assert_true!(cia.register.interruptControl.timerA)
-  assert_true!(cia.register.interruptControl.interrupt) // SC
+  assert_false!(cia.register.interruptControl.interrupt)
   //
   assert_eq!(cia.emulate(1), true)
   assert_eq!(cia[TA_HI], 0)
   assert_eq!(cia[TA_LO], timer)
   assert_eq!(cia.register.timerA, timer)
   assert_eq!(cia[CRA], cra(START))
-  assert_eq!(cia[ICR], icr(SC) | icr(TA))
+  assert_eq!(cia[ICR], icr(IR) | icr(TA))
   assert_true!(cia.register.interruptControl.timerA)
-  assert_true!(cia.register.interruptControl.interrupt) // SC
+  assert_true!(cia.register.interruptControl.interrupt)
   //
   cia.acknowledgeCIAIRQ()
   //
   assert_eq!(cia[ICR], icr(NONE))
-  // assert_true!(cia.register.interruptControl[0])
-  // assert_true!(cia.register.interruptControl[7]) // SC
+  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
 }
 
 test "cia1_timera_forceload" {
@@ -885,180 +885,84 @@ test "cia1_timera_forceload" {
   assert_true!(cia.register.interruptControl.interrupt)
   //
   cia.acknowledgeCIAIRQ()
+  //
   assert_eq!(cia[ICR], icr(NONE))
+  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
+  //
+  // should start timer A again
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia[TA_HI], 0)
+  assert_eq!(cia[TA_LO], timer - 1)
+  assert_eq!(cia.register.timerA, timer - 1)
+  assert_eq!(cia[CRA], cra(START))
+  assert_eq!(cia[ICR], icr(NONE))
+  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
 }
 
-// test "cia1_instantiate" {
-//   let timer = 3
-//   //
-//   let cpu = @cpu.CPU::new()
-//   let cia = CIA::new(cpu, cia_mem_start)
-//   //
-//   cia[WR_TA_HI] = 0
-//   cia[WR_TA_LO] = timer
-//   //
-//   cia.writeCIAIRQmask(0x00)
-//   //
-//   assert_eq!(cia[WR_TA_HI], 0)
-//   assert_eq!(cia[WR_TA_LO], timer)
-//   assert_eq!(cia[RD_TA_HI], 0)
-//   assert_eq!(cia[RD_TA_LO], 0)
-//   //
-//   assert_eq!(cia[WR_CRA], cra(START))
-//   assert_eq!(cia[RD_CRA], cra(NONE))
-//   //
-//   assert_eq!(cia[WR_ICR], icr(TA) | icr(IR)) // should be NONE
-//   assert_eq!(cia[RD_ICR], icr(NONE))
-// }
-
-// test "cia1_timera" {
-//   let timer = 3
-//   let cpu = @cpu.CPU::new()
-//   let cia = CIA::new(cpu, cia_mem_start)
-//   cia.ram[TA_HI] = 0
-//   cia.ram[TA_LO] = timer
-//   //
-//   cia.writeCIAIRQmask(icr(SC) | icr(TA))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-//   //
-//   cia.ram[CRA] = cra(START)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(NONE))
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], 0)
-//   //
-//   assert_eq!(cia.emulate(1), true)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer - 1)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
-//   //
-//   assert_eq!(cia.emulate(1), true)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer - 2)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
-//   //
-//   assert_eq!(cia.emulate(1), true)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
-//   //
-//   cia.acknowledgeCIAIRQ()
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-// }
-
-// test "cia1_timera_forceload" {
-//   let timer = 3
-//   let cpu = @cpu.CPU::new()
-//   let cia = CIA::new(cpu, cia_mem_start)
-//   cia.ram[TA_HI] = 0
-//   cia.ram[TA_LO] = timer
-//   //
-//   cia.writeCIAIRQmask(icr(SC) | icr(TA))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-//   //
-//   cia.ram[CRA] = cra(START) | cra(LOAD)
-//   assert_eq!(cia.ram[CRA], cra(START) | cra(LOAD))
-//   assert_eq!(cia.rom[CRA], cra(NONE))
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], 0)
-//   //
-//   assert_eq!(cia.emulate(1), false)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-//   //
-//   assert_eq!(cia.emulate(1), false)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer - 1)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-//   //
-//   assert_eq!(cia.emulate(1), false)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer - 2)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-//   //
-//   assert_eq!(cia.emulate(1), true) // interrupt happened
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer)
-//   assert_eq!(cia.ram[CRA], cra(START))
-//   assert_eq!(cia.rom[CRA], cra(START))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
-//   //
-//   cia.acknowledgeCIAIRQ()
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-// }
-
-// test "cia1_timera_oneshot" {
-//   let timer = 3
-//   let cpu = @cpu.CPU::new()
-//   let cia = CIA::new(cpu, cia_mem_start)
-//   cia.ram[TA_HI] = 0
-//   cia.ram[TA_LO] = timer
-//   //
-//   cia.writeCIAIRQmask(icr(SC) | icr(TA))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-//   //
-//   cia.ram[CRA] = cra(START) | cra(RUNMODE)
-//   assert_eq!(cia.ram[CRA], cra(START) | cra(RUNMODE))
-//   assert_eq!(cia.rom[CRA], cra(NONE))
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], 0)
-//   //
-//   assert_eq!(cia.emulate(1), true)
-//   assert_eq!(cia.ram[TA_HI], 0)
-//   assert_eq!(cia.ram[TA_LO], timer)
-//   assert_eq!(cia.rom[TA_HI], 0)
-//   assert_eq!(cia.rom[TA_LO], timer - 1)
-//   assert_eq!(cia.ram[CRA], cra(RUNMODE))
-//   assert_eq!(cia.rom[CRA], cra(RUNMODE))
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(TA) | icr(IR))
-//   //
-//   cia.acknowledgeCIAIRQ()
-//   assert_eq!(cia.ram[ICR], icr(SC) | icr(TA))
-//   assert_eq!(cia.rom[ICR], icr(NONE))
-// }
+test "cia1_timera_oneshot" {
+  let timer = 3
+  //
+  let cpu = @cpu.CPU::new()
+  let cia = CIA::new(cpu, cia_mem_start)
+  //
+  cia[TA_HI] = timer >> 8
+  cia[TA_LO] = timer
+  //
+  cia.writeCIAIRQmask(icr(SC) | icr(TA))
+  assert_eq!(cia[ICR], icr(TA))
+  assert_true!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
+  //
+  cia[CRA] = cra(START) | cra(RUNMODE)
+  assert_eq!(cia[CRA], cra(START) | cra(RUNMODE))
+  assert_true!(cia.register.controlA.start)
+  assert_true!(cia.register.controlA.runMode)
+  assert_eq!(cia[TA_HI], 0)
+  assert_eq!(cia[TA_LO], timer)
+  assert_eq!(cia.register.timerA, timer)
+  //
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia[TA_HI], 0)
+  assert_eq!(cia[TA_LO], timer - 1)
+  assert_eq!(cia.register.timerA, timer - 1)
+  assert_eq!(cia[CRA], cra(START) | cra(RUNMODE))
+  assert_eq!(cia[ICR], icr(TA))
+  assert_true!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
+  //
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia[TA_HI], 0)
+  assert_eq!(cia[TA_LO], timer - 2)
+  assert_eq!(cia.register.timerA, timer - 2)
+  assert_eq!(cia[CRA], cra(START) | cra(RUNMODE))
+  assert_eq!(cia[ICR], icr(TA))
+  assert_true!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
+  //
+  assert_eq!(cia.emulate(1), true) // interrupt happened
+  assert_eq!(cia[TA_HI], 0)
+  assert_eq!(cia[TA_LO], timer)
+  assert_eq!(cia.register.timerA, timer)
+  assert_eq!(cia[CRA], cra(RUNMODE))
+  assert_eq!(cia[ICR], icr(TA) | icr(IR))
+  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.register.interruptControl.interrupt)
+  //
+  cia.acknowledgeCIAIRQ()
+  //
+  assert_eq!(cia[ICR], icr(NONE))
+  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
+  //
+  // should not start timer A again
+  assert_eq!(cia.emulate(1), false)
+  assert_eq!(cia[TA_HI], 0)
+  assert_eq!(cia[TA_LO], timer)
+  assert_eq!(cia.register.timerA, timer)
+  assert_eq!(cia[CRA], cra(RUNMODE))
+  assert_eq!(cia[ICR], icr(NONE))
+  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.register.interruptControl.interrupt)
+}

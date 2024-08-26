@@ -77,6 +77,7 @@ type MemoryHook
 type Mode
 impl Mode {
   op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
 }
 
 pub enum Register {
@@ -114,6 +115,8 @@ type Vector
 
 // Extension Methods
 impl Show for Flags
+
+impl Show for Mode
 
 impl Show for UInt16
 
