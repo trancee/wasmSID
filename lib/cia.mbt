@@ -18,91 +18,19 @@ let cia_mem_end = 0xDDFF
 
 let cia_mem_size = 0x00FF
 
-// struct Memory {
-//   mem : FixedArray[Int]
-//   baseaddress : Int
-// }
-
-// pub fn Memory::new(
-//   size : Int,
-//   ~value : Int = 0x00,
-//   ~baseaddress : Int
-// ) -> Memory {
-//   let mem = FixedArray::make(size + 1, value)
-//   { mem, baseaddress }
-// }
-
-// fn reset(self : Memory, ~value : Int = 0x00) -> Unit {
-//   for i = 0; i < self.mem.length(); i = i + 1 {
-//     self.mem[i] = value
-//   }
-// }
-
-// fn r(self : Memory, address : UInt16) -> UInt8 {
-//   println(
-//     "CIA $" + address.to_hex() + " → $" + UInt8(self.mem[address.0]).to_hex(),
-//   )
-//   self.mem[address.0]
-// }
-
-// fn w(self : Memory, address : UInt16, value : UInt8) -> Unit {
-//   println(
-//     "CIA $" + address.to_hex() + " ← $" + UInt8(self.mem[address.0]).to_hex(),
-//   )
-//   self.mem[address.0] = value.0
-// }
-
-// fn op_get(self : Memory, register : Register) -> UInt8 {
-//   println("CIA::get \{register}")
-//   let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
-//   if self.baseaddress + address < cia_mem_start ||
-//     self.baseaddress + address > cia_mem_end {
-//     // self.dump()
-//     println("CIA \{register} → $" + UInt8(self.mem[address % 0x100]).to_hex())
-//     abort("get out of bounds")
-//   }
-//   // println("CIA \(register) → $" + self.mem[address % 0x100].to_hex())
-//   // match register {
-//   //   /// FIXME: depends on memory bank?
-//   //   RD_ICR => self.acknowledgeCIAIRQ()
-//   // }
-//   // self.mem[address].0
-//   self.r(address)
-// }
-
-// fn op_set(self : Memory, register : Register, value : UInt8) -> Unit {
-//   println("CIA::set \{register} = #$" + value.to_hex())
-//   let address = register[register] % 0x10 // (repeated every $10, 16 bytes)
-//   if self.baseaddress + address < cia_mem_start ||
-//     self.baseaddress + address > cia_mem_end {
-//     // self.dump()
-//     println("CIA \{register} ← $" + value.to_hex())
-//     abort("set out of bounds")
-//   }
-//   // println("CIA \(register) ← $" + value.to_hex())
-//   // match register {
-//   //   /// FIXME: depends on memory bank?
-//   //   // WR_ICR => self.writeCIAIRQmask(value) //only writing 1 to $d019 bit0 would acknowledge, not any value (but RMW instructions write $d019 back before mod.)
-//   //   // WR_SDR => self.mem[address] = value.0
-//   //   _ => self.mem[address] = value.0
-//   // }
-//   self.w(address, value)
-// }
+struct Timer {
+  mut latch : Int
+  mut counter : Int
+  mut underflow : Bool
+  mut interrupt : Bool // enable/disable underflow interrupt
+} derive(Show, Default)
 
 struct CIA {
   mem : FixedArray[Int]
   baseaddress : Int
 
-  // ram : Memory
-  // rom : Memory
-
   //
-  mut latchA : Int
-  mut timerA : Int
-  mut timerAdown : Bool
-  mut latchB : Int
-  mut timerB : Int
-  mut timerBdown : Bool
+  timer : FixedArray[Timer]
 
   //
   register : CIARegister
@@ -115,20 +43,12 @@ pub fn CIA::new(
 ) -> CIA {
   println("CIA::new")
   let mem = FixedArray::make(cia_mem_size + 1, 0x00)
-  // let ram = Memory::new(cia_mem_size + 1, ~baseaddress)
-  // let rom = Memory::new(cia_mem_size + 1, ~baseaddress)
-  // let cia : CIA = { ram, rom, baseaddress }
   let cia : CIA = {
     mem,
     baseaddress,
 
     //
-    latchA: Int::default(),
-    timerA: Int::default(),
-    timerAdown: Bool::default(),
-    latchB: Int::default(),
-    timerB: Int::default(),
-    timerBdown: Bool::default(),
+    timer: [Timer::default(), Timer::default()],
 
     //
     register: CIARegister::default(),
@@ -220,86 +140,68 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
   if self.register.controlA.forceLoad {
     println("TimerA Force Load")
     // force latch into counter (strobe-input)
-    self.timerA = self.latchA
-    self.timerAdown = self.timerA == 0
+    self.timer[0].counter = self.timer[0].latch
+    self.timer[0].underflow = self.timer[0].counter == 0
     self.register.controlA.forceLoad = false //strobe is edge-sensitive
-  } else if self.register.controlA.start { // Enabled, counts Phi2
-    println("TA:#$" + UInt16(self.timerA).to_hex() + " \{cycles}")
+  }
+  if self.register.controlA.start { // Enabled, counts Phi2
+    println("TA:#$" + UInt16(self.timer[0].counter).to_hex() + " \{cycles}")
     //count timer
-    let mut tmp = self.timerA - cycles
+    let mut tmp = self.timer[0].counter - cycles
     // println("TimerA Start #\{tmp}")
-    if tmp <= 0 { // Timer counted down
+    self.timer[0].underflow = tmp <= 0
+    if self.timer[0].underflow { // Timer counted down
       println("TimerA Finish \{tmp}")
-      tmp += self.latchA //reload timer
+      tmp += self.timer[0].latch //reload timer
       if self.register.controlA.runMode == OneShot {
         println("TimerA OneShot")
         self.register.controlA.start = false //disable if one-shot
       }
-      self.timerAdown = true
-      // if self.register.interruptControl.timerA { //generate interrupt if mask allows
+      if self.timer[0].interrupt { //generate interrupt if mask allows
         self.register.interruptControl.interrupt = true
-      // }
+      }
+      println(self.timer[0])
     }
-    self.timerA = tmp
+    self.timer[0].counter = tmp
   }
-  // self[CRA] = self[CRA].clr(cra(LOAD)) //strobe is edge-sensitive
-  // self[RD_CRA] = self[WR_CRA] //control-registers are readable
 
-  // // TimerB
-  // if self.ram[CRB].has(crb(LOAD)) {
-  //   //force latch into counter (strobe-input)
-  //   self.rom[TB_HI] = self.ram[TB_HI]
-  //   self.rom[TB_LO] = self.ram[TB_LO]
-  //   //what about clocking TimerB by TimerA? (maybe not used in any music)
-  // } else if (self.ram[CRB] & (crb(START) | crb(INMODE))).has(crb(START)) { //Enabled, counts Phi2
-  //   //count timer
-  //   let mut tmp = (self.rom[TB_HI] << 8) + self.rom[TB_LO] - cycles
-  //   if tmp <= 0 { // Timer counted down
-  //     tmp += (self.ram[TB_HI] << 8) + self.ram[TB_LO] //reload timer
-  //     if self.ram[CRB].has(cra(RUNMODE)) {
-  //       self.ram[CRB] = self.ram[CRB].clr(crb(START)) //disable if one-shot
-  //     }
-  //     self.rom[ICR] = self.rom[ICR].set(icr(TB))
-  //     if self.ram[ICR].has(icr(TB)) { //generate interrupt if mask allows
-  //       self.rom[ICR] = self.rom[ICR].set(icr(IR))
-  //     }
-  //   }
-  //   self.rom[TB_HI] = tmp >> 8
-  //   self.rom[TB_LO] = tmp & 0xFF
-  // }
-  // self.ram[CRB] = self.ram[CRB].clr(crb(LOAD)) //strobe is edge-sensitive
-  // self.rom[CRB] = self.ram[CRB] //control-registers are readable
+  // Timer B
+  if self.register.controlB.forceLoad {
+    println("TimerB Force Load")
+    // force latch into counter (strobe-input)
+    self.timer[1].counter = self.timer[1].latch
+    self.timer[1].underflow = self.timer[1].counter == 0
+    self.register.controlB.forceLoad = false //strobe is edge-sensitive
+    //what about clocking TimerB by TimerA? (maybe not used in any music)
+  }
+  if self.register.controlB.start { // Enabled, counts Phi2
+    println("TB:#$" + UInt16(self.timer[1].counter).to_hex() + " \{cycles}")
+    //count timer
+    let mut tmp = self.timer[1].counter -
+      match self.register.controlB.inputMode {
+        CountCycles => cycles
+        CountTimerA => if self.timer[0].underflow { 1 } else { 0 }
+      }
+    // println("TimerB Start #\{tmp}")
+    self.timer[1].underflow = tmp <= 0
+    if self.timer[1].underflow { // Timer counted down
+      println("TimerB Finish \{tmp}")
+      tmp += self.timer[1].latch //reload timer
+      if self.register.controlB.runMode == OneShot {
+        println("TimerB OneShot")
+        self.register.controlB.start = false //disable if one-shot
+      }
+      if self.timer[1].interrupt { //generate interrupt if mask allows
+        self.register.interruptControl.interrupt = true
+      }
+      println(self.timer[1])
+    }
+    self.timer[1].counter = tmp
+  }
 
   //
-  // println("<< emulate $" + self[WR_ICR].to_hex() + " \(cycles)")
-
   self.register.interruptControl.interrupt
 }
-
-/// The `MASK` register provides convenient control of individual mask bits.
-/// When writing to the `MASK` register, if bit 7 (`SET`/`CLEAR`) of data written is a
-/// `ZERO`, any mask bit written with a `ONE` will be cleared, while those mask bits written with a zero will be unaffected.
-/// If bit 7 of the data written is a `ONE`, any mask bit written with a one will be set, while those mask bits written with a zero will be unaffected.
-/// In order for an interrupt flag to set `IR` and generate an Interrupt Request, the corresponding `MASK` bit must be set.
-// pub fn writeCIAIRQmask(self : CIA, mask : UInt8) -> Unit {
-//   println(
-//     ">> writeCIAIRQmask #$" +
-//     self[ICR].to_hex() +
-//     " #$" +
-//     (mask & 0x1F).to_hex(),
-//   )
-//   match mask.bit(7) {
-//     true => self[ICR] = self[ICR].set(mask & 0x1F) // SET
-//     false => self[ICR] = self[ICR].clr(mask & 0x1F) // CLEAR
-//   }
-//   println("<< writeCIAIRQmask $" + self[ICR].to_hex())
-// }
-
-// pub fn acknowledgeCIAIRQ(self : CIA) -> Unit {
-//   // println(">> acknowledgeCIAIRQ $" + self[RD_ICR].to_hex())
-//   self[ICR] = 0x00 // reading a CIA interrupt-register clears its read-part and IRQ-flag
-//   // println("<< acknowledgeCIAIRQ $" + self[RD_ICR].to_hex())
-// }
 
 fn op_get(self : CIA, register : CIAregister) -> UInt8 {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
@@ -408,10 +310,10 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
       (self.register.directionB[6].to_int() << 6) |
       /// Bit 7:  Select Bit 7 of Data Port B for input or output (0=input, 1=output)
       (self.register.directionB[7].to_int() << 7)
-    TA_LO | RD_TA_LO => u8(self.timerA)
-    TA_HI | RD_TA_HI => u8(self.timerA >> 8)
-    TB_LO | RD_TB_LO => u8(self.timerB)
-    TB_HI | RD_TB_HI => u8(self.timerB >> 8)
+    TA_LO | RD_TA_LO => u8(self.timer[0].counter)
+    TA_HI | RD_TA_HI => u8(self.timer[0].counter >> 8)
+    TB_LO | RD_TB_LO => u8(self.timer[1].counter)
+    TB_HI | RD_TB_HI => u8(self.timer[1].counter >> 8)
     TOD_10TH | RD_TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
       /// Bits 4-7:  Unused
@@ -436,15 +338,9 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
     SDR | RD_SDR => self.register.serialData
     ICR | RD_ICR => {
       /// Bit 0:  Read / did Timer A count down to 0?  (1=yes)
-      let value = (
-          (self.register.interruptControl.timerA && self.timerAdown).to_int() <<
-          0
-        ) |
+      let value = (self.timer[0].underflow.to_int() << 0) |
         /// Bit 1:  Read / did Timer B count down to 0?  (1=yes)
-        (
-          (self.register.interruptControl.timerB && self.timerBdown).to_int() <<
-          1
-        ) |
+        (self.timer[1].underflow.to_int() << 1) |
         /// Bit 2:  Read / did Time of Day Clock reach the alarm time?  (1=yes)
         (self.register.interruptControl.alarm.to_int() << 2) |
         /// Bit 3:  Read / did the serial shift register finish a byte? (1=yes)
@@ -455,17 +351,14 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
         /// Bit 6:  Not used
         /// Bit 7:  Read / did any CIA #1 source cause an interrupt?  (1=yes)
         (self.register.interruptControl.interrupt.to_int() << 7)
-      // if self.register.interruptControl.interrupt {
-      //   value = value | 0x01
-      // }
       println(
         "ICR #$" +
         UInt8(value).to_hex() +
-        " TimerA:\{(self.register.interruptControl.timerA && self.timerAdown)} TimerB:\{(self.register.interruptControl.timerB && self.timerBdown)} | \{value}",
+        " TimerA:\{(self.timer[0].underflow)} TimerB:\{(self.timer[1].underflow)} | \{value}",
       )
-      self.register.interruptControl.interrupt = false
-      self.timerAdown = self.timerA == 0
-      self.timerBdown = self.timerB == 0
+      self.timer[0].underflow = false
+      self.timer[1].underflow = false
+      self.register.interruptControl = InterruptControl::default()
       value
     }
     CRA | RD_CRA =>
@@ -517,7 +410,7 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
         match self.register.controlB.inputMode {
           TimerBInputMode::CountCycles => 0b00
           TimerBInputMode::CountSignals => 0b01
-          TimerBInputMode::CountTimer => 0b10
+          TimerBInputMode::CountTimerA => 0b10
           TimerBInputMode::CountZero => 0b11
         } <<
         5
@@ -645,19 +538,23 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
       self.register.directionB[7] = value.bit(7)
     }
     TA_LO | WR_TA_LO => {
-      self.timerA = (self.timerA & 0xFF00) | u16(value).0
-      self.latchA = (self.latchA & 0xFF00) | u16(value).0
+      self.timer[0].counter = (self.timer[0].counter & 0xFF00) | u16(value).0
+      self.timer[0].latch = (self.timer[0].latch & 0xFF00) | u16(value).0
     }
     TA_HI | WR_TA_HI => {
-      self.timerA = (u16(value) << 8).0 | (self.timerA & 0x00FF)
-      self.latchA = (u16(value) << 8).0 | (self.latchA & 0x00FF)
+      self.timer[0].counter = (u16(value) << 8).0 |
+        (self.timer[0].counter & 0x00FF)
+      self.timer[0].latch = (u16(value) << 8).0 | (self.timer[0].latch & 0x00FF)
     }
-    TB_LO | WR_TB_LO =>
-      // self.register.timerB = (self.register.timerB & 0xFF00) | u16(value)
-      self.latchB = (self.latchB & 0xFF00) | u16(value).0
-    TB_HI | WR_TB_HI =>
-      // self.register.timerB = (u16(value) << 8) | (self.register.timerB & 0x00FF)
-      self.latchB = (u16(value) << 8).0 | (self.latchB & 0x00FF)
+    TB_LO | WR_TB_LO => {
+      self.timer[1].counter = (self.timer[1].counter & 0xFF00) | u16(value).0
+      self.timer[1].latch = (self.timer[1].latch & 0xFF00) | u16(value).0
+    }
+    TB_HI | WR_TB_HI => {
+      self.timer[1].counter = (u16(value) << 8).0 |
+        (self.timer[1].counter & 0x00FF)
+      self.timer[1].latch = (u16(value) << 8).0 | (self.timer[1].latch & 0x00FF)
+    }
     TOD_10TH | WR_TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
       /// Bits 4-7:  Unused
@@ -688,11 +585,11 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
 
       /// Bit 0:  Write/ enable or disable Timer A interrupt (1=enable, 0=disable)
       if value.bit(0) {
-        self.register.interruptControl.timerA = flag
+        self.timer[0].interrupt = flag
       }
       /// Bit 1:  Write/ enable or disable Timer B interrupt (1=enable, 0=disable)
       if value.bit(1) {
-        self.register.interruptControl.timerB = flag
+        self.timer[1].interrupt = flag
       }
       /// Bit 2:  Write/ enable or disable TOD clock alarm interrupt (1=enable, 0=disable)
       if value.bit(2) {
@@ -708,6 +605,8 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
       }
       /// Bit 5:  Not used
       /// Bit 6:  Not used
+      println(self.register.interruptControl)
+      panic()
     }
     CRA | WR_CRA => {
       /// Bit 0:  Start Timer A (1=start, 0=stop)
@@ -744,11 +643,9 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
     CRB | WR_CRB => {
       /// Bit 0:  Start Timer B (1=start, 0=stop)
       self.register.controlB.start = value.bit(0)
-      /// Bit 1:  Select Timer B output on Port B (1=Timer B output appears on
-      ///         Bit 7 of Port B)
+      /// Bit 1:  Select Timer B output on Port B (1=Timer B output appears on Bit 7 of Port B)
       self.register.controlB.output = value.bit(1)
-      /// Bit 2:  Port B output mode (1=toggle Bit 7, 0=pulse Bit 7 for one
-      ///         cycle)
+      /// Bit 2:  Port B output mode (1=toggle Bit 7, 0=pulse Bit 7 for one cycle)
       self.register.controlB.outputMode = value.bit(2)
       /// Bit 3:  Timer B run mode (1=one-shot, 0=continuous)
       self.register.controlB.runMode = if value.bit(3) {
@@ -756,8 +653,7 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
       } else {
         RunMode::Continuous
       }
-      /// Bit 4:  Force latched value to be loaded to Timer B counter (1=force
-      ///         load strobe)
+      /// Bit 4:  Force latched value to be loaded to Timer B counter (1=force load strobe)
       self.register.controlB.forceLoad = value.bit(4)
       /// Bits 5-6:  Timer B input mode
       ///            00 = Timer B counts microprocessor cycles
@@ -767,11 +663,11 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
       self.register.controlB.inputMode = match (value & 0b01100000).0 >> 5 {
         0b00 => TimerBInputMode::CountCycles
         0b01 => TimerBInputMode::CountSignals
-        0b10 => TimerBInputMode::CountTimer
+        0b10 => TimerBInputMode::CountTimerA
         0b11 => TimerBInputMode::CountZero
       }
-      /// Bit 7:  Select Time of Day write (0=writing to TOD registers sets
-      ///         alarm, 1=writing to TOD registers sets clock)
+      /// Bit 7:  Select Time of Day write
+      ///         (0=writing to TOD registers sets alarm, 1=writing to TOD registers sets clock)
       self.register.controlB.writeMode = value.bit(7)
     }
     _ => {
@@ -792,7 +688,7 @@ test "cia1_instantiate" {
   //
   cia[ICR] = 0x7F
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   //
@@ -806,7 +702,7 @@ test "cia1_instantiate" {
   assert_false!(cia.register.controlA.clockFrequency)
   assert_eq!(cia[CRA], cra(INMODE))
   //
-  assert_false!(cia.register.interruptControl.timerA)
+  assert_false!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
 }
@@ -822,16 +718,16 @@ test "cia1_timera" {
   //
   cia[ICR] = icr(SC) | icr(TA)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   cia[CRA] = cra(START)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_true!(cia.register.controlA.start)
@@ -839,43 +735,43 @@ test "cia1_timera" {
   //
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer - 1)
+  assert_eq!(cia.timer[0].counter, timer - 1)
   assert_eq!(cia[TA_HI], (timer - 1) >> 8)
   assert_eq!(cia[TA_LO], timer - 1)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer - 2)
+  assert_eq!(cia.timer[0].counter, timer - 2)
   assert_eq!(cia[TA_HI], (timer - 2) >> 8)
   assert_eq!(cia[TA_LO], timer - 2)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   assert_eq!(cia.emulate(1), true) // interrupt happened
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_true!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(IR) | icr(TA))
-  // assert_false!(cia.register.interruptControl.timerA) // becomes false as interrupt has occurred
+  // assert_false!(cia.timer[0].interrupt) // becomes false as interrupt has occurred
   assert_false!(cia.register.interruptControl.interrupt)
   //
   assert_eq!(cia[ICR], icr(NONE))
-  // assert_false!(cia.register.interruptControl.timerA)
+  // assert_false!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
 }
 
@@ -890,16 +786,16 @@ test "cia1_timera_forceload" {
   //
   cia[ICR] = icr(SC) | icr(TA)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   cia[CRA] = cra(START) | cra(LOAD)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_true!(cia.register.controlA.start)
@@ -908,69 +804,57 @@ test "cia1_timera_forceload" {
   //
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer)
-  assert_eq!(cia[TA_HI], timer >> 8)
-  assert_eq!(cia[TA_LO], timer)
-  assert_true!(cia.register.controlA.start)
-  assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
-  assert_false!(cia.register.interruptControl.interrupt)
-  assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
-  //
-  assert_eq!(cia.emulate(1), false)
-  //
-  assert_eq!(cia.timerA, timer - 1)
+  assert_eq!(cia.timer[0].counter, timer - 1)
   assert_eq!(cia[TA_HI], (timer - 1) >> 8)
   assert_eq!(cia[TA_LO], timer - 1)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer - 2)
+  assert_eq!(cia.timer[0].counter, timer - 2)
   assert_eq!(cia[TA_HI], (timer - 2) >> 8)
   assert_eq!(cia[TA_LO], timer - 2)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   assert_eq!(cia.emulate(1), true) // interrupt happened
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_true!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(IR) | icr(TA))
-  // assert_false!(cia.register.interruptControl.timerA) // becomes false as interrupt has occurred
+  // assert_false!(cia.timer[0].interrupt) // becomes false as interrupt has occurred
   assert_false!(cia.register.interruptControl.interrupt)
   //
   assert_eq!(cia[ICR], icr(NONE))
-  // assert_false!(cia.register.interruptControl.timerA)
+  // assert_false!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   //
   // should start timer A again
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer - 1)
+  assert_eq!(cia.timer[0].counter, timer - 1)
   assert_eq!(cia[TA_HI], (timer - 1) >> 8)
   assert_eq!(cia[TA_LO], timer - 1)
   assert_true!(cia.register.controlA.start)
   assert_eq!(cia[CRA], cra(START))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
 }
 
 test "cia1_timera_oneshot" {
@@ -984,16 +868,16 @@ test "cia1_timera_oneshot" {
   //
   cia[ICR] = icr(SC) | icr(TA)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   cia[CRA] = cra(START) | cra(RUNMODE)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_true!(cia.register.controlA.start)
@@ -1003,64 +887,64 @@ test "cia1_timera_oneshot" {
   //
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer - 1)
+  assert_eq!(cia.timer[0].counter, timer - 1)
   assert_eq!(cia[TA_HI], (timer - 1) >> 8)
   assert_eq!(cia[TA_LO], timer - 1)
   assert_true!(cia.register.controlA.start)
   assert_false!(cia.register.controlA.forceLoad)
   assert_eq!(cia.register.controlA.runMode, RunMode::OneShot)
   assert_eq!(cia[CRA], cra(START) | cra(RUNMODE))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer - 2)
+  assert_eq!(cia.timer[0].counter, timer - 2)
   assert_eq!(cia[TA_HI], (timer - 2) >> 8)
   assert_eq!(cia[TA_LO], timer - 2)
   assert_true!(cia.register.controlA.start)
   assert_false!(cia.register.controlA.forceLoad)
   assert_eq!(cia.register.controlA.runMode, RunMode::OneShot)
   assert_eq!(cia[CRA], cra(START) | cra(RUNMODE))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  assert_true!(cia.register.interruptControl.timerA) // stays true as no interrupt has occurred
+  assert_true!(cia.timer[0].interrupt) // stays true as no interrupt has occurred
   //
   assert_eq!(cia.emulate(1), true) // interrupt happened
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_false!(cia.register.controlA.start)
   assert_false!(cia.register.controlA.forceLoad)
   assert_eq!(cia.register.controlA.runMode, RunMode::OneShot)
   assert_eq!(cia[CRA], cra(RUNMODE))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_true!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(IR) | icr(TA))
-  // assert_false!(cia.register.interruptControl.timerA) // becomes false as interrupt has occurred
+  // assert_false!(cia.timer[0].interrupt) // becomes false as interrupt has occurred
   assert_false!(cia.register.interruptControl.interrupt)
   //
   assert_eq!(cia[ICR], icr(NONE))
-  // assert_false!(cia.register.interruptControl.timerA)
+  // assert_false!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   //
   // should not start timer A again
   assert_eq!(cia.emulate(1), false)
   //
-  assert_eq!(cia.timerA, timer)
+  assert_eq!(cia.timer[0].counter, timer)
   assert_eq!(cia[TA_HI], timer >> 8)
   assert_eq!(cia[TA_LO], timer)
   assert_false!(cia.register.controlA.start)
   assert_false!(cia.register.controlA.forceLoad)
   assert_eq!(cia.register.controlA.runMode, RunMode::OneShot)
   assert_eq!(cia[CRA], cra(RUNMODE))
-  assert_true!(cia.register.interruptControl.timerA)
+  assert_true!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
   assert_eq!(cia[ICR], icr(NONE))
-  // assert_false!(cia.register.interruptControl.timerA)
+  // assert_false!(cia.timer[0].interrupt)
   assert_false!(cia.register.interruptControl.interrupt)
 }

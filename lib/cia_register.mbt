@@ -121,7 +121,7 @@ struct ControlB {
 enum TimerBInputMode {
   CountCycles
   CountSignals
-  CountTimer
+  CountTimerA
   CountZero
 } derive(Show)
 
@@ -138,8 +138,8 @@ fn ControlB::default() -> ControlB {
 }
 
 struct InterruptControl {
-  mut timerA : Bool
-  mut timerB : Bool
+  // mut timerA : Bool
+  // mut timerB : Bool
   mut alarm : Bool
   mut serial : Bool
   mut flag : Bool

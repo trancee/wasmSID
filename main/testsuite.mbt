@@ -448,11 +448,87 @@ let testcases : Map[String, FixedArray[Int]] = {
 
 pub fn testsuite() -> Unit {
   let c64 = @lib.C64::new(realSID=true, debug=true)
-  let _ = c64.load(irq, offset=0xFF48)
+  // let _ = c64.load(irq, offset=0xFF48)
 
-  //
-  let data = testcases["irq"].or_default()
-  load(c64, data)
+  // //
+  // let data = testcases["irq"].or_default()
+  // load(c64, data)
+
+  c64[0xEA31] = 0x40
+  let _ = c64.load(
+    [
+      // SEI
+      0x78,
+
+      // LDA #$51 // START | FORCELOAD | COUNT_TIMERA
+       0xA9, 0x51,
+      // STA $DC0F
+       0x8D, 0x0F, 0xDC,
+
+      // LDA #$FC
+       0xA9, 0x08, //
+      // STA $DC04
+       0x8D, 0x04, 0xDC,
+      // LDA #$03
+       0xA9, 0x00, //
+      // STA $DC05
+       0x8D, 0x05, 0xDC,
+
+      // LDA #$FF
+       0xA9, 0x01,
+      // STA $DC06
+       0x8D, 0x06, 0xDC,
+      // STA $DC07
+       0x8D, 0x07, 0xDC,
+
+      // <timer
+      // LDA #$2C
+       0xA9, 0x2C,
+      // STA $0314
+       0x8D, 0x14, 0x03,
+      // >timer
+      // LDA #$08
+       0xA9, 0x08,
+      // STA $0315
+       0x8D, 0x15, 0x03,
+
+      // LDA #$11 // START | FORCELOAD
+       0xA9, 0x11,
+      // STA $DC0E
+       0x8D, 0x0E, 0xDC,
+
+      // CLI
+       0x58,
+      // JMP $083A
+       0x4C, 0x3A, 0x08, // main
+
+      // timer
+      // INC $0400
+       0xEE, 0x00, 0x04,
+      // LDA #$7F
+       0xA9, 0xFF, // all interrupts
+      // STA $DC0D
+       0x8D, 0x0D, 0xDC,
+      // LDA $DC0D
+       0xAD, 0x0D, 0xDC,
+      // JMP $EA31
+       0x4C, 0x31, 0xEA,
+
+      // main
+      // LDA #$01
+       0xA9, 0x01,
+      // STA $D800
+       0x8D, 0x00, 0xD8,
+
+      // loop
+      // JMP $083F
+       0x4C, 0x3F, 0x08, // loop
+      // RTS
+       0x60,
+    ],
+    offset=0x0801,
+  )
+  c64.initCPU(baseaddress=Some(0x0801))
 
   //
   while c64.pc() != 0x0000 {
