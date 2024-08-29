@@ -73,12 +73,12 @@ struct ControlA {
   mut serialMode : SerialMode
   /// Bit 7:  Time of Day Clock frequency (1=50 Hz required on TOD pin, 0=60 Hz)
   mut clockFrequency : Bool
-} derive(Show)
+} derive(Show, Eq)
 
 enum TimerAInputMode {
   CountCycles
   CountSignals
-} derive(Show)
+} derive(Show, Eq)
 
 fn ControlA::default() -> ControlA {
   {

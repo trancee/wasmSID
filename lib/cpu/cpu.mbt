@@ -72,7 +72,6 @@ enum Vector {
   RESET
   NMI
   IRQ
-  BRK
 } derive(Eq)
 
 fn addr(self : Vector) -> Int {
@@ -80,7 +79,6 @@ fn addr(self : Vector) -> Int {
     RESET => 0xFFFC
     NMI => 0xFFFA
     IRQ => 0xFFFE
-    BRK => 0xFFFE
   }
 }
 
@@ -747,6 +745,7 @@ fn opBPL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
 fn opBRK(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  println("*** BRK")
   if self.irq {
     return
   }
@@ -764,7 +763,7 @@ fn opBRK(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   //   IRQ => self.read16(IRQ.addr())
   //   _ => self.read16(IRQ.addr())
   // }
-  self.pc = self.read16(BRK.addr())
+  self.pc = self.read16(IRQ.addr())
 }
 
 // BVC - Branch if overflow clear
@@ -1017,11 +1016,11 @@ fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// The `RTI` instruction reinitializes all flags to the position to the point they were at the time the interrupt was taken and sets the program counter back to its pre-interrupt state.
 /// It affects no other registers in the microprocessor.
 fn opRTI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  println("*** RTI")
   // self.flags.set(self.pop()&(0xCF)|(U.bits())|(B.bits())) // pull() & 0xEF | 0x20
   // self.flags.set((self.pop() & 0xEF) | U.bits()) // nestest: pull() & 0xEF | 0x20
   self.flags.set(self.pop())
   self.pc = self.pop16()
-  self.set_interrupt() // we are coming from an interrupt
 }
 
 // RTS - Return from subrouting

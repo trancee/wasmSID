@@ -340,5 +340,14 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   //   ")",
   // )
   // println("OK $" + UInt16(addr).to_hex() + " #$" + self.mem[addr].to_hex())
+
+  match addr {
+    0xFFFE | 0xFFFF =>
+      println("IRQ $" + u16(addr).to_hex() + " ← #$" + u8(value).to_hex())
+    _ => {
+      let _ = 1
+
+    }
+  }
   self.mem[addr] = value |> u8
 }

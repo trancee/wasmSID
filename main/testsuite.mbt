@@ -447,7 +447,7 @@ let testcases : Map[String, FixedArray[Int]] = {
 /// irqB  20 D2 FF  JSR $FFD2                       A:0D X:01 Y:00 P:35 SP:FF
 
 pub fn testsuite() -> Unit {
-  let c64 = @lib.C64::new(realSID=true, debug=false)
+  let c64 = @lib.C64::new(realSID=true, debug=true)
   let _ = c64.load(irq, offset=0xFF48)
 
   //
