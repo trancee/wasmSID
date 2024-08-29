@@ -368,18 +368,86 @@ let testcases : Map[String, FixedArray[Int]] = {
 
   // Trap
   ,
-  "trap1": @testsuite.trap1, // FIXME
-
+  "trap1": @testsuite.trap1 // FIXME
+  ,
   "branchwrap": @testsuite.branchwrap,
-  "mmufetch": @testsuite.mmufetch, // FIXME
-  "mmu": @testsuite.mmu, // FIXME
-  "cpuport": @testsuite.cpuport, // FIXME
-  "cputiming": @testsuite.cputiming, // FIXME
+  "mmufetch": @testsuite.mmufetch // FIXME
+  ,
+  "mmu": @testsuite.mmu // FIXME
+  ,
+  "cpuport": @testsuite.cpuport // FIXME
+  ,
+  "cputiming": @testsuite.cputiming // FIXME
+  ,
   "irq": @testsuite.irq,
 }
 
+/// IRQ
+/// $DC0E <= #$19
+/// $DC0D => #$00
+
+/// 088D  A9 19     LDA #$19                        A:00 X:FF Y:00 P:B4 SP:FD
+/// 088F  8D 0E DC  STA $DC0E = 00                  A:19 X:FF Y:00 P:34 SP:FD # CIACRA: START / FORCELOAD / ONESHOT (NONE)
+/// TimerA Force Load
+/// 0892  60        RTS                             A:19 X:FF Y:00 P:34 SP:FD
+/// 0C66  AD 0D DC  LDA $DC0D = 00                  A:19 X:FF Y:00 P:34 SP:FF # CIAICR
+/// TimerA OneShot
+/// 0C69  C9 00     CMP #$00                        A:00 X:FF Y:00 P:36 SP:FF
+/// 0C6B  D0 CC     BNE $0C39                       A:00 X:FF Y:00 P:37 SP:FF
+/// 0C6D  A9 04     LDA #$04                        A:00 X:FF Y:00 P:37 SP:FF
+/// 0C6F  20 61 08  JSR $0861                       A:04 X:FF Y:00 P:35 SP:FF
+/// 0861  48        PHA                             A:04 X:FF Y:00 P:35 SP:FD
+/// 0862  A9 00     LDA #$00                        A:04 X:FF Y:00 P:35 SP:FC
+/// 0864  8D 0E DC  STA $DC0E = 08                  A:00 X:FF Y:00 P:37 SP:FC # CIACRA: NONE (FORCELOAD)
+/// 0867  18        CLC                             A:00 X:FF Y:00 P:37 SP:FC
+/// 0868  68        PLA                             A:00 X:FF Y:00 P:36 SP:FC
+/// 0869  69 03     ADC #$03                        A:04 X:FF Y:00 P:34 SP:FD
+/// 086B  8D 04 DC  STA $DC04 = 06                  A:07 X:FF Y:00 P:34 SP:FD # TIMALO: #$07
+/// 086E  A9 00     LDA #$00                        A:07 X:FF Y:00 P:34 SP:FD
+/// 0870  8D 05 DC  STA $DC05 = 00                  A:00 X:FF Y:00 P:36 SP:FD # TIMAHI: #$00
+/// 0873  A9 93     LDA #$93                        A:00 X:FF Y:00 P:36 SP:FD
+/// 0875  8D FE FF  STA $FFFE = 93                  A:93 X:FF Y:00 P:B4 SP:FD # PCL: #$93
+/// 0878  A9 08     LDA #$08                        A:93 X:FF Y:00 P:B4 SP:FD
+/// 087A  8D FF FF  STA $FFFF = 08                  A:08 X:FF Y:00 P:34 SP:FD # PCH: #$08
+/// 087D  A9 35     LDA #$35                        A:08 X:FF Y:00 P:34 SP:FD
+/// 087F  85 01     STA $01 = 35                    A:35 X:FF Y:00 P:34 SP:FD # DREG(?): #$35
+/// 0881  AD 11 D0  LDA $D011 = 18                  A:35 X:FF Y:00 P:34 SP:FD
+/// 0884  30 07     BMI $088D                       A:18 X:FF Y:00 P:34 SP:FD
+/// 0886  AD 12 D0  LDA $D012 = 00                  A:18 X:FF Y:00 P:34 SP:FD
+/// 0889  C9 1E     CMP #$1E                        A:00 X:FF Y:00 P:36 SP:FD
+/// 088B  B0 F9     BCS $0886                       A:00 X:FF Y:00 P:B4 SP:FD
+///
+/// 088D  A9 19     LDA #$19                        A:00 X:FF Y:00 P:B4 SP:FD
+/// 088F  8D 0E DC  STA $DC0E = 00                  A:19 X:FF Y:00 P:34 SP:FD # CIACRA: START / FORCELOAD / ONESHOT (NONE)
+/// TimerA Force Load
+/// 0892  60        RTS                             A:19 X:FF Y:00 P:34 SP:FD
+/// 0C72  AD 0D DC  LDA $DC0D = 81                  A:19 X:FF Y:00 P:34 SP:FF # CIAICR: TIMERA / INTERRUPT
+/// TimerA OneShot
+/// 0C75  C9 01     CMP #$01                        A:81 X:FF Y:00 P:B4 SP:FF
+/// 0C77  D0 C0     BNE $0C39                       A:81 X:FF Y:00 P:B5 SP:FF
+/// 0C39  20 F3 08  JSR $08F3                       A:81 X:FF Y:00 P:B5 SP:FF
+/// 08F3  A9 37     LDA #$37                        A:81 X:FF Y:00 P:B5 SP:FD
+/// 08F5  85 01     STA $01 = 35                    A:37 X:FF Y:00 P:35 SP:FD
+/// 08F7  A9 23     LDA #$23                        A:37 X:FF Y:00 P:35 SP:FD
+/// 08F9  8D 04 DC  STA $DC04 = 04                  A:23 X:FF Y:00 P:35 SP:FD
+/// 08FC  A9 40     LDA #$40                        A:23 X:FF Y:00 P:35 SP:FD
+/// 08FE  8D 05 DC  STA $DC05 = 00                  A:40 X:FF Y:00 P:35 SP:FD
+/// 0901  A9 11     LDA #$11                        A:40 X:FF Y:00 P:35 SP:FD
+/// 0903  8D 0E DC  STA $DC0E = 08                  A:11 X:FF Y:00 P:35 SP:FD # CIACRA: START / FORCELOAD (FORCELOAD)
+/// TimerA Force Load
+/// 0906  60        RTS                             A:11 X:FF Y:00 P:35 SP:FD
+/// 0C3C  20 1C 08  JSR $081C                       A:11 X:FF Y:00 P:35 SP:FF
+/// 081C  68        PLA                             A:11 X:FF Y:00 P:35 SP:FD
+/// 081D  8D 27 08  STA $0827 = 51                  A:3E X:FF Y:00 P:35 SP:FE
+/// 0820  68        PLA                             A:3E X:FF Y:00 P:35 SP:FE
+/// 0821  8D 28 08  STA $0828 = 0C                  A:0C X:FF Y:00 P:35 SP:FF
+/// 0824  A2 01     LDX #$01                        A:0C X:FF Y:00 P:35 SP:FF
+/// 0826  BD 3E 0C  LDA $0C3E,X @ 0C3F = 0D         A:0C X:01 Y:00 P:35 SP:FF
+/// 0829  F0 06     BEQ $0831                       A:0D X:01 Y:00 P:35 SP:FF
+/// irqB  20 D2 FF  JSR $FFD2                       A:0D X:01 Y:00 P:35 SP:FF
+
 pub fn testsuite() -> Unit {
-  let c64 = @lib.C64::new(debug=false)
+  let c64 = @lib.C64::new(realSID=true, debug=false)
   let _ = c64.load(irq, offset=0xFF48)
 
   //
@@ -425,7 +493,7 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
 
   //
   c64.clear_flags()
-  c64.set_interrupt_flag()
+  // c64.set_interrupt_flag()
 }
 
 fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {

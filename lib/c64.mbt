@@ -144,9 +144,9 @@ pub fn reset(self : C64) -> Unit! {
   self.cpuFrequency = CPUClock(self.videoStandard)
   self.sampleClockRatio = (self.cpuFrequency << 4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
   //
-  self.vic.rasterLines = ScanLines(self.videoStandard).to_int!() // HINT: should be inferred
+  self.vic.rasterCompare = ScanLines(self.videoStandard).to_int!() // HINT: should be inferred
   self.vic.rasterRowCycles = ScanLineCycles(self.videoStandard).to_int!() // HINT: should be inferred
-  self.frameCycles = self.vic.rasterLines * self.vic.rasterRowCycles ///C64->SampleRate / PAL_FRAMERATE; //1x speed tune with VIC Vertical-blank timing
+  self.frameCycles = self.vic.rasterCompare * self.vic.rasterRowCycles ///C64->SampleRate / PAL_FRAMERATE; //1x speed tune with VIC Vertical-blank timing
   //
   self.prevRasterLine = -1 //so if $d012 is set once only don't disturb FrameCycleCnt
   //
@@ -440,9 +440,6 @@ pub fn emulate(self : C64) -> Output {
   //Cycle-based part of emulations:
   //
   while self.sampleCycleCnt <= self.sampleClockRatio {
-    self.irq = false //prepare for collecting IRQ sources
-    self.nmi = false //prepare for collecting NMI sources
-
     //
     if not(self.realSID) {
       if self.frameCycleCnt >= self.frameCycles {
@@ -469,9 +466,9 @@ pub fn emulate(self : C64) -> Output {
       self.frameCycleCnt += instructionCycles
       // FIXME: self[0xDC04] += instructionCycles //very simple CIA1 TimerA simulation for PSID (e.g. Delta-Mix_E-Load_loader)
       //RealSID emulations:
-    } else if self.interrupts() {
-      self.finished = false
-      instructionCycles = 7
+      // } else if self.interrupts() {
+      //   self.finished = false
+      //   instructionCycles = 7
     } else if not(self.finished) {
       instructionCycles = self.step()
       if self.pc() == 0x0000 {
@@ -483,9 +480,16 @@ pub fn emulate(self : C64) -> Output {
     }
 
     //
-    self.irq = self.irq || self.cia[0].emulate(instructionCycles)
-    self.nmi = self.nmi || self.cia[1].emulate(instructionCycles)
-    self.irq = self.irq || self.vic.emulate(instructionCycles)
+    self.irq = false //prepare for collecting IRQ sources
+    self.nmi = false //prepare for collecting NMI sources
+    //
+    self.irq = self.cia[0].emulate(instructionCycles) || self.irq
+    self.nmi = self.cia[1].emulate(instructionCycles) || self.nmi
+    self.irq = self.vic.emulate(instructionCycles) || self.irq
+    // println("IRQ:" + self.irq.to_string())
+
+    self.cpu.set_irq(state=self.irq)
+    self.cpu.set_nmi(state=self.nmi)
 
     //
     self.sampleCycleCnt += instructionCycles << 4
@@ -670,11 +674,17 @@ pub fn push16(self : C64, value : @cpu.UInt16) -> Unit {
 }
 
 fn interrupts(self : C64) -> Bool {
+  // println(
+  //   "*** IRQ:" +
+  //   self.irq.to_string() +
+  //   " I:" +
+  //   self.cpu.has_interrupt().to_string(),
+  // )
   if self.nmi != self.prevNMI { //if IRQ and NMI at the same time, NMI is serviced first
     self.cpu.nmi() //NMI-vector
     self.prevNMI = self.nmi
     return true
-  } else if self.irq != false && not(self.cpu.has_interrupt()) {
+  } else if self.irq && not(self.cpu.has_interrupt()) {
     self.cpu.irq() //maskable IRQ-vector
     self.prevNMI = self.nmi
     return true

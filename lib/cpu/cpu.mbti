@@ -14,6 +14,7 @@ impl CPU {
   get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
   hook(Self, Int, (Int) -> Unit) -> Unit
+  interrupts(Self) -> Bool
   irq(Self, ~pc : Int? = ..) -> Unit
   load(Self, Int, FixedArray[Int], ~length : Int = .., ~has_load_address : Bool = ..) -> Int
   mem(Self) -> Memory
@@ -30,6 +31,8 @@ impl CPU {
   setRESET(Self, UInt16) -> Unit
   set_flags(Self, UInt8) -> Unit
   set_interrupt(Self) -> Unit
+  set_irq(Self, ~state : Bool = ..) -> Unit
+  set_nmi(Self, ~state : Bool = ..) -> Unit
   step(Self) -> Int
   write(Self, UInt16, UInt8) -> Unit
   write16(Self, UInt16, UInt16) -> Unit
@@ -108,6 +111,9 @@ impl UInt8 {
 }
 
 type Vector
+impl Vector {
+  op_equal(Self, Self) -> Bool
+}
 
 // Type aliases
 

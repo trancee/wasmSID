@@ -27,7 +27,31 @@ struct TimeOfDay {
 
   /// AM/PM Flag (1=PM, 0=AM)
   mut pm : Bool
-} derive(Default)
+} derive(Show, Default)
+
+enum RunMode {
+  OneShot
+  Continuous
+} derive(Show, Eq)
+
+fn to_int(self : RunMode) -> Int {
+  match self {
+    OneShot => 1
+    Continuous => 0
+  }
+}
+
+enum SerialMode {
+  Output
+  Input
+} derive(Show, Eq)
+
+fn to_int(self : SerialMode) -> Int {
+  match self {
+    Output => 1
+    Input => 0
+  }
+}
 
 struct ControlA {
   /// Bit 0:  Start Timer A (1=start, 0=stop)
@@ -38,7 +62,7 @@ struct ControlA {
   /// Bit 2:  Port B output mode (1=toggle Bit 6, 0=pulse Bit 6 for one cycle)
   mut outputMode : Bool
   /// Bit 3:  Timer A run mode (1=one-shot, 0=continuous)
-  mut runMode : Bool
+  mut runMode : RunMode
   /// Bit 4:  Force latched value to be loaded to Timer A counter (1=force load
   ///         strobe)
   mut forceLoad : Bool
@@ -46,25 +70,25 @@ struct ControlA {
   ///         CNT line at pin 4 of User Port)
   mut inputMode : TimerAInputMode
   /// Bit 6:  Serial Port (56332, $DC0C) mode (1=output, 0=input)
-  mut serialMode : Bool
+  mut serialMode : SerialMode
   /// Bit 7:  Time of Day Clock frequency (1=50 Hz required on TOD pin, 0=60 Hz)
   mut clockFrequency : Bool
-}
+} derive(Show)
 
 enum TimerAInputMode {
   CountCycles
   CountSignals
-}
+} derive(Show)
 
 fn ControlA::default() -> ControlA {
   {
     start: Bool::default(),
     output: Bool::default(),
     outputMode: Bool::default(),
-    runMode: Bool::default(),
+    runMode: RunMode::Continuous,
     forceLoad: Bool::default(),
     inputMode: TimerAInputMode::CountCycles,
-    serialMode: Bool::default(),
+    serialMode: SerialMode::Input,
     clockFrequency: Bool::default(),
   }
 }
@@ -79,7 +103,7 @@ struct ControlB {
   ///         cycle)
   mut outputMode : Bool
   /// Bit 3:  Timer B run mode (1=one-shot, 0=continuous)
-  mut runMode : Bool
+  mut runMode : RunMode
   /// Bit 4:  Force latched value to be loaded to Timer B counter (1=force
   ///         load strobe)
   mut forceLoad : Bool
@@ -92,21 +116,21 @@ struct ControlB {
   /// Bit 7:  Select Time of Day write (0=writing to TOD registers sets
   ///         alarm, 1=writing to TOD registers sets clock)
   mut writeMode : Bool
-}
+} derive(Show)
 
 enum TimerBInputMode {
   CountCycles
   CountSignals
   CountTimer
   CountZero
-}
+} derive(Show)
 
 fn ControlB::default() -> ControlB {
   {
     start: Bool::default(),
     output: Bool::default(),
     outputMode: Bool::default(),
-    runMode: Bool::default(),
+    runMode: RunMode::Continuous,
     forceLoad: Bool::default(),
     inputMode: TimerBInputMode::CountCycles,
     writeMode: Bool::default(),
@@ -120,7 +144,7 @@ struct InterruptControl {
   mut serial : Bool
   mut flag : Bool
   mut interrupt : Bool
-} derive(Default)
+} derive(Show, Default)
 
 struct CIARegister {
   /// 56320-56335   $DC00-$DC0F
@@ -156,14 +180,14 @@ struct CIARegister {
   ///
   /// 56325         $DC05          TIMAHI
   /// Timer A (high byte)
-  mut timerA : Int
+  // mut timerA : UInt16
 
   /// 56326         $DC06          TIMBLO
   /// Timer B (low byte)
   ///
   /// 56327         $DC07          TIMBHI
   /// Timer B (high byte)
-  mut timerB : UInt16
+  // mut timerB : UInt16
 
   /// Location Range: 56328-56331 ($DC08-$DC0B)
   /// Time of Day Clock (TOD)
@@ -178,7 +202,7 @@ struct CIARegister {
 
   /// 56333         $DC0D          CIAICR
   /// Interrupt Control Register
-  interruptControl : InterruptControl
+  mut interruptControl : InterruptControl
 
   /// 56334         $DC0E          CIACRA
   /// Control Register A
@@ -187,7 +211,7 @@ struct CIARegister {
   /// 56335         $DC0F          CIACRB
   /// Control Register B
   controlB : ControlB
-}
+} derive(Show)
 
 fn CIARegister::default() -> CIARegister {
   {
@@ -196,8 +220,8 @@ fn CIARegister::default() -> CIARegister {
     directionA: FixedArray::make(8, false),
     directionB: FixedArray::make(8, false),
     //
-    timerA: Int::default(),
-    timerB: Int::default(),
+    // timerA: Int::default(),
+    // timerB: Int::default(),
     //
     timeOfDay: TimeOfDay::default(),
     //

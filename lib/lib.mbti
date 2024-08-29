@@ -251,6 +251,12 @@ impl PSID {
   videoStandard(Self) -> VideoStandard
 }
 
+type RunMode
+impl RunMode {
+  op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
+}
+
 type SID
 impl SID {
   new(@cpu.CPU, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = ..) -> Self
@@ -295,6 +301,12 @@ impl ScanLineCycles {
 
 type ScanLines
 impl ScanLines {
+  op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
+}
+
+type SerialMode
+impl SerialMode {
   op_equal(Self, Self) -> Bool
   to_string(Self) -> String
 }
@@ -406,6 +418,8 @@ impl Show for Mode
 
 impl Show for Model
 
+impl Show for RunMode
+
 impl Show for SIDFlags
 
 impl Show for SIDRegister
@@ -417,6 +431,8 @@ impl Show for SIDregister
 impl Show for ScanLineCycles
 
 impl Show for ScanLines
+
+impl Show for SerialMode
 
 impl Show for UInt16
 

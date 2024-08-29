@@ -171,9 +171,9 @@ fn interrupt(self : Flags) -> Bool {
   self[I]
 }
 
-fn not_interrupt(self : Flags) -> Bool {
-  not(self.interrupt())
-}
+// fn not_interrupt(self : Flags) -> Bool {
+//   not(self.interrupt())
+// }
 
 fn clear_interrupt(self : Flags) -> Unit {
   self[I] = false

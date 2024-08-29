@@ -206,7 +206,7 @@ trait U16 {
 // }
 
 fn u16(self : UInt8) -> UInt16 {
-  self.0 & 0xFF
+  self.0 // & 0xFF
 }
 
 // fn to_u16[T : U16](t : T) -> UInt16 {

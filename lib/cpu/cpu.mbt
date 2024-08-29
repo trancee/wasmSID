@@ -17,7 +17,9 @@ struct CPU {
   mut flags : Flags
   //
   decimal_mode : Bool
-  mut needs_interrupt : Vector
+  // mut needs_interrupt : Vector
+  mut nmi : Bool
+  mut irq : Bool
   //
   hooks : Array[AddressHook]
   //
@@ -49,7 +51,9 @@ pub fn CPU::new(
     flags,
     //
     decimal_mode,
-    needs_interrupt: None,
+    // needs_interrupt: None,
+    nmi: false,
+    irq: false,
     //
     hooks: [],
     //
@@ -68,13 +72,15 @@ enum Vector {
   RESET
   NMI
   IRQ
-}
+  BRK
+} derive(Eq)
 
 fn addr(self : Vector) -> Int {
   match self {
     RESET => 0xFFFC
     NMI => 0xFFFA
     IRQ => 0xFFFE
+    BRK => 0xFFFE
   }
 }
 
@@ -91,6 +97,14 @@ pub fn reset(self : CPU, ~baseaddress : Int? = None) -> Unit {
   }
   self.registers.reset()
   self.flags.reset()
+}
+
+pub fn set_nmi(self : CPU, ~state : Bool = true) -> Unit {
+  self.nmi = state
+}
+
+pub fn set_irq(self : CPU, ~state : Bool = true) -> Unit {
+  self.irq = state
 }
 
 pub fn mem(self : CPU) -> Memory {
@@ -119,6 +133,10 @@ pub fn set_flags(self : CPU, flags : UInt8) -> Unit {
 
 pub fn has_interrupt(self : CPU) -> Bool {
   self.flags[I]
+}
+
+pub fn clear_interrupt(self : CPU) -> Unit {
+  self.flags[I] = false
 }
 
 pub fn set_interrupt(self : CPU) -> Unit {
@@ -224,13 +242,16 @@ pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
 /// triggers a NMI IRQ in the processor
 /// this is very similar to the BRK instruction
 pub fn nmi(self : CPU, ~pc : Int? = None) -> Unit {
-  self.flags.set_interrupt()
+  println(
+    "*** NMI $" +
+    UInt16(NMI.addr()).to_hex() +
+    " #$" +
+    self.read16(NMI.addr()).to_hex(),
+  )
   self.push16(self.pc)
-  self.opPHP(0x0000, Mode::None) // stores flags and sets break and unused flags
-  self.pc = match pc {
-    Some(pc) => pc
-    None => self.read16(NMI.addr())
-  }
+  self.push(self.flags.get())
+  self.flags.set_interrupt()
+  self.pc = pc.or(self.read16(NMI.addr()).0)
   self.cycles += 7
 }
 
@@ -241,54 +262,64 @@ pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
 /// triggers a normal IRQ
 /// this is very similar to the BRK instruction
 pub fn irq(self : CPU, ~pc : Int? = None) -> Unit {
-  if self.flags.not_interrupt() {
-    self.flags.set_interrupt()
-    self.push16(self.pc)
-    self.opPHP(0x0000, Mode::None) // stores flags and sets break and unused flags
-    self.pc = match pc {
-      Some(pc) => pc
-      None => self.read16(IRQ.addr())
-    }
-    self.cycles += 7
+  println(
+    "*** IRQ $" +
+    UInt16(IRQ.addr()).to_hex() +
+    " #$" +
+    self.read16(IRQ.addr()).to_hex(),
+  )
+  self.push16(self.pc)
+  self.push(self.flags.get())
+  self.flags.set_interrupt()
+  self.pc = pc.or(self.read16(IRQ.addr()).0)
+  self.cycles += 7
+}
+
+pub fn interrupts(self : CPU) -> Bool {
+  if self.nmi {
+    self.nmi = false
+    self.nmi()
+    return true
+  } else if self.irq && not(self.has_interrupt()) {
+    self.irq = false
+    self.irq()
+    return true
   }
+  return false
 }
 
 pub fn step(self : CPU) -> Int {
-  match self.needs_interrupt {
-    NMI => self.nmi()
-    IRQ => self.irq()
-    _ => ()
-  }
-  self.needs_interrupt = None
-
-  //
-  for i = 0; i < self.hooks.length(); i = i + 1 {
-    if self.pc == self.hooks[i].address {
-      (self.hooks[i].hook)(self.pc.0)
-    }
-  }
-
-  //
   let cycles = self.cycles
-  let opcode = self.read(self.pc)
+  if not(self.interrupts()) {
+    for i = 0; i < self.hooks.length(); i = i + 1 {
+      if self.pc == self.hooks[i].address {
+        (self.hooks[i].hook)(self.pc.0)
+      }
+    }
 
-  //
-  let (name, op, mode, _size, _cycles, _, illegal) = instructions[opcode.0]
-  if self.debug {
-    self.dump_step(opcode, name, mode, _size, _cycles, illegal)
+    //
+    let opcode = self.read(self.pc)
+
+    //
+    let (name, op, mode, _size, _cycles, _, illegal) = instructions[opcode.0]
+    if self.debug {
+      self.dump_step(opcode, name, mode, _size, _cycles, illegal)
+    }
+
+    //
+    let addr = self.get_addr(mode)
+
+    //
+    self.pc += _size
+
+    //
+    op(self, addr, mode)
+
+    //
+    self.cycles += _cycles
   }
 
   //
-  let addr = self.get_addr(mode)
-
-  //
-  self.pc += _size
-
-  //
-  op(self, addr, mode)
-
-  //
-  self.cycles += _cycles
   self.cycles - cycles
 }
 
@@ -716,17 +747,24 @@ fn opBPL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
 fn opBRK(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+  if self.irq {
+    return
+  }
+
+  //
   self.flags.set_break()
   self.push16(self.pc + 1)
   //
-  self.opPHP(addr, mode) // stores flags and sets break and unused flags
-  self.opSEI(addr, mode) // sets interrupt flag
-  //
-  self.pc = match self.needs_interrupt {
-    NMI => self.read16(NMI.addr())
-    IRQ => self.read16(IRQ.addr())
-    _ => self.read16(IRQ.addr())
-  }
+  self.push(self.flags.get())
+  // self.flags.clear_decimal()
+  self.flags.set_interrupt()
+
+  // self.pc = match self.needs_interrupt {
+  //   NMI => self.read16(NMI.addr())
+  //   IRQ => self.read16(IRQ.addr())
+  //   _ => self.read16(IRQ.addr())
+  // }
+  self.pc = self.read16(BRK.addr())
 }
 
 // BVC - Branch if overflow clear
@@ -980,8 +1018,10 @@ fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// It affects no other registers in the microprocessor.
 fn opRTI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   // self.flags.set(self.pop()&(0xCF)|(U.bits())|(B.bits())) // pull() & 0xEF | 0x20
-  self.flags.set((self.pop() & 0xEF) | U.bits()) // nestest: pull() & 0xEF | 0x20
+  // self.flags.set((self.pop() & 0xEF) | U.bits()) // nestest: pull() & 0xEF | 0x20
+  self.flags.set(self.pop())
   self.pc = self.pop16()
+  self.set_interrupt() // we are coming from an interrupt
 }
 
 // RTS - Return from subrouting

@@ -41,9 +41,11 @@ struct VIC {
   baseaddress : Int
 
   //
-  mut rasterLines : Int
   mut rasterRowCycles : Int
   mut rowCycleCount : Int
+
+  //
+  mut rasterCompare : Int
 
   //
   register : VICRegister
@@ -61,9 +63,11 @@ pub fn VIC::new(
     baseaddress,
 
     //
-    rasterLines: 0,
     rasterRowCycles: 0,
     rowCycleCount: 0,
+
+    //
+    rasterCompare: 0,
 
     //
     register: VICRegister::default(),
@@ -136,16 +140,22 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
     self.rowCycleCount -= self.rasterRowCycles
 
     //
-    let mut rasterRow = self.register.rasterScanLine + 1
-    if rasterRow >= self.rasterLines {
-      rasterRow = 0
+    // let mut rasterRow = self.register.rasterScanLine + 1
+    // if rasterRow >= self.rasterCompare {
+    //   rasterRow = 0
+    // }
+    // self[SCROLY] = self[SCROLY] | ((rasterRow & 0x0100) >> 1)
+    // self[RASTER] = rasterRow & 0xFF
+    self.register.rasterScanLine += 1
+    println("VIC RASTER \{self.register.rasterScanLine} >= \{self.rasterCompare}")
+    if self.register.rasterScanLine >= self.rasterCompare {
+      self.register.rasterScanLine = 0
     }
-    self[SCROLY] = self[SCROLY] | ((rasterRow & 0x0100) >> 1)
-    self[RASTER] = rasterRow & 0xFF
 
     //
     if self[IRQMASK].has(irqMask(InterruptEnabled)) {
-      if rasterRow == self.register.rasterScanLine {
+      println("VIC IRQ")
+      if self.register.rasterScanLine == self.rasterCompare {
         self[VICIRQ] = self[VICIRQ] |
           irqFlag(SetAnyEnabledVICIRQCondition) |
           irqMask(InterruptEnabled)
@@ -559,8 +569,7 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
         /// Bit 6:  Enable extended color text mode (1=enable)
         self.register.controlRegister.extendedColorMode = value.bit(6)
         /// Bit 7:  High bit (Bit 8) of raster compare register at 53266 ($D012)
-        self.register.rasterScanLine = self.register.rasterScanLine |
-          (value.bit(7).to_int() << 8)
+        self.rasterCompare = self.rasterCompare | (value.bit(7).to_int() << 8)
       }
 
       /// Write Current Raster Scan Line to Compare for Raster IRQ
@@ -569,7 +578,7 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       /// Raster Compare Interrupt.  When that interrupt is enabled, a maskable
       /// interrupt request will be issued every time the electron beam scan
       /// reaches the scan line whose number was written here.
-      RASTER => self.register.rasterScanLine = value.0
+      RASTER => self.rasterCompare = value.0
 
       /// Light Pen Horizontal Position
       LPENX => self.register.lightPen.x = value.0
