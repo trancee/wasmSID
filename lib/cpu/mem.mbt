@@ -74,16 +74,16 @@ struct MemoryHook {
   start : Int
   end : Int
   mem : FixedArray[Int]
-  r : (Int) -> Int
-  w : (Int, Int) -> Unit
+  r : (Int, Bool?) -> Int
+  w : (Int, Int, Bool?) -> Unit
 }
 
 fn MemoryHook::new(
   start : Int,
   end : Int,
   mem : FixedArray[Int],
-  r : (Int) -> Int,
-  w : (Int, Int) -> Unit
+  r : (Int, Bool?) -> Int,
+  w : (Int, Int, Bool?) -> Unit
 ) -> MemoryHook {
   { start, end, mem, r, w }
 }
@@ -92,10 +92,22 @@ struct Memory {
   mut mem : FixedArray[UInt8]
   //
   hooks : Array[MemoryHook]
+  //
+  mut debug : Bool
 }
 
-pub fn Memory::new(~length : Int = 0xFFFF, ~value : Int = 0x00) -> Memory {
-  { mem: FixedArray::make(length + 1, value), hooks: [] }
+pub fn Memory::new(
+  ~length : Int = 0xFFFF,
+  ~value : Int = 0x00,
+  ~debug : Bool = false
+) -> Memory {
+  { mem: FixedArray::make(length + 1, value), hooks: [], debug }
+}
+
+pub fn debug(self : Memory, state : Bool) -> Bool {
+  let tmp = self.debug
+  self.debug = state
+  tmp
 }
 
 pub fn hook(
@@ -103,8 +115,8 @@ pub fn hook(
   start : Int,
   end : Int,
   mem : FixedArray[Int],
-  r : (Int) -> Int,
-  w : (Int, Int) -> Unit
+  r : (Int, Bool?) -> Int,
+  w : (Int, Int, Bool?) -> Unit
 ) -> Unit {
   self.hooks.push(MemoryHook::new(start, end, mem, r, w))
 }
@@ -209,7 +221,7 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
       //   " | $" +
       //   UInt16(addr).to_hex(),
       // )
-      return (self.hooks[i].r)(addr)
+      return (self.hooks[i].r)(addr, Some(self.debug))
     }
   }
 
@@ -290,7 +302,7 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
       //   " | $" +
       //   UInt16(addr).to_hex(),
       // )
-      return (self.hooks[i].w)(addr, value)
+      return (self.hooks[i].w)(addr, value, Some(self.debug))
     }
   }
 

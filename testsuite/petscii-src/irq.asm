@@ -94,8 +94,8 @@ OK
            .BEND
 IRQ
            .BLOCK
-           PHP
-           BIT $DC0D
+           PHP       // Push the processor status register's contents onto the the stack. S:= PSR, SP:= SP-1
+           BIT $DC0D // Test memory bits. Z flag set according to A AND M; N flag: = M7; V flag: = M6
            STA SAVEDA+1
            STX SAVEDX+1
            PLA

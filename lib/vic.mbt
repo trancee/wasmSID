@@ -30,7 +30,7 @@
 /// higher bits are decoded when addressing this 1K area.  The result is
 /// that every 64 byte area in this 1K block is a mirror of every other.
 
-let vic_mem_start = 0xD000
+pub let vic_mem_start = 0xD000
 
 let vic_mem_end = 0xD3FF
 
@@ -41,20 +41,25 @@ struct VIC {
   baseaddress : Int
 
   //
-  mut rasterRowCycles : Int
   mut rowCycleCount : Int
+  mut rasterRowCycles : Int
+  mut rasterLines : Int
 
   //
   mut rasterCompare : Int
 
   //
   register : VICRegister
+
+  //
+  mut debug : Bool
 }
 
 pub fn VIC::new(
   cpu : @cpu.CPU,
   baseaddress : Int,
-  ~videoStandard : VideoStandard = Unknown
+  ~videoStandard : VideoStandard = Unknown,
+  ~debug : Bool = false
 ) -> VIC {
   println("VIC::new")
   let mem = FixedArray::make(vic_mem_size + 1, 0x00)
@@ -63,22 +68,26 @@ pub fn VIC::new(
     baseaddress,
 
     //
-    rasterRowCycles: 0,
     rowCycleCount: 0,
+    rasterRowCycles: 0,
+    rasterLines: 0,
 
     //
     rasterCompare: 0,
 
     //
     register: VICRegister::default(),
+
+    //
+    debug,
   }
   cpu
   .mem()
   .hook(
-    vic_mem_start,
-    vic_mem_end,
+    baseaddress,
+    baseaddress + vic_mem_size,
     mem,
-    fn(address : Int) {
+    fn(address : Int, debug : Bool?) {
       let register = try {
         VICregister::from_int!(address - baseaddress)
       } catch {
@@ -89,7 +98,7 @@ pub fn VIC::new(
       }
       vic[register].0
     },
-    fn(address : Int, value : Int) {
+    fn(address : Int, value : Int, debug : Bool?) {
       let register = try {
         VICregister::from_int!(address - baseaddress)
       } catch {
@@ -101,20 +110,66 @@ pub fn VIC::new(
       vic[register] = value
     },
   )
-  vic.reset()
+  try {
+    vic.reset!(~videoStandard)
+  } catch {
+    err => {
+      println(err)
+      panic()
+    }
+  }
   vic
 }
 
 /// These registers are all intialized to 0 at power-up.
-pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit {
+pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit! {
   // self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
     self.mem[i] = 0x00
   }
 
   // realSID
-  self[SCROLY] = 0x8B
-  self[RASTER] = 0x37
+  // self[SCROLY] = 0x8B
+  // self[RASTER] = 0x37
+
+  /// Control Register #1
+  /// Bit#0-#2: Screen Soft Scroll Vertical
+  /// Bit#3: Switch to 25 visible rows
+  /// Bit#4: Switch VIC-II output on
+  /// Bit#5: Turn Bitmap Mode off
+  /// Bit#6: Turn Extended Color Mode off
+  /// Bit#7: 9th Bit for $D012 Rasterline counter
+  self[SCROLY] = 0b10011011
+
+  /// Control Register 2
+  /// Bit#0-#2: Screen Soft Scroll Horizontal
+  /// Bit#3: Switch to 40 visible columns
+  /// Bit#4: Turn Multicolor Mode off
+  /// Bit#5-#7: not used
+  self[SCROLX] = 0b00001000
+
+  /// VIC-II base addresses
+  /// Bit#0: not used
+  /// Bit#1-#3: Address Bits 11-13 of the Character Set (*2048)
+  /// Bit#4-#7: Address Bits 10-13 of the Screen RAM (*1024)
+  self[VMCSB] = 0b00010100
+
+  /// Interrupt Request Register
+  /// Bit#0: Interrupt by Rasterline triggered when high
+  /// Bit#1: Interrupt by Spite-Background collision triggered when high
+  /// Bit#2: Interrupt by Sprite-Sprite collision triggered when high
+  /// Bit#3: Interrupt by Lightpen impulse triggered when high
+  /// Bit#4-#6: not used
+  /// Bit#7: If set high at least one of the Interrupts above were triggered
+  self[VICIRQ] = 0b00001111
+
+  /// Interrupt Mask Register
+  /// Bit#0: Request Interrupt by Rasterline by setting high
+  /// Bit#1: Request Interrupt by Spite-Background collision by setting high
+  /// Bit#2: Request Interrupt by Sprite-Sprite collision by setting high
+  /// Bit#3: Request Interrupt by Lightpen impulse by setting high
+  /// Bit#4-#7: not used
+  self[IRQMASK] = 0b00000000
 
   /// ($D02F-$D03F)
   /// Not Connected
@@ -126,16 +181,22 @@ pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit {
   for i = 0xD02F - self.baseaddress; i <= 0xD03F - 0xD02F; i = i + 1 {
     self.mem[i] = 0xFF
   }
+
+  //
+  self.rasterLines = ScanLines(videoStandard).to_int!() // HINT: should be inferred
+  self.rasterRowCycles = ScanLineCycles(videoStandard).to_int!() // HINT: should be inferred
 }
 
 pub fn emulate(self : VIC, cycles : Int) -> Bool {
-  // println(">> VIC::emulate [\{cycles}]")
+  // if self.debug {
+  //   println(">> VIC::emulate [\{cycles}]")
+  // }
   //
 
   //
   self.rowCycleCount += cycles
 
-  //
+  // did we complete one raster row (horizontal beam)?
   if self.rowCycleCount >= self.rasterRowCycles {
     self.rowCycleCount -= self.rasterRowCycles
 
@@ -147,46 +208,53 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
     // self[SCROLY] = self[SCROLY] | ((rasterRow & 0x0100) >> 1)
     // self[RASTER] = rasterRow & 0xFF
     self.register.rasterScanLine += 1
-    println("VIC RASTER \{self.register.rasterScanLine} >= \{self.rasterCompare}")
-    if self.register.rasterScanLine >= self.rasterCompare {
+    println(
+      "VIC RASTER \{self.register.rasterScanLine} >= \{self.rasterCompare}",
+    )
+    if self.register.rasterScanLine >= self.rasterLines {
       self.register.rasterScanLine = 0
     }
 
     //
-    if self[IRQMASK].has(irqMask(InterruptEnabled)) {
-      println("VIC IRQ")
-      if self.register.rasterScanLine == self.rasterCompare {
-        self[VICIRQ] = self[VICIRQ] |
-          irqFlag(SetAnyEnabledVICIRQCondition) |
-          irqMask(InterruptEnabled)
-      }
+    // if self.register.irqMask.interruptEnable {
+    //   println("IRQMASK::InterruptEnable")
+    if self.register.rasterScanLine == self.rasterCompare &&
+      self.register.irqMask.rasterCompare {
+      self.register.interruptFlag.rasterCompare = true
+      println("VICIRQ::RasterScan \{self.register.interruptFlag}")
     }
+    // }
   }
+  self.register.interruptFlag.vicIRQ = self.register.interruptFlag.rasterCompare
 
   //
-  // println("<< VIC::emulate [\{cycles}]")
+  // if self.debug {
+  //   println("<< VIC::emulate [\{cycles}]")
+  // }
 
   //
-  self[VICIRQ].has(irqFlag(SetAnyEnabledVICIRQCondition))
+  self.register.interruptFlag.vicIRQ
 }
 
-pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
-  self[VICIRQ] = self[VICIRQ].clr(irqMask(InterruptEnabled))
-  self[VICIRQ] = self[VICIRQ].clr(
-    irqFlag(SetAnyEnabledVICIRQCondition) | irqMask(InterruptEnabled),
-  )
-}
+// pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
+//   self[VICIRQ] = self[VICIRQ].clr(irqMask(InterruptEnabled))
+//   self[VICIRQ] = self[VICIRQ].clr(
+//     irqFlag(SetAnyEnabledVICIRQCondition) | irqMask(InterruptEnabled),
+//   )
+// }
 
 fn op_get(self : VIC, register : VICregister) -> UInt8 {
   // VIC-II Register Images
   let address = vic(register) % 0x40 // (repeated every $40, 64 bytes)
-  // println(
-  //   "💻 VIC $" +
-  //   UInt16(self.baseaddress + address).to_hex() +
-  //   " → #$" +
-  //   UInt8(self.mem[address]).to_hex() +
-  //   " | \{register}",
-  // )
+  if self.debug {
+    println(
+      "💻 VIC $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " → #$" +
+      UInt8(self.mem[address]).to_hex() +
+      " | \{register}",
+    )
+  }
   if self.baseaddress + address < vic_mem_start ||
     self.baseaddress + address > vic_mem_end {
     // self.dump()
@@ -339,7 +407,8 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
 
     /// VIC-II Chip Memory Control Register
     VMCSB =>
-      /// Bit 0:  Unused
+      /// Bit 0:  Unused; it is always set to 1.
+      (1 << 0) |
       /// Bits 1-3:  Text character dot-data base address within VIC-II address space
       ((self.register.characterDataArea & 0x08) << 1) |
       /// Bits 4-7:  Video matrix base address within VIC-II address space
@@ -354,11 +423,8 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
       /// Bit 2:  Flag:  Is a collision between two sprites a possible source of an IRQ?  (1=yes)
       (self.register.interruptFlag.spritesCollide.to_int() << 2) |
       /// Bit 3:  Flag:  Is the light pen trigger a possible source of an IRQ? (1=yes)
-      (
-        self.register.interruptFlag.lightPenTrigger.to_int() <<
-        /// Bits 4-6:  Not used
-        3
-      ) |
+      (self.register.interruptFlag.lightPenTrigger.to_int() << 3) |
+      /// Bits 4-6:  Not used
       /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
       (self.register.interruptFlag.vicIRQ.to_int() << 7)
 
@@ -495,13 +561,15 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
 fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   // VIC-II Register Images
   let address = vic(register) % 0x40 // (repeated every $40, 64 bytes)
-  // println(
-  //   "💻 VIC $" +
-  //   UInt16(self.baseaddress + address).to_hex() +
-  //   " ← #$" +
-  //   value.to_hex() +
-  //   " | \{register}",
-  // )
+  if self.debug {
+    println(
+      "💻 VIC $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " ← #$" +
+      value.to_hex() +
+      " | \{register}",
+    )
+  }
   if self.baseaddress + address < vic_mem_start ||
     self.baseaddress + address > vic_mem_end {
     // self.dump()
@@ -569,7 +637,8 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
         /// Bit 6:  Enable extended color text mode (1=enable)
         self.register.controlRegister.extendedColorMode = value.bit(6)
         /// Bit 7:  High bit (Bit 8) of raster compare register at 53266 ($D012)
-        self.rasterCompare = self.rasterCompare | (value.bit(7).to_int() << 8)
+        self.rasterCompare = (self.rasterCompare & 0x00FF) |
+          (value.bit(7).to_int() << 8)
       }
 
       /// Write Current Raster Scan Line to Compare for Raster IRQ
@@ -578,7 +647,7 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       /// Raster Compare Interrupt.  When that interrupt is enabled, a maskable
       /// interrupt request will be issued every time the electron beam scan
       /// reaches the scan line whose number was written here.
-      RASTER => self.rasterCompare = value.0
+      RASTER => self.rasterCompare = (self.rasterCompare & 0x0100) | value.0
 
       /// Light Pen Horizontal Position
       LPENX => self.register.lightPen.x = value.0
@@ -693,6 +762,7 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
         /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
         self.register.irqMask.lightPenTrigger = value.bit(3)
         /// Bits 4-7:  Not used
+        self.register.irqMask.interruptEnable = value.bit(7)
       }
 
       /// Sprite to Foreground Display Priority Register

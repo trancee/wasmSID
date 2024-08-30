@@ -65,14 +65,15 @@ impl C64 {
 
 type CIA
 impl CIA {
-  acknowledgeCIAIRQ(Self) -> Unit
   emulate(Self, Int) -> Bool
   new(@cpu.CPU, Int, ~videoStandard : VideoStandard = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
-  writeCIAIRQmask(Self, UInt8) -> Unit
 }
 
 type CIARegister
+impl CIARegister {
+  to_string(Self) -> String
+}
 
 type CIAregister
 impl CIAregister {
@@ -111,8 +112,15 @@ impl Channel {
 type Color
 
 type ControlA
+impl ControlA {
+  op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
+}
 
 type ControlB
+impl ControlB {
+  to_string(Self) -> String
+}
 
 type ControlRegister
 impl ControlRegister {
@@ -185,6 +193,7 @@ type IRQMaskRegister
 type InterruptControl
 impl InterruptControl {
   default() -> Self
+  to_string(Self) -> String
 }
 
 type InterruptFlagRegister
@@ -314,11 +323,25 @@ impl SerialMode {
 type TimeOfDay
 impl TimeOfDay {
   default() -> Self
+  to_string(Self) -> String
+}
+
+type Timer
+impl Timer {
+  default() -> Self
+  to_string(Self) -> String
 }
 
 type TimerAInputMode
+impl TimerAInputMode {
+  op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
+}
 
 type TimerBInputMode
+impl TimerBInputMode {
+  to_string(Self) -> String
+}
 
 pub type UInt16 Int
 impl UInt16 {
@@ -396,11 +419,17 @@ impl Waveform {
 // Traits
 
 // Extension Methods
+impl Show for CIARegister
+
 impl Show for CIAregister
 
 impl Show for CPUClock
 
 impl Show for Channel
+
+impl Show for ControlA
+
+impl Show for ControlB
 
 impl Show for Envelope
 
@@ -413,6 +442,8 @@ impl Show for FilterSelect
 impl Show for Flags
 
 impl Show for FrameRate
+
+impl Show for InterruptControl
 
 impl Show for Mode
 
@@ -433,6 +464,14 @@ impl Show for ScanLineCycles
 impl Show for ScanLines
 
 impl Show for SerialMode
+
+impl Show for TimeOfDay
+
+impl Show for Timer
+
+impl Show for TimerAInputMode
+
+impl Show for TimerBInputMode
 
 impl Show for UInt16
 

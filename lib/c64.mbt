@@ -69,16 +69,16 @@ pub fn C64::new(
   ~debug : Bool = false
 ) -> C64 {
   let cpu = @cpu.CPU::new(pc=baseaddress, ~mem, ~debug)
-  let addr = cpu.load(addr, data, ~length)
+  let _ = cpu.load(addr, data, ~length)
   let mem = cpu.mem()
   mem.setROM()
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let sid = [SID::new(cpu, 0xD400, ~videoStandard)]
+  let sid = [SID::new(cpu, sid1_mem_start, ~videoStandard, ~debug)]
   let cia = [
-    CIA::new(cpu, 0xDC00, ~videoStandard),
-    CIA::new(cpu, 0xDD00, ~videoStandard),
+    CIA::new(cpu, cia1_mem_start, ~videoStandard, ~debug),
+    CIA::new(cpu, cia2_mem_start, ~videoStandard, ~debug),
   ]
-  let vic = VIC::new(cpu, 0xD000, ~videoStandard)
+  let vic = VIC::new(cpu, vic_mem_start, ~videoStandard, ~debug)
   //
   let c64 : C64 = {
     baseaddress,
@@ -355,13 +355,13 @@ pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
 }
 
 //C64 Reset
-pub fn initC64(self : C64) -> Unit {
+pub fn initC64(self : C64) -> Unit! {
   println(">> C64::initC64")
 
   //
   self.sid.each(fn(sid) { sid.reset(videoStandard=self.videoStandard) })
   self.cia.each(fn(cia) { cia.reset(videoStandard=self.videoStandard) })
-  self.vic.reset(videoStandard=self.videoStandard)
+  self.vic.reset!(videoStandard=self.videoStandard)
 
   // self.mem.reset()
 

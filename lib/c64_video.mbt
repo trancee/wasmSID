@@ -96,7 +96,7 @@ type ScanLines VideoStandard derive(Show, Eq)
 
 fn to_int(self : ScanLines) -> Int! {
   match self.0 {
-    NTSC => 263
+    NTSC => 262
     PAL => 312
     _ => raise UnknownScanLines
   }
@@ -115,7 +115,7 @@ test "error ScanLines::None" {
 test "ScanLines::NTSC" {
   let value = ScanLines(NTSC)
   assert_eq!(value, NTSC)
-  inspect!(value.to_int!(), content="263")
+  inspect!(value.to_int!(), content="262")
 }
 
 test "ScanLines::PAL" {

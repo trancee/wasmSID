@@ -10,9 +10,9 @@
 
 let cia_mem_start = 0xDC00
 
-let cia1_mem_start = 0xDC00
+pub let cia1_mem_start = 0xDC00
 
-let cia2_mem_start = 0xDD00
+pub let cia2_mem_start = 0xDD00
 
 let cia_mem_end = 0xDDFF
 
@@ -34,12 +34,16 @@ struct CIA {
 
   //
   register : CIARegister
+
+  //
+  mut debug : Bool
 }
 
 pub fn CIA::new(
   cpu : @cpu.CPU,
   baseaddress : Int,
-  ~videoStandard : VideoStandard = Unknown
+  ~videoStandard : VideoStandard = Unknown,
+  ~debug : Bool = false
 ) -> CIA {
   println("CIA::new")
   let mem = FixedArray::make(cia_mem_size + 1, 0x00)
@@ -52,14 +56,17 @@ pub fn CIA::new(
 
     //
     register: CIARegister::default(),
+
+    //
+    debug,
   }
   cpu
   .mem()
   .hook(
-    cia_mem_start,
-    cia_mem_end,
+    baseaddress,
+    baseaddress + cia_mem_size,
     mem,
-    fn(address : Int) {
+    fn(address : Int, debug : Bool?) {
       let register = try {
         CIAregister::from_int!(address - baseaddress)
       } catch {
@@ -68,9 +75,13 @@ pub fn CIA::new(
           panic()
         }
       }
-      cia[register].0
+      let _debug = cia.debug
+      cia.debug = debug.or(_debug)
+      let tmp = cia[register].0
+      cia.debug = _debug
+      tmp
     },
-    fn(address : Int, value : Int) {
+    fn(address : Int, value : Int, debug : Bool?) {
       let register = try {
         CIAregister::from_int!(address - baseaddress)
       } catch {
@@ -79,7 +90,10 @@ pub fn CIA::new(
           panic()
         }
       }
+      let _debug = cia.debug
+      cia.debug = debug.or(_debug)
       cia[register] = value
+      cia.debug = _debug
     },
   )
   cia.reset(~videoStandard)
@@ -132,6 +146,15 @@ pub fn reset(self : CIA, ~videoStandard : VideoStandard = Unknown) -> Unit {
   }
 }
 
+/// p.127
+/// Timers. Program 5-2 allows you to see the timers updating on the screen. Timer
+/// A normally controls the IRQ rate, which is why POKEs to $DC04 and $DC05 (56324
+/// and 56325) alter the cursor flash rate. TA counts down with the system clock about
+/// 60 times per second, too fast for Program 5-2 to show a pattern. Note, though, that
+/// register 5 ($DC05 or 56335) never exceeds 66; this latched value was selected be-
+/// cause 65*256/1,000,000 is about 1/60 second. When the computer is turned on,
+/// $DCOD (56333) has bit 0 set high, enabling an IRQ interrupt to the 6510, although
+/// PEEKing won't show this.
 pub fn emulate(self : CIA, cycles : Int) -> Bool {
   // println(">> emulate $" + self[ICR].to_hex() + " (\{cycles})")
   //
@@ -356,9 +379,11 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
         UInt8(value).to_hex() +
         " TimerA:\{(self.timer[0].underflow)} TimerB:\{(self.timer[1].underflow)} | \{value}",
       )
-      self.timer[0].underflow = false
-      self.timer[1].underflow = false
-      self.register.interruptControl = InterruptControl::default()
+      if not(self.debug) {
+        self.timer[0].underflow = false
+        self.timer[1].underflow = false
+        self.register.interruptControl = InterruptControl::default()
+      }
       value
     }
     CRA | RD_CRA =>
@@ -605,8 +630,6 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
       }
       /// Bit 5:  Not used
       /// Bit 6:  Not used
-      println(self.register.interruptControl)
-      panic()
     }
     CRA | WR_CRA => {
       /// Bit 0:  Start Timer A (1=start, 0=stop)

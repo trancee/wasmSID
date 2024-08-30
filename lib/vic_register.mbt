@@ -16,7 +16,7 @@ struct VICInterruptFlag {
   /// Bits 4-6:  Not used
   /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
   mut vicIRQ : Bool
-} derive(Default)
+} derive(Show, Default)
 
 /// IRQ Mask Register
 ///
@@ -32,6 +32,7 @@ struct IRQMask {
   /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
   mut lightPenTrigger : Bool
   /// Bits 4-7:  Not used
+  mut interruptEnable : Bool
 } derive(Default)
 
 struct ControlRegister {
@@ -468,23 +469,4 @@ fn op_get(self : InterruptFlagRegister, flag : InterruptFlagRegister) -> Int {
     /// VIC Interrupt Flag Register (Bit = 1: IRQ	Occurred)
     SetAnyEnabledVICIRQCondition => 1 << 7
   }
-}
-
-fn irqFlag(flag : InterruptFlagRegister) -> Int {
-  flag[flag]
-}
-
-enum IRQMaskRegister {
-  InterruptEnabled
-}
-
-fn op_get(self : IRQMaskRegister, flag : IRQMaskRegister) -> Int {
-  match flag {
-    /// IRQ Mask Register: 1 = Interrupt Enabled
-    InterruptEnabled => 1 << 0
-  }
-}
-
-fn irqMask(flag : IRQMaskRegister) -> Int {
-  flag[flag]
 }

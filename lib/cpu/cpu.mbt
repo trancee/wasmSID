@@ -23,7 +23,7 @@ struct CPU {
   //
   hooks : Array[AddressHook]
   //
-  debug : Bool
+  mut debug : Bool
 }
 
 pub fn CPU::new(
@@ -67,17 +67,46 @@ pub fn CPU::new(
   cpu
 }
 
+pub fn debug(self : CPU, state : Bool) -> Bool {
+  let tmp = self.debug
+  self.debug = state
+  tmp
+}
+
+/// p.269
+/// Interrupts
+/// Defaults for NMI, BRK, and IRQ vectors (Non-Maskable Interrupt, BReaK, and Inter-
+/// rupt ReQuest vectors) are permanently stored in the top six bytes of the 651O's
+/// memory. With the 64, NMI jumps to $FE43, BRK to $FE66, and IRQ to $FF43. Hard-
+/// ware reset (see Chapter 5) has no indirect vectors apart from the optional cartridge's
+/// start address.
+
+/// p.356
+/// 6510/6502 Hardware Vectors
+/// The 6510/6502 microprocessor chip reserves the highest six bytes of the address
+/// space (locations $FFFA-$FFFF) for use as vectors. These three vectors point to
+/// routines that handle processing under three special sets of circumstances. The chip
+/// automatically causes a JMP through one of these vectors when external hardware
+/// sends a Signal on the 6510/6502's NMI, RESET, or IRQ lines.
 enum Vector {
   None
-  RESET
+  /// When the 6510/6502 receives an NMI (Non-Maskable
+  /// Interrupt) signal, it causes a jump to the address held
+  /// here.
   NMI
+  /// When the 6510/6502 receives a RESET signal, it causes a
+  /// jump to the address held here.
+  RESET
+  /// When the 6510/6502 receives an IRQ (Interrupt Re-
+  /// Quest) Signal or processes a machine language BRK
+  /// instruction, it causes a jump to the address held here.
   IRQ
 } derive(Eq)
 
 fn addr(self : Vector) -> Int {
   match self {
-    RESET => 0xFFFC
     NMI => 0xFFFA
+    RESET => 0xFFFC
     IRQ => 0xFFFE
   }
 }
@@ -350,6 +379,9 @@ fn dump_step(
   cycles : Int,
   illegal : Bool
 ) -> Unit {
+  let debug = self.mem.debug(false)
+  //
+
   let read8 = fn() { "$" + self.mem[self.pc.0 + 1].to_hex() }
   let read16 = fn() {
     "$" +
@@ -561,6 +593,10 @@ fn dump_step(
   )
   // + " P:" + self.flags.get().to_hex() + " " + self.flags.to_string(),
   // + " PPU:  _,  _" + " CYC:" + (self.cycles + _cycles).to_string(),
+
+  //
+  let _ = self.mem.debug(debug)
+
 }
 
 // page_boundary returns true if the two addresses reference different pages
@@ -733,6 +769,14 @@ fn opBPL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 /// `BRK` - Break Command
 /// Operation: PC + 2↓, [FFFE] → PCL, [FFFF] → PCH
+///
+/// p.297
+/// Force break. S:= PCH, SP:= SP-1, S:= PCL, SP:= SP-1, S:= PSR, SP:= SP-1, PCL: = $FE, PCH: = $FF
+///
+/// Operation: `BRK` is a forced interrupt, which saves the current program counter and
+/// status register values and jumps to a standard address. Note that the value saved for
+/// the program counter points to the `BRK` byte plus two (like a branch) and that the
+/// processor status register on the stack has flag `B` set to `1`.
 ///
 /// The break command causes the microprocessor to go through an inter­rupt sequence under program control.
 /// This means that the program counter of the second byte after the `BRK` is automatically stored on the stack along with the processor status at the beginning of the break instruction.

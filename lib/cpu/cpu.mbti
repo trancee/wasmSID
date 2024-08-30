@@ -9,6 +9,7 @@ type CPU
 impl CPU {
   a(Self) -> UInt8
   clear_flags(Self) -> Unit
+  clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
   get_flags(Self) -> Flags
   get_registers(Self) -> Registers

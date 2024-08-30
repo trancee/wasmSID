@@ -94,6 +94,8 @@
 
 let sid_mem_start = 0xD400
 
+let sid1_mem_start = 0xD400
+
 let sid_mem_end = 0xD7FF
 
 let sid_mem_size = 0x03FF
@@ -126,6 +128,9 @@ struct SID {
 
   //
   register : SIDRegister
+
+  //
+  mut debug : Bool
 }
 
 pub fn SID::new(
@@ -133,7 +138,8 @@ pub fn SID::new(
   baseaddress : Int,
   ~model : Model = Unknown,
   ~channel : Channel = Unknown,
-  ~videoStandard : VideoStandard = Unknown
+  ~videoStandard : VideoStandard = Unknown,
+  ~debug : Bool = false
 ) -> SID {
   println("SID::new")
   let mem = FixedArray::make(sid_mem_size + 1, 0x00)
@@ -165,14 +171,17 @@ pub fn SID::new(
 
     //
     register: SIDRegister::default(),
+
+    //
+    debug,
   }
   cpu
   .mem()
   .hook(
-    sid_mem_start,
-    sid_mem_end,
+    baseaddress,
+    baseaddress + sid_mem_size,
     mem,
-    fn(address : Int) {
+    fn(address : Int, debug : Bool?) {
       // println("SID::r $" + UInt16(address).to_hex())
       // sid.r(address - baseaddress).0
       // let register = try { Ok(SIDregister::from_int!(address - baseaddress)) } catch { s => Err(s) }
@@ -186,7 +195,7 @@ pub fn SID::new(
       }
       sid[register].0
     },
-    fn(address : Int, value : Int) {
+    fn(address : Int, value : Int, debug : Bool?) {
       // println("SID::w $" + UInt16(address).to_hex())
       // sid.w(address - baseaddress, value)
       let register = try {
