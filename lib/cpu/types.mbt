@@ -61,7 +61,7 @@ fn lxor(self : UInt8, bit : UInt8) -> UInt8 {
   self.0 ^ bit.0
 }
 
-fn bit(self : UInt8, bit : UInt8) -> Bool {
+pub fn bit(self : UInt8, bit : UInt8) -> Bool {
   // disabled for overflow check
   // if bit >= 8 {
   //   println("UInt8::bit out of bounds")

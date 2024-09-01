@@ -21,7 +21,7 @@ let cia_mem_size = 0x00FF
 struct Timer {
   mut latch : Int
   mut counter : Int
-  mut underflow : Bool
+  // mut underflow : Bool
   mut interrupt : Bool // enable/disable underflow interrupt
 } derive(Show, Default)
 
@@ -66,7 +66,7 @@ pub fn CIA::new(
     baseaddress,
     baseaddress + cia_mem_size,
     mem,
-    fn(address : Int, debug : Bool?) {
+    fn(address : Int, dummy : Bool) {
       let register = try {
         CIAregister::from_int!(address - baseaddress)
       } catch {
@@ -75,13 +75,9 @@ pub fn CIA::new(
           panic()
         }
       }
-      let _debug = cia.debug
-      cia.debug = debug.or(_debug)
-      let tmp = cia[register].0
-      cia.debug = _debug
-      tmp
+      cia.read(register, ~dummy).0
     },
-    fn(address : Int, value : Int, debug : Bool?) {
+    fn(address : Int, value : Int, dummy : Bool) {
       let register = try {
         CIAregister::from_int!(address - baseaddress)
       } catch {
@@ -90,10 +86,7 @@ pub fn CIA::new(
           panic()
         }
       }
-      let _debug = cia.debug
-      cia.debug = debug.or(_debug)
-      cia[register] = value
-      cia.debug = _debug
+      cia.write(register, value, ~dummy)
     },
   )
   cia.reset(~videoStandard)
@@ -164,7 +157,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     println("TimerA Force Load")
     // force latch into counter (strobe-input)
     self.timer[0].counter = self.timer[0].latch
-    self.timer[0].underflow = self.timer[0].counter == 0
+    self.register.interruptControl.timerA = self.timer[0].counter == 0
     self.register.controlA.forceLoad = false //strobe is edge-sensitive
   }
   if self.register.controlA.start { // Enabled, counts Phi2
@@ -172,8 +165,8 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     //count timer
     let mut tmp = self.timer[0].counter - cycles
     // println("TimerA Start #\{tmp}")
-    self.timer[0].underflow = tmp <= 0
-    if self.timer[0].underflow { // Timer counted down
+    self.register.interruptControl.timerA = tmp <= 0
+    if self.register.interruptControl.timerA { // Timer counted down
       println("TimerA Finish \{tmp}")
       tmp += self.timer[0].latch //reload timer
       if self.register.controlA.runMode == OneShot {
@@ -193,7 +186,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     println("TimerB Force Load")
     // force latch into counter (strobe-input)
     self.timer[1].counter = self.timer[1].latch
-    self.timer[1].underflow = self.timer[1].counter == 0
+    self.register.interruptControl.timerB = self.timer[1].counter == 0
     self.register.controlB.forceLoad = false //strobe is edge-sensitive
     //what about clocking TimerB by TimerA? (maybe not used in any music)
   }
@@ -203,11 +196,11 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     let mut tmp = self.timer[1].counter -
       match self.register.controlB.inputMode {
         CountCycles => cycles
-        CountTimerA => if self.timer[0].underflow { 1 } else { 0 }
+        CountTimerA => if self.register.interruptControl.timerA { 1 } else { 0 }
       }
     // println("TimerB Start #\{tmp}")
-    self.timer[1].underflow = tmp <= 0
-    if self.timer[1].underflow { // Timer counted down
+    self.register.interruptControl.timerB = tmp <= 0
+    if self.register.interruptControl.timerB { // Timer counted down
       println("TimerB Finish \{tmp}")
       tmp += self.timer[1].latch //reload timer
       if self.register.controlB.runMode == OneShot {
@@ -221,20 +214,23 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     }
     self.timer[1].counter = tmp
   }
+  // println("CIA IRQ:\{self.register.interruptControl.interrupt}")
 
   //
   self.register.interruptControl.interrupt
 }
 
-fn op_get(self : CIA, register : CIAregister) -> UInt8 {
+fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
-  println(
-    "💻 CIA $" +
-    UInt16(self.baseaddress + address).to_hex() +
-    " → #$" +
-    UInt8(self.mem[address]).to_hex() +
-    " | \{register}",
-  )
+  if self.debug && not(dummy) {
+    println(
+      "💻 CIA $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " → #$" +
+      UInt8(self.mem[address]).to_hex() +
+      " | \{register}",
+    )
+  }
   if self.baseaddress + address < cia_mem_start ||
     self.baseaddress + address > cia_mem_end {
     // self.dump()
@@ -246,6 +242,8 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
     )
     abort("out of bounds")
   }
+
+  //
   match register {
     PRA | RD_PRA =>
       /// Bit 0:  Select to read keyboard column 0
@@ -361,9 +359,9 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
     SDR | RD_SDR => self.register.serialData
     ICR | RD_ICR => {
       /// Bit 0:  Read / did Timer A count down to 0?  (1=yes)
-      let value = (self.timer[0].underflow.to_int() << 0) |
+      let value = (self.register.interruptControl.timerA.to_int() << 0) |
         /// Bit 1:  Read / did Timer B count down to 0?  (1=yes)
-        (self.timer[1].underflow.to_int() << 1) |
+        (self.register.interruptControl.timerB.to_int() << 1) |
         /// Bit 2:  Read / did Time of Day Clock reach the alarm time?  (1=yes)
         (self.register.interruptControl.alarm.to_int() << 2) |
         /// Bit 3:  Read / did the serial shift register finish a byte? (1=yes)
@@ -374,15 +372,14 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
         /// Bit 6:  Not used
         /// Bit 7:  Read / did any CIA #1 source cause an interrupt?  (1=yes)
         (self.register.interruptControl.interrupt.to_int() << 7)
-      println(
-        "ICR #$" +
-        UInt8(value).to_hex() +
-        " TimerA:\{(self.timer[0].underflow)} TimerB:\{(self.timer[1].underflow)} | \{value}",
-      )
-      if not(self.debug) {
-        self.timer[0].underflow = false
-        self.timer[1].underflow = false
-        self.register.interruptControl = InterruptControl::default()
+      if not(dummy) {
+        println(
+          "ICR #$" +
+          UInt8(value).to_hex() +
+          " \{self.register.interruptControl} | \{value}",
+        )
+        self.register.interruptControl = CIAInterruptControl::default()
+        println("ICR::CLR \{self.register.interruptControl}")
       }
       value
     }
@@ -450,15 +447,26 @@ fn op_get(self : CIA, register : CIAregister) -> UInt8 {
   }
 }
 
-fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
+fn op_get(self : CIA, register : CIAregister) -> UInt8 {
+  self.read(register)
+}
+
+fn write(
+  self : CIA,
+  register : CIAregister,
+  value : UInt8,
+  ~dummy : Bool = false
+) -> Unit {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
-  println(
-    "💻 CIA $" +
-    UInt16(self.baseaddress + address).to_hex() +
-    " ← #$" +
-    value.to_hex() +
-    " | \{register}",
-  )
+  if self.debug && not(dummy) {
+    println(
+      "💻 CIA $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " ← #$" +
+      value.to_hex() +
+      " | \{register}",
+    )
+  }
   if self.baseaddress + address < cia_mem_start ||
     self.baseaddress + address > cia_mem_end {
     // self.dump()
@@ -470,6 +478,8 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
     )
     abort("out of bounds")
   }
+
+  //
   match register {
     /// Data Port Register A
     PRA | WR_PRA => {
@@ -610,26 +620,27 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
 
       /// Bit 0:  Write/ enable or disable Timer A interrupt (1=enable, 0=disable)
       if value.bit(0) {
-        self.timer[0].interrupt = flag
+        self.register.interruptEnable.timerA = flag
       }
       /// Bit 1:  Write/ enable or disable Timer B interrupt (1=enable, 0=disable)
       if value.bit(1) {
-        self.timer[1].interrupt = flag
+        self.register.interruptEnable.timerB = flag
       }
       /// Bit 2:  Write/ enable or disable TOD clock alarm interrupt (1=enable, 0=disable)
       if value.bit(2) {
-        self.register.interruptControl.alarm = flag
+        self.register.interruptEnable.alarm = flag
       }
       /// Bit 3:  Write/ enable or disable serial shift register interrupt (1=enable, 0=disable)
       if value.bit(3) {
-        self.register.interruptControl.serial = flag
+        self.register.interruptEnable.serial = flag
       }
       /// Bit 4:  Write/ enable or disable FLAG line interrupt (1=enable, 0=disable)
       if value.bit(4) {
-        self.register.interruptControl.flag = flag
+        self.register.interruptEnable.flag = flag
       }
       /// Bit 5:  Not used
       /// Bit 6:  Not used
+      println("ICR #$" + value.to_hex() + " \{self.register.interruptEnable}")
     }
     CRA | WR_CRA => {
       /// Bit 0:  Start Timer A (1=start, 0=stop)
@@ -698,6 +709,10 @@ fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
       panic()
     }
   }
+}
+
+fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
+  self.write(register, value)
 }
 
 test "cia1_instantiate" {

@@ -3,6 +3,11 @@ package trancee/wasmSID/lib
 alias @trancee/wasmSID/lib/cpu as @cpu
 
 // Values
+let cia1_mem_start : Int
+
+let cia2_mem_start : Int
+
+let vic_mem_start : Int
 
 // Types and methods
 type ADSR
@@ -40,6 +45,7 @@ pub struct C64 {
   pub irq : Bool
   pub nmi : Bool
   pub prevNMI : Bool
+  pub debug : Bool
 }
 impl C64 {
   clear_flags(Self) -> Unit
@@ -48,7 +54,7 @@ impl C64 {
   get_flags(Self) -> @cpu.Flags
   get_registers(Self) -> @cpu.Registers
   hook(Self, Int, (Int) -> Unit) -> Unit
-  initC64(Self) -> Unit
+  initC64(Self) -> Unit!
   initCPU(Self, ~baseaddress : Int? = ..) -> Unit
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Int
   new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
@@ -66,8 +72,20 @@ impl C64 {
 type CIA
 impl CIA {
   emulate(Self, Int) -> Bool
-  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = ..) -> Self
+  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
+}
+
+type CIAInterruptControl
+impl CIAInterruptControl {
+  default() -> Self
+  to_string(Self) -> String
+}
+
+type CIAInterruptEnable
+impl CIAInterruptEnable {
+  default() -> Self
+  to_string(Self) -> String
 }
 
 type CIARegister
@@ -183,20 +201,16 @@ impl ICR {
 
 type ICRFlags
 
-type IRQMask
-impl IRQMask {
+type InterruptEnable
+impl InterruptEnable {
   default() -> Self
 }
 
-type IRQMaskRegister
-
-type InterruptControl
-impl InterruptControl {
+type InterruptFlag
+impl InterruptFlag {
   default() -> Self
   to_string(Self) -> String
 }
-
-type InterruptFlagRegister
 
 type MemoryControlRegister
 
@@ -268,7 +282,7 @@ impl RunMode {
 
 type SID
 impl SID {
-  new(@cpu.CPU, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = ..) -> Self
+  new(@cpu.CPU, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
@@ -363,15 +377,9 @@ impl UInt8 {
 
 type VIC
 impl VIC {
-  acknowledgeVICrasterIRQ(Self) -> Unit
   emulate(Self, Int) -> Bool
-  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = ..) -> Self
-  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
-}
-
-type VICInterruptFlag
-impl VICInterruptFlag {
-  default() -> Self
+  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit!
 }
 
 type VICRegister
@@ -419,6 +427,10 @@ impl Waveform {
 // Traits
 
 // Extension Methods
+impl Show for CIAInterruptControl
+
+impl Show for CIAInterruptEnable
+
 impl Show for CIARegister
 
 impl Show for CIAregister
@@ -443,7 +455,7 @@ impl Show for Flags
 
 impl Show for FrameRate
 
-impl Show for InterruptControl
+impl Show for InterruptFlag
 
 impl Show for Mode
 

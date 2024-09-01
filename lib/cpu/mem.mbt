@@ -66,24 +66,20 @@
 //   TVSFLG // 02A6        678     Flag: TV Standard: $00 = NTSC, $01 = PAL.
 // }
 
-// fn op_get(self : Address, map : Address) -> UInt16 {
-//   self[map]
-// }
-
 struct MemoryHook {
   start : Int
   end : Int
   mem : FixedArray[Int]
-  r : (Int, Bool?) -> Int
-  w : (Int, Int, Bool?) -> Unit
+  r : (Int, Bool) -> Int
+  w : (Int, Int, Bool) -> Unit
 }
 
 fn MemoryHook::new(
   start : Int,
   end : Int,
   mem : FixedArray[Int],
-  r : (Int, Bool?) -> Int,
-  w : (Int, Int, Bool?) -> Unit
+  r : (Int, Bool) -> Int,
+  w : (Int, Int, Bool) -> Unit
 ) -> MemoryHook {
   { start, end, mem, r, w }
 }
@@ -115,8 +111,8 @@ pub fn hook(
   start : Int,
   end : Int,
   mem : FixedArray[Int],
-  r : (Int, Bool?) -> Int,
-  w : (Int, Int, Bool?) -> Unit
+  r : (Int, Bool) -> Int,
+  w : (Int, Int, Bool) -> Unit
 ) -> Unit {
   self.hooks.push(MemoryHook::new(start, end, mem, r, w))
 }
@@ -202,8 +198,11 @@ fn dump(
   }
 }
 
-pub fn op_get(self : Memory, addr : Int) -> UInt8 {
-  // println("Memory::op_get $" + UInt16(addr).to_hex())
+pub fn read(self : Memory, addr : Int, ~dummy : Bool = false) -> UInt8 {
+  // let _dummy = if dummy { "🔍" } else { "" }
+  // println("Memory::read $\{u16(addr).to_hex()} \{_dummy}")
+
+  //
   if addr > 0xFFFF {
     self.dump()
     println("Memory::get out of bounds")
@@ -213,78 +212,40 @@ pub fn op_get(self : Memory, addr : Int) -> UInt8 {
   //
   for i = 0; i < self.hooks.length(); i = i + 1 {
     if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-      // println(
-      //   "R:HOOK $" +
-      //   UInt16(self.hooks[i].start).to_hex() +
-      //   " - $" +
-      //   UInt16(self.hooks[i].end).to_hex() +
-      //   " | $" +
-      //   UInt16(addr).to_hex(),
-      // )
-      return (self.hooks[i].r)(addr, Some(self.debug))
+      return (self.hooks[i].r)(addr, dummy)
     }
   }
 
-  // // VIC-II
-  // if addr >= 0xD000 && addr <= 0xD3FF {
-  //   if addr >= 0xD02F && addr <= 0xD03F {
-  //     /// When read, they will always give a value of 255 ($FF).
-  //     /// This value will not change after writing to them.
-  //     return 0xFF
-  //   }
-  //   println(
-  //     "vic2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-  //   )
-  //   abort("")
-  //   // return vic2.onReadByte(address);
-  // }
+  //
+  self.read_direct(addr)
+}
 
-  // // SID
-  // if addr >= 0xD400 && addr <= 0xD7FF {
-  //   if addr >= 0xD41D && addr <= 0xD41F {
-  //     /// Reading them will always return a value of 255 ($FF),
-  //     /// and writing to them will have no effect.
-  //     return 0xFF
-  //   }
-  //   println(
-  //     "sid read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-  //   )
-  //   abort("")
-  // }
+pub fn read_direct(self : Memory, addr : Int) -> UInt8 {
+  // println("Memory::read_direct $" + UInt16(addr).to_hex())
+  //
 
-  // // Color ram
-  // if addr >= 0xD800 && addr <= 0xDBFF {
-  //   println(
-  //     "color ram read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-  //   )
-  //   abort("")
-  //   // return memoryManager.ram.onReadByte(address);
-  // }
-
-  // // CIA 1
-  // if addr >= 0xDC00 && addr <= 0xDCFF {
-  //   println(
-  //     "cia1 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-  //   )
-  //   abort("")
-  //   // return memoryManager.cia1.onReadByte(address);
-  // }
-
-  // // CIA 2
-  // if addr >= 0xDD00 && addr <= 0xDDFF {
-  //   println(
-  //     "cia2 read $" + u16(addr).to_hex() + " = #$" + self.mem[addr].to_hex(),
-  //   )
-  //   abort("")
-  //   // return memoryManager.cia2.onReadByte(address);
-  // }
   self.mem[addr]
 }
 
-pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
+fn op_get(self : Memory, addr : Int) -> UInt8 {
+  // println("Memory::op_get $" + UInt16(addr).to_hex())
+  //
+
+  self.read(addr)
+}
+
+pub fn write(
+  self : Memory,
+  addr : Int,
+  value : Int,
+  ~dummy : Bool = false
+) -> Unit {
+  // let _dummy = if dummy { "🔍" } else { "" }
   // println(
-  //   "Memory::op_set $" + UInt16(addr).to_hex() + " = " + UInt8(value).to_hex(),
+  //   "Memory::write $\{u16(addr).to_hex()} = #$\{u8(value).to_hex()} \{_dummy}",
   // )
+
+  //
   if addr > 0xFFFF {
     self.dump()
     println("Memory::set out of bounds")
@@ -294,72 +255,23 @@ pub fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
   //
   for i = 0; i < self.hooks.length(); i = i + 1 {
     if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-      // println(
-      //   "W:HOOK $" +
-      //   UInt16(self.hooks[i].start).to_hex() +
-      //   " - $" +
-      //   UInt16(self.hooks[i].end).to_hex() +
-      //   " | $" +
-      //   UInt16(addr).to_hex(),
-      // )
-      return (self.hooks[i].w)(addr, value, Some(self.debug))
+      return (self.hooks[i].w)(addr, value, dummy)
     }
   }
 
-  // // VIC-II
-  // if addr >= 0xD000 && addr <= 0xD3FF {
-  //   println("vic2 write $" + u16(addr).to_hex())
-  //   abort("")
-  //   // vic2.onWriteByte(address, data)
-  // }
+  //
+  self.write_direct(addr, value)
+}
 
-  // // SID
-  // if addr >= 0xD400 && addr <= 0xD7FF {
-  //   println("sid write $" + u16(addr).to_hex())
-  //   abort("")
-  //   // sid.play()
-  //   // sidPlayer.synth.poke(address & 0x1f, data);
-  //   if addr > 0xD418 {
-  //     // console.log("attempted digi poke:", address, data);
-  //     // sidPlayer.synth.pokeDigi(address, data);
-  //     // println("attempted digi poke")
-  //     // abort("digi")
-  //   }
-  // }
-  // // Color ram
-  // if addr >= 0xD800 && addr <= 0xDBFF {
-  //   println("color ram write $" + u16(addr).to_hex())
-  //   abort("")
-  //   // memoryManager.ram.onWriteByte(address, data);
-  // }
-
-  // // CIA 1
-  // if addr >= 0xDC00 && addr <= 0xDCFF {
-  //   println("cia1 write $" + u16(addr).to_hex())
-  //   abort("")
-  //   // memoryManager.cia1.onWriteByte(address, data);
-  // }
-
-  // // CIA 2
-  // if addr >= 0xDD00 && addr <= 0xDDFF {
-  //   println("cia2 write $" + u16(addr).to_hex())
-  //   abort("")
-  //   // memoryManager.cia2.onWriteByte(address, data);
-  // }
-
-  // println(
-  //   "OK $" + UInt16(addr).to_hex() + " ($" + UInt16(self.mem.length()).to_hex() +
-  //   ")",
-  // )
-  // println("OK $" + UInt16(addr).to_hex() + " #$" + self.mem[addr].to_hex())
-
-  match addr {
-    0xFFFE | 0xFFFF =>
-      println("IRQ $" + u16(addr).to_hex() + " ← #$" + u8(value).to_hex())
-    _ => {
-      let _ = 1
-
-    }
-  }
+pub fn write_direct(self : Memory, addr : Int, value : Int) -> Unit {
   self.mem[addr] = value |> u8
+}
+
+fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
+  // println(
+  //   "Memory::op_set $" + UInt16(addr).to_hex() + " = " + UInt8(value).to_hex(),
+  // )
+
+  //
+  self.write(addr, value)
 }

@@ -11,6 +11,7 @@ impl CPU {
   clear_flags(Self) -> Unit
   clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
+  debug(Self, Bool) -> Bool
   get_flags(Self) -> Flags
   get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
@@ -24,7 +25,7 @@ impl CPU {
   pc(Self) -> Int
   push(Self, UInt8) -> Unit
   push16(Self, UInt16) -> Unit
-  read(Self, UInt16) -> UInt8
+  read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
   register(Self, Register, Int) -> Unit
   reset(Self, ~baseaddress : Int? = ..) -> Unit
   setIRQ(Self, UInt16) -> Unit
@@ -35,8 +36,8 @@ impl CPU {
   set_irq(Self, ~state : Bool = ..) -> Unit
   set_nmi(Self, ~state : Bool = ..) -> Unit
   step(Self) -> Int
-  write(Self, UInt16, UInt8) -> Unit
-  write16(Self, UInt16, UInt16) -> Unit
+  write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
+  write16(Self, UInt16, UInt16, ~dummy : Bool = ..) -> Unit
 }
 
 pub enum Flag {
@@ -68,12 +69,15 @@ type Instruction
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  hook(Self, Int, Int, FixedArray[Int], (Int) -> Int, (Int, Int) -> Unit) -> Unit
-  new(~length : Int = .., ~value : Int = ..) -> Self
-  op_get(Self, Int) -> UInt8
-  op_set(Self, Int, Int) -> Unit
+  debug(Self, Bool) -> Bool
+  hook(Self, Int, Int, FixedArray[Int], (Int, Bool) -> Int, (Int, Int, Bool) -> Unit) -> Unit
+  new(~length : Int = .., ~value : Int = .., ~debug : Bool = ..) -> Self
+  read(Self, Int, ~dummy : Bool = ..) -> UInt8
+  read_direct(Self, Int) -> UInt8
   reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
   setROM(Self) -> Unit
+  write(Self, Int, Int, ~dummy : Bool = ..) -> Unit
+  write_direct(Self, Int, Int) -> Unit
 }
 
 type MemoryHook
@@ -104,6 +108,7 @@ impl UInt16 {
 
 pub type UInt8 Int
 impl UInt8 {
+  bit(Self, Self) -> Bool
   compare(Self, Self) -> Int
   default() -> Self
   op_equal(Self, Self) -> Bool

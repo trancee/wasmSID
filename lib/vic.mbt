@@ -87,7 +87,7 @@ pub fn VIC::new(
     baseaddress,
     baseaddress + vic_mem_size,
     mem,
-    fn(address : Int, debug : Bool?) {
+    fn(address : Int, dummy : Bool) {
       let register = try {
         VICregister::from_int!(address - baseaddress)
       } catch {
@@ -98,7 +98,7 @@ pub fn VIC::new(
       }
       vic[register].0
     },
-    fn(address : Int, value : Int, debug : Bool?) {
+    fn(address : Int, value : Int, dummy : Bool) {
       let register = try {
         VICregister::from_int!(address - baseaddress)
       } catch {
@@ -192,6 +192,7 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
   //   println(">> VIC::emulate [\{cycles}]")
   // }
   //
+  self.register.interruptFlag.rasterCompare = false
 
   //
   self.rowCycleCount += cycles
@@ -208,9 +209,11 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
     // self[SCROLY] = self[SCROLY] | ((rasterRow & 0x0100) >> 1)
     // self[RASTER] = rasterRow & 0xFF
     self.register.rasterScanLine += 1
-    println(
-      "VIC RASTER \{self.register.rasterScanLine} >= \{self.rasterCompare}",
-    )
+    if self.debug && self.register.interruptEnable.rasterCompare { // only output raster debug information if interrupt is enabled for it.
+      println(
+        "VIC RASTER \{self.register.rasterScanLine} >= \{self.rasterCompare} | \{self.rasterLines}",
+      )
+    }
     if self.register.rasterScanLine >= self.rasterLines {
       self.register.rasterScanLine = 0
     }
@@ -219,21 +222,22 @@ pub fn emulate(self : VIC, cycles : Int) -> Bool {
     // if self.register.irqMask.interruptEnable {
     //   println("IRQMASK::InterruptEnable")
     if self.register.rasterScanLine == self.rasterCompare &&
-      self.register.irqMask.rasterCompare {
+      self.register.interruptEnable.rasterCompare {
       self.register.interruptFlag.rasterCompare = true
       println("VICIRQ::RasterScan \{self.register.interruptFlag}")
     }
     // }
   }
-  self.register.interruptFlag.vicIRQ = self.register.interruptFlag.rasterCompare
+  self.register.interruptFlag.interrupt = self.register.interruptFlag.rasterCompare
 
   //
   // if self.debug {
   //   println("<< VIC::emulate [\{cycles}]")
   // }
+  // println("VIC IRQ:\{self.register.interruptFlag}")
 
   //
-  self.register.interruptFlag.vicIRQ
+  self.register.interruptFlag.interrupt
 }
 
 // pub fn acknowledgeVICrasterIRQ(self : VIC) -> Unit {
@@ -321,7 +325,7 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
       /// Bit 6:  Enable extended color text mode (1=enable)
       (self.register.controlRegister.extendedColorMode.to_int() << 6) |
       /// Bit 7:  High bit (Bit 8) of raster compare register at 53266 ($D012)
-      msbX(self.register.rasterScanLine, 7)
+      ((self.register.rasterScanLine & 0x0100) >> 1)
 
     /// Read Current Raster Scan Line
     ///
@@ -426,18 +430,18 @@ fn op_get(self : VIC, register : VICregister) -> UInt8 {
       (self.register.interruptFlag.lightPenTrigger.to_int() << 3) |
       /// Bits 4-6:  Not used
       /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
-      (self.register.interruptFlag.vicIRQ.to_int() << 7)
+      (self.register.interruptFlag.interrupt.to_int() << 7)
 
     /// IRQ Mask Register
     IRQMASK =>
       /// Bit 0:  Enable Raster Compare IRQ (1=interrupt enabled)
-      (self.register.irqMask.rasterCompare.to_int() << 0) |
+      (self.register.interruptEnable.rasterCompare.to_int() << 0) |
       /// Bit 1:  Enable IRQ to occure when sprite collides with display of normal graphics data (1=interrupt enabled)
-      (self.register.irqMask.spriteCollide.to_int() << 1) |
+      (self.register.interruptEnable.spriteCollide.to_int() << 1) |
       /// Bit 2:  Enable IRQ to occur when two sprites collide (1=interrupt enabled)
-      (self.register.irqMask.spritesCollide.to_int() << 2) |
+      (self.register.interruptEnable.spritesCollide.to_int() << 2) |
       /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
-      (self.register.irqMask.lightPenTrigger.to_int() << 3)
+      (self.register.interruptEnable.lightPenTrigger.to_int() << 3)
     /// Bits 4-7:  Not used
 
     /// Sprite to Foreground Display Priority Register
@@ -581,6 +585,8 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
     )
     abort("out of bounds")
   }
+
+  //
   fn msbX(value : Int) -> Unit {
     let position = self.register.spritePosition
     /// Bit 0:  Most significant bit of Sprite 0 horizontal position
@@ -748,21 +754,20 @@ fn op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
         self.register.interruptFlag.lightPenTrigger = value.bit(3)
         /// Bits 4-6:  Not used
         /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
-        self.register.interruptFlag.vicIRQ = value.bit(7)
+        self.register.interruptFlag.interrupt = value.bit(7)
       }
 
       /// IRQ Mask Register
       IRQMASK => {
         /// Bit 0:  Enable Raster Compare IRQ (1=interrupt enabled)
-        self.register.irqMask.rasterCompare = value.bit(0)
+        self.register.interruptEnable.rasterCompare = value.bit(0)
         /// Bit 1:  Enable IRQ to occure when sprite collides with display of normal graphics data (1=interrupt enabled)
-        self.register.irqMask.spriteCollide = value.bit(1)
+        self.register.interruptEnable.spriteCollide = value.bit(1)
         /// Bit 2:  Enable IRQ to occur when two sprites collide (1=interrupt enabled)
-        self.register.irqMask.spritesCollide = value.bit(2)
+        self.register.interruptEnable.spritesCollide = value.bit(2)
         /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
-        self.register.irqMask.lightPenTrigger = value.bit(3)
+        self.register.interruptEnable.lightPenTrigger = value.bit(3)
         /// Bits 4-7:  Not used
-        self.register.irqMask.interruptEnable = value.bit(7)
       }
 
       /// Sprite to Foreground Display Priority Register

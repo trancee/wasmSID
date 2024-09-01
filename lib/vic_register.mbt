@@ -4,7 +4,7 @@
 ///
 /// The VIC-II chip is capable of generating a maskable request (IRQ) when
 /// certain conditions relating to the video display are fulfilled.
-struct VICInterruptFlag {
+struct InterruptFlag {
   /// Bit 0:  Flag:  Is the Raster Compare a possible source of an IRQ? (1=yes)
   mut rasterCompare : Bool
   /// Bit 1:  Flag:  Is a collision between a sprite and the normal graphics display a possible source of an IRQ?  (1=yes)
@@ -15,14 +15,14 @@ struct VICInterruptFlag {
   mut lightPenTrigger : Bool
   /// Bits 4-6:  Not used
   /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
-  mut vicIRQ : Bool
+  mut interrupt : Bool
 } derive(Show, Default)
 
 /// IRQ Mask Register
 ///
 /// This register is used to enable an IRQ request to occur when one of
 /// the VIC-II chip interrupt conditions is met.
-struct IRQMask {
+struct InterruptEnable {
   /// Bit 0:  Enable Raster Compare IRQ (1=interrupt enabled)
   mut rasterCompare : Bool
   /// Bit 1:  Enable IRQ to occure when sprite collides with display of normal graphics data (1=interrupt enabled)
@@ -32,7 +32,6 @@ struct IRQMask {
   /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
   mut lightPenTrigger : Bool
   /// Bits 4-7:  Not used
-  mut interruptEnable : Bool
 } derive(Default)
 
 struct ControlRegister {
@@ -74,8 +73,8 @@ struct VICRegister {
 
   ///
   controlRegister : ControlRegister
-  interruptFlag : VICInterruptFlag
-  irqMask : IRQMask
+  interruptFlag : InterruptFlag
+  interruptEnable : InterruptEnable
 
   ///
   mut rasterScanLine : Int
@@ -112,8 +111,8 @@ fn VICRegister::default() -> VICRegister {
 
     ///
     controlRegister: ControlRegister::default(),
-    interruptFlag: VICInterruptFlag::default(),
-    irqMask: IRQMask::default(),
+    interruptFlag: InterruptFlag::default(),
+    interruptEnable: InterruptEnable::default(),
 
     ///
     rasterScanLine: Int::default(),
@@ -456,17 +455,17 @@ enum MemoryControlRegister {
   SelectCharacterSet /// 	0	  Select upper/lower Character Set
 }
 
-enum InterruptFlagRegister {
-  SetAnyEnabledVICIRQCondition /// 	7	  Set on Any Enabled VIC IRQ Condition
-  LightPenTriggeredIRQFlag /// 	3	  Light-Pen Triggered IRQ Flag
-  SpriteSpriteCollisionIRQFlag /// 	2	  Sprite to Sprite Collision IRQ Flag
-  SpriteBackgroundCollisionIRQFlag /// 	1	  Sprite to Background Collision IRQ Flag
-  RasterCompareIRQFlag /// 	0	  Raster Compare IRQ Flag
-}
+// enum InterruptFlagRegister {
+//   SetAnyEnabledVICIRQCondition /// 	7	  Set on Any Enabled VIC IRQ Condition
+//   LightPenTriggeredIRQFlag /// 	3	  Light-Pen Triggered IRQ Flag
+//   SpriteSpriteCollisionIRQFlag /// 	2	  Sprite to Sprite Collision IRQ Flag
+//   SpriteBackgroundCollisionIRQFlag /// 	1	  Sprite to Background Collision IRQ Flag
+//   RasterCompareIRQFlag /// 	0	  Raster Compare IRQ Flag
+// }
 
-fn op_get(self : InterruptFlagRegister, flag : InterruptFlagRegister) -> Int {
-  match flag {
-    /// VIC Interrupt Flag Register (Bit = 1: IRQ	Occurred)
-    SetAnyEnabledVICIRQCondition => 1 << 7
-  }
-}
+// fn op_get(self : InterruptFlagRegister, flag : InterruptFlagRegister) -> Int {
+//   match flag {
+//     /// VIC Interrupt Flag Register (Bit = 1: IRQ	Occurred)
+//     SetAnyEnabledVICIRQCondition => 1 << 7
+//   }
+// }

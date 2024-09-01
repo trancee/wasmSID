@@ -327,6 +327,7 @@ fn op_get(self : PSID, address : Int) -> Int {
     println("PSID::get out of bounds")
     abort("PSID::get out of bounds")
   }
+
   // println(
   //   "PSID $" + address.to_hex() + " → #$" + (self.data[address.0] |> u8).to_hex(),
   // )
@@ -339,6 +340,7 @@ fn op_set(self : PSID, address : Int, value : Int) -> Unit {
     println("PSID::set out of bounds")
     abort("PSID::set out of bounds")
   }
+
   // println("PSID $" + address.to_hex() + " ← #$" + value.to_hex())
-  self.mem[address] = value
+  self.mem.write(address, value)
 }

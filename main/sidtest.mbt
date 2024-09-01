@@ -2,6 +2,8 @@ let subtune = 1
 
 pub fn sidtest() -> Unit {
   let mem = @cpu.Memory::new()
+
+  //
   let psid = try {
     @lib.PSID::new!(mem, siddata)
   } catch {
@@ -10,6 +12,8 @@ pub fn sidtest() -> Unit {
       panic()
     }
   }
+
+  //
   try {
     psid.process!()
   } catch {
@@ -18,15 +22,24 @@ pub fn sidtest() -> Unit {
       panic()
     }
   }
+
+  //
   println("---")
+
+  //
   let c64 = @lib.C64::new(
     mem=Some(mem),
     model=psid.flags.model,
     videoStandard=psid.videoStandard(),
     realSID=psid.realSID,
+    debug=true,
   )
+
+  //
   initSIDtune(c64, psid, subtune)
   println("---")
+
+  //
   let author = psid.author
   let title = psid.title
   let info = psid.info
@@ -58,15 +71,16 @@ pub fn sidtest() -> Unit {
   }
   println(s)
   println("---")
+
+  //
   c64.push16(0xFFFF)
+
+  //
   let mut i = 0
   while c64.pc() != 0x0000 && i < 1000 {
     let _ = c64.emulate()
     i += 1
   }
-  // if i > 100 {
-  //   panic()
-  // }
 }
 
 fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {

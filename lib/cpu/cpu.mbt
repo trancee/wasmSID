@@ -117,6 +117,7 @@ pub fn setRESET(self : CPU, pc : UInt16) -> Unit {
 
 pub fn reset(self : CPU, ~baseaddress : Int? = None) -> Unit {
   // self.mem.clear()
+
   self.cycles = 0
   self.pc = match baseaddress {
     Some(baseaddress) => baseaddress
@@ -200,44 +201,52 @@ pub fn load(
   let addr = if has_load_address { data[0] | (data[1] << 8) } else { addr }
   let start = if has_load_address { 2 } else { 0 }
   for i = 0; i < length - start; i = i + 1 {
-    self.mem[addr + i] = data[i + start]
+    self.mem.write(addr + i, data[i + start])
   }
   addr
 }
 
-pub fn read(self : CPU, addr : UInt16) -> UInt8 {
-  // if log {
-  //   println("$" + u16(addr).to_hex() + " → " + self.mem[addr].to_hex())
-  // }
-  self.mem[addr.0]
+pub fn read(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt8 {
+  self.mem.read(addr.0, ~dummy)
 }
 
-fn read16(self : CPU, addr : UInt16) -> UInt16 {
+fn read16(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt16 {
   // println(
   //   "$" + u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
-  self.read(addr) | (self.read(addr + 1) << 8) |> u16
+  self.read(addr, ~dummy) | (self.read(addr + 1, ~dummy) << 8) |> u16
 }
 
-fn read16zp(self : CPU, addr : UInt16) -> UInt16 {
+fn read16zp(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt16 {
   // println(
   //   ("read16zp $" + addr.to_hex() + ":#$" + self.read(addr).to_hex() + " $" + (addr +
   //   1)&(0x00FF)) | (addr&(0xFF00).to_hex() + ":#$" + self.read(
   //     (addr + 1)&(0x00FF) | addr&(0xFF00),
   //   ).to_hex()),
   // )
-  self.read(addr) | (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00)) << 8)
+  self.read(addr, ~dummy) |
+  (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), ~dummy) << 8)
   |> u16
 }
 
-pub fn write(self : CPU, addr : UInt16, value : UInt8) -> Unit {
-  self.mem[addr.0] = value.0
+pub fn write(
+  self : CPU,
+  addr : UInt16,
+  value : UInt8,
+  ~dummy : Bool = false
+) -> Unit {
+  self.mem.write(addr.0, value.0, ~dummy)
   // println("$" + u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
 }
 
-pub fn write16(self : CPU, addr : UInt16, value : UInt16) -> Unit {
-  self.mem[addr.0] = value.0
-  self.mem[addr.0 + 1] = value.0 >> 8
+pub fn write16(
+  self : CPU,
+  addr : UInt16,
+  value : UInt16,
+  ~dummy : Bool = false
+) -> Unit {
+  self.write(addr.0, value.0)
+  self.write(addr.0 + 1, value.0 >> 8)
   // println(
   //   "$" + u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
@@ -379,14 +388,12 @@ fn dump_step(
   cycles : Int,
   illegal : Bool
 ) -> Unit {
-  let debug = self.mem.debug(false)
-  //
-
-  let read8 = fn() { "$" + self.mem[self.pc.0 + 1].to_hex() }
+  let dummy = true
+  let read8 = fn() { "$" + self.mem.read(self.pc.0 + 1, ~dummy).to_hex() }
   let read16 = fn() {
     "$" +
-    self.mem[self.pc.0 + 1 + 1].to_hex() +
-    self.mem[self.pc.0 + 1].to_hex()
+    self.mem.read(self.pc.0 + 1 + 1, ~dummy).to_hex() +
+    self.mem.read(self.pc.0 + 1, ~dummy).to_hex()
   }
   let unofficial = if illegal { "*" } else { " " }
   let addr_mode = match mode {
@@ -421,7 +428,7 @@ fn dump_step(
       read16() +
       ")" +
       " = " +
-      self.read16zp(self.read16(self.pc + 1)).to_hex()
+      self.read16zp(self.read16(self.pc + 1, ~dummy), ~dummy).to_hex()
     IndexedIndirect =>
       // Indexed-Indirect Addressing
       // https://www.c64-wiki.com/wiki/Indexed-indirect_addressing
@@ -431,16 +438,20 @@ fn dump_step(
       " (" +
       read8() +
       ",X) @ " +
-      (self.read(self.pc + 1) + self.registers[X]).to_hex() +
+      (self.read(self.pc + 1, ~dummy) + self.registers[X]).to_hex() +
       " = " +
       self
-      .read16zp((self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16)
+      .read16zp(
+        (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
+        ~dummy,
+      )
       .to_hex() +
       " = " +
       self
       .read(
         self.read16zp(
-          (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16,
+          (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
+          ~dummy,
         ),
       )
       .to_hex()
@@ -454,12 +465,17 @@ fn dump_step(
       " (" +
       read8() +
       "),Y = " +
-      self.read16zp(self.read(self.pc + 1) |> u16).to_hex() +
+      self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy).to_hex() +
       " @ " +
-      (self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y].0).to_hex() +
+      (self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy) +
+      self.registers[Y].0).to_hex() +
       " = " +
       self
-      .read(self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y].0)
+      .read(
+        self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy) +
+        self.registers[Y].0,
+        ~dummy,
+      )
       .to_hex()
     Absolute =>
       // Absolute Addressing
@@ -471,7 +487,8 @@ fn dump_step(
       read16() +
       match name {
         "JMP" | "JSR" => ""
-        _ => " = " + self.read(self.read16(self.pc + 1)).to_hex()
+        _ =>
+          " = " + self.read(self.read16(self.pc + 1, ~dummy), ~dummy).to_hex()
       }
     AbsoluteX =>
       // Indexed Absolute Addressing
@@ -482,9 +499,11 @@ fn dump_step(
       " " +
       read16() +
       ",X @ " +
-      (self.read16(self.pc + 1) + self.registers[X].0).to_hex() +
+      (self.read16(self.pc + 1, ~dummy) + self.registers[X].0).to_hex() +
       " = " +
-      self.read(self.read16(self.pc + 1) + self.registers[X].0).to_hex()
+      self
+      .read(self.read16(self.pc + 1, ~dummy) + self.registers[X].0, ~dummy)
+      .to_hex()
     AbsoluteY =>
       // Indexed Absolute Addressing
       // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
@@ -494,9 +513,11 @@ fn dump_step(
       " " +
       read16() +
       ",Y @ " +
-      (self.read16(self.pc + 1) + self.registers[Y].0).to_hex() +
+      (self.read16(self.pc + 1, ~dummy) + self.registers[Y].0).to_hex() +
       " = " +
-      self.read(self.read16(self.pc + 1) + self.registers[Y].0).to_hex()
+      self
+      .read(self.read16(self.pc + 1, ~dummy) + self.registers[Y].0, ~dummy)
+      .to_hex()
     ZeroPage =>
       // Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Zeropage_addressing
@@ -506,7 +527,7 @@ fn dump_step(
       " " +
       read8() +
       " = " +
-      self.read(self.read(self.pc + 1) & 0xFF |> u16).to_hex()
+      self.read(self.read(self.pc + 1, ~dummy) & 0xFF |> u16, ~dummy).to_hex()
     ZeroPageX =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
@@ -516,10 +537,13 @@ fn dump_step(
       " " +
       read8() +
       ",X @ " +
-      ((self.read(self.pc + 1) + self.registers[X]) & 0xFF).to_hex() +
+      ((self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF).to_hex() +
       " = " +
       self
-      .read((self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16)
+      .read(
+        (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
+        ~dummy,
+      )
       .to_hex()
     ZeroPageY =>
       // Indexed Zeropage Addressing
@@ -530,10 +554,13 @@ fn dump_step(
       " " +
       read8() +
       ",Y @ " +
-      ((self.read(self.pc + 1) + self.registers[Y]) & 0xFF).to_hex() +
+      ((self.read(self.pc + 1, ~dummy) + self.registers[Y]) & 0xFF).to_hex() +
       " = " +
       self
-      .read((self.read(self.pc + 1) + self.registers[Y]) & 0xFF |> u16)
+      .read(
+        (self.read(self.pc + 1, ~dummy) + self.registers[Y]) & 0xFF |> u16,
+        ~dummy,
+      )
       .to_hex()
     Relative =>
       // Relative Addressing
@@ -542,11 +569,12 @@ fn dump_step(
       // A single, signed-integer byte that specifies, in relative terms, how far "up" or "down" to jump if the required conditions are met.
       // This signed 8-bit figure is called the offset.
       // BCC, BCS, BEQ, BMI, BNE, BPL, BVC, and BVS.
-      " $" + (self.pc + 2 + self.read(self.pc + 1).to_signed()).to_hex()
+      " $" + (self.pc + 2 + self.read(self.pc + 1, ~dummy).to_signed()).to_hex()
   }
   let mut instr = ""
   for i = 0; i < 3; i = i + 1 {
-    instr += " " + if i < size { self.read(self.pc + i).to_hex() } else { "  " }
+    instr += " " +
+      if i < size { self.read(self.pc + i, ~dummy).to_hex() } else { "  " }
   }
   let mut spaces = ""
   for i = 32 - name.length() - addr_mode.length(); i > 0; i = i - 1 {
@@ -593,10 +621,6 @@ fn dump_step(
   )
   // + " P:" + self.flags.get().to_hex() + " " + self.flags.to_string(),
   // + " PPU:  _,  _" + " CYC:" + (self.cycles + _cycles).to_string(),
-
-  //
-  let _ = self.mem.debug(debug)
-
 }
 
 // page_boundary returns true if the two addresses reference different pages
@@ -1065,6 +1089,7 @@ fn opRTI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   // self.flags.set((self.pop() & 0xEF) | U.bits()) // nestest: pull() & 0xEF | 0x20
   self.flags.set(self.pop())
   self.pc = self.pop16()
+  // self.opSEI(addr, mode)
 }
 
 // RTS - Return from subrouting

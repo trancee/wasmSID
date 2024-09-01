@@ -373,7 +373,7 @@ let testcases : Map[String, FixedArray[Int]] = {
   "branchwrap": @testsuite.branchwrap,
   "mmufetch": @testsuite.mmufetch // FIXME
   ,
-  "mmu": @testsuite.mmu // FIXME
+  "mmu____": @testsuite.mmu // FIXME
   ,
   "cpuport": @testsuite.cpuport // FIXME
   ,
@@ -382,244 +382,185 @@ let testcases : Map[String, FixedArray[Int]] = {
   "irq": @testsuite.irq,
 }
 
-/// IRQ
-/// $DC0E <= #$19
-/// $DC0D => #$00
-
-/// 088D  A9 19     LDA #$19                        A:00 X:FF Y:00 P:B4 SP:FD
-/// 088F  8D 0E DC  STA $DC0E = 00                  A:19 X:FF Y:00 P:34 SP:FD # CIACRA: START / FORCELOAD / ONESHOT (NONE)
-/// TimerA Force Load
-/// 0892  60        RTS                             A:19 X:FF Y:00 P:34 SP:FD
-/// 0C66  AD 0D DC  LDA $DC0D = 00                  A:19 X:FF Y:00 P:34 SP:FF # CIAICR
-/// TimerA OneShot
-/// 0C69  C9 00     CMP #$00                        A:00 X:FF Y:00 P:36 SP:FF
-/// 0C6B  D0 CC     BNE $0C39                       A:00 X:FF Y:00 P:37 SP:FF
-/// 0C6D  A9 04     LDA #$04                        A:00 X:FF Y:00 P:37 SP:FF
-/// 0C6F  20 61 08  JSR $0861                       A:04 X:FF Y:00 P:35 SP:FF
-/// 0861  48        PHA                             A:04 X:FF Y:00 P:35 SP:FD
-/// 0862  A9 00     LDA #$00                        A:04 X:FF Y:00 P:35 SP:FC
-/// 0864  8D 0E DC  STA $DC0E = 08                  A:00 X:FF Y:00 P:37 SP:FC # CIACRA: NONE (FORCELOAD)
-/// 0867  18        CLC                             A:00 X:FF Y:00 P:37 SP:FC
-/// 0868  68        PLA                             A:00 X:FF Y:00 P:36 SP:FC
-/// 0869  69 03     ADC #$03                        A:04 X:FF Y:00 P:34 SP:FD
-/// 086B  8D 04 DC  STA $DC04 = 06                  A:07 X:FF Y:00 P:34 SP:FD # TIMALO: #$07
-/// 086E  A9 00     LDA #$00                        A:07 X:FF Y:00 P:34 SP:FD
-/// 0870  8D 05 DC  STA $DC05 = 00                  A:00 X:FF Y:00 P:36 SP:FD # TIMAHI: #$00
-/// 0873  A9 93     LDA #$93                        A:00 X:FF Y:00 P:36 SP:FD
-/// 0875  8D FE FF  STA $FFFE = 93                  A:93 X:FF Y:00 P:B4 SP:FD # PCL: #$93
-/// 0878  A9 08     LDA #$08                        A:93 X:FF Y:00 P:B4 SP:FD
-/// 087A  8D FF FF  STA $FFFF = 08                  A:08 X:FF Y:00 P:34 SP:FD # PCH: #$08
-/// 087D  A9 35     LDA #$35                        A:08 X:FF Y:00 P:34 SP:FD
-/// 087F  85 01     STA $01 = 35                    A:35 X:FF Y:00 P:34 SP:FD # DREG(?): #$35
-/// 0881  AD 11 D0  LDA $D011 = 18                  A:35 X:FF Y:00 P:34 SP:FD
-/// 0884  30 07     BMI $088D                       A:18 X:FF Y:00 P:34 SP:FD
-/// 0886  AD 12 D0  LDA $D012 = 00                  A:18 X:FF Y:00 P:34 SP:FD
-/// 0889  C9 1E     CMP #$1E                        A:00 X:FF Y:00 P:36 SP:FD
-/// 088B  B0 F9     BCS $0886                       A:00 X:FF Y:00 P:B4 SP:FD
-///
-/// 088D  A9 19     LDA #$19                        A:00 X:FF Y:00 P:B4 SP:FD
-/// 088F  8D 0E DC  STA $DC0E = 00                  A:19 X:FF Y:00 P:34 SP:FD # CIACRA: START / FORCELOAD / ONESHOT (NONE)
-/// TimerA Force Load
-/// 0892  60        RTS                             A:19 X:FF Y:00 P:34 SP:FD
-/// 0C72  AD 0D DC  LDA $DC0D = 81                  A:19 X:FF Y:00 P:34 SP:FF # CIAICR: TIMERA / INTERRUPT
-/// TimerA OneShot
-/// 0C75  C9 01     CMP #$01                        A:81 X:FF Y:00 P:B4 SP:FF
-/// 0C77  D0 C0     BNE $0C39                       A:81 X:FF Y:00 P:B5 SP:FF
-/// 0C39  20 F3 08  JSR $08F3                       A:81 X:FF Y:00 P:B5 SP:FF
-/// 08F3  A9 37     LDA #$37                        A:81 X:FF Y:00 P:B5 SP:FD
-/// 08F5  85 01     STA $01 = 35                    A:37 X:FF Y:00 P:35 SP:FD
-/// 08F7  A9 23     LDA #$23                        A:37 X:FF Y:00 P:35 SP:FD
-/// 08F9  8D 04 DC  STA $DC04 = 04                  A:23 X:FF Y:00 P:35 SP:FD
-/// 08FC  A9 40     LDA #$40                        A:23 X:FF Y:00 P:35 SP:FD
-/// 08FE  8D 05 DC  STA $DC05 = 00                  A:40 X:FF Y:00 P:35 SP:FD
-/// 0901  A9 11     LDA #$11                        A:40 X:FF Y:00 P:35 SP:FD
-/// 0903  8D 0E DC  STA $DC0E = 08                  A:11 X:FF Y:00 P:35 SP:FD # CIACRA: START / FORCELOAD (FORCELOAD)
-/// TimerA Force Load
-/// 0906  60        RTS                             A:11 X:FF Y:00 P:35 SP:FD
-/// 0C3C  20 1C 08  JSR $081C                       A:11 X:FF Y:00 P:35 SP:FF
-/// 081C  68        PLA                             A:11 X:FF Y:00 P:35 SP:FD
-/// 081D  8D 27 08  STA $0827 = 51                  A:3E X:FF Y:00 P:35 SP:FE
-/// 0820  68        PLA                             A:3E X:FF Y:00 P:35 SP:FE
-/// 0821  8D 28 08  STA $0828 = 0C                  A:0C X:FF Y:00 P:35 SP:FF
-/// 0824  A2 01     LDX #$01                        A:0C X:FF Y:00 P:35 SP:FF
-/// 0826  BD 3E 0C  LDA $0C3E,X @ 0C3F = 0D         A:0C X:01 Y:00 P:35 SP:FF
-/// 0829  F0 06     BEQ $0831                       A:0D X:01 Y:00 P:35 SP:FF
-/// irqB  20 D2 FF  JSR $FFD2                       A:0D X:01 Y:00 P:35 SP:FF
-
 pub fn testsuite() -> Unit {
-  let c64 = @lib.C64::new(realSID=true, debug=true)
-  // let _ = c64.load(irq, offset=0xFF48)
+  let c64 = @lib.C64::new(realSID=true, debug=false)
+  let _ = c64.load(irq, offset=0xFF48)
 
-  // //
-  // let data = testcases["irq"].or_default()
-  // load(c64, data)
+  //
+  let data = testcases["mmufetch"].or_default()
+  load(c64, data)
 
-  c64[0xEA31] = 0x40
-  let _ = c64.load(
-    [
-      // // SEI
-      // 0x78,
+  // c64[0xEA31] = 0x40
+  // let _ = c64.load(
+  //   [
+  //     // SEI
+  //     0x78,
 
-      // // LDA #$51 // START | FORCELOAD | COUNT_TIMERA
-      //  0xA9, 0x51,
-      // // STA $DC0F
-      //  0x8D, 0x0F, 0xDC,
+  //     // LDA #$51 // START | FORCELOAD | COUNT_TIMERA
+  //      0xA9, 0x51,
+  //     // STA $DC0F
+  //      0x8D, 0x0F, 0xDC,
 
-      // // LDA #$FC
-      //  0xA9, 0x08, //
-      // // STA $DC04
-      //  0x8D, 0x04, 0xDC,
-      // // LDA #$03
-      //  0xA9, 0x00, //
-      // // STA $DC05
-      //  0x8D, 0x05, 0xDC,
+  //     // LDA #$FC
+  //      0xA9, 0x08, //
+  //     // STA $DC04
+  //      0x8D, 0x04, 0xDC,
+  //     // LDA #$03
+  //      0xA9, 0x00, //
+  //     // STA $DC05
+  //      0x8D, 0x05, 0xDC,
 
-      // // LDA #$FF
-      //  0xA9, 0x01,
-      // // STA $DC06
-      //  0x8D, 0x06, 0xDC,
-      // // STA $DC07
-      //  0x8D, 0x07, 0xDC,
+  //     // LDA #$FF
+  //      0xA9, 0x01,
+  //     // STA $DC06
+  //      0x8D, 0x06, 0xDC,
+  //     // STA $DC07
+  //      0x8D, 0x07, 0xDC,
 
-      // // <timer
-      // // LDA #$2C
-      //  0xA9, 0x2C,
-      // // STA $0314
-      //  0x8D, 0x14, 0x03,
-      // // >timer
-      // // LDA #$08
-      //  0xA9, 0x08,
-      // // STA $0315
-      //  0x8D, 0x15, 0x03,
+  //     // <timer
+  //     // LDA #$2C
+  //      0xA9, 0x2C,
+  //     // STA $0314
+  //      0x8D, 0x14, 0x03,
+  //     // >timer
+  //     // LDA #$08
+  //      0xA9, 0x08,
+  //     // STA $0315
+  //      0x8D, 0x15, 0x03,
 
-      // // LDA #$11 // START | FORCELOAD
-      //  0xA9, 0x11,
-      // // STA $DC0E
-      //  0x8D, 0x0E, 0xDC,
+  //     // LDA #$11 // START | FORCELOAD
+  //      0xA9, 0x11,
+  //     // STA $DC0E
+  //      0x8D, 0x0E, 0xDC,
 
-      // // CLI
-      //  0x58,
-      // // JMP $083A
-      //  0x4C, 0x3A, 0x08, // main
+  //     // CLI
+  //      0x58,
+  //     // JMP $083A
+  //      0x4C, 0x3A, 0x08, // main
 
-      // // timer
-      // // INC $0400
-      //  0xEE, 0x00, 0x04,
-      // // LDA #$7F
-      //  0xA9, 0x7F, // all interrupts
-      // // STA $DC0D
-      //  0x8D, 0x0D, 0xDC,
-      // // LDA $DC0D
-      //  0xAD, 0x0D, 0xDC,
-      // // JMP $EA31
-      //  0x4C, 0x31, 0xEA,
+  //     // timer
+  //     // INC $0400
+  //      0xEE, 0x00, 0x04,
+  //     // LDA #$7F
+  //      0xA9, 0x7F, // all interrupts
+  //     // STA $DC0D
+  //      0x8D, 0x0D, 0xDC,
+  //     // LDA $DC0D
+  //      0xAD, 0x0D, 0xDC,
+  //     // JMP $EA31
+  //      0x4C, 0x31, 0xEA,
 
-      // // main
-      // // LDA #$01
-      //  0xA9, 0x01,
-      // // STA $D800
-      //  0x8D, 0x00, 0xD8,
+  //     // main
+  //     // LDA #$01
+  //      0xA9, 0x01,
+  //     // STA $D800
+  //      0x8D, 0x00, 0xD8,
 
-      // // loop
-      // // JMP $083F
-      //  0x4C, 0x3F, 0x08, // loop
-      // // RTS
-      //  0x60,
+  //     // loop
+  //     // JMP $083F
+  //      0x4C, 0x3F, 0x08, // loop
+  //     // RTS
+  //      0x60,
 
-      // disable maskable IRQs
-      0x78, // SEI             ; 2
+  //     /// codebase64.org
+  //     // // disable maskable IRQs
+  //     // 0x78, // SEI             ; 2
 
-      // disable timer interrupts which can be generated by the two CIA chips
-      // the kernal uses such an interrupt to flash the cursor and scan the keyboard, so we better
-      // stop it.
-       0xA9, 0x7F, // LDA #$7F        ; 2
-       0x8D, 0x0D, 0xDC, // STA $DC0D       ; 4
-       0x8D, 0x0D, 0xDD, // STA $DD0D       ; 4
+  //     // // disable timer interrupts which can be generated by the two CIA chips
+  //     // // the kernal uses such an interrupt to flash the cursor and scan the keyboard, so we better
+  //     // // stop it.
+  //     //  0xA9, 0x7F, // LDA #$7F        ; 2
+  //     //  0x8D, 0x0D, 0xDC, // STA $DC0D       ; 4
+  //     //  0x8D, 0x0D, 0xDD, // STA $DD0D       ; 4
 
-      // by reading this two registers we negate any pending CIA irqs.
-      // if we don't do this, a pending CIA irq might occur after we finish setting up our irq.
-      // we don't want that to happen.
-       0xAD, 0x0D, 0xDC, // LDA $DC0D       ; 4
-       0xAD, 0x0D, 0xDD, // LDA $DD0D       ; 4
+  //     // // by reading this two registers we negate any pending CIA irqs.
+  //     // // if we don't do this, a pending CIA irq might occur after we finish setting up our irq.
+  //     // // we don't want that to happen.
+  //     //  0xAD, 0x0D, 0xDC, // LDA $DC0D       ; 4
+  //     //  0xAD, 0x0D, 0xDD, // LDA $DD0D       ; 4
 
-      // this is how to tell the VICII to generate a raster interrupt
-       0xA9, 0x01, // LDA #$01        ; 2
-       0x8D, 0x1A, 0xD0, // STA $D01A       ; 4
+  //     // // this is how to tell the VICII to generate a raster interrupt
+  //     //  0xA9, 0x01, // LDA #$01        ; 2
+  //     //  0x8D, 0x1A, 0xD0, // STA $D01A       ; 4
 
-      // this is how to tell at which rasterline we want the irq to be triggered
-       0xA9, 0x02, // LDA #$64        ; 2
-       0x8D, 0x12, 0xD0, // STA $D012       ; 4
+  //     // // this is how to tell at which rasterline we want the irq to be triggered
+  //     //  0xA9, 0x02, // LDA #$64        ; 2
+  //     //  0x8D, 0x12, 0xD0, // STA $D012       ; 4
 
-      // as there are more than 256 rasterlines, the topmost bit of $d011 serves as
-      // the 9th bit for the rasterline we want our irq to be triggered.
-      // here we simply set up a character screen, leaving the topmost bit 0.
-       0xA9, 0x1B, // LDA #$1B        ; 2
-       0x8D, 0x11, 0xD0, // STA $D011       ; 4
+  //     // // as there are more than 256 rasterlines, the topmost bit of $d011 serves as
+  //     // // the 9th bit for the rasterline we want our irq to be triggered.
+  //     // // here we simply set up a character screen, leaving the topmost bit 0.
+  //     //  0xA9, 0x1B, // LDA #$1B        ; 2
+  //     //  0x8D, 0x11, 0xD0, // STA $D011       ; 4
 
-      // we turn off the BASIC and KERNAL rom here
-      // the cpu now sees RAM everywhere except at $d000-$e000, where still the registers of
-      // SID/VICII/etc are visible
-       0xA9, 0x35, // LDA #$35        ; 2
-       0x85, 0x01, // STA $01         ; 3
+  //     // // we turn off the BASIC and KERNAL rom here
+  //     // // the cpu now sees RAM everywhere except at $d000-$e000, where still the registers of
+  //     // // SID/VICII/etc are visible
+  //     //  0xA9, 0x35, // LDA #$35        ; 2
+  //     //  0x85, 0x01, // STA $01         ; 3
 
-      // this is how we set up
-      // the address of our interrupt code
-       0xA9, 0x31, // LDA #$31        ; 2
-       0x8D, 0xFE, 0xFF, // STA $FFFE       ; 4
-       0xA9, 0x08, // LDA #$08        ; 2
-       0x8D, 0xFF, 0xFF, // STA $FFFF       ; 4
+  //     // // this is how we set up
+  //     // // the address of our interrupt code
+  //     //  0xA9, 0x31, // LDA #$31        ; 2
+  //     //  0x8D, 0xFE, 0xFF, // STA $FFFE       ; 4
+  //     //  0xA9, 0x08, // LDA #$08        ; 2
+  //     //  0x8D, 0xFF, 0xFF, // STA $FFFF       ; 4
 
-      // enable maskable interrupts again
-       0x58, // CLI             ; 2
+  //     // // enable maskable interrupts again
+  //     //  0x58, // CLI             ; 2
 
-      // we better don't RTS, the ROMS are now switched off, there's no way back to the system
-       0x4C, 0x2E, 0x08, // JMP $082E       ; 3
+  //     // // we better don't RTS, the ROMS are now switched off, there's no way back to the system
+  //     //  0x4C, 0x2E, 0x08, // JMP $082E       ; 3
 
-      // Being all kernal irq handlers switched off we have to do more work by ourselves.
-      // When an interrupt happens the CPU will stop what its doing, store the status and return address
-      // into the stack, and then jump to the interrupt routine. It will not store other registers, and if
-      // we destroy the value of A/X/Y in the interrupt routine, then when returning from the interrupt to
-      // what the CPU was doing will lead to unpredictable results (most probably a crash). So we better
-      // store those registers, and restore their original value before reentering the code the CPU was
-      // interrupted running.
-      // If you won't change the value of a register you are safe to not to store / restore its value.
-      // However, it's easy to screw up code like that with later modifying it to use another register too
-      // and forgetting about storing its state.
-      // The method shown here to store the registers is the most orthodox and most failsafe.
+  //     // // Being all kernal irq handlers switched off we have to do more work by ourselves.
+  //     // // When an interrupt happens the CPU will stop what its doing, store the status and return address
+  //     // // into the stack, and then jump to the interrupt routine. It will not store other registers, and if
+  //     // // we destroy the value of A/X/Y in the interrupt routine, then when returning from the interrupt to
+  //     // // what the CPU was doing will lead to unpredictable results (most probably a crash). So we better
+  //     // // store those registers, and restore their original value before reentering the code the CPU was
+  //     // // interrupted running.
+  //     // // If you won't change the value of a register you are safe to not to store / restore its value.
+  //     // // However, it's easy to screw up code like that with later modifying it to use another register too
+  //     // // and forgetting about storing its state.
+  //     // // The method shown here to store the registers is the most orthodox and most failsafe.
 
-      // store register A in stack
-       0x48, // PHA             ; 3
-       0x8A, // TXA             ; 2
-      // store register X in stack
-       0x48, // PHA             ; 3
-       0x98, // TYA             ; 2
-      // store register Y in stack
-       0x48, // PHA             ; 3
+  //     // // store register A in stack
+  //     //  0x48, // PHA             ; 3
+  //     //  0x8A, // TXA             ; 2
+  //     // // store register X in stack
+  //     //  0x48, // PHA             ; 3
+  //     //  0x98, // TYA             ; 2
+  //     // // store register Y in stack
+  //     //  0x48, // PHA             ; 3
 
-      // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
-       0xA9, 0xFF, // LDA #$FF        ; 2
-      // if you don't do this the interrupt condition will be present all the time and you end
-      // up having the CPU running the interrupt code all the time, as when it exists the
-      // interrupt, the interrupt request from the VICII will be there again regardless of the
-      // rasterline counter.
+  //     // // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
+  //     //  0xA9, 0xFF, // LDA #$FF        ; 2
+  //     // // if you don't do this the interrupt condition will be present all the time and you end
+  //     // // up having the CPU running the interrupt code all the time, as when it exists the
+  //     // // interrupt, the interrupt request from the VICII will be there again regardless of the
+  //     // // rasterline counter.
 
-      // it's pretty safe to use inc $d019 (or any other rmw instruction) for brevity, they
-      // will only fail on hardware like c65 or supercpu. c64dtv is ok with this though.
-       0x8D, 0x19, 0xD0, // STA $D019       ; 4
+  //     // // it's pretty safe to use inc $d019 (or any other rmw instruction) for brevity, they
+  //     // // will only fail on hardware like c65 or supercpu. c64dtv is ok with this though.
+  //     //  0x8D, 0x19, 0xD0, // STA $D019       ; 4
 
-      // restore register Y from stack (remember stack is FIFO: First In First Out)
-       0x68, // PLA             ; 4
-       0xA8, // TAY             ; 2
-    ],
-    offset=0x0801,
-  )
-  c64.initCPU(baseaddress=Some(0x0801))
-  c64.clear_flags()
-  // c64.set_interrupt_flag()
+  //     // // restore register Y from stack (remember stack is FIFO: First In First Out)
+  //     //  0x68, // PLA             ; 4
+  //     //  0xA8, // TAY             ; 2
+  //     //  0x68, // PLA
+  //     //  0xAA, // TAX
+  //     //  0x68, // PLA
+  //     //  0x40, // RTI
+  //   ],
+  //   offset=0x0801,
+  // )
+  // c64.initCPU(baseaddress=Some(0x0801))
+  // c64.clear_flags()
+  // // c64.set_interrupt_flag()
 
   //
   let mut i = 0
-  while c64.pc() != 0x0000 && i < 10 {
+  while c64.pc() != 0x0000 && i < 10000000 {
     let _ = c64.emulate()
     i += 1
   }
@@ -657,7 +598,7 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
 
   //
   c64.clear_flags()
-  // c64.set_interrupt_flag()
+  c64.set_interrupt_flag()
 }
 
 fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {

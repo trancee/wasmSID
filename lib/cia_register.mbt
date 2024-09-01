@@ -137,13 +137,21 @@ fn ControlB::default() -> ControlB {
   }
 }
 
-struct InterruptControl {
-  // mut timerA : Bool
-  // mut timerB : Bool
+struct CIAInterruptControl {
+  mut timerA : Bool
+  mut timerB : Bool
   mut alarm : Bool
   mut serial : Bool
   mut flag : Bool
   mut interrupt : Bool
+} derive(Show, Default)
+
+struct CIAInterruptEnable {
+  mut timerA : Bool
+  mut timerB : Bool
+  mut alarm : Bool
+  mut serial : Bool
+  mut flag : Bool
 } derive(Show, Default)
 
 struct CIARegister {
@@ -202,7 +210,8 @@ struct CIARegister {
 
   /// 56333         $DC0D          CIAICR
   /// Interrupt Control Register
-  mut interruptControl : InterruptControl
+  mut interruptControl : CIAInterruptControl
+  mut interruptEnable : CIAInterruptEnable
 
   /// 56334         $DC0E          CIACRA
   /// Control Register A
@@ -227,7 +236,8 @@ fn CIARegister::default() -> CIARegister {
     //
     serialData: Int::default(),
     //
-    interruptControl: InterruptControl::default(),
+    interruptControl: CIAInterruptControl::default(),
+    interruptEnable: CIAInterruptEnable::default(),
     //
     controlA: ControlA::default(),
     controlB: ControlB::default(),

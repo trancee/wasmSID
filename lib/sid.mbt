@@ -181,10 +181,7 @@ pub fn SID::new(
     baseaddress,
     baseaddress + sid_mem_size,
     mem,
-    fn(address : Int, debug : Bool?) {
-      // println("SID::r $" + UInt16(address).to_hex())
-      // sid.r(address - baseaddress).0
-      // let register = try { Ok(SIDregister::from_int!(address - baseaddress)) } catch { s => Err(s) }
+    fn(address : Int, dummy : Bool) {
       let register = try {
         SIDregister::from_int!(address - baseaddress)
       } catch {
@@ -195,9 +192,7 @@ pub fn SID::new(
       }
       sid[register].0
     },
-    fn(address : Int, value : Int, debug : Bool?) {
-      // println("SID::w $" + UInt16(address).to_hex())
-      // sid.w(address - baseaddress, value)
+    fn(address : Int, value : Int, dummy : Bool) {
       let register = try {
         SIDregister::from_int!(address - baseaddress)
       } catch {

@@ -26,15 +26,15 @@ pub fn nestest() -> Unit {
   println("---")
   println(
     "$02 #" +
-    nes.mem[0x02].to_hex() +
+    nes.mem.read(0x02, dummy=true).to_hex() +
     " " +
-    if nes.mem[0x02] == @cpu.UInt8(0x00) { "OK" } else { "FAIL" },
+    if nes.mem.read(0x02) == @cpu.UInt8(0x00) { "OK" } else { "FAIL" },
   )
   println(
     "$03 #" +
-    nes.mem[0x03].to_hex() +
+    nes.mem.read(0x03, dummy=true).to_hex() +
     " " +
-    if nes.mem[0x03] == @cpu.UInt8(0x00) { "OK" } else { "FAIL" },
+    if nes.mem.read(0x03) == @cpu.UInt8(0x00) { "OK" } else { "FAIL" },
   )
 }
 
