@@ -27,27 +27,29 @@ let c64_characters_mem_size = 0x1000
 struct Hook {
   start : Int
   end : Int
-  mem : FixedArray[Int]
-  read : (UInt16, Bool?) -> UInt8
-  write : (UInt16, UInt8, Bool?) -> Unit
+  // mem : FixedArray[Int]
+  read : (UInt16, Bool) -> UInt8
+  write : (UInt16, UInt8, Bool) -> Unit
 }
 
 fn Hook::new(
   start : Int,
   end : Int,
-  mem : FixedArray[Int],
-  read : (UInt16, Bool?) -> UInt8,
-  write : (UInt16, UInt8, Bool?) -> Unit
+  // mem : FixedArray[Int],
+  read : (UInt16, Bool) -> UInt8,
+  write : (UInt16, UInt8, Bool) -> Unit
 ) -> Hook {
-  { start, end, mem, read, write }
+  { start, end, read, write }
 }
+
+let memory : Array[Hook] = []
 
 pub struct C64 {
   baseaddress : UInt16
   mem : @cpu.Memory
   //
   bank : FixedArray[Bank]
-  memory : Array[Hook]
+  // memory : Array[Hook]
   //
   cpu : @cpu.CPU
   sid : Array[SID]
@@ -99,7 +101,7 @@ let defaultSampleRate = 44100
 
 pub fn C64::new(
   ~baseaddress : Int = 0x0000,
-  ~mem : @cpu.Memory? = None,
+  ~mem? : @cpu.Memory,
   ~data : FixedArray[Int] = [],
   ~addr : Int = 0x0000,
   ~length : Int = data.length(),
@@ -109,120 +111,133 @@ pub fn C64::new(
   ~realSID : Bool = false,
   ~debug : Bool = false
 ) -> C64 {
-  let cpu = @cpu.CPU::new(pc=baseaddress, ~mem, ~debug)
+  let cpu = @cpu.CPU::new(
+    pc=baseaddress,
+    mem=mem.or(@cpu.Memory::new()),
+    ~debug,
+  )
   let _ = cpu.load(addr, data, ~length)
 
   //
   let mem = cpu.mem()
+  // mem.set_read(
+  //   fn(address : Int, dummy : Bool) -> Int { mem.read_direct(address)._ },
+  // )
+  // mem.set_write(
+  //   fn(address : Int, value : Int, dummy : Bool) -> Unit {
+  //     mem.write_direct(address, value)
+  //   },
+  // )
   // mem.setROM()
 
   // BASIC
-  cpu
-  .mem()
-  .hook(
-    c64_basic_mem_start,
-    c64_basic_mem_start + c64_basic_mem_size,
-    c64_basic,
-    fn(address : Int, dummy : Bool) {
-      /// 6510 On-Chip I/O Port Register
-      let port = mem.read(0x0001, dummy=true)
+  memory.push(
+    Hook::new(
+      c64_basic_mem_start,
+      c64_basic_mem_start + c64_basic_mem_size,
+      // c64_basic,
+      fn(address : UInt16, dummy : Bool) {
+        /// 6510 On-Chip I/O Port Register
+        let port = mem.read(0x0001, dummy=true)
 
-      /// Bit 0.  This bit controls the LORAM signal.  A 0 in this bit position
-      /// switches the BASIC ROM out, and replaces it with RAM at addresses
-      /// 40960-49151 ($A000-$BFFF).  The default value of this bit is 1.
-      if port.bit(0) {
-        c64_basic[address - c64_basic_mem_start]
-      } else {
-        mem.read_direct(address).0
-      }
-    },
-    fn(address : Int, value : Int, dummy : Bool) {
-      /// 6510 On-Chip I/O Data Direction Register
-      let ddr = mem.read(0x0000, dummy=true)
-      /// 6510 On-Chip I/O Port Register
-      let port = mem.read(0x0001, dummy=true)
+        /// Bit 0.  This bit controls the LORAM signal.  A 0 in this bit position
+        /// switches the BASIC ROM out, and replaces it with RAM at addresses
+        /// 40960-49151 ($A000-$BFFF).  The default value of this bit is 1.
+        if port.bit(0) {
+          c64_basic[address._ - c64_basic_mem_start]
+        } else {
+          mem.read_direct(address._)._
+        }
+      },
+      fn(address : UInt16, value : UInt8, dummy : Bool) {
+        /// 6510 On-Chip I/O Data Direction Register
+        let ddr = mem.read(0x0000, dummy=true)
+        /// 6510 On-Chip I/O Port Register
+        let port = mem.read(0x0001, dummy=true)
 
-      /// Bit 0.  This bit controls the LORAM signal.  A 0 in this bit position
-      /// switches the BASIC ROM out, and replaces it with RAM at addresses
-      /// 40960-49151 ($A000-$BFFF).  The default value of this bit is 1.
-      if port.bit(0) {
+        /// Bit 0.  This bit controls the LORAM signal.  A 0 in this bit position
+        /// switches the BASIC ROM out, and replaces it with RAM at addresses
+        /// 40960-49151 ($A000-$BFFF).  The default value of this bit is 1.
+        if port.bit(0) {
 
-      } else {
-        mem.write_direct(address, value)
-      }
-    },
+        } else {
+          mem.write_direct(address._, value._)
+        }
+      },
+    ),
   )
 
   // KERNAL
-  cpu
-  .mem()
-  .hook(
-    c64_kernal_mem_start,
-    c64_kernal_mem_start + c64_kernal_mem_size,
-    c64_kernal,
-    fn(address : Int, dummy : Bool) {
-      /// 6510 On-Chip I/O Port Register
-      let port = mem.read(0x0001, dummy=true)
+  memory.push(
+    Hook::new(
+      c64_kernal_mem_start,
+      c64_kernal_mem_start + c64_kernal_mem_size,
+      // c64_kernal,
+      fn(address : UInt16, dummy : Bool) {
+        /// 6510 On-Chip I/O Port Register
+        let port = mem.read(0x0001, dummy=true)
 
-      /// Bit 1.  Bit 1 controls the HIRAM signal.  A 0 in this bit position
-      /// switches the Kernal ROM out, and replaces it with RAM at 57344-65535
-      /// ($E000-$FFFF).  As the BASIC interpreter uses the Kernal, it is also
-      /// switched out and replaced by RAM.  The default value of this bit is 1.
-      if port.bit(1) {
-        c64_kernal[address - c64_kernal_mem_start]
-      } else {
-        mem.read_direct(address).0
-      }
-    },
-    fn(address : Int, value : Int, dummy : Bool) {
-      mem.write_direct(address, value)
-    },
+        /// Bit 1.  Bit 1 controls the HIRAM signal.  A 0 in this bit position
+        /// switches the Kernal ROM out, and replaces it with RAM at 57344-65535
+        /// ($E000-$FFFF).  As the BASIC interpreter uses the Kernal, it is also
+        /// switched out and replaced by RAM.  The default value of this bit is 1.
+        if port.bit(1) {
+          c64_kernal[address._ - c64_kernal_mem_start]
+        } else {
+          mem.read_direct(address._)._
+        }
+      },
+      fn(address : UInt16, value : UInt8, dummy : Bool) {
+        mem.write_direct(address._, value._)
+      },
+    ),
   )
 
   // CHARACTERS
-  cpu
-  .mem()
-  .hook(
-    c64_characters_mem_start,
-    c64_characters_mem_start + c64_characters_mem_size,
-    c64_characters,
-    fn(address : Int, dummy : Bool) {
-      /// 6510 On-Chip I/O Port Register
-      let port = mem.read(0x0001, dummy=true)
+  memory.push(
+    Hook::new(
+      c64_characters_mem_start,
+      c64_characters_mem_start + c64_characters_mem_size,
+      // c64_characters,
+      fn(address : UInt16, dummy : Bool) {
+        /// 6510 On-Chip I/O Port Register
+        let port = mem.read(0x0001, dummy=true)
 
-      /// Bit 2.  This bit controls the CHAREN signal.  A 0 in this position
-      /// switches the character generator ROM in, so that it can be read by the
-      /// 6510 at addresses 53248-57343 ($D000-$DFFF).  Normally, this bit is
-      /// set to 1, so that while the VIC-II chip has access to the character
-      /// generator ROM for purposes of creating the screen display, the user
-      /// cannot PEEK into it.  Since this ROM is switched into the system in
-      /// the same location as the I/O devices (SID chip, VIC-II chip, and 6526
-      /// CIA's), o I/O can occur when this ROM is switched in.
-      if port.bit(2) {
-        c64_characters[address - c64_characters_mem_start]
-      } else {
-        mem.read_direct(address).0
-      }
-    },
-    fn(address : Int, value : Int, dummy : Bool) {
-      mem.write_direct(address, value)
-    },
+        /// Bit 2.  This bit controls the CHAREN signal.  A 0 in this position
+        /// switches the character generator ROM in, so that it can be read by the
+        /// 6510 at addresses 53248-57343 ($D000-$DFFF).  Normally, this bit is
+        /// set to 1, so that while the VIC-II chip has access to the character
+        /// generator ROM for purposes of creating the screen display, the user
+        /// cannot PEEK into it.  Since this ROM is switched into the system in
+        /// the same location as the I/O devices (SID chip, VIC-II chip, and 6526
+        /// CIA's), o I/O can occur when this ROM is switched in.
+        if port.bit(2) {
+          c64_characters[address._ - c64_characters_mem_start]
+        } else {
+          mem.read_direct(address._)._
+        }
+      },
+      fn(address : UInt16, value : UInt8, dummy : Bool) {
+        mem.write_direct(address._, value._)
+      },
+    ),
   )
 
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let sid = [SID::new(cpu, sid1_mem_start, ~videoStandard, ~debug)]
+  let sid = [SID::new(sid1_mem_start, ~videoStandard, ~debug)]
   let cia = [
-    CIA::new(cpu, cia1_mem_start, ~videoStandard, ~debug),
-    CIA::new(cpu, cia2_mem_start, ~videoStandard, ~debug),
+    CIA::new(cia1_mem_start, ~videoStandard, ~debug),
+    CIA::new(cia2_mem_start, ~videoStandard, ~debug),
   ]
-  let vic = VIC::new(cpu, vic_mem_start, ~videoStandard, ~debug)
+  let vic = VIC::new(vic_mem_start, ~videoStandard, ~debug)
   //
+
   let c64 : C64 = {
     baseaddress,
     mem,
     //
     bank: FixedArray::make(8, Bank::RAM),
-    memory: [],
+    // memory: hooks,
     //
     cpu,
     sid,
@@ -263,7 +278,9 @@ pub fn C64::new(
     //
     debug,
   }
+
   // c64.initC64()
+
   try {
     c64.reset!()
   } catch {
@@ -272,6 +289,8 @@ pub fn C64::new(
       panic()
     }
   }
+
+  //
   c64
 }
 
@@ -513,11 +532,11 @@ pub fn reset(self : C64) -> Unit! {
   println("<< C64::reset")
 }
 
-pub fn initCPU(self : C64, ~baseaddress : Int? = None) -> Unit {
+pub fn initCPU(self : C64, ~baseaddress? : Int) -> Unit {
   // println(">> C64::initCPU")
 
   //
-  self.cpu.reset(~baseaddress)
+  self.cpu.reset(~baseaddress?)
   //
   self.prevNMI = false
 
@@ -616,7 +635,7 @@ pub fn emulate(self : C64) -> Output {
       if self.frameCycleCnt >= self.frameCycles {
         self.frameCycleCnt -= self.frameCycles
         if self.finished { //some tunes (e.g. Barbarian, A-Maze-Ing) doesn't always finish in 1 frame
-          // FIXME: self.initCPU(baseaddress=Some(self.psid.playAddress)) //(PSID docs say bank-register should always be set for each call's region)
+          // FIXME: self.initCPU(baseaddress=self.psid.playAddress) //(PSID docs say bank-register should always be set for each call's region)
           self.finished = false
           // if self.timerSource == 0 {
           //   self[0xD019] = 0x81 //always simulate to player-calls that VIC-IRQ happened
@@ -864,13 +883,13 @@ fn interrupts(self : C64) -> Bool {
   false
 }
 
-pub fn op_get(self : C64, address : UInt16) -> UInt8 {
+pub fn read(self : C64, address : UInt16, ~dummy : Bool = false) -> UInt8 {
   if self.debug {
     println(
       "C64 $" +
       address.to_hex() +
       " → $" +
-      self.mem.read(address.0, dummy=true).to_hex(),
+      self.mem.read(address._, dummy=true).to_hex(),
     )
   }
 
@@ -882,34 +901,52 @@ pub fn op_get(self : C64, address : UInt16) -> UInt8 {
   }
 
   //
-  self.memory.each(
-    fn(memory) {
-      if address >= memory.start && address <= memory.end {
-        return (memory.read)(address)
-      }
-    },
-  )
+  for i = 0; i < memory.length(); i = i + 1 {
+    println("MEMORY[\{i}] \{memory[i].start}")
+    if address >= memory[i].start && address <= memory[i].end {
+      return (memory[i].read)(address, dummy)
+    }
+  }
 
   // VIC-II DMA or Character ROM
   if address >= vic_mem_start && address <= vic_mem_end {
     match self.bank[bank_characters] {
-      ROM => return c64_characters[address.0 - vic_mem_start]
-      RAM => return self.mem.read_direct(address.0).0
+      ROM => return c64_characters[address._ - vic_mem_start]
+      RAM => return self.mem.read_direct(address._)._
     }
   }
   // BASIC or RAM
   if address >= c64_basic_mem_start && address <= c64_basic_mem_end {
     match self.bank[bank_basic] {
-      ROM => return c64_basic[address.0 - c64_basic_mem_start]
-      RAM => return self.mem.read_direct(address.0).0
+      ROM => return c64_basic[address._ - c64_basic_mem_start]
+      RAM => return self.mem.read_direct(address._)._
     }
   }
 
   //
-  self.mem.read(address.0).0
+  self.read_direct(address)
 }
 
-pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
+pub fn read_direct(self : C64, address : UInt16) -> UInt8 {
+  // println("C64::read_direct $" + UInt16(addr).to_hex())
+  //
+
+  self.mem.read(address._)._
+}
+
+fn op_get(self : C64, address : UInt16) -> UInt8 {
+  // println("C64::op_get $" + UInt16(addr).to_hex())
+  //
+
+  self.read(address)
+}
+
+pub fn write(
+  self : C64,
+  address : UInt16,
+  value : UInt8,
+  ~dummy : Bool = false
+) -> Unit {
   if self.debug {
     println("C64 $" + address.to_hex() + " ← #$" + value.to_hex())
   }
@@ -922,7 +959,7 @@ pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
   }
 
   //
-  let page = (address.0 & 0xFF00) >> 8
+  let page = (address & 0xFF00) >> 8
   if page == 0x00 {
     // Zero Page
     if address == 0x0001 {
@@ -932,20 +969,31 @@ pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
   } else if page >= 0xD0 && page <= 0xD3 {
     // VIC-II DMA or Character ROM
     if self.bank[bank_characters] != IO {
-      return self.mem.write_direct(address.0, value.0)
+      return self.mem.write_direct(address._, value._)
     }
   } else if page == 0xDC {
     // CIA1
     if self.bank[bank_characters] != IO {
-      return self.mem.write_direct(address.0, value.0)
+      return self.mem.write_direct(address._, value._)
     }
   } else if page == 0xDD {
     // CIA2
     if self.bank[bank_characters] != IO {
-      return self.mem.write_direct(address.0, value.0)
+      return self.mem.write_direct(address._, value._)
     }
   }
 
   //
-  self.mem.write(address.0, value.0)
+  self.write_direct(address, value)
+}
+
+pub fn write_direct(self : C64, address : UInt16, value : UInt8) -> Unit {
+  self.mem.write(address._, value._)
+}
+
+pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
+  // println("C64::op_set $" + address.to_hex() + " = " + value.to_hex())
+
+  //
+  self.write(address, value)
 }

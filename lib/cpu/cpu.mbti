@@ -17,17 +17,17 @@ impl CPU {
   has_interrupt(Self) -> Bool
   hook(Self, Int, (Int) -> Unit) -> Unit
   interrupts(Self) -> Bool
-  irq(Self, ~pc : Int? = ..) -> Unit
+  irq(Self, ~pc? : Int) -> Unit
   load(Self, Int, FixedArray[Int], ~length : Int = .., ~has_load_address : Bool = ..) -> Int
   mem(Self) -> Memory
-  new(~pc : Int = .., ~mem : Memory? = .., ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~decimal_mode : Bool = .., ~debug : Bool = ..) -> Self
-  nmi(Self, ~pc : Int? = ..) -> Unit
+  new(~pc : Int = .., ~mem? : Memory, ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~decimal_mode : Bool = .., ~debug : Bool = ..) -> Self
+  nmi(Self, ~pc? : Int) -> Unit
   pc(Self) -> Int
   push(Self, UInt8) -> Unit
   push16(Self, UInt16) -> Unit
   read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
   register(Self, Register, Int) -> Unit
-  reset(Self, ~baseaddress : Int? = ..) -> Unit
+  reset(Self, ~baseaddress? : Int) -> Unit
   setIRQ(Self, UInt16) -> Unit
   setNMI(Self, UInt16) -> Unit
   setRESET(Self, UInt16) -> Unit
@@ -70,17 +70,16 @@ type Memory
 impl Memory {
   clear(Self) -> Unit
   debug(Self, Bool) -> Bool
-  hook(Self, Int, Int, FixedArray[Int], (Int, Bool) -> Int, (Int, Int, Bool) -> Unit) -> Unit
-  new(~length : Int = .., ~value : Int = .., ~debug : Bool = ..) -> Self
+  new[A, B](~length : Int = .., ~value : Int = .., ~read? : (Int, Bool) -> Int, ~write? : (Int, Int, Bool) -> Unit, ~debug : Bool = ..) -> Self
   read(Self, Int, ~dummy : Bool = ..) -> UInt8
   read_direct(Self, Int) -> UInt8
   reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
   setROM(Self) -> Unit
+  set_read(Self, (Int, Bool) -> Int) -> Unit
+  set_write(Self, (Int, Int, Bool) -> Unit) -> Unit
   write(Self, Int, Int, ~dummy : Bool = ..) -> Unit
   write_direct(Self, Int, Int) -> Unit
 }
-
-type MemoryHook
 
 type Mode
 impl Mode {

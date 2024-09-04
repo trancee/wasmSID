@@ -14,9 +14,15 @@ type ADSR
 
 type ADSRState
 
+type Bank
+impl Bank {
+  op_equal(Self, Self) -> Bool
+}
+
 pub struct C64 {
   pub baseaddress : UInt16
   pub mem : @cpu.Memory
+  pub bank : FixedArray[Bank]
   pub cpu : @cpu.CPU
   pub sid : Array[SID]
   pub cia : Array[CIA]
@@ -55,24 +61,27 @@ impl C64 {
   get_registers(Self) -> @cpu.Registers
   hook(Self, Int, (Int) -> Unit) -> Unit
   initC64(Self) -> Unit!
-  initCPU(Self, ~baseaddress : Int? = ..) -> Unit
+  initCPU(Self, ~baseaddress? : Int) -> Unit
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Int
-  new(~baseaddress : Int = .., ~mem : @cpu.Memory? = .., ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
-  op_get(Self, UInt16) -> UInt8
+  new(~baseaddress : Int = .., ~mem? : @cpu.Memory, ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
   op_set(Self, UInt16, UInt8) -> Unit
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
+  read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
+  read_direct(Self, UInt16) -> UInt8
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
+  write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
+  write_direct(Self, UInt16, UInt8) -> Unit
 }
 
 type CIA
 impl CIA {
   emulate(Self, Int) -> Bool
-  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  new(Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
@@ -193,6 +202,8 @@ impl FrameRate {
   to_string(Self) -> String
 }
 
+type Hook
+
 pub type ICR UInt8
 impl ICR {
   compare(Self, Self) -> Int
@@ -200,6 +211,12 @@ impl ICR {
 }
 
 type ICRFlags
+
+type IOPort
+impl IOPort {
+  default() -> Self
+  to_string(Self) -> String
+}
 
 type InterruptEnable
 impl InterruptEnable {
@@ -282,7 +299,7 @@ impl RunMode {
 
 type SID
 impl SID {
-  new(@cpu.CPU, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  new(Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
@@ -378,7 +395,7 @@ impl UInt8 {
 type VIC
 impl VIC {
   emulate(Self, Int) -> Bool
-  new(@cpu.CPU, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  new(Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit!
 }
 
@@ -454,6 +471,8 @@ impl Show for FilterSelect
 impl Show for Flags
 
 impl Show for FrameRate
+
+impl Show for IOPort
 
 impl Show for InterruptFlag
 

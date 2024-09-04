@@ -134,15 +134,20 @@ struct SID {
 }
 
 pub fn SID::new(
-  cpu : @cpu.CPU,
   baseaddress : Int,
+  //
+
   ~model : Model = Unknown,
   ~channel : Channel = Unknown,
   ~videoStandard : VideoStandard = Unknown,
   ~debug : Bool = false
 ) -> SID {
   println("SID::new")
+  //
+
   let mem = FixedArray::make(sid_mem_size + 1, 0x00)
+  //
+
   let sid : SID = {
     mem,
     baseaddress,
@@ -175,36 +180,42 @@ pub fn SID::new(
     //
     debug,
   }
-  cpu
-  .mem()
-  .hook(
-    baseaddress,
-    baseaddress + sid_mem_size,
-    mem,
-    fn(address : Int, dummy : Bool) {
-      let register = try {
-        SIDregister::from_int!(address - baseaddress)
-      } catch {
-        err => {
-          println(err)
-          panic()
+
+  //
+  memory.push(
+    Hook::new(
+      baseaddress,
+      baseaddress + sid_mem_size,
+      // mem,
+      fn(address : UInt16, dummy : Bool) {
+        let register = try {
+          SIDregister::from_int!(address._ - baseaddress)
+        } catch {
+          err => {
+            println(err)
+            panic()
+          }
         }
-      }
-      sid[register].0
-    },
-    fn(address : Int, value : Int, dummy : Bool) {
-      let register = try {
-        SIDregister::from_int!(address - baseaddress)
-      } catch {
-        err => {
-          println(err)
-          panic()
+        sid[register]._
+      },
+      fn(address : UInt16, value : UInt8, dummy : Bool) {
+        let register = try {
+          SIDregister::from_int!(address._ - baseaddress)
+        } catch {
+          err => {
+            println(err)
+            panic()
+          }
         }
-      }
-      sid[register] = value
-    },
+        sid[register] = value
+      },
+    ),
   )
+
+  //
   sid.reset()
+
+  //
   sid
 }
 

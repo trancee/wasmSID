@@ -28,21 +28,17 @@ struct CPU {
 
 pub fn CPU::new(
   ~pc : Int = 0x0000,
-  ~mem : Memory? = None,
+  ~mem? : Memory,
   ~data : FixedArray[Int] = [],
   ~addr : Int = 0,
   ~length : Int = data.length(),
   ~decimal_mode : Bool = true,
   ~debug : Bool = false
 ) -> CPU {
-  let mem = match mem {
-    Some(mem) => mem
-    None => Memory::new()
-  }
   let registers = Registers::new()
   let flags = Flags::new()
   let cpu : CPU = {
-    mem,
+    mem: mem.or(Memory::new()),
     //
     cycles: 0,
     //
@@ -115,7 +111,7 @@ pub fn setRESET(self : CPU, pc : UInt16) -> Unit {
   self.write16(RESET.addr(), pc)
 }
 
-pub fn reset(self : CPU, ~baseaddress : Int? = None) -> Unit {
+pub fn reset(self : CPU, ~baseaddress? : Int) -> Unit {
   // self.mem.clear()
 
   self.cycles = 0
@@ -277,7 +273,7 @@ pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
 
 /// triggers a NMI IRQ in the processor
 /// this is very similar to the BRK instruction
-pub fn nmi(self : CPU, ~pc : Int? = None) -> Unit {
+pub fn nmi(self : CPU, ~pc? : Int) -> Unit {
   println(
     "*** NMI $" +
     UInt16(NMI.addr()).to_hex() +
@@ -287,7 +283,7 @@ pub fn nmi(self : CPU, ~pc : Int? = None) -> Unit {
   self.push16(self.pc)
   self.push(self.flags.get())
   self.flags.set_interrupt()
-  self.pc = pc.or(self.read16(NMI.addr()).0)
+  self.pc = pc.or(self.read16(NMI.addr())._)
   self.cycles += 7
 }
 
@@ -297,7 +293,7 @@ pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
 
 /// triggers a normal IRQ
 /// this is very similar to the BRK instruction
-pub fn irq(self : CPU, ~pc : Int? = None) -> Unit {
+pub fn irq(self : CPU, ~pc? : Int) -> Unit {
   println(
     "*** IRQ $" +
     UInt16(IRQ.addr()).to_hex() +
@@ -307,7 +303,7 @@ pub fn irq(self : CPU, ~pc : Int? = None) -> Unit {
   self.push16(self.pc)
   self.push(self.flags.get())
   self.flags.set_interrupt()
-  self.pc = pc.or(self.read16(IRQ.addr()).0)
+  self.pc = pc.or(self.read16(IRQ.addr())._)
   self.cycles += 7
 }
 

@@ -66,38 +66,43 @@
 //   TVSFLG // 02A6        678     Flag: TV Standard: $00 = NTSC, $01 = PAL.
 // }
 
-struct MemoryHook {
-  start : Int
-  end : Int
-  mem : FixedArray[Int]
-  r : (Int, Bool) -> Int
-  w : (Int, Int, Bool) -> Unit
-}
+// struct MemoryHook {
+//   start : Int
+//   end : Int
+//   mem : FixedArray[Int]
+//   r : (Int, Bool) -> Int
+//   w : (Int, Int, Bool) -> Unit
+// }
 
-fn MemoryHook::new(
-  start : Int,
-  end : Int,
-  mem : FixedArray[Int],
-  r : (Int, Bool) -> Int,
-  w : (Int, Int, Bool) -> Unit
-) -> MemoryHook {
-  { start, end, mem, r, w }
-}
+// fn MemoryHook::new(
+//   start : Int,
+//   end : Int,
+//   mem : FixedArray[Int],
+//   r : (Int, Bool) -> Int,
+//   w : (Int, Int, Bool) -> Unit
+// ) -> MemoryHook {
+//   { start, end, mem, r, w }
+// }
 
 struct Memory {
   mut mem : FixedArray[UInt8]
   //
-  hooks : Array[MemoryHook]
+  mut read : ((Int, Bool) -> Int)?
+  mut write : ((Int, Int, Bool) -> Unit)?
+  //
+  hooks : Array[Unit] //[MemoryHook]
   //
   mut debug : Bool
 }
 
-pub fn Memory::new(
+pub fn Memory::new[A, B](
   ~length : Int = 0xFFFF,
   ~value : Int = 0x00,
+  ~read? : (Int, Bool) -> Int,
+  ~write? : (Int, Int, Bool) -> Unit,
   ~debug : Bool = false
 ) -> Memory {
-  { mem: FixedArray::make(length + 1, value), hooks: [], debug }
+  { mem: FixedArray::make(length + 1, value), read, write, hooks: [], debug }
 }
 
 pub fn debug(self : Memory, state : Bool) -> Bool {
@@ -106,19 +111,27 @@ pub fn debug(self : Memory, state : Bool) -> Bool {
   tmp
 }
 
-pub fn hook(
-  self : Memory,
-  start : Int,
-  end : Int,
-  mem : FixedArray[Int],
-  r : (Int, Bool) -> Int,
-  w : (Int, Int, Bool) -> Unit
-) -> Unit {
-  self.hooks.push(MemoryHook::new(start, end, mem, r, w))
-}
+// pub fn hook(
+//   self : Memory,
+//   start : Int,
+//   end : Int,
+//   mem : FixedArray[Int],
+//   r : (Int, Bool) -> Int,
+//   w : (Int, Int, Bool) -> Unit
+// ) -> Unit {
+//   self.hooks.push(MemoryHook::new(start, end, mem, r, w))
+// }
 
 pub fn clear(self : Memory) -> Unit {
   self.mem = FixedArray::make(self.mem.length(), 0x00)
+}
+
+pub fn set_read(self : Memory, read : (Int, Bool) -> Int) -> Unit {
+  self.read = Some(read)
+}
+
+pub fn set_write(self : Memory, write : (Int, Int, Bool) -> Unit) -> Unit {
+  self.write = Some(write)
 }
 
 pub fn reset(
@@ -210,11 +223,11 @@ pub fn read(self : Memory, addr : Int, ~dummy : Bool = false) -> UInt8 {
   }
 
   //
-  for i = 0; i < self.hooks.length(); i = i + 1 {
-    if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-      return (self.hooks[i].r)(addr, dummy)
-    }
-  }
+  // for i = 0; i < self.hooks.length(); i = i + 1 {
+  //   if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
+  //     return (self.hooks[i].r)(addr, dummy)
+  //   }
+  // }
 
   //
   self.read_direct(addr)
@@ -224,7 +237,10 @@ pub fn read_direct(self : Memory, addr : Int) -> UInt8 {
   // println("Memory::read_direct $" + UInt16(addr).to_hex())
   //
 
-  self.mem[addr]
+  match self.read {
+    Some(_) => self.read(addr)
+    None => self.mem[addr]
+  }
 }
 
 fn op_get(self : Memory, addr : Int) -> UInt8 {
@@ -253,18 +269,21 @@ pub fn write(
   }
 
   //
-  for i = 0; i < self.hooks.length(); i = i + 1 {
-    if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-      return (self.hooks[i].w)(addr, value, dummy)
-    }
-  }
+  // for i = 0; i < self.hooks.length(); i = i + 1 {
+  //   if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
+  //     return (self.hooks[i].w)(addr, value, dummy)
+  //   }
+  // }
 
   //
   self.write_direct(addr, value)
 }
 
 pub fn write_direct(self : Memory, addr : Int, value : Int) -> Unit {
-  self.mem[addr] = value |> u8
+  match self.write {
+    Some(_) => self.write(addr, value)
+    None => self.mem[addr] = value |> u8
+  }
 }
 
 fn op_set(self : Memory, addr : Int, value : Int) -> Unit {

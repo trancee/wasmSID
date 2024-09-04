@@ -554,7 +554,7 @@ pub fn testsuite() -> Unit {
   //   ],
   //   offset=0x0801,
   // )
-  // c64.initCPU(baseaddress=Some(0x0801))
+  // c64.initCPU(baseaddress=0x0801)
   // c64.clear_flags()
   // // c64.set_interrupt_flag()
 
@@ -594,7 +594,7 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   c64[0xFFFF] = 0xFF
 
   //
-  c64.initCPU(baseaddress=Some(addr))
+  c64.initCPU(baseaddress=(addr))
 
   //
   c64.clear_flags()
@@ -624,7 +624,7 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   c64.hook(
     0xFFD2,
     fn(pc) {
-      let a = c64.cpu.a().0
+      let a = c64.cpu.a()._
       match a {
         13 => {
           println("\x1b[33m\{output}\x1b[0m")
