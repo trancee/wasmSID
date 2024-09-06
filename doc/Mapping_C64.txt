@@ -963,7 +963,7 @@ less than that stored at 22 ($16), while 24 ($18) will contain a 0.
 Descriptor Stack for Temporary Strings
 
 The temporary string descriptor stack contains information about
-temporary strings which hve not yet been assigned to a string
+temporary strings which have not yet been assigned to a string
 variable.  An examples of such a temporary string is the literal
 string "HELLO" in the statement PRINT "HELLO".
 
@@ -2173,6 +2173,8 @@ directly to or from RAM.  This location points to the beginning
 address of the area of RAM to be used for the blocks of data that come
 after the initial header.
 
+195-196       $C3-$C4        MEMUSS
+
 197           $C5            LSTX
 Matrix Coordinate of Last Key Pressed, 64=None Pressed
 
@@ -2442,7 +2444,7 @@ also show the new line.  The cursor can also be set or read using the
 Kernal PLOT routine (58634, $E50A) as explained in the entry from
 locations 780-783 ($30C-$30F).
 
-215           $D7
+215           $D7            SCHAR
 Temporary Storage Area for ASCII Value of Last Character Printed
 
 The ASCII value of the last character printed to the screen is held
@@ -2552,7 +2554,7 @@ This location points to the address of the 256-byte output buffer
 which is used for transmitting data to RS-232 devices (device number
 2)l
 
-251-254       $FB-$FE        FREEZP
+251-254       $FB-$FE        FREKZP
 Four Free Bytes of Zero Page for User Programs
 
 These locations were specifically set aside for user-written ML
@@ -2619,7 +2621,7 @@ indices of which bytes in the tape block were not received corectly
 during the first transmission, so that corrections might be made on
 the second pass.
 
-319-511       $13F-$1FF
+319-511       $13F-$1FF      BSTACK
 
 This area is exclusively for the microprocessor stack.  Some BASIC
 commands, such as FOR-NEXT loops require many stack entries at a time.
@@ -2837,7 +2839,7 @@ The Kernal routine MEMBOT (65076, $FE34) may be used to read or set
 this pointer, or these locations may be directly PEEKed or POKEd from
 BASIC.
 
-643-644       $283-284       MEMSIZ
+643-644       $283-284       MEMEND
 Pointer: O.S. End of Memory
 
 When the power is first turned on, or a cold start RESET is performed,
@@ -3440,7 +3442,7 @@ This index points to the ending byte within the 256-byte RS-232
 transmit buffer, and is used to add data to that buffer.
 
 671-672       $29F-$2A0      IRQTMP
-SAve Area for IRQ Vector During Cassette I/O
+Save Area for IRQ Vector During Cassette I/O
 
 The routines that read and write tape data are driven by an IRQ
 interrupt.  In order to hook one of these routines into the interrupt,

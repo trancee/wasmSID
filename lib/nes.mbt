@@ -1,6 +1,6 @@
 pub struct NES {
   baseaddress : UInt16
-  mem : @cpu.Memory
+  mem : Memory
   cpu : @cpu.CPU
 }
 
@@ -11,7 +11,7 @@ pub fn NES::new(
   ~length : Int = data.length()
 ) -> NES {
   let cpu = @cpu.CPU::new(pc=baseaddress, decimal_mode=false)
-  let mem = cpu.mem()
+  let mem = Memory::new()
   let addr = cpu.load(addr, data, ~length)
   let nes : NES = { baseaddress, mem, cpu }
   nes

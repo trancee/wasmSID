@@ -1,7 +1,7 @@
 let subtune = 1
 
 pub fn sidtest() -> Unit {
-  let mem = @cpu.Memory::new()
+  let mem = @lib.Memory::new()
 
   //
   let psid = try {

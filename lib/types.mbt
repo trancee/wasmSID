@@ -36,7 +36,8 @@ pub fn to_string(self : Exception) -> String {
     UnknownHeader(header) => "unknown SID header: \{header}"
     UnknownMode => "unknown mode"
     UnknownModel(scope) => "unknown \{scope} model"
-    UnknownRegister(scope, value) => "unknown \{scope} register #\{value}"
+    UnknownRegister(scope, value) =>
+      "unknown \{scope} register #$\{UInt16(value).to_hex()}"
     UnknownScanLineCycles => "unknown scan line cycles"
     UnknownScanLines => "unknown scan lines"
     UnknownVersion => "unknown version"

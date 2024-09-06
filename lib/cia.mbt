@@ -258,7 +258,7 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
 
   //
   match register {
-    PRA | RD_PRA =>
+    PRA =>
       /// Bit 0:  Select to read keyboard column 0
       ///         Read joystick 2 up direction
       (self.register.portA[0].to_int() << 0) |
@@ -284,7 +284,7 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       /// Bit 7:  Select to read keyboard column 7
       ///         Select to read paddles on Port A or B
       (self.register.portA[7].to_int() << 7)
-    PRB | RD_PRB =>
+    PRB =>
       /// Bit 0:  Read keyboard row 0
       ///         Read joystick 1 up direction
       (self.register.portB[0].to_int() << 0) |
@@ -310,7 +310,7 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       /// Bit 7:  Read keyboard row 7
       ///         Toggle or pulse data output for Timer B
       (self.register.portB[7].to_int() << 7)
-    DDRA | RD_DDRA =>
+    DDRA =>
       /// Bit 0:  Select Bit 0 of Data Port A for input or output (0=input, 1=output)
       (self.register.directionA[0].to_int() << 0) |
       /// Bit 1:  Select Bit 1 of Data Port A for input or output (0=input, 1=output)
@@ -327,7 +327,7 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       (self.register.directionA[6].to_int() << 6) |
       /// Bit 7:  Select Bit 7 of Data Port A for input or output (0=input, 1=output)
       (self.register.directionA[7].to_int() << 7)
-    DDRB | RD_DDRB =>
+    DDRB =>
       /// Bit 0:  Select Bit 0 of Data Port B for input or output (0=input, 1=output)
       (self.register.directionB[0].to_int() << 0) |
       /// Bit 1:  Select Bit 1 of Data Port B for input or output (0=input, 1=output)
@@ -344,33 +344,33 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       (self.register.directionB[6].to_int() << 6) |
       /// Bit 7:  Select Bit 7 of Data Port B for input or output (0=input, 1=output)
       (self.register.directionB[7].to_int() << 7)
-    TA_LO | RD_TA_LO => u8(self.timerA.counter)
-    TA_HI | RD_TA_HI => u8(self.timerA.counter >> 8)
-    TB_LO | RD_TB_LO => u8(self.timerB.counter)
-    TB_HI | RD_TB_HI => u8(self.timerB.counter >> 8)
-    TOD_10TH | RD_TOD_10TH =>
+    TA_LO => u8(self.timerA.counter)
+    TA_HI => u8(self.timerA.counter >> 8)
+    TB_LO => u8(self.timerB.counter)
+    TB_HI => u8(self.timerB.counter >> 8)
+    TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
       /// Bits 4-7:  Unused
       self.register.timeOfDay.tenth & 0b00001111
-    TOD_SEC | RD_TOD_SEC =>
+    TOD_SEC =>
       /// Bits 0-3:  Second digit of Time of Day seconds (BCD)
       /// Bits 4-6:  First digit of Time of Day seconds (BCD)
       /// Bit 7:  Unused
       self.register.timeOfDay.seconds & 0b01111111
-    TOD_MIN | RD_TOD_MIN =>
+    TOD_MIN =>
       /// Bits 0-3:  Second digit of Time of Day minutes (BCD)
       /// Bits 4-6:  First digit of Time of Day minutes (BCD)
       /// Bit 7:  Unused
       self.register.timeOfDay.minutes & 0b01111111
-    TOD_HR | RD_TOD_HR =>
+    TOD_HR =>
       /// Bits 0-3:  Second digit of Time of Day hours (BCD)
       /// Bit 4:  First digit of Time of Day hours (BCD)
       /// Bits 5-6:  Unused
       /// Bit 7:  AM/PM Flag (1=PM, 0=AM)
       (self.register.timeOfDay.hours & 0b00011111) |
       (self.register.timeOfDay.pm.to_int() << 7)
-    SDR | RD_SDR => self.register.serialData
-    ICR | RD_ICR => {
+    SDR => self.register.serialData
+    ICR => {
       /// Bit 0:  Read / did Timer A count down to 0?  (1=yes)
       let value = (self.register.interruptControl.timerA.to_int() << 0) |
         /// Bit 1:  Read / did Timer B count down to 0?  (1=yes)
@@ -396,7 +396,7 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       }
       value
     }
-    CRA | RD_CRA =>
+    CRA =>
       /// Bit 0:  Start Timer A (1=start, 0=stop)
       (self.register.controlA.start.to_int() << 0) |
       /// Bit 1:  Select Timer A output on Port B (1=Timer A output appears on Bit 6 of
@@ -422,7 +422,7 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       (self.register.controlA.serialMode.to_int() << 6) |
       /// Bit 7:  Time of Day Clock frequency (1=50 Hz required on TOD pin, 0=60 Hz)
       (self.register.controlA.clockFrequency.to_int() << 7)
-    CRB | RD_CRB =>
+    CRB =>
       /// Bit 0:  Start Timer B (1=start, 0=stop)
       (self.register.controlB.start.to_int() << 0) |
       /// Bit 1:  Select Timer B output on Port B (1=Timer B output appears on
@@ -495,7 +495,7 @@ fn write(
   //
   match register {
     /// Data Port Register A
-    PRA | WR_PRA => {
+    PRA => {
       /// Bit 0:  Select to read keyboard column 0
       ///         Read joystick 2 up direction
       self.register.portA[0] = value.bit(0)
@@ -522,7 +522,7 @@ fn write(
       ///         Select to read paddles on Port A or B
       self.register.portA[7] = value.bit(7)
     }
-    PRB | WR_PRB => {
+    PRB => {
       /// Bit 0:  Read keyboard row 0
       ///         Read joystick 1 up direction
       self.register.portB[0] = value.bit(0)
@@ -549,7 +549,7 @@ fn write(
       ///         Toggle or pulse data output for Timer B
       self.register.portB[7] = value.bit(7)
     }
-    DDRA | WR_DDRA => {
+    DDRA => {
       /// Bit 0:  Select Bit 0 of Data Port A for input or output (0=input, 1=output)
       self.register.directionA[0] = value.bit(0)
       /// Bit 1:  Select Bit 1 of Data Port A for input or output (0=input, 1=output)
@@ -567,7 +567,7 @@ fn write(
       /// Bit 7:  Select Bit 7 of Data Port A for input or output (0=input, 1=output)
       self.register.directionA[7] = value.bit(7)
     }
-    DDRB | WR_DDRB => {
+    DDRB => {
       /// Bit 0:  Select Bit 0 of Data Port B for input or output (0=input, 1=output)
       self.register.directionB[0] = value.bit(0)
       /// Bit 1:  Select Bit 1 of Data Port B for input or output (0=input, 1=output)
@@ -585,37 +585,37 @@ fn write(
       /// Bit 7:  Select Bit 7 of Data Port B for input or output (0=input, 1=output)
       self.register.directionB[7] = value.bit(7)
     }
-    TA_LO | WR_TA_LO => {
+    TA_LO => {
       self.timerA.counter = (self.timerA.counter & 0xFF00) | u16(value).0
       self.timerA.latch = (self.timerA.latch & 0xFF00) | u16(value).0
     }
-    TA_HI | WR_TA_HI => {
+    TA_HI => {
       self.timerA.counter = (u16(value) << 8).0 | (self.timerA.counter & 0x00FF)
       self.timerA.latch = (u16(value) << 8).0 | (self.timerA.latch & 0x00FF)
     }
-    TB_LO | WR_TB_LO => {
+    TB_LO => {
       self.timerB.counter = (self.timerB.counter & 0xFF00) | u16(value).0
       self.timerB.latch = (self.timerB.latch & 0xFF00) | u16(value).0
     }
-    TB_HI | WR_TB_HI => {
+    TB_HI => {
       self.timerB.counter = (u16(value) << 8).0 | (self.timerB.counter & 0x00FF)
       self.timerB.latch = (u16(value) << 8).0 | (self.timerB.latch & 0x00FF)
     }
-    TOD_10TH | WR_TOD_10TH =>
+    TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
       /// Bits 4-7:  Unused
       self.register.timeOfDay.tenth = value & 0b00001111
-    TOD_SEC | WR_TOD_SEC =>
+    TOD_SEC =>
       /// Bits 0-3:  Second digit of Time of Day seconds (BCD)
       /// Bits 4-6:  First digit of Time of Day seconds (BCD)
       /// Bit 7:  Unused
       self.register.timeOfDay.seconds = value & 0b01111111
-    TOD_MIN | WR_TOD_MIN =>
+    TOD_MIN =>
       /// Bits 0-3:  Second digit of Time of Day minutes (BCD)
       /// Bits 4-6:  First digit of Time of Day minutes (BCD)
       /// Bit 7:  Unused
       self.register.timeOfDay.minutes = value & 0b01111111
-    TOD_HR | WR_TOD_HR => {
+    TOD_HR => {
       /// Bits 0-3:  Second digit of Time of Day hours (BCD)
       /// Bit 4:  First digit of Time of Day hours (BCD)
       /// Bits 5-6:  Unused
@@ -623,8 +623,8 @@ fn write(
       self.register.timeOfDay.hours = value & 0b00011111
       self.register.timeOfDay.pm = value.bit(7)
     }
-    SDR | WR_SDR => self.register.serialData = value
-    ICR | WR_ICR => {
+    SDR => self.register.serialData = value
+    ICR => {
       /// Bit 7:  Write/ set or clear bits of this register
       ///         (1=bits written with 1 will be set, 0=bits written with 1 will be cleared)
       let flag = value.bit(7)
@@ -653,7 +653,7 @@ fn write(
       /// Bit 6:  Not used
       println("ICR #$" + value.to_hex() + " \{self.register.interruptEnable}")
     }
-    CRA | WR_CRA => {
+    CRA => {
       /// Bit 0:  Start Timer A (1=start, 0=stop)
       self.register.controlA.start = value.bit(0)
       /// Bit 1:  Select Timer A output on Port B (1=Timer A output appears on Bit 6 of
@@ -685,7 +685,7 @@ fn write(
       /// Bit 7:  Time of Day Clock frequency (1=50 Hz required on TOD pin, 0=60 Hz)
       self.register.controlA.clockFrequency = value.bit(7)
     }
-    CRB | WR_CRB => {
+    CRB => {
       /// Bit 0:  Start Timer B (1=start, 0=stop)
       self.register.controlB.start = value.bit(0)
       /// Bit 1:  Select Timer B output on Port B (1=Timer B output appears on Bit 7 of Port B)

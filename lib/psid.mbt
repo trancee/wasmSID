@@ -1,5 +1,5 @@
 pub struct PSID {
-  mem : @cpu.Memory
+  mem : Memory
   data : FixedArray[Int]
   //
   mut version : Version
@@ -29,7 +29,7 @@ pub struct PSID {
   mut sid3Address : UInt8
 }
 
-pub fn PSID::new(mem : @cpu.Memory, data : FixedArray[Int]) -> PSID! {
+pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
   let psid : PSID = {
     mem,
     data,

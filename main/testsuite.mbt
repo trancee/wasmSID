@@ -570,31 +570,38 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   let addr = c64.load(data, has_load_address=true)
 
   //
-  c64[0x0002] = 0x00
-  c64[0xA002] = 0x00
-  c64[0xA003] = 0x80 // Docs say put zero here, but this works better.
+  c64[UNUSED] = 0x00
+  // c64[0xA002] = 0x00
+  // c64[0xA003] = 0x80 // Docs say put zero here, but this works better.
+  c64.writew(WARM, 0x8000)
 
   //
-  c64[0x01FE] = 0xFF
-  c64[0x01FF] = 0x7F
+  // c64[0x01FE] = 0xFF
+  // c64[0x01FF] = 0x7F
+  c64.push16(0x7FFF)
 
   // Put RTSes in some of the stubbed calls
-  c64[0xFFD2] = 0x60
-  c64[0x8000] = 0x60
-  c64[0xA474] = 0x60
+  c64[CHROUT] = 0x60
+  // c64[0x8000] = 0x60
+  c64.writea(CARTROM, [0x60])
+  // c64[0xA474] = 0x60
+  c64.writea(READY, [0x60])
 
   // NOP the loading routine
-  c64[0xE16F] = 0xEA
+  // c64[0xE16F] = 0xEA
+  c64.write_direct(0xE16F, 0xEA)
 
   // scan keyboard is LDA #3: RTS
-  c64[0xFFE4] = 0xA9
-  c64[0xFFE5] = 0x03
-  c64[0xFFE6] = 0x60
-  c64[0xFFFE] = 0x48
-  c64[0xFFFF] = 0xFF
+  // c64[0xFFE4] = 0xA9
+  // c64[0xFFE5] = 0x03
+  // c64[0xFFE6] = 0x60
+  c64.writea(GETIN, [0xA9, 0x03, 0x60])
+  // c64[0xFFFE] = 0x48
+  // c64[0xFFFF] = 0xFF
+  c64.writew(IRQ, 0xFF48)
 
   //
-  c64.initCPU(baseaddress=(addr))
+  c64.initCPU(baseaddress=addr)
 
   //
   c64.clear_flags()
@@ -646,7 +653,7 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
           output += Char::from_int(a).to_string()
         }
       }
-      c64[0x030C] = 0x00
+      c64[SAREG] = 0x00
     },
   )
   c64.hook(

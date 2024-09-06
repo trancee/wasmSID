@@ -211,7 +211,7 @@ fn dump(
   }
 }
 
-pub fn read(self : Memory, addr : Int, ~dummy : Bool = false) -> UInt8 {
+pub fn read(self : Memory, addr : UInt16, ~dummy : Bool = false) -> UInt8 {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println("Memory::read $\{u16(addr).to_hex()} \{_dummy}")
 
@@ -233,17 +233,17 @@ pub fn read(self : Memory, addr : Int, ~dummy : Bool = false) -> UInt8 {
   self.read_direct(addr)
 }
 
-pub fn read_direct(self : Memory, addr : Int) -> UInt8 {
+pub fn read_direct(self : Memory, addr : UInt16) -> UInt8 {
   // println("Memory::read_direct $" + UInt16(addr).to_hex())
   //
 
   match self.read {
     Some(_) => self.read(addr)
-    None => self.mem[addr]
+    None => self.mem[addr._]
   }
 }
 
-fn op_get(self : Memory, addr : Int) -> UInt8 {
+fn op_get(self : Memory, addr : UInt16) -> UInt8 {
   // println("Memory::op_get $" + UInt16(addr).to_hex())
   //
 
@@ -252,8 +252,8 @@ fn op_get(self : Memory, addr : Int) -> UInt8 {
 
 pub fn write(
   self : Memory,
-  addr : Int,
-  value : Int,
+  addr : UInt16,
+  value : UInt8,
   ~dummy : Bool = false
 ) -> Unit {
   // let _dummy = if dummy { "🔍" } else { "" }
@@ -279,14 +279,14 @@ pub fn write(
   self.write_direct(addr, value)
 }
 
-pub fn write_direct(self : Memory, addr : Int, value : Int) -> Unit {
+pub fn write_direct(self : Memory, addr : UInt16, value : UInt8) -> Unit {
   match self.write {
     Some(_) => self.write(addr, value)
-    None => self.mem[addr] = value |> u8
+    None => self.mem[addr._] = value._ |> u8
   }
 }
 
-fn op_set(self : Memory, addr : Int, value : Int) -> Unit {
+fn op_set(self : Memory, addr : UInt16, value : UInt8) -> Unit {
   // println(
   //   "Memory::op_set $" + UInt16(addr).to_hex() + " = " + UInt8(value).to_hex(),
   // )

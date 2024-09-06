@@ -261,42 +261,6 @@ enum CIAregister {
   ICR
   CRA
   CRB
-
-  // Read
-  RD_PRA
-  RD_PRB
-  RD_DDRA
-  RD_DDRB
-  RD_TA_LO
-  RD_TA_HI
-  RD_TB_LO
-  RD_TB_HI
-  RD_TOD_10TH
-  RD_TOD_SEC
-  RD_TOD_MIN
-  RD_TOD_HR
-  RD_SDR
-  RD_ICR
-  RD_CRA
-  RD_CRB
-
-  // Write
-  WR_PRA
-  WR_PRB
-  WR_DDRA
-  WR_DDRB
-  WR_TA_LO
-  WR_TA_HI
-  WR_TB_LO
-  WR_TB_HI
-  WR_TOD_10TH
-  WR_TOD_SEC
-  WR_TOD_MIN
-  WR_TOD_HR
-  WR_SDR
-  WR_ICR
-  WR_CRA
-  WR_CRB
 } derive(Show, Eq)
 
 fn cia(register : CIAregister) -> Int {
@@ -317,42 +281,6 @@ fn cia(register : CIAregister) -> Int {
     ICR => 0x0D
     CRA => 0x0E
     CRB => 0x0F
-
-    // Read
-    RD_PRA => 0x00
-    RD_PRB => 0x01
-    RD_DDRA => 0x02
-    RD_DDRB => 0x03
-    RD_TA_LO => 0x04
-    RD_TA_HI => 0x05
-    RD_TB_LO => 0x06
-    RD_TB_HI => 0x07
-    RD_TOD_10TH => 0x08
-    RD_TOD_SEC => 0x09
-    RD_TOD_MIN => 0x0A
-    RD_TOD_HR => 0x0B
-    RD_SDR => 0x0C
-    RD_ICR => 0x0D
-    RD_CRA => 0x0E
-    RD_CRB => 0x0F
-
-    // Write
-    WR_PRA => 0x10
-    WR_PRB => 0x11
-    WR_DDRA => 0x12
-    WR_DDRB => 0x13
-    WR_TA_LO => 0x14
-    WR_TA_HI => 0x15
-    WR_TB_LO => 0x16
-    WR_TB_HI => 0x17
-    WR_TOD_10TH => 0x18
-    WR_TOD_SEC => 0x19
-    WR_TOD_MIN => 0x1A
-    WR_TOD_HR => 0x1B
-    WR_SDR => 0x1C
-    WR_ICR => 0x1D
-    WR_CRA => 0x1E
-    WR_CRB => 0x1F
   }
 }
 

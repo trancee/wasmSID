@@ -1934,7 +1934,7 @@ fn testADCZeroPageX(
   cpu.write(0xFF01, 0x42)
 
   //
-  cpu.write(0x0042 + cpu.registers[X].0, t.op)
+  cpu.write(0x0042 + cpu.registers[X]._, t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -1987,7 +1987,7 @@ fn testADCAbsoluteX(
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[X].0, t.op)
+  cpu.write(0x8000 + cpu.registers[X]._, t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -2040,7 +2040,7 @@ fn testADCAbsoluteY(
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
+  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -2092,8 +2092,8 @@ fn testADCIndirectX(
   cpu.write(0xFF01, 0x02)
 
   //
-  cpu.write(0x0002 + cpu.registers[X].0, 0x00)
-  cpu.write(0x0003 + cpu.registers[X].0, 0x80)
+  cpu.write(0x0002 + cpu.registers[X]._, 0x00)
+  cpu.write(0x0003 + cpu.registers[X]._, 0x80)
 
   //
   cpu.write(0x8000, t.op)
@@ -2152,7 +2152,7 @@ fn testADCIndirectY(
   cpu.write(0x0003, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
+  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
 
   //
   assert_eq!(cpu.step(), 5)

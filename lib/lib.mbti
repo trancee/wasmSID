@@ -21,7 +21,7 @@ impl Bank {
 
 pub struct C64 {
   pub baseaddress : UInt16
-  pub mem : @cpu.Memory
+  pub mem : Memory
   pub bank : FixedArray[Bank]
   pub cpu : @cpu.CPU
   pub sid : Array[SID]
@@ -63,19 +63,245 @@ impl C64 {
   initC64(Self) -> Unit!
   initCPU(Self, ~baseaddress? : Int) -> Unit
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Int
-  new(~baseaddress : Int = .., ~mem? : @cpu.Memory, ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
-  op_set(Self, UInt16, UInt8) -> Unit
+  new(~baseaddress : Int = .., ~mem? : Memory, ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
+  op_set(Self, C64register, UInt8) -> Unit
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
-  read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
-  read_direct(Self, UInt16) -> UInt8
+  read(Self, Int, ~dummy : Bool = ..) -> Int
+  read_direct(Self, Int) -> Int
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
-  write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
+  write(Self, Int, Int, ~dummy : Bool = ..) -> Unit
   write_direct(Self, UInt16, UInt8) -> Unit
+  writea(Self, C64register, Array[UInt8]) -> Unit
+  writew(Self, C64register, UInt16) -> Unit
+}
+
+pub enum C64register {
+  D6510
+  R6510
+  UNUSED
+  ADRAY1
+  ADRAY2
+  CHARAC
+  ENDCHR
+  INTEGR
+  TRMPOS
+  VERCK
+  COUNT
+  DIMFLG
+  VALTYP
+  INTFLG
+  GARBFL
+  SUBFLG
+  INPFLG
+  TANSGN
+  CHANNL
+  LINNUM
+  TEMPPT
+  LASTPT
+  TEMPST
+  INDEX
+  RESHO
+  TXTTAB
+  VARTAB
+  ARYTAB
+  STREND
+  FRETOP
+  FRESPC
+  MEMSIZ
+  CURLIN
+  OLDLIN
+  OLDTXT
+  DATLIN
+  DATPTR
+  INPPTR
+  VARNAM
+  VARPNT
+  FORPNT
+  OPPTR
+  OPMASK
+  DEFPNT
+  DSCPNT
+  FOUR6
+  JMPER
+  FAC1
+  FACEXP
+  FACHO
+  FACSGN
+  SGNFLG
+  BITS
+  AFAC
+  ARGEXP
+  ARGHO
+  ARGSGN
+  ARISGN
+  FACOV
+  FBUFPT
+  CHRGET
+  CHRGOT
+  TXTPTR
+  RNDX
+  STATUS
+  STKEY
+  SVXT
+  VERCKK
+  C3PO
+  BSOUR
+  SYNO
+  XSAV
+  LDTND
+  DFLTN
+  DFLTO
+  PRTY
+  DPSW
+  MSGFLG
+  FNMIDX
+  PTR1
+  PTR2
+  TIME
+  TSFCNT
+  TBTCNT
+  CNTDN
+  BUFPNT
+  INBIT
+  BITC1
+  RINONE
+  RIDATA
+  RIPRTY
+  SAL
+  EAL
+  CMPO
+  TAPE1
+  BITTS
+  NXTBIT
+  RODATA
+  FNLEN
+  LA
+  SA
+  FA
+  FNADR
+  ROPRTY
+  FSBLK
+  MYCH
+  CAS1
+  STAL
+  MEMUSS
+  LSTX
+  NDX
+  RVS
+  INDX
+  LXSP
+  SFDX
+  BLNSW
+  BLNCT
+  GDBLN
+  BLNON
+  CRSW
+  PNT
+  PNTR
+  QTSW
+  LNMX
+  TBLX
+  SCHAR
+  INSRT
+  LDTB1
+  USER
+  KEYTAB
+  RIBUF
+  ROBUF
+  FREEZP
+  BASZPT
+  ASCWRK
+  BAD
+  STACK
+  BSTACK
+  BUF
+  LAT
+  FAT
+  SAT
+  KEYD
+  MEMSTR
+  MEMEND
+  TIMOUT
+  COLOR
+  GDCOL
+  HIBASE
+  XMAX
+  RPTFLG
+  KOUNT
+  DELAY
+  SHFLAG
+  LSTSHF
+  KEYLOG
+  MODE
+  AUTODN
+  M51CTR
+  M51CDR
+  M51AJB
+  RSSTAT
+  BITNUM
+  BAUDOF
+  RIDBE
+  RIDBS
+  RODBS
+  RODBE
+  IRQTMP
+  ENABL
+  TODSNS
+  TRDTMP
+  TD1IRQ
+  TLNIDX
+  TVSFLG
+  SPR11
+  IERROR
+  IMAIN
+  ICRNCH
+  IQPLOP
+  IGONE
+  IEVAL
+  SAREG
+  SXREG
+  SYREG
+  SPREG
+  USRPOK
+  USRADD
+  CINV
+  CNBINV
+  NMINV
+  IOPEN
+  ICLOSE
+  ICHKIN
+  ICKOUT
+  ICLRCH
+  IBASIN
+  IBSOUT
+  ISTOP
+  IGETIN
+  ICLALL
+  USRCMD
+  ILOAD
+  ISAVE
+  TBUFFR
+  SPR13
+  SPR14
+  SPR15
+  VICSCN
+  SPNTRS
+  CARTROM
+  COLD
+  WARM
+  READY
+  CHROUT
+  GETIN
+  IRQ
+}
+impl C64register {
+  op_equal(Self, Self) -> Bool
+  to_string(Self) -> String
 }
 
 type CIA
@@ -229,6 +455,21 @@ impl InterruptFlag {
   to_string(Self) -> String
 }
 
+type Memory
+impl Memory {
+  clear(Self) -> Unit
+  debug(Self, Bool) -> Bool
+  new[A, B](~length : Int = .., ~value : Int = .., ~read? : (Int, Bool) -> Int, ~write? : (Int, Int, Bool) -> Unit, ~debug : Bool = ..) -> Self
+  read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
+  read_direct(Self, UInt16) -> UInt8
+  reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
+  setROM(Self) -> Unit
+  set_read(Self, (Int, Bool) -> Int) -> Unit
+  set_write(Self, (Int, Int, Bool) -> Unit) -> Unit
+  write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
+  write_direct(Self, UInt16, UInt8) -> Unit
+}
+
 type MemoryControlRegister
 
 type Mode
@@ -245,7 +486,7 @@ impl Model {
 
 pub struct NES {
   pub baseaddress : UInt16
-  pub mem : @cpu.Memory
+  pub mem : Memory
   pub cpu : @cpu.CPU
 }
 impl NES {
@@ -264,7 +505,7 @@ impl Output {
 }
 
 pub struct PSID {
-  pub mem : @cpu.Memory
+  pub mem : Memory
   pub data : FixedArray[Int]
   pub version : Version
   pub realSID : Bool
@@ -286,7 +527,7 @@ pub struct PSID {
   pub sid3Address : UInt8
 }
 impl PSID {
-  new(@cpu.Memory, FixedArray[Int]) -> Self!
+  new(Memory, FixedArray[Int]) -> Self!
   process(Self) -> Unit!
   videoStandard(Self) -> VideoStandard
 }
@@ -444,6 +685,8 @@ impl Waveform {
 // Traits
 
 // Extension Methods
+impl Show for C64register
+
 impl Show for CIAInterruptControl
 
 impl Show for CIAInterruptEnable

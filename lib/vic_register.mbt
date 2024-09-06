@@ -281,6 +281,9 @@ enum VICregister {
   SP6COL
   /// Sprite 7 Color Register (the default color value is 12, medium gray)
   SP7COL
+
+  ///
+  UNUSED
 } derive(Show, Compare, Eq)
 
 fn vic(register : VICregister) -> Int {
@@ -341,6 +344,8 @@ fn vic(register : VICregister) -> Int {
     SP5COL => 0x2C
     SP6COL => 0x2D
     SP7COL => 0x2E
+    //
+    UNUSED => -1
   }
 }
 
@@ -403,6 +408,25 @@ fn VICregister::from_int(value : Int) -> VICregister! {
     0x2C => SP5COL
     0x2D => SP6COL
     0x2E => SP7COL
+
+    //
+    0x2F => UNUSED
+    0x30 => UNUSED
+    0x31 => UNUSED
+    0x32 => UNUSED
+    0x33 => UNUSED
+    0x34 => UNUSED
+    0x35 => UNUSED
+    0x36 => UNUSED
+    0x37 => UNUSED
+    0x38 => UNUSED
+    0x39 => UNUSED
+    0x3A => UNUSED
+    0x3B => UNUSED
+    0x3C => UNUSED
+    0x3D => UNUSED
+    0x3E => UNUSED
+    0x3F => UNUSED
 
     ///
     _ => raise UnknownRegister("VIC", value)

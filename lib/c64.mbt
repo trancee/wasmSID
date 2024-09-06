@@ -46,7 +46,7 @@ let memory : Array[Hook] = []
 
 pub struct C64 {
   baseaddress : UInt16
-  mem : @cpu.Memory
+  mem : Memory
   //
   bank : FixedArray[Bank]
   // memory : Array[Hook]
@@ -101,7 +101,7 @@ let defaultSampleRate = 44100
 
 pub fn C64::new(
   ~baseaddress : Int = 0x0000,
-  ~mem? : @cpu.Memory,
+  ~mem? : Memory,
   ~data : FixedArray[Int] = [],
   ~addr : Int = 0x0000,
   ~length : Int = data.length(),
@@ -111,23 +111,15 @@ pub fn C64::new(
   ~realSID : Bool = false,
   ~debug : Bool = false
 ) -> C64 {
-  let cpu = @cpu.CPU::new(
-    pc=baseaddress,
-    mem=mem.or(@cpu.Memory::new()),
-    ~debug,
-  )
-  let _ = cpu.load(addr, data, ~length)
+  let mem = mem.or(Memory::new())
 
   //
-  let mem = cpu.mem()
-  // mem.set_read(
-  //   fn(address : Int, dummy : Bool) -> Int { mem.read_direct(address)._ },
-  // )
-  // mem.set_write(
-  //   fn(address : Int, value : Int, dummy : Bool) -> Unit {
-  //     mem.write_direct(address, value)
-  //   },
-  // )
+  let cpu = @cpu.CPU::new(
+    pc=baseaddress,
+    //
+    ~debug,
+  )
+
   // mem.setROM()
 
   // BASIC
@@ -146,7 +138,7 @@ pub fn C64::new(
         if port.bit(0) {
           c64_basic[address._ - c64_basic_mem_start]
         } else {
-          mem.read_direct(address._)._
+          mem.read_direct(address)
         }
       },
       fn(address : UInt16, value : UInt8, dummy : Bool) {
@@ -161,7 +153,7 @@ pub fn C64::new(
         if port.bit(0) {
 
         } else {
-          mem.write_direct(address._, value._)
+          mem.write_direct(address, value)
         }
       },
     ),
@@ -184,11 +176,11 @@ pub fn C64::new(
         if port.bit(1) {
           c64_kernal[address._ - c64_kernal_mem_start]
         } else {
-          mem.read_direct(address._)._
+          mem.read_direct(address)
         }
       },
       fn(address : UInt16, value : UInt8, dummy : Bool) {
-        mem.write_direct(address._, value._)
+        mem.write_direct(address, value)
       },
     ),
   )
@@ -214,11 +206,11 @@ pub fn C64::new(
         if port.bit(2) {
           c64_characters[address._ - c64_characters_mem_start]
         } else {
-          mem.read_direct(address._)._
+          mem.read_direct(address)
         }
       },
       fn(address : UInt16, value : UInt8, dummy : Bool) {
-        mem.write_direct(address._, value._)
+        mem.write_direct(address, value)
       },
     ),
   )
@@ -237,7 +229,6 @@ pub fn C64::new(
     mem,
     //
     bank: FixedArray::make(8, Bank::RAM),
-    // memory: hooks,
     //
     cpu,
     sid,
@@ -281,6 +272,19 @@ pub fn C64::new(
 
   // c64.initC64()
 
+  cpu.set_read(
+    fn(address : Int, dummy : Bool) -> Int { c64.read(address, ~dummy) },
+  )
+  cpu.set_write(
+    fn(address : Int, value : Int, dummy : Bool) -> Unit {
+      c64.write(address, value, ~dummy)
+    },
+  )
+
+  // must happen after read/write functions set
+  let _ = cpu.load(addr, data, ~length)
+
+  //
   try {
     c64.reset!()
   } catch {
@@ -395,130 +399,160 @@ pub fn reset(self : C64) -> Unit! {
   /// Bit 5: Direction of Bit 5 I/O on port at next address.  Default = 1 (output)
   /// Bit 6: Direction of Bit 6 I/O on port at next address.  Not used.
   /// Bit 7: Direction of Bit 7 I/O on port at next address.  Not used.
-  self[0x0000] = 0xEF
+  self[D6510] = 0xEF
 
   /// Zero page
   /// Processor port data direction register.
-  self[0x0000] = 0x2F // %00101111
+  // self[D6510] = 0x2F // %00101111
   /// Processor port.
-  self[0x0001] = 0x37 // %00110111
+  self[R6510] = 0x37 // %00110111
 
   /// Execution address of routine converting floating point to integer.
-  self[0x0003] = 0xAA
-  self[0x0004] = 0xB1
+  // self[ADRAY1] = 0xAA
+  // self[ADRAY1] = 0xB1
+  self.writew(ADRAY1, 0xB1AA)
   /// Execution address of routine converting integer to floating point.
-  self[0x0005] = 0x91
-  self[0x0006] = 0xB3
+  // self[ADRAY2] = 0x91
+  // self[ADRAY2] = 0xB3
+  self.writew(ADRAY2, 0xB391)
 
   /// Current I/O device number.
-  self[0x0013] = 0x00 // Keyboard for input and screen for output.
+  self[CHANNL] = 0x00 // Keyboard for input and screen for output.
   /// Pointer to next expression in string stack.
   /// Values: $19; $1C; $1F; $22.
-  self[0x0016] = 0x19
+  self[TEMPPT] = 0x19
 
   /// Pointer to beginning of BASIC area.
-  self[0x002B] = 0x01
-  self[0x002C] = 0x08
+  // self[TXTTAB] = 0x01
+  // self[TXTTAB] = 0x08
+  self.writew(TXTTAB, 0x0801)
   /// Pointer to end of BASIC area.
-  self[0x0037] = 0x00
-  self[0x0038] = 0xA0
+  // self[MEMSIZ] = 0x00
+  // self[MEMSIZ] = 0xA0
+  self.writew(MEMSIZ, 0xA000)
 
   /// Current input device number.
-  self[0x0099] = 0x00 // Keyboard.
+  self[DFLTN] = 0x00 // Keyboard.
   /// Current output device number.
-  self[0x009A] = 0x03 // Screen.
+  self[DFLTO] = 0x03 // Screen.
 
   /// Pointer to datasette buffer.
-  self[0x00B2] = 0x3C
-  self[0x00B3] = 0x03
+  // self[TAPE1] = 0x3C
+  // self[TAPE1] = 0x03
+  self.writew(TAPE1, 0x033C)
 
   /// Pointer to beginning of BASIC area after memory test.
-  self[0x0281] = 0x00
-  self[0x0282] = 0x08
+  // self[MEMSTR] = 0x00
+  // self[MEMSTR] = 0x08
+  self.writew(MEMSTR, 0x0800)
   /// Pointer to end of BASIC area after memory test.
-  self[0x0283] = 0x00
-  self[0x0284] = 0xA0
+  // self[MEMEND] = 0x00
+  // self[MEMEND] = 0xA0
+  self.writew(MEMSTR, 0xA000)
 
   /// High byte of pointer to screen memory for screen input/output.
-  self[0x0288] = 0x04
+  self[HIBASE] = 0x04
 
   /// Execution address of routine that, based on the status of shift keys, sets the pointer at memory address $00F5-$00F6 to the appropriate conversion table for converting keyboard matrix codes to PETSCII codes.
-  self[0x028F] = 0x48
-  self[0x0290] = 0xEB
+  // self[KEYLOG] = 0x48
+  // self[KEYLOG] = 0xEB
+  self.writew(KEYLOG, 0xEB48)
 
   /// Execution address of warm reset, displaying optional BASIC error message and entering BASIC idle loop.
-  self[0x0300] = 0x8B
-  self[0x0301] = 0xE3
+  // self[IERROR] = 0x8B
+  // self[IERROR] = 0xE3
+  self.writew(IERROR, 0xE38B)
   /// Execution address of BASIC idle loop.
-  self[0x0302] = 0x83
-  self[0x0303] = 0xA4
+  // self[IMAIN] = 0x83
+  // self[IMAIN] = 0xA4
+  self.writew(IMAIN, 0xA483)
   /// Execution address of BASIC line tokenizater routine.
-  self[0x0304] = 0x7C
-  self[0x0305] = 0xA5
+  // self[ICRNCH] = 0x7C
+  // self[ICRNCH] = 0xA5
+  self.writew(ICRNCH, 0xA57C)
   /// Execution address of BASIC token decoder routine.
-  self[0x0306] = 0x1A
-  self[0x0307] = 0xA7
+  // self[IQPLOP] = 0x1A
+  // self[IQPLOP] = 0xA7
+  self.writew(IQPLOP, 0xA71A)
   /// Execution address of BASIC instruction executor routine.
-  self[0x0308] = 0xE4
-  self[0x0309] = 0xA7
+  // self[IGONE] = 0xE4
+  // self[IGONE] = 0xA7
+  self.writew(IGONE, 0xA7E4)
   /// Execution address of routine reading next item of BASIC expression.
-  self[0x030A] = 0x86
-  self[0x030B] = 0xAE
+  // self[IEVAL] = 0x86
+  // self[IEVAL] = 0xAE
+  self.writew(IEVAL, 0xAE86)
 
   /// Execution address of interrupt service routine.
-  self[0x0314] = 0x31
-  self[0x0315] = 0xEA
+  // self[CINV] = 0x31
+  // self[CINV] = 0xEA
+  self.writew(CINV, 0xEA31)
   /// Execution address of BRK service routine.
-  self[0x0316] = 0x66
-  self[0x0317] = 0xFE
+  // self[CNBINV] = 0x66
+  // self[CNBINV] = 0xFE
+  self.writew(CNBINV, 0xFE66)
   /// Execution address of non-maskable interrupt service routine.
-  self[0x0318] = 0x47
-  self[0x0319] = 0xFE
+  // self[NMINV] = 0x47
+  // self[NMINV] = 0xFE
+  self.writew(NMINV, 0xFE47)
   /// Execution address of OPEN, routine opening files.
-  self[0x031A] = 0x4A
-  self[0x031B] = 0xF3
+  // self[IOPEN] = 0x4A
+  // self[IOPEN] = 0xF3
+  self.writew(IOPEN, 0xF34A)
   /// Execution address of CLOSE, routine closing files.
-  self[0x031C] = 0x91
-  self[0x031D] = 0xF2
+  // self[ICLOSE] = 0x91
+  // self[ICLOSE] = 0xF2
+  self.writew(ICLOSE, 0xF291)
   /// Execution address of CHKIN, routine defining file as default input.
-  self[0x031E] = 0x0E
-  self[0x031F] = 0xF2
+  // self[ICHKIN] = 0x0E
+  // self[ICHKIN] = 0xF2
+  self.writew(ICHKIN, 0xF20E)
   /// Execution address of CHKOUT, routine defining file as default output.
-  self[0x0320] = 0x50
-  self[0x0321] = 0xF2
+  // self[ICKOUT] = 0x50
+  // self[ICKOUT] = 0xF2
+  self.writew(ICKOUT, 0xF250)
   /// Execution address of CLRCHN, routine initializating input/output.
-  self[0x0322] = 0x33
-  self[0x0323] = 0xF3
+  // self[ICLRCH] = 0x33
+  // self[ICLRCH] = 0xF3
+  self.writew(ICLRCH, 0xF333)
   /// Execution address of CHRIN, data input routine, except for keyboard and RS232 input.
-  self[0x0324] = 0x57
-  self[0x0325] = 0xF1
+  // self[IBASIN] = 0x57
+  // self[IBASIN] = 0xF1
+  self.writew(IBASIN, 0xF157)
   /// Execution address of CHROUT, general purpose data output routine.
-  self[0x0326] = 0xCA
-  self[0x0327] = 0xF1
+  // self[IBSOUT] = 0xCA
+  // self[IBSOUT] = 0xF1
+  self.writew(IBSOUT, 0xF1CA)
   /// Execution address of STOP, routine checking the status of Stop key indicator, at memory address $0091.
-  self[0x0328] = 0xED
-  self[0x0329] = 0xF6
+  // self[ISTOP] = 0xED
+  // self[ISTOP] = 0xF6
+  self.writew(ISTOP, 0xF6ED)
   /// Execution address of GETIN, general purpose data input routine.
-  self[0x032A] = 0x3E
-  self[0x032B] = 0xF1
+  // self[IGETIN] = 0x3E
+  // self[IGETIN] = 0xF1
+  self.writew(IGETIN, 0xF13E)
   /// Execution address of CLALL, routine initializing input/output and clearing all file assignment tables.
-  self[0x032C] = 0x2F
-  self[0x032D] = 0xF3
+  // self[ICLALL] = 0x2F
+  // self[ICLALL] = 0xF3
+  self.writew(ICLALL, 0xF32F)
   /// Unused.
-  self[0x032E] = 0x66
-  self[0x032F] = 0xFE
+  // self[USRCMD] = 0x66
+  // self[USRCMD] = 0xFE
+  self.writew(USRCMD, 0xFE66)
   /// Execution address of LOAD, routine loading files.
-  self[0x0330] = 0xA5
-  self[0x0331] = 0xF4
+  // self[ILOAD] = 0xA5
+  // self[ILOAD] = 0xF4
+  self.writew(ILOAD, 0xF4A5)
   /// Execution address of SAVE, routine saving files.
-  self[0x0332] = 0xED
-  self[0x0333] = 0xF5
+  // self[ISAVE] = 0xED
+  // self[ISAVE] = 0xF5
+  self.writew(ISAVE, 0xF5ED)
 
-  /// VIC-II; video display
-  /// Screen control register #1.
-  self[0xD011] = 0x1B // %00011011
-  /// Screen control register #2.
-  self[0xD016] = 0xC8 // %11001000
+  // /// VIC-II; video display
+  // /// Screen control register #1.
+  // self[0xD011] = 0x1B // %00011011
+  // /// Screen control register #2.
+  // self[0xD016] = 0xC8 // %11001000
 
   /// Hardware vectors
   /// Execution address of non-maskable interrupt service routine.
@@ -581,7 +615,7 @@ pub fn initC64(self : C64) -> Unit! {
   /// Bits 6-7: Not connected--no function presently defined.
 
   //initialize bank-reg. (ROM-banks and IO enabled)
-  self[0x0001] = 0x37
+  self[R6510] = 0x37
 
   /// Vector to IRQ Interrupt Routine
   /// 788-789       $314-$315      CINV
@@ -590,8 +624,8 @@ pub fn initC64(self : C64) -> Unit! {
   /// an IRQ interrupt occurs (normally 59953 ($FA31)).
 
   //IRQ
-  self[0x0314] = 0x31
-  self[0x0315] = 0xEA
+  self[CINV] = 0x31
+  self[CINV] = 0xEA // FIXME
 
   /// Vector: Non-Maskable Interrupt
   /// 792-793       $318-$319      NMINV
@@ -601,8 +635,8 @@ pub fn initC64(self : C64) -> Unit! {
   /// ($FE47)).
 
   //NMI
-  self[0x0318] = 0x81
-  self[0x0319] = 0xEA
+  self[NMINV] = 0x81
+  self[NMINV] = 0xEA // FIXME
 
   //
   println("<< C64::initC64")
@@ -883,13 +917,22 @@ fn interrupts(self : C64) -> Bool {
   false
 }
 
-pub fn read(self : C64, address : UInt16, ~dummy : Bool = false) -> UInt8 {
-  if self.debug {
+pub fn read(self : C64, address : Int, ~dummy : Bool = false) -> Int {
+  if self.debug && not(dummy) {
+    let register = try {
+      " | \{C64register::from_int!(address)}"
+    } catch {
+      err => {
+        println(err)
+        ""
+      }
+    }
     println(
       "C64 $" +
-      address.to_hex() +
-      " → $" +
-      self.mem.read(address._, dummy=true).to_hex(),
+      UInt16(address).to_hex() +
+      " → #$" +
+      self.mem.read(address, dummy=true).to_hex() +
+      register,
     )
   }
 
@@ -900,26 +943,30 @@ pub fn read(self : C64, address : UInt16, ~dummy : Bool = false) -> UInt8 {
     abort("C64::get out of bounds")
   }
 
-  //
-  for i = 0; i < memory.length(); i = i + 1 {
-    println("MEMORY[\{i}] \{memory[i].start}")
-    if address >= memory[i].start && address <= memory[i].end {
-      return (memory[i].read)(address, dummy)
-    }
-  }
-
   // VIC-II DMA or Character ROM
   if address >= vic_mem_start && address <= vic_mem_end {
     match self.bank[bank_characters] {
-      ROM => return c64_characters[address._ - vic_mem_start]
-      RAM => return self.mem.read_direct(address._)._
+      ROM => return c64_characters[address - vic_mem_start]
+      RAM => return self.mem.read_direct(address)._
+      // IO => _
     }
   }
   // BASIC or RAM
   if address >= c64_basic_mem_start && address <= c64_basic_mem_end {
     match self.bank[bank_basic] {
-      ROM => return c64_basic[address._ - c64_basic_mem_start]
-      RAM => return self.mem.read_direct(address._)._
+      ROM => return c64_basic[address - c64_basic_mem_start]
+      RAM => return self.mem.read_direct(address)._
+      // IO => _
+    }
+  }
+
+  //
+  for i = 0; i < memory.length(); i = i + 1 {
+    if address >= memory[i].start && address <= memory[i].end {
+      println(
+        "MEMORY[\{i}] \{UInt16(memory[i].start).to_hex()} - \{UInt16(memory[i].end).to_hex()}",
+      )
+      return (memory[i].read)(address, dummy)._
     }
   }
 
@@ -927,15 +974,18 @@ pub fn read(self : C64, address : UInt16, ~dummy : Bool = false) -> UInt8 {
   self.read_direct(address)
 }
 
-pub fn read_direct(self : C64, address : UInt16) -> UInt8 {
+pub fn read_direct(self : C64, address : Int) -> Int {
   // println("C64::read_direct $" + UInt16(addr).to_hex())
   //
 
-  self.mem.read(address._)._
+  self.mem.read(address)._
 }
 
-fn op_get(self : C64, address : UInt16) -> UInt8 {
+fn op_get(self : C64, register : C64register) -> UInt8 {
   // println("C64::op_get $" + UInt16(addr).to_hex())
+  //
+
+  let address = c64(register)
   //
 
   self.read(address)
@@ -943,12 +993,26 @@ fn op_get(self : C64, address : UInt16) -> UInt8 {
 
 pub fn write(
   self : C64,
-  address : UInt16,
-  value : UInt8,
+  address : Int,
+  value : Int,
   ~dummy : Bool = false
 ) -> Unit {
-  if self.debug {
-    println("C64 $" + address.to_hex() + " ← #$" + value.to_hex())
+  if self.debug && not(dummy) {
+    let register = try {
+      " | \{C64register::from_int!(address)}"
+    } catch {
+      err => {
+        println(err)
+        ""
+      }
+    }
+    println(
+      "C64 $" +
+      UInt16(address).to_hex() +
+      " ← #$" +
+      UInt8(value).to_hex() +
+      register,
+    )
   }
   //
 
@@ -969,17 +1033,17 @@ pub fn write(
   } else if page >= 0xD0 && page <= 0xD3 {
     // VIC-II DMA or Character ROM
     if self.bank[bank_characters] != IO {
-      return self.mem.write_direct(address._, value._)
+      return self.mem.write_direct(address, value)
     }
   } else if page == 0xDC {
     // CIA1
     if self.bank[bank_characters] != IO {
-      return self.mem.write_direct(address._, value._)
+      return self.mem.write_direct(address, value)
     }
   } else if page == 0xDD {
     // CIA2
     if self.bank[bank_characters] != IO {
-      return self.mem.write_direct(address._, value._)
+      return self.mem.write_direct(address, value)
     }
   }
 
@@ -991,9 +1055,60 @@ pub fn write_direct(self : C64, address : UInt16, value : UInt8) -> Unit {
   self.mem.write(address._, value._)
 }
 
-pub fn op_set(self : C64, address : UInt16, value : UInt8) -> Unit {
+pub fn writew(self : C64, register : C64register, value : UInt16) -> Unit {
+  let address = c64(register)
+  match register {
+    ADRAY1
+    | ADRAY2
+    | TXTTAB
+    | MEMSTR
+    | MEMSIZ
+    | TAPE1
+    | KEYLOG
+    | IERROR
+    | IMAIN
+    | ICRNCH
+    | IQPLOP
+    | IGONE
+    | IEVAL
+    | IOPEN
+    | ICLOSE
+    | ICHKIN
+    | ICKOUT
+    | ICLRCH
+    | IBASIN
+    | IBSOUT
+    | ISTOP
+    | IGETIN
+    | ICLALL
+    | ILOAD | ISAVE | CINV | CNBINV | NMINV | USRCMD | COLD | WARM | IRQ => {
+      self.write(address, value._ >> 8)
+      self.write(address + 1, value._ & 0xFF)
+    }
+    _ => {
+      println("unknown register \{register}")
+      panic()
+    }
+  }
+}
+
+pub fn writea(
+  self : C64,
+  register : C64register,
+  values : Array[UInt8]
+) -> Unit {
+  let address = c64(register)
+  match register {
+    CARTROM | READY | GETIN =>
+      values.eachi(fn(i, value) { self.write_direct(address + i, value) })
+  }
+}
+
+pub fn op_set(self : C64, register : C64register, value : UInt8) -> Unit {
   // println("C64::op_set $" + address.to_hex() + " = " + value.to_hex())
 
+  let address = c64(register)
+
   //
-  self.write(address, value)
+  self.write(address, value._)
 }
