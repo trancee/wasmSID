@@ -213,7 +213,7 @@ pub enum C64register {
   KEYTAB
   RIBUF
   ROBUF
-  FREEZP
+  FREKZP
   BASZPT
   ASCWRK
   BAD
@@ -292,11 +292,15 @@ pub enum C64register {
   VICSCN
   SPNTRS
   CARTROM
+  BASICROM
+  KERNALROM
   COLD
   WARM
   READY
   CHROUT
   GETIN
+  NMI
+  RESET
   IRQ
 }
 impl C64register {

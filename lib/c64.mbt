@@ -8,7 +8,7 @@ let c64_mem_size = 0xFFFF
 
 let c64_basic_mem_start = 0xA000
 
-let c64_basic_mem_end = 0xDFFF
+let c64_basic_mem_end = 0xBFFF
 
 let c64_basic_mem_size = 0x2000
 
@@ -448,7 +448,7 @@ pub fn reset(self : C64) -> Unit! {
   /// Pointer to end of BASIC area after memory test.
   // self[MEMEND] = 0x00
   // self[MEMEND] = 0xA0
-  self.writew(MEMSTR, 0xA000)
+  self.writew(MEMEND, 0xA000)
 
   /// High byte of pointer to screen memory for screen input/output.
   self[HIBASE] = 0x04
@@ -556,11 +556,14 @@ pub fn reset(self : C64) -> Unit! {
 
   /// Hardware vectors
   /// Execution address of non-maskable interrupt service routine.
-  self.cpu.setNMI(0xFE43)
+  // self.cpu.setNMI(0xFE43)
+  self.writew(NMI, 0xFE43)
   /// Execution address of cold reset.
-  self.cpu.setRESET(0xFCE2)
+  // self.cpu.setRESET(0xFCE2)
+  self.writew(RESET, 0xFCE2)
   /// Execution address of interrupt service routine.
-  self.cpu.setIRQ(0xFF48)
+  // self.cpu.setIRQ(0xFF48)
+  self.writew(IRQ, 0xFF48)
 
   //
   println("<< C64::reset")
@@ -922,8 +925,8 @@ pub fn read(self : C64, address : Int, ~dummy : Bool = false) -> Int {
     let register = try {
       " | \{C64register::from_int!(address)}"
     } catch {
-      err => {
-        println(err)
+      _ => {
+        // println(err)
         ""
       }
     }
@@ -1001,8 +1004,8 @@ pub fn write(
     let register = try {
       " | \{C64register::from_int!(address)}"
     } catch {
-      err => {
-        println(err)
+      _ => {
+        // println(err)
         ""
       }
     }
@@ -1060,33 +1063,36 @@ pub fn writew(self : C64, register : C64register, value : UInt16) -> Unit {
   match register {
     ADRAY1
     | ADRAY2
-    | TXTTAB
-    | MEMSTR
-    | MEMSIZ
-    | TAPE1
+    | CINV
+    | CNBINV
+    | COLD
     | KEYLOG
-    | IERROR
-    | IMAIN
-    | ICRNCH
-    | IQPLOP
-    | IGONE
-    | IEVAL
-    | IOPEN
-    | ICLOSE
-    | ICHKIN
-    | ICKOUT
-    | ICLRCH
+    | MEMEND
+    | MEMSIZ
+    | MEMSTR
+    | TAPE1
     | IBASIN
     | IBSOUT
-    | ISTOP
-    | IGETIN
+    | ICHKIN
     | ICLALL
-    | ILOAD | ISAVE | CINV | CNBINV | NMINV | USRCMD | COLD | WARM | IRQ => {
+    | ICLOSE
+    | ICLRCH
+    | ICKOUT
+    | ICRNCH
+    | IERROR
+    | IEVAL
+    | IGETIN
+    | IGONE
+    | ILOAD
+    | IMAIN
+    | IOPEN
+    | IQPLOP
+    | ISAVE | ISTOP | IRQ | NMI | NMINV | RESET | TXTTAB | USRCMD | WARM => {
       self.write(address, value._ >> 8)
       self.write(address + 1, value._ & 0xFF)
     }
     _ => {
-      println("unknown register \{register}")
+      println("unknown C64 register \{register}")
       panic()
     }
   }

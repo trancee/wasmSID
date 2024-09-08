@@ -19,7 +19,7 @@ impl CPU {
   interrupts(Self) -> Bool
   irq(Self, ~pc? : Int) -> Unit
   load(Self, Int, FixedArray[Int], ~length : Int = .., ~has_load_address : Bool = ..) -> Int
-  new(~pc : Int = .., ~read? : (Int, Bool) -> Int, ~write? : (Int, Int, Bool) -> Unit, ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~decimal_mode : Bool = .., ~debug : Bool = ..) -> Self
+  new(~pc : Int = .., ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~decimal_mode : Bool = .., ~debug : Bool = ..) -> Self
   nmi(Self, ~pc? : Int) -> Unit
   pc(Self) -> Int
   push(Self, UInt8, ~dummy : Bool = ..) -> Unit

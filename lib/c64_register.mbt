@@ -534,9 +534,10 @@ pub enum C64register {
 
   /// Autostart ROM Cartridge
   CARTROM
-
   ///
   BASICROM
+  ///
+  KERNALROM
 
   /// Cold Start Vector
   COLD
@@ -702,7 +703,7 @@ fn c64(register : C64register) -> Int {
 
     /// Page 1
 
-    _ => 0x100 // ARRAY[10]
+    // _ => 0x100 // ARRAY[10]
     BAD => 0x0100 // ARRAY[62]
     STACK => 0x0100 // ARRAY[256]
     BSTACK => 0x013F // ARRAY[192]
@@ -812,6 +813,7 @@ fn c64(register : C64register) -> Int {
     ///
     CARTROM => 0x8000
     BASICROM => 0xA000
+    KERNALROM => 0xE000
   }
 }
 
@@ -823,7 +825,9 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x0001 => R6510
     0x0002 => UNUSED
     0x0003 => ADRAY1 // WORD
+    0x0004 => ADRAY1 // WORD
     0x0005 => ADRAY2 // WORD
+    0x0006 => ADRAY2 // WORD
     0x0007 => CHARAC
     // 0x0007 => INTEGR
     0x0008 => ENDCHR
@@ -839,33 +843,62 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x0012 => TANSGN
     0x0013 => CHANNL
     0x0014 => LINNUM // WORD
+    0x0015 => LINNUM // WORD
     0x0016 => TEMPPT
     0x0017 => LASTPT // WORD
+    0x0018 => LASTPT // WORD
     0x0019 => TEMPST // ARRAY [3*3]
     0x0022 => INDEX // ARRAY [4]
+    0x0023 => INDEX // ARRAY [4]
+    0x0024 => INDEX // ARRAY [4]
+    0x0025 => INDEX // ARRAY [4]
     0x0026 => RESHO // ARRAY [5]
+    0x0027 => RESHO // ARRAY [5]
+    0x0028 => RESHO // ARRAY [5]
+    0x0029 => RESHO // ARRAY [5]
+    0x002A => RESHO // ARRAY [5]
     0x002B => TXTTAB // WORD
+    0x002C => TXTTAB // WORD
     0x002D => VARTAB // WORD
+    0x002E => VARTAB // WORD
     0x002F => ARYTAB // WORD
+    0x0030 => ARYTAB // WORD
     0x0031 => STREND // WORD
+    0x0032 => STREND // WORD
     0x0033 => FRETOP // WORD
+    0x0034 => FRETOP // WORD
     0x0035 => FRESPC // WORD
+    0x0036 => FRESPC // WORD
     0x0037 => MEMSIZ // WORD
+    0x0038 => MEMSIZ // WORD
     0x0039 => CURLIN // WORD
+    0x003A => CURLIN // WORD
     0x003B => OLDLIN // WORD
     0x003D => OLDTXT // WORD
+    0x003E => OLDTXT // WORD
     0x003F => DATLIN // WORD
+    0x0040 => DATLIN // WORD
     0x0041 => DATPTR // WORD
     0x0043 => INPPTR // WORD
+    0x0044 => INPPTR // WORD
     0x0045 => VARNAM // WORD
+    0x0046 => VARNAM // WORD
     0x0047 => VARPNT // WORD
+    0x0048 => VARPNT // WORD
     0x0049 => FORPNT // WORD
+    0x004A => FORPNT // WORD
     0x004B => OPPTR // WORD
+    0x004C => OPPTR // WORD
     0x004D => OPMASK
     0x004E => DEFPNT // WORD
+    0x004F => DEFPNT // WORD
     0x0050 => DSCPNT // PTR + LEN
+    0x0051 => DSCPNT // PTR + LEN
+    0x0052 => DSCPNT // PTR + LEN
     0x0053 => FOUR6
     0x0054 => JMPER // OP + PTR
+    0x0055 => JMPER // OP + PTR
+    0x0056 => JMPER // OP + PTR
     // 0x0057 => TEMPF1
     // 0x005C => TEMPF2
     0x0061 => FAC1 // FP
@@ -903,6 +936,8 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x009E => PTR1
     0x009F => PTR2
     0x00A0 => TIME // ARRAY[3]
+    0x00A1 => TIME // ARRAY[3]
+    0x00A2 => TIME // ARRAY[3]
     0x00A3 => TSFCNT
     0x00A4 => TBTCNT
     0x00A5 => CNTDN
@@ -913,9 +948,13 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x00AA => RIDATA
     0x00AB => RIPRTY
     0x00AC => SAL // WORD
+    0x00AD => SAL // WORD
     0x00AE => EAL // WORD
+    0x00AF => EAL // WORD
     0x00B0 => CMPO // WORD
+    0x00B1 => CMPO // WORD
     0x00B2 => TAPE1 // WORD
+    0x00B3 => TAPE1 // WORD
     0x00B4 => BITTS
     0x00B5 => NXTBIT
     0x00B6 => RODATA
@@ -924,17 +963,21 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x00B9 => SA
     0x00BA => FA
     0x00BB => FNADR // WORD
+    0x00BC => FNADR // WORD
     0x00BD => ROPRTY
     0x00BE => FSBLK
     0x00BF => MYCH
     0x00C0 => CAS1
     0x00C1 => STAL // WORD
+    0x00C2 => STAL // WORD
     0x00C3 => MEMUSS // WORD
+    0x00C4 => MEMUSS // WORD
     0x00C5 => LSTX
     0x00C6 => NDX
     0x00C7 => RVS
     0x00C8 => INDX
     0x00C9 => LXSP // WORD
+    0x00CA => LXSP // WORD
     0x00CB => SFDX
     0x00CC => BLNSW
     0x00CD => BLNCT
@@ -942,6 +985,7 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x00CF => BLNON
     0x00D0 => CRSW
     0x00D1 => PNT // WORD
+    0x00D2 => PNT // WORD
     0x00D3 => PNTR
     0x00D4 => QTSW
     0x00D5 => LNMX
@@ -950,16 +994,23 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x00D8 => INSRT
     0x00D9 => LDTB1 // ARRAY[25]
     0x00F3 => USER // WORD
+    0x00F4 => USER // WORD
     0x00F5 => KEYTAB // WORD
+    0x00F6 => KEYTAB // WORD
     0x00F7 => RIBUF // WORD
+    0x00F8 => RIBUF // WORD
     0x00F9 => ROBUF // WORD
+    0x00FA => ROBUF // WORD
     0x00FB => FREKZP // ARRAY[4]
+    0x00FC => FREKZP // ARRAY[4]
+    0x00FD => FREKZP // ARRAY[4]
+    0x00FE => FREKZP // ARRAY[4]
     0x00FF => BASZPT
-    0x00FF => ASCWRK // FIXME
+    // 0x00FF => ASCWRK // FIXME
 
     /// Page 1
 
-    0x0100 => STACK // ARRAY[256]
+    // 0x0100 => STACK // ARRAY[256]
     0x013F => BSTACK // ARRAY[192]
 
     /// Page 2
@@ -1072,9 +1123,13 @@ fn C64register::from_int(value : Int) -> C64register! {
     ///
     0x8000 => CARTROM
     0xA000 => BASICROM
+    0xE000 => KERNALROM
 
     ///
     _ => {
+      if value >= 0x0100 && value < 0x0200 {
+        return STACK
+      }
       if value >= 0x8000 && value < 0xA000 {
         return CARTROM
       }
