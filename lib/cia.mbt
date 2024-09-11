@@ -41,6 +41,7 @@ struct CIA {
 }
 
 pub fn CIA::new(
+  ~mem? : Memory,
   baseaddress : Int,
   //
 
@@ -50,11 +51,8 @@ pub fn CIA::new(
   println("CIA::new")
   //
 
-  let mem = FixedArray::make(cia_mem_size + 1, 0x00)
-  //
-
   let cia : CIA = {
-    mem,
+    mem: FixedArray::make(cia_mem_size + 1, 0x00),
     baseaddress,
 
     //
@@ -69,35 +67,36 @@ pub fn CIA::new(
   }
 
   //
-  memory.push(
-    Hook::new(
-      baseaddress,
-      baseaddress + cia_mem_size,
-      // mem,
-      fn(address : UInt16, dummy : Bool) {
-        let register = try {
-          CIAregister::from_int!(address._ - baseaddress)
-        } catch {
-          err => {
-            println(err)
-            panic()
+  match mem {
+    Some(mem) =>
+      mem.hook(
+        baseaddress,
+        baseaddress + cia_mem_size,
+        // mem,
+        fn(address : UInt16, dummy : Bool) -> UInt8 {
+          let register = try {
+            CIAregister::from_int!(address._ - baseaddress)
+          } catch {
+            err => {
+              println(err)
+              panic()
+            }
           }
-        }
-        cia.read(register, ~dummy)._
-      },
-      fn(address : UInt16, value : UInt8, dummy : Bool) {
-        let register = try {
-          CIAregister::from_int!(address._ - baseaddress)
-        } catch {
-          err => {
-            println(err)
-            panic()
+          cia.read(register, ~dummy)._
+        },
+        fn(address : UInt16, value : UInt8, dummy : Bool) {
+          let register = try {
+            CIAregister::from_int!(address._ - baseaddress)
+          } catch {
+            err => {
+              println(err)
+              panic()
+            }
           }
-        }
-        cia.write(register, value, ~dummy)
-      },
-    ),
-  )
+          cia.write(register, value, ~dummy)
+        },
+      )
+  }
 
   //
   cia.reset(~videoStandard)
@@ -207,10 +206,10 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     println("TB:#$" + UInt16(self.timerB.counter).to_hex() + " \{cycles}")
     //count timer
     let mut tmp = self.timerB.counter -
-      match self.register.controlB.inputMode {
+      (match self.register.controlB.inputMode {
         CountCycles => cycles
         CountTimerA => if self.register.interruptControl.timerA { 1 } else { 0 }
-      }
+      })
     // println("TimerB Start #\{tmp}")
     self.register.interruptControl.timerB = tmp <= 0
     if self.register.interruptControl.timerB { // Timer counted down
@@ -412,10 +411,10 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       /// Bit 5:  Timer A input mode (1=count microprocessor cycles, 0=count signals on
       ///         CNT line at pin 4 of User Port)
       (
-        match self.register.controlA.inputMode {
+        (match self.register.controlA.inputMode {
           TimerAInputMode::CountCycles => 0b01
           TimerAInputMode::CountSignals => 0b00
-        } <<
+        }) <<
         5
       ) |
       /// Bit 6:  Serial Port (56332, $DC0C) mode (1=output, 0=input)
@@ -442,12 +441,12 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
       ///            10 = Count each time that Timer A counts down to 0
       ///            11 = Count Timer A 0's when CNT pulses are also present
       (
-        match self.register.controlB.inputMode {
+        (match self.register.controlB.inputMode {
           TimerBInputMode::CountCycles => 0b00
           TimerBInputMode::CountSignals => 0b01
           TimerBInputMode::CountTimerA => 0b10
           TimerBInputMode::CountZero => 0b11
-        } <<
+        }) <<
         5
       ) |
       /// Bit 7:  Select Time of Day write (0=writing to TOD registers sets

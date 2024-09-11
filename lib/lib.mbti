@@ -63,21 +63,19 @@ impl C64 {
   initC64(Self) -> Unit!
   initCPU(Self, ~baseaddress? : Int) -> Unit
   load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Int
-  new(~baseaddress : Int = .., ~mem? : Memory, ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
+  new(~baseaddress : Int = .., ~mem? : Memory, ~data : FixedArray[Int] = .., ~address : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
   op_set(Self, C64register, UInt8) -> Unit
   pc(Self) -> Int
   push(Self, @cpu.UInt8) -> Unit
   push16(Self, @cpu.UInt16) -> Unit
   read(Self, Int, ~dummy : Bool = ..) -> Int
-  read_direct(Self, Int) -> Int
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
   write(Self, Int, Int, ~dummy : Bool = ..) -> Unit
-  write_direct(Self, UInt16, UInt8) -> Unit
-  writea(Self, C64register, Array[UInt8]) -> Unit
-  writew(Self, C64register, UInt16) -> Unit
+  write_array(Self, C64register, Array[UInt8]) -> Unit
+  write_word(Self, C64register, UInt16) -> Unit
 }
 
 pub enum C64register {
@@ -311,7 +309,7 @@ impl C64register {
 type CIA
 impl CIA {
   emulate(Self, Int) -> Bool
-  new(Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  new(~mem? : Memory, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
@@ -462,14 +460,10 @@ impl InterruptFlag {
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  debug(Self, Bool) -> Bool
-  new[A, B](~length : Int = .., ~value : Int = .., ~read? : (Int, Bool) -> Int, ~write? : (Int, Int, Bool) -> Unit, ~debug : Bool = ..) -> Self
+  hook(Self, Int, Int, (UInt16, Bool) -> UInt8, (UInt16, UInt8, Bool) -> Unit) -> Unit
+  new(~length : Int = .., ~value : Int = ..) -> Self
   read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
   read_direct(Self, UInt16) -> UInt8
-  reset(Self, ~offset : Int = .., ~length : Int = .., ~value : Int = ..) -> Unit
-  setROM(Self) -> Unit
-  set_read(Self, (Int, Bool) -> Int) -> Unit
-  set_write(Self, (Int, Int, Bool) -> Unit) -> Unit
   write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
   write_direct(Self, UInt16, UInt8) -> Unit
 }
@@ -524,6 +518,8 @@ pub struct PSID {
   pub songs : UInt16
   pub defaultSong : UInt16
   pub flags : Flags
+  pub startPage : UInt8
+  pub pageLength : UInt8
   pub sid2Flags : SIDFlags
   pub sid3Flags : SIDFlags
   pub sid4Flags : SIDFlags
@@ -544,7 +540,7 @@ impl RunMode {
 
 type SID
 impl SID {
-  new(Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  new(~mem? : Memory, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
 }
 
@@ -640,7 +636,7 @@ impl UInt8 {
 type VIC
 impl VIC {
   emulate(Self, Int) -> Bool
-  new(Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
+  new(~mem? : Memory, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
   reset(Self, ~videoStandard : VideoStandard = ..) -> Unit!
 }
 

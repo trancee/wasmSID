@@ -61,8 +61,8 @@ pub fn sidtest() -> Unit {
       s += "(IRQ), "
     }
   }
-  let song = psid.defaultSong.0
-  let songs = psid.songs.0
+  let song = psid.defaultSong._
+  let songs = psid.songs._
   s += "Subtune:\{song} (of \{songs})"
   if psid.realSID {
     s += ", RealSID"
@@ -87,8 +87,8 @@ fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {
   let mut subtune = subtune
   if subtune == 0 {
     subtune = 1
-  } else if subtune > psid.songs.0 {
-    subtune = psid.songs.0
+  } else if subtune > psid.songs._ {
+    subtune = psid.songs._
   }
 
   //determine init-address:

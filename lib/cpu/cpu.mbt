@@ -210,20 +210,27 @@ pub fn register(self : CPU, register : Register, value : Int) -> Unit {
 // Load a program into memory
 pub fn load(
   self : CPU,
-  addr : Int,
+  //
+  address : Int,
+  //
   data : FixedArray[Int],
   ~length : Int = data.length(),
+  //
   ~has_load_address : Bool = false
 ) -> Int {
   // println(
   //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
   // )
-  let addr = if has_load_address { data[0] | (data[1] << 8) } else { addr }
+  let address = if has_load_address {
+    data[0] | (data[1] << 8)
+  } else {
+    address
+  }
   let start = if has_load_address { 2 } else { 0 }
   for i = 0; i < length - start; i = i + 1 {
-    self.write(addr + i, data[i + start])
+    self.write(address + i, data[i + start], dummy=true)
   }
-  addr
+  address
 }
 
 pub fn read(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt8 {
@@ -360,7 +367,7 @@ pub fn step(self : CPU) -> Int {
     }
 
     //
-    let opcode = self.read(self.pc)
+    let opcode = self.read(self.pc, dummy=true)
 
     //
     let (name, op, mode, _size, _cycles, _, illegal) = instructions[opcode._]
@@ -385,23 +392,33 @@ pub fn step(self : CPU) -> Int {
   self.cycles - cycles
 }
 
-fn get_addr(self : CPU, mode : Mode) -> UInt16 {
+fn get_addr(self : CPU, mode : Mode, ~dummy : Bool = true) -> UInt16 {
   match mode {
     Implied => 0
     Accumulator => 0
     Immediate => self.pc + 1
-    Indirect => self.read16zp(self.read16(self.pc + 1))
+    Indirect => self.read16zp(self.read16(self.pc + 1, ~dummy), ~dummy)
     IndexedIndirect =>
-      self.read16zp((self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16)
+      self.read16zp(
+        (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
+        ~dummy,
+      )
     IndirectIndexed =>
-      self.read16zp(self.read(self.pc + 1) |> u16) + self.registers[Y]._
-    Absolute => self.read16(self.pc + 1)
-    AbsoluteX => self.read16(self.pc + 1) + self.registers[X]._
-    AbsoluteY => self.read16(self.pc + 1) + self.registers[Y]._
-    ZeroPage => self.read(self.pc + 1) & 0xFF |> u16
-    ZeroPageX => (self.read(self.pc + 1) + self.registers[X]) & 0xFF |> u16
-    ZeroPageY => (self.read(self.pc + 1) + self.registers[Y]) & 0xFF |> u16
-    Relative => self.pc + 2 + self.read(self.pc + 1).to_signed()
+      self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy) +
+      self.registers[Y]._
+    Absolute => self.read16(self.pc + 1, ~dummy)
+    AbsoluteX => self.read16(self.pc + 1, ~dummy) + self.registers[X]._
+    AbsoluteY => self.read16(self.pc + 1, ~dummy) + self.registers[Y]._
+    ZeroPage => self.read(self.pc + 1, ~dummy) & 0xFF |> u16
+    ZeroPageX =>
+      (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16
+    ZeroPageY =>
+      (self.read(self.pc + 1, ~dummy) + self.registers[Y]) & 0xFF |> u16
+    Relative => self.pc + 2 + self.read(self.pc + 1, ~dummy).to_signed()
+    _ => {
+      println("unknown CPU mode \{mode}")
+      panic()
+    }
   }
 }
 
@@ -511,11 +528,11 @@ fn dump_step(
       // ADC, AND, ASL, BIT, CMP, CPX, CPY, DEC, EOR, INC, JMP, JSR, LDA, LDX, LDY, LSR, ORA, ROL, ROR, SBC, STA, STX, and STY.
       " " +
       read16() +
-      match name {
+      (match name {
         "JMP" | "JSR" => ""
         _ =>
           " = " + self.read(self.read16(self.pc + 1, ~dummy), ~dummy).to_hex()
-      }
+      })
     AbsoluteX =>
       // Indexed Absolute Addressing
       // https://www.c64-wiki.com/wiki/Indexed_absolute_addressing
@@ -600,7 +617,7 @@ fn dump_step(
   let mut instr = ""
   for i = 0; i < 3; i = i + 1 {
     instr += " " +
-      if i < size { self.read(self.pc + i, ~dummy).to_hex() } else { "  " }
+      (if i < size { self.read(self.pc + i, ~dummy).to_hex() } else { "  " })
   }
   let mut spaces = ""
   for i = 32 - name.length() - addr_mode.length(); i > 0; i = i - 1 {
@@ -621,7 +638,7 @@ fn dump_step(
     instr +
     " " +
     unofficial +
-    if opcode == 0xE3 ||
+    (if opcode == 0xE3 ||
       opcode == 0xE7 ||
       opcode == 0xEF ||
       opcode == 0xF3 ||
@@ -631,7 +648,7 @@ fn dump_step(
       "ISB"
     } else {
       name
-    } +
+    }) +
     addr_mode +
     spaces +
     "A:" +
@@ -1528,14 +1545,14 @@ fn opSHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
   let tmp = self.registers[A] &
     self.registers[X] &
-    match mode {
+    (match mode {
       AbsoluteY => (addr >> 8) + 1 |> u8 // overflow
       IndirectIndexed => (addr >> 8) + 1 |> u8 // overflow
       _ => {
         println("unimplemented: SHA \{mode}")
         abort("unimplemented: SHA \{mode}")
       }
-    }
+    })
   self.write(addr, tmp)
 }
 

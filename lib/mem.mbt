@@ -50,138 +50,111 @@
 ///       $FFFC         System Reset (RES) Hardware Vector
 ///       $FFFE         Maskable Interrupt Request and Break Hardware Vectors
 
-// enum Address {
-//   D6510
-//   R6510
-//   ADRAY1 // Vector: Routine to Convert a Number from Floating Point to Signed Integer
-//   ADRAY2 // Vector: Routine to Convert a Number from Integer to Floating Point
-//   CHARAC // Search Character for Scanning BASIC Text Input
-//   ENDCHR // Search Character for Statement Termination or Quote
-//   TRMPOS // Column position of the Cursor before the Last TAB or SPC
-//   VERCK // Flag: LOAD or VERIFY
-//   COUNT // Index into the Text Input Buffer/Number of Array Subscripts
-//   DIMFLG // Flags for the Routines That Locate or Build an Array
-//   VALTYP // Flag: Type of Data (String or Numeric)
-//   //
-//   TVSFLG // 02A6        678     Flag: TV Standard: $00 = NTSC, $01 = PAL.
-// }
+struct Hook {
+  start : Int
+  end : Int
+  //
+  read : (UInt16, Bool) -> UInt8
+  write : (UInt16, UInt8, Bool) -> Unit
+}
 
-// struct MemoryHook {
-//   start : Int
-//   end : Int
-//   mem : FixedArray[Int]
-//   r : (Int, Bool) -> Int
-//   w : (Int, Int, Bool) -> Unit
-// }
+fn Hook::new(
+  start : Int,
+  end : Int,
+  //
+  read : (UInt16, Bool) -> UInt8,
+  write : (UInt16, UInt8, Bool) -> Unit
+) -> Hook {
+  { start, end, read, write }
+}
 
-// fn MemoryHook::new(
-//   start : Int,
-//   end : Int,
-//   mem : FixedArray[Int],
-//   r : (Int, Bool) -> Int,
-//   w : (Int, Int, Bool) -> Unit
-// ) -> MemoryHook {
-//   { start, end, mem, r, w }
-// }
+// let memory : Array[Hook] = []
 
 struct Memory {
   mut mem : FixedArray[UInt8]
   //
-  mut read : ((Int, Bool) -> Int)?
-  mut write : ((Int, Int, Bool) -> Unit)?
+  // mut read : (UInt16, Bool) -> UInt8
+  // mut write : (UInt16, UInt8, Bool) -> Unit
   //
-  hooks : Array[Unit] //[MemoryHook]
+  hooks : Array[Hook]
+}
+
+pub fn Memory::new(~length : Int = 0xFFFF, ~value : Int = 0x00) -> Memory {
+  { mem: FixedArray::make(length + 1, value), hooks: [] }
+}
+
+pub fn hook(
+  self : Memory,
   //
-  mut debug : Bool
+  start : Int,
+  end : Int,
+  //
+  read : (UInt16, Bool) -> UInt8,
+  write : (UInt16, UInt8, Bool) -> Unit
+) -> Unit {
+  self.hooks.push(Hook::new(start, end, read, write))
 }
-
-pub fn Memory::new[A, B](
-  ~length : Int = 0xFFFF,
-  ~value : Int = 0x00,
-  ~read? : (Int, Bool) -> Int,
-  ~write? : (Int, Int, Bool) -> Unit,
-  ~debug : Bool = false
-) -> Memory {
-  { mem: FixedArray::make(length + 1, value), read, write, hooks: [], debug }
-}
-
-pub fn debug(self : Memory, state : Bool) -> Bool {
-  let tmp = self.debug
-  self.debug = state
-  tmp
-}
-
-// pub fn hook(
-//   self : Memory,
-//   start : Int,
-//   end : Int,
-//   mem : FixedArray[Int],
-//   r : (Int, Bool) -> Int,
-//   w : (Int, Int, Bool) -> Unit
-// ) -> Unit {
-//   self.hooks.push(MemoryHook::new(start, end, mem, r, w))
-// }
 
 pub fn clear(self : Memory) -> Unit {
   self.mem = FixedArray::make(self.mem.length(), 0x00)
 }
 
-pub fn set_read(self : Memory, read : (Int, Bool) -> Int) -> Unit {
-  self.read = Some(read)
-}
+// pub fn set_read(self : Memory, read : (UInt16, Bool) -> UInt8) -> Unit {
+//   self.read = read
+// }
 
-pub fn set_write(self : Memory, write : (Int, Int, Bool) -> Unit) -> Unit {
-  self.write = Some(write)
-}
+// pub fn set_write(self : Memory, write : (UInt16, UInt8, Bool) -> Unit) -> Unit {
+//   self.write = write
+// }
 
-pub fn reset(
-  self : Memory,
-  ~offset : Int = 0,
-  ~length : Int = self.mem.length(),
-  ~value : Int = 0x00
-) -> Unit {
-  println(
-    "Memory::reset $" +
-    UInt16(offset).to_hex() +
-    " - $" +
-    UInt16(offset + length).to_hex() +
-    " = #$" +
-    UInt8(value).to_hex(),
-  )
-  for i = 0; i < length; i = i + 1 {
-    self[offset + i] = value
-  }
-}
+// pub fn reset(
+//   self : Memory,
+//   ~offset : Int = 0,
+//   ~length : Int = self.mem.length(),
+//   ~value : Int = 0x00
+// ) -> Unit {
+//   println(
+//     "Memory::reset $" +
+//     UInt16(offset).to_hex() +
+//     " - $" +
+//     UInt16(offset + length).to_hex() +
+//     " = #$" +
+//     UInt8(value).to_hex(),
+//   )
+//   for i = 0; i < length; i = i + 1 {
+//     self[offset + i] = value
+//   }
+// }
 
-//fill KERNAL/BASIC-ROM areas with content needed for SID-playback
-pub fn setROM(self : Memory) -> Unit {
-  let rom_IRQreturnCode = [0xAD, 0x0D, 0xDC, 0x68, 0xA8, 0x68, 0xAA, 0x68, 0x40] //CIA1-acknowledge IRQ-return
-  let rom_NMIstartCode = [0x78, 0x6c, 0x18, 0x03, 0x40] //SEI and jmp($0318)
-  let rom_IRQBRKstartCode = [ //Full IRQ-return (handling BRK with the same RAM vector as IRQ)
-    0x48, 0x8A, 0x48, 0x98, 0x48, 0xBA, 0xBD, 0x04, 0x01, 0x29, 0x10, 0xEA, 0xEA,
-    0xEA, 0xEA, 0xEA, 0x6C, 0x14, 0x03,
-  ]
-  for i = 0xA000; i < 0x10000; i = i + 1 {
-    self[i] = 0x60 //RTS (at least return if some unsupported call is made to ROM)
-  }
-  for i = 0xEA31; i < 0xEA7E; i = i + 1 {
-    self[i] = 0xEA //NOP (full IRQ-return leading to simple IRQ-return without other tasks)
-  }
-  for i = 0; i < rom_IRQreturnCode.length(); i = i + 1 {
-    self[0xEA7E + i] = rom_IRQreturnCode[i]
-  }
-  for i = 0; i < rom_NMIstartCode.length(); i = i + 1 {
-    self[0xFE43 + i] = rom_NMIstartCode[i]
-  }
-  for i = 0; i < rom_IRQBRKstartCode.length(); i = i + 1 {
-    self[0xFF48 + i] = rom_IRQBRKstartCode[i]
-  }
-  self[0xFFFB] = 0xFE
-  self[0xFFFA] = 0x43 //ROM NMI-vector
-  self[0xFFFF] = 0xFF
-  self[0xFFFE] = 0x48 //ROM IRQ-vector
-  //copy KERNAL & BASIC ROM contents into the RAM under them? (So PSIDs that don't select bank correctly will work better.)
-}
+// //fill KERNAL/BASIC-ROM areas with content needed for SID-playback
+// pub fn setROM(self : Memory) -> Unit {
+//   let rom_IRQreturnCode = [0xAD, 0x0D, 0xDC, 0x68, 0xA8, 0x68, 0xAA, 0x68, 0x40] //CIA1-acknowledge IRQ-return
+//   let rom_NMIstartCode = [0x78, 0x6c, 0x18, 0x03, 0x40] //SEI and jmp($0318)
+//   let rom_IRQBRKstartCode = [ //Full IRQ-return (handling BRK with the same RAM vector as IRQ)
+//     0x48, 0x8A, 0x48, 0x98, 0x48, 0xBA, 0xBD, 0x04, 0x01, 0x29, 0x10, 0xEA, 0xEA,
+//     0xEA, 0xEA, 0xEA, 0x6C, 0x14, 0x03,
+//   ]
+//   for i = 0xA000; i < 0x10000; i = i + 1 {
+//     self[i] = 0x60 //RTS (at least return if some unsupported call is made to ROM)
+//   }
+//   for i = 0xEA31; i < 0xEA7E; i = i + 1 {
+//     self[i] = 0xEA //NOP (full IRQ-return leading to simple IRQ-return without other tasks)
+//   }
+//   for i = 0; i < rom_IRQreturnCode.length(); i = i + 1 {
+//     self[0xEA7E + i] = rom_IRQreturnCode[i]
+//   }
+//   for i = 0; i < rom_NMIstartCode.length(); i = i + 1 {
+//     self[0xFE43 + i] = rom_NMIstartCode[i]
+//   }
+//   for i = 0; i < rom_IRQBRKstartCode.length(); i = i + 1 {
+//     self[0xFF48 + i] = rom_IRQBRKstartCode[i]
+//   }
+//   self[0xFFFB] = 0xFE
+//   self[0xFFFA] = 0x43 //ROM NMI-vector
+//   self[0xFFFF] = 0xFF
+//   self[0xFFFE] = 0x48 //ROM IRQ-vector
+//   //copy KERNAL & BASIC ROM contents into the RAM under them? (So PSIDs that don't select bank correctly will work better.)
+// }
 
 fn dump(
   self : Memory,
@@ -206,54 +179,58 @@ fn dump(
       }
       str = (addr + i).to_hex() + "|"
     }
-    str += self.mem[(addr + i).0].to_hex() + " "
+    str += self.mem[(addr + i)._].to_hex() + " "
     i = i + 1
   }
 }
 
-pub fn read(self : Memory, addr : UInt16, ~dummy : Bool = false) -> UInt8 {
+pub fn read(self : Memory, address : UInt16, ~dummy : Bool = false) -> UInt8 {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println("Memory::read $\{u16(addr).to_hex()} \{_dummy}")
 
   //
-  if addr > 0xFFFF {
+  if address > 0xFFFF {
     self.dump()
     println("Memory::get out of bounds")
     panic()
   }
 
   //
-  // for i = 0; i < self.hooks.length(); i = i + 1 {
-  //   if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-  //     return (self.hooks[i].r)(addr, dummy)
-  //   }
-  // }
+  for i = 0; i < self.hooks.length(); i = i + 1 {
+    if address >= self.hooks[i].start && address <= self.hooks[i].end {
+      return (self.hooks[i].read)(address, dummy)
+    }
+  }
 
   //
-  self.read_direct(addr)
+  self.read_direct(address)
 }
 
-pub fn read_direct(self : Memory, addr : UInt16) -> UInt8 {
+pub fn read_direct(self : Memory, address : UInt16) -> UInt8 {
   // println("Memory::read_direct $" + UInt16(addr).to_hex())
   //
 
-  match self.read {
-    Some(_) => self.read(addr)
-    None => self.mem[addr._]
-  }
+  // match self.read {
+  //   Some(_) => self.read(addr)
+  //   None => self.mem[addr._]
+  // }
+
+  self.mem[address._]
 }
 
-fn op_get(self : Memory, addr : UInt16) -> UInt8 {
-  // println("Memory::op_get $" + UInt16(addr).to_hex())
-  //
+// fn op_get(self : Memory, addr : UInt16) -> UInt8 {
+//   // println("Memory::op_get $" + UInt16(addr).to_hex())
+//   //
 
-  self.read(addr)
-}
+//   self.read(addr)
+// }
 
 pub fn write(
   self : Memory,
-  addr : UInt16,
+  //
+  address : UInt16,
   value : UInt8,
+  //
   ~dummy : Bool = false
 ) -> Unit {
   // let _dummy = if dummy { "🔍" } else { "" }
@@ -262,35 +239,37 @@ pub fn write(
   // )
 
   //
-  if addr > 0xFFFF {
+  if address > 0xFFFF {
     self.dump()
     println("Memory::set out of bounds")
     panic()
   }
 
   //
-  // for i = 0; i < self.hooks.length(); i = i + 1 {
-  //   if addr >= self.hooks[i].start && addr <= self.hooks[i].end {
-  //     return (self.hooks[i].w)(addr, value, dummy)
-  //   }
+  for i = 0; i < self.hooks.length(); i = i + 1 {
+    if address >= self.hooks[i].start && address <= self.hooks[i].end {
+      return (self.hooks[i].write)(address, value, dummy)
+    }
+  }
+
+  //
+  self.write_direct(address, value)
+}
+
+pub fn write_direct(self : Memory, address : UInt16, value : UInt8) -> Unit {
+  // match self.write {
+  //   Some(_) => self.write(addr, value)
+  //   None => self.mem[addr._] = value._ |> u8
   // }
 
-  //
-  self.write_direct(addr, value)
+  self.mem[address._] = value
 }
 
-pub fn write_direct(self : Memory, addr : UInt16, value : UInt8) -> Unit {
-  match self.write {
-    Some(_) => self.write(addr, value)
-    None => self.mem[addr._] = value._ |> u8
-  }
-}
+// fn op_set(self : Memory, addr : UInt16, value : UInt8) -> Unit {
+//   // println(
+//   //   "Memory::op_set $" + UInt16(addr).to_hex() + " = " + UInt8(value).to_hex(),
+//   // )
 
-fn op_set(self : Memory, addr : UInt16, value : UInt8) -> Unit {
-  // println(
-  //   "Memory::op_set $" + UInt16(addr).to_hex() + " = " + UInt8(value).to_hex(),
-  // )
-
-  //
-  self.write(addr, value)
-}
+//   //
+//   self.write(addr, value)
+// }

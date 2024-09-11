@@ -21,6 +21,9 @@ pub struct PSID {
   //
   mut flags : Flags
   //
+  mut startPage : UInt8
+  mut pageLength : UInt8
+  //
   mut sid2Flags : SIDFlags
   mut sid3Flags : SIDFlags
   mut sid4Flags : SIDFlags
@@ -52,6 +55,9 @@ pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
     defaultSong: 0,
     //
     flags: Flags::default!(),
+    //
+    startPage: UInt8::default(),
+    pageLength: UInt8::default(),
     //
     sid2Flags: SIDFlags::default!(),
     sid3Flags: SIDFlags::default!(),
@@ -251,7 +257,15 @@ pub fn process(self : PSID) -> Unit! {
   self[0x02A6] = match self.flags.videoStandard {
     NTSC => 0x00
     PAL => 0x01
+    _ => {
+      println("PSID unknown video standard \{self.flags.videoStandard}")
+      panic()
+    }
   }
+
+  //
+  self.startPage = self.readByte!(StartPage)
+  self.pageLength = self.readByte!(PageLength)
 
   //
   let mut j = 0

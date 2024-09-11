@@ -50,7 +50,7 @@ enum Version {
 
 fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
   if realSID {
-    match value.0 {
+    match value._ {
       // 0x00 => Unknown
       0x02 => RSIDv2
       0x03 => RSIDv3
@@ -58,7 +58,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
       _ => raise UnknownVersion
     }
   } else {
-    match value.0 {
+    match value._ {
       // 0x00 => Unknown
       0x01 => PSIDv1
       0x02 => PSIDv2
@@ -69,20 +69,20 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
   }
 }
 
-fn op_get(self : Version, value : Version) -> Int {
-  match value {
-    Unknown => 0x00
-    //
-    PSIDv1 => 0x01
-    PSIDv2 => 0x02
-    PSIDv3 => 0x03
-    PSIDv4 => 0x04
-    //
-    RSIDv2 => 0x02
-    RSIDv3 => 0x03
-    RSIDv4 => 0x04
-  }
-}
+// fn op_get(self : Version, value : Version) -> Int {
+//   match value {
+//     Unknown => 0x00
+//     //
+//     PSIDv1 => 0x01
+//     PSIDv2 => 0x02
+//     PSIDv3 => 0x03
+//     PSIDv4 => 0x04
+//     //
+//     RSIDv2 => 0x02
+//     RSIDv3 => 0x03
+//     RSIDv4 => 0x04
+//   }
+// }
 
 // bit9&8/7&6/5&4: SID3/2/1 model (00:?,01:6581,10:8580,11:both) (4SID:bit6=SID1-channel)
 // bit3&2:VideoStandard (01:PAL,10:NTSC,11:both)
@@ -90,7 +90,7 @@ fn op_get(self : Version, value : Version) -> Int {
 // bit0:(0:builtin-player,1:MUS)
 
 enum Mode {
-  Unknown
+  // Unknown
   C64
   Digi
   BASIC
@@ -127,8 +127,8 @@ fn SIDFlags::default() -> SIDFlags! {
 
 fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
   {
-    channel: Channel::from_int!((value.0 >> 6) & 0b11),
-    model: Model::from_int!((value.0 >> 4) & 0b11),
+    channel: Channel::from_int!((value._ >> 6) & 0b11),
+    model: Model::from_int!((value._ >> 4) & 0b11),
   }
 }
 
@@ -145,13 +145,13 @@ fn Flags::default() -> Flags! {
 
 fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags! {
   {
-    player: (value.0 >> 0) & 0b01,
-    mode: Mode::from_int!((value.0 >> 1) & 0b01, realSID),
-    videoStandard: VideoStandard::from_int!((value.0 >> 2) & 0b11),
+    player: (value._ >> 0) & 0b01,
+    mode: Mode::from_int!((value._ >> 1) & 0b01, realSID),
+    videoStandard: VideoStandard::from_int!((value._ >> 2) & 0b11),
     model: [
-      Model::from_int!((value.0 >> 4) & 0b11),
-      Model::from_int!((value.0 >> 6) & 0b11),
-      Model::from_int!((value.0 >> 8) & 0b11),
+      Model::from_int!((value._ >> 4) & 0b11),
+      Model::from_int!((value._ >> 6) & 0b11),
+      Model::from_int!((value._ >> 8) & 0b11),
     ],
   }
 }

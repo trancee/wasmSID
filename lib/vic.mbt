@@ -56,20 +56,18 @@ struct VIC {
 }
 
 pub fn VIC::new(
+  ~mem? : Memory,
   baseaddress : Int,
   //
-
   ~videoStandard : VideoStandard = Unknown,
+  //
   ~debug : Bool = false
 ) -> VIC {
   println("VIC::new")
   //
 
-  let mem = FixedArray::make(vic_mem_size + 1, 0x00)
-  //
-
   let vic : VIC = {
-    mem,
+    mem: FixedArray::make(vic_mem_size + 1, 0x00),
     baseaddress,
 
     //
@@ -88,35 +86,36 @@ pub fn VIC::new(
   }
 
   //
-  memory.push(
-    Hook::new(
-      baseaddress,
-      baseaddress + vic_mem_size,
-      // mem,
-      fn(address : UInt16, dummy : Bool) {
-        let register = try {
-          VICregister::from_int!(address._ - baseaddress)
-        } catch {
-          err => {
-            println(err)
-            panic()
+  match mem {
+    Some(mem) =>
+      mem.hook(
+        baseaddress,
+        baseaddress + vic_mem_size,
+        //
+        fn(address : UInt16, dummy : Bool) -> UInt8 {
+          let register = try {
+            VICregister::from_int!(address._ - baseaddress)
+          } catch {
+            err => {
+              println(err)
+              panic()
+            }
           }
-        }
-        vic[register]
-      },
-      fn(address : UInt16, value : UInt8, dummy : Bool) {
-        let register = try {
-          VICregister::from_int!(address._ - baseaddress)
-        } catch {
-          err => {
-            println(err)
-            panic()
+          vic[register]
+        },
+        fn(address : UInt16, value : UInt8, dummy : Bool) {
+          let register = try {
+            VICregister::from_int!(address._ - baseaddress)
+          } catch {
+            err => {
+              println(err)
+              panic()
+            }
           }
-        }
-        vic[register] = value
-      },
-    ),
-  )
+          vic[register] = value
+        },
+      )
+  }
 
   //
   try {

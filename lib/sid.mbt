@@ -123,7 +123,7 @@ struct SID {
   mut prevFilterInputSample : Int
   //
   mut prevVolume : Int //lowpass-filtered version of Volume-band register
-  mut output : Int //not attenuated (range:0..0xFFFFF depending on SID's main-volume)
+  mut output : Int //not attenuated (range:0.._xFFFFF depending on SID's main-volume)
   mut level : Int //filtered version, good for VU-meter display
 
   //
@@ -134,6 +134,7 @@ struct SID {
 }
 
 pub fn SID::new(
+  ~mem? : Memory,
   baseaddress : Int,
   //
 
@@ -145,11 +146,8 @@ pub fn SID::new(
   println("SID::new")
   //
 
-  let mem = FixedArray::make(sid_mem_size + 1, 0x00)
-  //
-
   let sid : SID = {
-    mem,
+    mem: FixedArray::make(sid_mem_size + 1, 0x00),
     baseaddress,
 
     //
@@ -182,35 +180,36 @@ pub fn SID::new(
   }
 
   //
-  memory.push(
-    Hook::new(
-      baseaddress,
-      baseaddress + sid_mem_size,
-      // mem,
-      fn(address : UInt16, dummy : Bool) {
-        let register = try {
-          SIDregister::from_int!(address._ - baseaddress)
-        } catch {
-          err => {
-            println(err)
-            panic()
+  match mem {
+    Some(mem) =>
+      mem.hook(
+        baseaddress,
+        baseaddress + sid_mem_size,
+        // mem,
+        fn(address : UInt16, dummy : Bool) -> UInt8 {
+          let register = try {
+            SIDregister::from_int!(address._ - baseaddress)
+          } catch {
+            err => {
+              println(err)
+              panic()
+            }
           }
-        }
-        sid[register]._
-      },
-      fn(address : UInt16, value : UInt8, dummy : Bool) {
-        let register = try {
-          SIDregister::from_int!(address._ - baseaddress)
-        } catch {
-          err => {
-            println(err)
-            panic()
+          sid[register]._
+        },
+        fn(address : UInt16, value : UInt8, dummy : Bool) {
+          let register = try {
+            SIDregister::from_int!(address._ - baseaddress)
+          } catch {
+            err => {
+              println(err)
+              panic()
+            }
           }
-        }
-        sid[register] = value
-      },
-    ),
-  )
+          sid[register] = value
+        },
+      )
+  }
 
   //
   sid.reset()
@@ -327,12 +326,12 @@ fn emulateWaves(
         oscval = oscval & 0x7FFF
       }
       let pitch = voice.frequency
-      let filt = 0x7777 + 0x8888 / pitch.0
+      let filt = 0x7777 + 0x8888 / pitch._
       wave.prevWavData = (
           wfArray[oscval >> 4] * filt + wave.prevWavData * (0xFFFF - filt)
         ) >>
         16
-      wave.prevWavData.0 << 8
+      wave.prevWavData._ << 8
     }
 
     //
@@ -353,7 +352,7 @@ fn emulateWaves(
     let mut phaseAccuPtr = wave.phaseAccu // FIXME: better direct access instead of Ptr?
 
     //
-    let phaseAccuStep = voice.frequency.0 * sampleClockRatio
+    let phaseAccuStep = voice.frequency._ * sampleClockRatio
     if testBit || (voiceControl.syncBit && wave.syncSourceMSBrise) {
       phaseAccuPtr = 0
     } else { //stepping phase-accumulator (oscillator)
@@ -390,7 +389,7 @@ fn emulateWaves(
         ((tmp & 0x01) << 8)
       }
     } else if voiceControl.pulseWaveform { //simple pulse
-      pw = voice.pulseWidth.0 //PW=0000..FFF0 from SID-register
+      pw = voice.pulseWidth._ //PW=0000..FFF0 from SID-register
       utmp = phaseAccuStep >> 13
       if 0 < pw && pw < utmp {
         pw = utmp //Too thin pulsewidth? Correct...
@@ -435,7 +434,7 @@ fn emulateWaves(
             }
           } else { //pulse+triangle
             tmp = phaseAccuPtr ^
-              if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
+              (if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 })
             if wavGenOut > 0 {
               wavGenOut = combinedWF(PulseTriangle, tmp >> 12)
             }
@@ -463,8 +462,8 @@ fn emulateWaves(
       }
     } else if voiceControl.triangleWaveform { //triangle (this waveform has no harsh edges, so it doesn't suffer from strong aliasing at high pitches)
       tmp = phaseAccuPtr ^
-        if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
-      wavGenOut = (tmp ^ if (tmp & 0x8000000) > 0 { 0xFFFFFFF } else { 0 }) >>
+        (if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 })
+      wavGenOut = (tmp ^ (if (tmp & 0x8000000) > 0 { 0xFFFFFFF } else { 0 })) >>
         11
     }
 
@@ -482,7 +481,7 @@ fn emulateWaves(
     envelope = if self.model == MOS8580 {
       adsr.envelopeCounter
     } else {
-      adsrDAC_6581[adsr.envelopeCounter].0
+      adsrDAC_6581[adsr.envelopeCounter]._
     }
     if filterSwitchReso.voice[channel] {
       self.filterInputSample += ((wavGenOut - 0x8000) * envelope) >> 8 // FIXME: (int) clamping?
@@ -529,8 +528,8 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
 
   match self.model {
     MOS8580 => {
-      cutoff = cutoffMul8580_44100Hz[cutoff.0]
-      resonance = resonances8580[resonance].0
+      cutoff = cutoffMul8580_44100Hz[cutoff._]
+      resonance = resonances8580[resonance]._
     }
     MOS6581 => {
       //MOSFET-VCR control-voltage calculation
@@ -540,8 +539,8 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
       } else if cutoff < 0 {
         cutoff = 0
       }
-      cutoff = cutoffMul6581_44100Hz[cutoff.0] //(resistance-modulation aka 6581 filter distortion) emulation
-      resonance = resonances6581[resonance].0
+      cutoff = cutoffMul6581_44100Hz[cutoff._] //(resistance-modulation aka 6581 filter distortion) emulation
+      resonance = resonances6581[resonance]._
     }
     _ => {
       println("unknown SID model")
@@ -555,12 +554,12 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
   if filterSelect.highPass {
     filterOutput -= tmp
   }
-  tmp = self.prevBandPass - ((tmp * cutoff.0) >> 12)
+  tmp = self.prevBandPass - ((tmp * cutoff._) >> 12)
   self.prevBandPass = tmp
   if filterSelect.bandPass {
     filterOutput -= tmp
   }
-  tmp = self.prevLowPass + ((tmp * cutoff.0) >> 12)
+  tmp = self.prevLowPass + ((tmp * cutoff._) >> 12)
   self.prevLowPass = tmp
   if filterSelect.lowPass {
     filterOutput += tmp
@@ -578,7 +577,7 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
     self.prevVolume += (tmp - self.prevVolume) >> 10 //arithmetic shift amount determines digi lowpass-frequency
     mainVolume = self.prevVolume >> 12
   } else { //lowpass is main volume
-    mainVolume = self.register.volume.0
+    mainVolume = self.register.volume._
   }
 
   //
@@ -611,7 +610,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
       if self.model == MOS6581 && wfArray != PulseTriangle {
         oscval = oscval & 0x7FFF
       }
-      return wfArray[oscval >> 4].0 << 8
+      return wfArray[oscval >> 4]._ << 8
     }
 
     let mut utmp = 0
@@ -627,7 +626,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
     let testBit = voiceControl.testBit
     let mut phaseAccuPtr = wave.phaseAccu // FIXME: better direct access instead of Ptr?
     //
-    let phaseAccuStep = voice.frequency.0 * cycles
+    let phaseAccuStep = voice.frequency._ * cycles
     if testBit || (voiceControl.syncBit && wave.syncSourceMSBrise) {
       phaseAccuPtr = 0
     } else { //stepping phase-accumulator (oscillator)
@@ -664,7 +663,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
         ((tmp & 0x01) << 8)
       }
     } else if voiceControl.pulseWaveform { //simple pulse or pulse+combined
-      pw = voice.pulseWidth.0 //PW=0000..FFF0 from SID-register
+      pw = voice.pulseWidth._ //PW=0000..FFF0 from SID-register
       utmp = phaseAccuStep >> 8
       wavGenOut = if utmp >= pw || testBit { 0xFFFF } else { 0 }
       //
@@ -678,7 +677,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
             }
           } else { //pulse+triangle
             tmp = phaseAccuPtr ^
-              if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
+              (if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 })
             if wavGenOut != 0 {
               wavGenOut = combinedHQWF(PulseTriangle, tmp >> 8)
             }
@@ -695,8 +694,9 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
         wavGenOut = combinedHQWF(SawTriangle, wavGenOut) //saw+triangle
       } else if voiceControl.triangleWaveform { //triangle (this waveform has no harsh edges, so it doesn't suffer from strong aliasing at high pitches)
         tmp = phaseAccuPtr ^
-          if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 }
-        wavGenOut = (tmp ^ if (tmp & 0x800000) > 0 { 0xFFFFFF } else { 0 }) >> 7
+          (if voiceControl.ringModulation { wave.ringSourceMSB } else { 0 })
+        wavGenOut = (tmp ^ (if (tmp & 0x800000) > 0 { 0xFFFFFF } else { 0 })) >>
+          7
       }
 
       //
@@ -713,7 +713,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
       envelope = if self.model == MOS8580 {
         adsr.envelopeCounter
       } else {
-        adsrDAC_6581[adsr.envelopeCounter].0
+        adsrDAC_6581[adsr.envelopeCounter]._
       }
       if filterSwitchReso.voice[channel] {
         wavOutput.filterInput += ((wavGenOut - 0x8000) * envelope) >> 8 // FIXME: (int) clamping?
@@ -734,13 +734,16 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
 fn op_get(self : SID, register : SIDregister) -> UInt8 {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
-  println(
-    "🎵 SID $" +
-    UInt16(self.baseaddress + address).to_hex() +
-    " → #$" +
-    UInt8(self.mem[address]).to_hex() +
-    " | \{register}",
-  )
+  if self.debug {
+    println(
+      "\t\t\t\t\t\t\t\t\t " +
+      "🎵 SID $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " → #$" +
+      UInt8(self.mem[address]).to_hex() +
+      " | \{register}",
+    )
+  }
   if self.baseaddress + address < sid_mem_start ||
     self.baseaddress + address > sid_mem_end {
     // self.dump()
@@ -833,13 +836,16 @@ fn op_get(self : SID, register : SIDregister) -> UInt8 {
 fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
-  println(
-    "🎵 SID $" +
-    UInt16(self.baseaddress + address).to_hex() +
-    " ← #$" +
-    value.to_hex() +
-    " | \{register}",
-  )
+  if self.debug {
+    println(
+      "\t\t\t\t\t\t\t\t\t " +
+      "🎵 SID $" +
+      UInt16(self.baseaddress + address).to_hex() +
+      " ← #$" +
+      value.to_hex() +
+      " | \{register}",
+    )
+  }
   if self.baseaddress + address < sid_mem_start ||
     self.baseaddress + address > sid_mem_end {
     // self.dump()
@@ -880,8 +886,8 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       // /// Bits 4-7:  Select attack cycle duration (0-15)
       // /// Bits 0-3:  Select decay cycle duration (0-15)
       ATDCY1 | ATDCY2 | ATDCY3 => {
-        voice.envelope.attack = (value.0 & 0xF0) >> 4
-        voice.envelope.decay = value.0 & 0x0F
+        voice.envelope.attack = (value._ & 0xF0) >> 4
+        voice.envelope.decay = value._ & 0x0F
       }
 
       // /// Voice 1 Sustain/Release Control Register
@@ -889,8 +895,8 @@ fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       // /// Bits 4-7:  Select sustain volume level (0-15)
       // /// Bits 0-3:  Select release cycle duration (0-15)
       SUREL1 | SUREL2 | SUREL3 => {
-        voice.envelope.sustain = (value.0 & 0xF0) >> 4
-        voice.envelope.release = value.0 & 0x0F
+        voice.envelope.sustain = (value._ & 0xF0) >> 4
+        voice.envelope.release = value._ & 0x0F
       }
     }
   }

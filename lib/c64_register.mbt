@@ -52,7 +52,7 @@ struct IOPort {
   mut cassette_motor_switch_control : Bool
 } derive(Show, Default)
 
-fn IOPort::from_int(value : UInt8) -> IOPort {
+pub fn IOPort::from_int(value : UInt8) -> IOPort {
   {
     /// Bit 0: LORAM signal.  Selects ROM or RAM at 40960 ($A000).  1=BASIC, 0=RAM
     loram: value.bit(0),

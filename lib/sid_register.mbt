@@ -14,13 +14,13 @@ fn sidSpecs(value : SIDspecs) -> Int {
   }
 }
 
-fn op_get(self : SIDspecs, value : SIDspecs) -> Int {
-  match value {
-    CHANNELS => 3 + 1
-    VOLUME_MAX => 0x0F
-    D418_DIGI_VOLUME => 2
-  }
-}
+// fn op_get(self : SIDspecs, value : SIDspecs) -> Int {
+//   match value {
+//     CHANNELS => 3 + 1
+//     VOLUME_MAX => 0x0F
+//     D418_DIGI_VOLUME => 2
+//   }
+// }
 
 struct Output {
   mut left : Int

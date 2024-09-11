@@ -383,11 +383,11 @@ let testcases : Map[String, FixedArray[Int]] = {
 }
 
 pub fn testsuite() -> Unit {
-  let c64 = @lib.C64::new(realSID=true, debug=false)
+  let c64 = @lib.C64::new(realSID=true, debug=true)
   let _ = c64.load(irq, offset=0xFF48)
 
   //
-  let data = testcases["mmufetch"].or_default()
+  let data = testcases["start"].or(@testsuite._start)
   load(c64, data)
 
   // c64[0xEA31] = 0x40
@@ -560,7 +560,7 @@ pub fn testsuite() -> Unit {
 
   //
   let mut i = 0
-  while c64.pc() != 0x0000 && i < 10000000 {
+  while c64.pc() != 0x0000 && i < 2 {
     let _ = c64.emulate()
     i += 1
   }
@@ -568,12 +568,13 @@ pub fn testsuite() -> Unit {
 
 fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   let addr = c64.load(data, has_load_address=true)
+  c64.set_bank(@lib.IOPort::from_int(0x00))
 
   //
   c64[UNUSED] = 0x00
   // c64[0xA002] = 0x00
   // c64[0xA003] = 0x80 // Docs say put zero here, but this works better.
-  c64.writew(WARM, 0x8000)
+  c64.write_word(WARM, 0x8000)
 
   //
   // c64[0x01FE] = 0xFF
@@ -583,22 +584,22 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   // Put RTSes in some of the stubbed calls
   c64[CHROUT] = 0x60
   // c64[0x8000] = 0x60
-  c64.writea(CARTROM, [0x60])
+  c64.write_array(CARTROM, [0x60])
   // c64[0xA474] = 0x60
-  c64.writea(READY, [0x60])
+  c64.write_array(READY, [0x60])
 
   // NOP the loading routine
   // c64[0xE16F] = 0xEA
-  c64.write_direct(0xE16F, 0xEA)
+  c64.write(0xE16F, 0xEA)
 
   // scan keyboard is LDA #3: RTS
   // c64[0xFFE4] = 0xA9
   // c64[0xFFE5] = 0x03
   // c64[0xFFE6] = 0x60
-  c64.writea(GETIN, [0xA9, 0x03, 0x60])
+  c64.write_array(GETIN, [0xA9, 0x03, 0x60])
   // c64[0xFFFE] = 0x48
   // c64[0xFFFF] = 0xFF
-  c64.writew(IRQ, 0xFF48)
+  c64.write_word(IRQ, 0xFF48)
 
   //
   c64.initCPU(baseaddress=addr)

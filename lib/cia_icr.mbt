@@ -9,7 +9,6 @@ enum ICRFlags {
   SP
   FLG
   //
-  //
   SC
   IR
 }
@@ -31,11 +30,11 @@ fn op_get(self : ICRFlags, flag : ICRFlags) -> Int {
 }
 
 fn land(self : ICR, value : ICRFlags) -> ICR {
-  self.0 & value[value]
+  self._ & value[value]
 }
 
 fn lor(self : ICR, value : ICR) -> ICR {
-  self.0 | value.0
+  self._ | value._
 }
 
 fn icr(flag : ICRFlags) -> Int {
@@ -43,9 +42,9 @@ fn icr(flag : ICRFlags) -> Int {
 }
 
 fn has(self : ICR, mask : ICRFlags) -> Bool {
-  (self.0 & mask[mask]) != 0
+  (self._ & mask[mask]) != 0
 }
 
 fn clear(self : ICR, mask : ICRFlags) -> CRA {
-  self.0 & (-mask[mask] - 1)
+  self._ & (-mask[mask] - 1)
 }
