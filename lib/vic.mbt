@@ -52,7 +52,7 @@ struct VIC {
   register : VICRegister
 
   //
-  mut debug : Bool
+  debug : Bool
 }
 
 pub fn VIC::new(

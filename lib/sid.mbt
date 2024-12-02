@@ -130,7 +130,7 @@ struct SID {
   register : SIDRegister
 
   //
-  mut debug : Bool
+  debug : Bool
 }
 
 pub fn SID::new(

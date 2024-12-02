@@ -28,13 +28,13 @@ pub fn nestest() -> Unit {
     "$02 #" +
     nes.mem.read(0x02, dummy=true).to_hex() +
     " " +
-    if nes.mem.read(0x02) == UInt8(0x00) { "OK" } else { "FAIL" },
+    (if nes.mem.read(0x02) == UInt8(0x00) { "OK" } else { "FAIL" }),
   )
   println(
     "$03 #" +
     nes.mem.read(0x03, dummy=true).to_hex() +
     " " +
-    if nes.mem.read(0x03) == UInt8(0x00) { "OK" } else { "FAIL" },
+    (if nes.mem.read(0x03) == UInt8(0x00) { "OK" } else { "FAIL" }),
   )
 }
 

@@ -22,8 +22,8 @@ struct CPU {
   mut cycles : Int
   //
   mut pc : UInt16 // Program Counter
-  mut registers : Registers
-  mut flags : Flags
+  registers : Registers
+  flags : Flags
   //
   decimal_mode : Bool
   // mut needs_interrupt : Vector

@@ -12,13 +12,13 @@ struct IOPort {
   /// Bit 0.  This bit controls the LORAM signal.  A 0 in this bit position
   /// switches the BASIC ROM out, and replaces it with RAM at addresses
   /// 40960-49151 ($A000-$BFFF).  The default value of this bit is 1.
-  mut loram : Bool
+  loram : Bool
 
   /// Bit 1.  Bit 1 controls the HIRAM signal.  A 0 in this bit position
   /// switches the Kernal ROM out, and replaces it with RAM at 57344-65535
   /// ($E000-$FFFF).  As the BASIC interpreter uses the Kernal, it is also
   /// switched out and replaced by RAM.  The default value of this bit is 1.
-  mut hiram : Bool
+  hiram : Bool
 
   /// Bit 2.  This bit controls the CHAREN signal.  A 0 in this position
   /// switches the character generator ROM in, so that it can be read by the
@@ -28,7 +28,7 @@ struct IOPort {
   /// cannot PEEK into it.  Since this ROM is switched into the system in
   /// the same location as the I/O devices (SID chip, VIC-II chip, and 6526
   /// CIA's), o I/O can occur when this ROM is switched in.
-  mut charen : Bool
+  charen : Bool
 
   /// Bits 3-5 of this register have functions connected with the Datasette
   /// recorder.  These are as follows:
@@ -36,7 +36,7 @@ struct IOPort {
   /// Bit 3.  This is the Cassette Data Output line.  This line is connected
   /// to the Cassette Data Write line on the cassette port, and is used to
   /// send the data which is written to tape.
-  mut cassette_data_output : Bool
+  cassette_data_output : Bool
 
   /// Bit 4.  This bit is the Cassette Switch Sense line.  This bit enables
   /// a program to tell whether or not one of the buttons that moves the
@@ -44,12 +44,12 @@ struct IOPort {
   /// bit will have a value of 1.  Remember that Bit 4 of the data direction
   /// register at location 0 must contain a 0 for this bit to properly
   /// reflect the status of the switch.
-  mut cassette_switch_sense : Bool
+  cassette_switch_sense : Bool
 
   /// Bit 5.  Bit 5 is the Cassette Motor Control.  Setting this bit to zero
   /// allows the motor to turn when you press one of the buttons on the
   /// recorder, while setting it to one disables it from turning.
-  mut cassette_motor_switch_control : Bool
+  cassette_motor_switch_control : Bool
 } derive(Show, Default)
 
 pub fn IOPort::from_int(value : UInt8) -> IOPort {

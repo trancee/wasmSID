@@ -128,7 +128,7 @@ struct Voice {
   /// 54277         $D405          ATDCY1
   /// 54278         $D406          SUREL1
   /// Voice Attack/Decay/Sustain/Release Control Register
-  mut envelope : Envelope
+  envelope : Envelope
 } derive(Show, Default)
 
 struct FilterSelect {

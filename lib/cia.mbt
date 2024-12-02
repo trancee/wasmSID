@@ -37,7 +37,7 @@ struct CIA {
   register : CIARegister
 
   //
-  mut debug : Bool
+  debug : Bool
 }
 
 pub fn CIA::new(
