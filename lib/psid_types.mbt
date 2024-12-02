@@ -132,7 +132,7 @@ fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
   }
 }
 
-pub struct Flags {
+pub(all) struct Flags {
   player : Int
   mode : Mode
   videoStandard : VideoStandard

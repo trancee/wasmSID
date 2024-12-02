@@ -1763,7 +1763,7 @@ struct ADCTestData {
   expectN : Bool
 }
 
-fn testADCAbsolute(t : ADCTestData, ~ins : Instruction = ADC_ABS) -> Unit!Error {
+fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
@@ -1812,7 +1812,7 @@ fn testSBCAbsolute(t : ADCTestData) -> Unit!Error {
   testADCAbsolute!(t, ins=SBC_ABS)
 }
 
-fn testADCImmediate(t : ADCTestData, ~ins : Instruction = ADC) -> Unit!Error {
+fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
@@ -1857,7 +1857,7 @@ fn testSBCImmediate(t : ADCTestData) -> Unit!Error {
   testADCImmediate!(t, ins=SBC)
 }
 
-fn testADCZeroPage(t : ADCTestData, ~ins : Instruction = ADC_ZP) -> Unit!Error {
+fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
@@ -1907,7 +1907,7 @@ fn testSBCZeroPage(t : ADCTestData) -> Unit!Error {
 
 fn testADCZeroPageX(
   t : ADCTestData,
-  ~ins : Instruction = ADC_ZPX
+  ins~ : Instruction = ADC_ZPX
 ) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1959,7 +1959,7 @@ fn testSBCZeroPageX(t : ADCTestData) -> Unit!Error {
 
 fn testADCAbsoluteX(
   t : ADCTestData,
-  ~ins : Instruction = ADC_ABSX
+  ins~ : Instruction = ADC_ABSX
 ) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2012,7 +2012,7 @@ fn testSBCAbsoluteX(t : ADCTestData) -> Unit!Error {
 
 fn testADCAbsoluteY(
   t : ADCTestData,
-  ~ins : Instruction = ADC_ABSY
+  ins~ : Instruction = ADC_ABSY
 ) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2065,7 +2065,7 @@ fn testSBCAbsoluteY(t : ADCTestData) -> Unit!Error {
 
 fn testADCIndirectX(
   t : ADCTestData,
-  ~ins : Instruction = ADC_INDX
+  ins~ : Instruction = ADC_INDX
 ) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -2121,7 +2121,7 @@ fn testSBCIndirectX(t : ADCTestData) -> Unit!Error {
 
 fn testADCIndirectY(
   t : ADCTestData,
-  ~ins : Instruction = ADC_INDY
+  ins~ : Instruction = ADC_INDY
 ) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 

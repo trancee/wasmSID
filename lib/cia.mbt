@@ -41,12 +41,12 @@ struct CIA {
 }
 
 pub fn CIA::new(
-  ~mem? : Memory,
+  mem? : Memory,
   baseaddress : Int,
   //
 
-  ~videoStandard : VideoStandard = Unknown,
-  ~debug : Bool = false
+  videoStandard~ : VideoStandard = Unknown,
+  debug~ : Bool = false
 ) -> CIA {
   println("CIA::new")
   //
@@ -82,7 +82,7 @@ pub fn CIA::new(
               panic()
             }
           }
-          cia.read(register, ~dummy)._
+          cia.read(register, dummy~)._
         },
         fn(address : UInt16, value : UInt8, dummy : Bool) {
           let register = try {
@@ -93,19 +93,19 @@ pub fn CIA::new(
               panic()
             }
           }
-          cia.write(register, value, ~dummy)
+          cia.write(register, value, dummy~)
         },
       )
   }
 
   //
-  cia.reset(~videoStandard)
+  cia.reset(videoStandard~)
 
   //
   cia
 }
 
-pub fn reset(self : CIA, ~videoStandard : VideoStandard = Unknown) -> Unit {
+pub fn reset(self : CIA, videoStandard~ : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
   // self.rom.reset()
   // self.ram.reset()
@@ -232,7 +232,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
   self.register.interruptControl.interrupt
 }
 
-fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
+fn read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8 {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
   if self.debug && not(dummy) {
     println(
@@ -467,7 +467,7 @@ fn write(
   self : CIA,
   register : CIAregister,
   value : UInt8,
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
   if self.debug && not(dummy) {

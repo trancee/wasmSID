@@ -1,4 +1,4 @@
-pub enum Register {
+pub(all) enum Register {
   SP // Stack Pointer
   A // Accumulator
   X // Index Register X
@@ -12,7 +12,7 @@ struct Registers {
   mut y : UInt8 // Index Register Y
 }
 
-fn Registers::new(~sp : UInt8 = 0xFF) -> Registers {
+fn Registers::new(sp~ : UInt8 = 0xFF) -> Registers {
   { sp: u8(sp._), a: u8(0), x: u8(0), y: u8(0) }
 }
 

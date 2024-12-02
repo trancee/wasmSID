@@ -391,7 +391,7 @@ struct CMPTestData {
   expectN : Bool
 }
 
-fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!Error {
+fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
@@ -449,7 +449,7 @@ fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!Error {
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
-fn testCompareZeroPage(t : CMPTestData, ~r : Register = A) -> Unit!Error {
+fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
@@ -559,7 +559,7 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
-fn testCompareAbsolute(t : CMPTestData, ~r : Register = A) -> Unit!Error {
+fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]

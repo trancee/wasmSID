@@ -1,4 +1,4 @@
-pub type CRB UInt8 derive(Eq, Compare)
+pub(all) type CRB UInt8 derive(Eq, Compare)
 
 /// There are two control registers in the 6526, CRA and CRB.
 /// CRA is associated with TIMER A and CRB is associated with TIMER B.

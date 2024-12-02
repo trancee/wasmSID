@@ -134,14 +134,14 @@ struct SID {
 }
 
 pub fn SID::new(
-  ~mem? : Memory,
+  mem? : Memory,
   baseaddress : Int,
   //
 
-  ~model : Model = Unknown,
-  ~channel : Channel = Unknown,
-  ~videoStandard : VideoStandard = Unknown,
-  ~debug : Bool = false
+  model~ : Model = Unknown,
+  channel~ : Channel = Unknown,
+  videoStandard~ : VideoStandard = Unknown,
+  debug~ : Bool = false
 ) -> SID {
   println("SID::new")
   //
@@ -218,7 +218,7 @@ pub fn SID::new(
   sid
 }
 
-pub fn reset(self : SID, ~videoStandard : VideoStandard = Unknown) -> Unit {
+pub fn reset(self : SID, videoStandard~ : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=sid_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
     self.mem[i] = 0x00

@@ -62,7 +62,7 @@ let s = "0123456789ABCDEF"
 // UInt8
 //
 
-pub type UInt8 Int derive(Show, Eq, Compare, Default)
+pub(all) type UInt8 Int derive(Show, Eq, Compare, Default)
 
 trait U8 {
   u8(Self) -> UInt8
@@ -196,7 +196,7 @@ fn to_int(self : UInt8) -> Int {
 // UInt16
 //
 
-pub type UInt16 Int derive(Show, Eq, Compare, Default)
+pub(all) type UInt16 Int derive(Show, Eq, Compare, Default)
 
 trait U16 {
   u16(Self) -> UInt16

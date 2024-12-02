@@ -72,7 +72,7 @@ pub fn IOPort::from_int(value : UInt8) -> IOPort {
   }
 }
 
-pub enum C64register {
+pub(all) enum C64register {
   /// 6510 On-Chip I/O Data Direction Register
   D6510
   /// 6510 On-Chip I/O Port Register

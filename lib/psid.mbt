@@ -1,4 +1,4 @@
-pub struct PSID {
+pub(all) struct PSID {
   mem : Memory
   data : FixedArray[Int]
   //

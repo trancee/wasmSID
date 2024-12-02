@@ -1,4 +1,4 @@
-pub enum Flag {
+pub(all) enum Flag {
   C // Carry Flag
   Z // Zero Flag
   I // Interrupt Disable Flag
@@ -37,7 +37,7 @@ struct Flags {
   mut n : Bool // 7: Negative Flag
 } derive(Show, Eq)
 
-fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
+fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
   {
     c: flags.bit(0),
     z: flags.bit(1),

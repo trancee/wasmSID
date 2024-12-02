@@ -24,7 +24,7 @@ let c64_characters_mem_end = 0xDFFF
 
 // let c64_characters_mem_size = 0x1000
 
-pub struct C64 {
+pub(all) struct C64 {
   baseaddress : UInt16
   mem : Memory
   //
@@ -79,20 +79,20 @@ pub struct C64 {
 let defaultSampleRate = 44100
 
 pub fn C64::new(
-  ~baseaddress : Int = 0x0000,
-  ~mem? : Memory,
+  baseaddress~ : Int = 0x0000,
+  mem? : Memory,
   //
-  ~data : FixedArray[Int] = [],
-  ~address : Int = 0x0000,
-  ~length : Int = data.length(),
+  data~ : FixedArray[Int] = [],
+  address~ : Int = 0x0000,
+  length~ : Int = data.length(),
   //
-  ~sampleRate : Int = defaultSampleRate,
-  ~model : FixedArray[Model] = [MOS6581],
-  ~videoStandard : VideoStandard = VideoStandard::PAL,
+  sampleRate~ : Int = defaultSampleRate,
+  model~ : FixedArray[Model] = [MOS6581],
+  videoStandard~ : VideoStandard = VideoStandard::PAL,
   //
-  ~realSID : Bool = false,
+  realSID~ : Bool = false,
   //
-  ~debug : Bool = false
+  debug~ : Bool = false
 ) -> C64 {
   let mem = mem.or(Memory::new())
 
@@ -100,18 +100,18 @@ pub fn C64::new(
   let cpu = @cpu.CPU::new(
     pc=baseaddress,
     //
-    ~debug,
+    debug~,
   )
 
   // mem.setROM()
 
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let sid = [SID::new(~mem, sid1_mem_start, ~videoStandard, ~debug)]
+  let sid = [SID::new(mem~, sid1_mem_start, videoStandard~, debug~)]
   let cia = [
-    CIA::new(~mem, cia1_mem_start, ~videoStandard, ~debug),
-    CIA::new(~mem, cia2_mem_start, ~videoStandard, ~debug),
+    CIA::new(mem~, cia1_mem_start, videoStandard~, debug~),
+    CIA::new(mem~, cia2_mem_start, videoStandard~, debug~),
   ]
-  let vic = VIC::new(~mem, vic_mem_start, ~videoStandard, ~debug)
+  let vic = VIC::new(mem~, vic_mem_start, videoStandard~, debug~)
   //
 
   let c64 : C64 = {
@@ -163,16 +163,16 @@ pub fn C64::new(
   // c64.initC64()
 
   cpu.set_read(
-    fn(address : Int, dummy : Bool) -> Int { c64.read(address, ~dummy) },
+    fn(address : Int, dummy : Bool) -> Int { c64.read(address, dummy~) },
   )
   cpu.set_write(
     fn(address : Int, value : Int, dummy : Bool) -> Unit {
-      c64.write(address, value, ~dummy)
+      c64.write(address, value, dummy~)
     },
   )
 
   // must happen after read/write functions set
-  let _ = cpu.load(address, data, ~length)
+  let _ = cpu.load(address, data, length~)
 
   //
   try {
@@ -459,11 +459,11 @@ pub fn reset(self : C64) -> Unit! {
   println("<< C64::reset")
 }
 
-pub fn initCPU(self : C64, ~baseaddress? : Int) -> Unit {
+pub fn initCPU(self : C64, baseaddress? : Int) -> Unit {
   // println(">> C64::initCPU")
 
   //
-  self.cpu.reset(~baseaddress?)
+  self.cpu.reset(baseaddress?)
   //
   self.prevNMI = false
 
@@ -735,12 +735,12 @@ pub fn load(
   //
   data : FixedArray[Int],
   //
-  ~offset : Int = 0,
-  ~length : Int = data.length(),
+  offset~ : Int = 0,
+  length~ : Int = data.length(),
   //
-  ~has_load_address : Bool = false
+  has_load_address~ : Bool = false
 ) -> Int {
-  self.cpu.load(offset, data, ~length, ~has_load_address)
+  self.cpu.load(offset, data, length~, has_load_address~)
 }
 
 fn step(self : C64) -> Int {
@@ -836,7 +836,7 @@ fn interrupts(self : C64) -> Bool {
 // static const uint16_t kAddrKernalFirstPage = 0xe000;
 // static const uint16_t kAddrKernalLastPage = 0xff00;
 
-pub fn read(self : C64, address : Int, ~dummy : Bool = false) -> Int {
+pub fn read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
   if self.debug && not(dummy) {
     let register = try {
       " | \{C64register::from_int!(address)}"
@@ -932,7 +932,7 @@ pub fn write(
   address : Int,
   value : Int,
   //
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
   if self.debug && not(dummy) {
     let register = try {

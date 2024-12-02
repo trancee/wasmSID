@@ -56,12 +56,12 @@ struct VIC {
 }
 
 pub fn VIC::new(
-  ~mem? : Memory,
+  mem? : Memory,
   baseaddress : Int,
   //
-  ~videoStandard : VideoStandard = Unknown,
+  videoStandard~ : VideoStandard = Unknown,
   //
-  ~debug : Bool = false
+  debug~ : Bool = false
 ) -> VIC {
   println("VIC::new")
   //
@@ -119,7 +119,7 @@ pub fn VIC::new(
 
   //
   try {
-    vic.reset!(~videoStandard)
+    vic.reset!(videoStandard~)
   } catch {
     err => {
       println(err)
@@ -132,7 +132,7 @@ pub fn VIC::new(
 }
 
 /// These registers are all intialized to 0 at power-up.
-pub fn reset(self : VIC, ~videoStandard : VideoStandard = Unknown) -> Unit! {
+pub fn reset(self : VIC, videoStandard~ : VideoStandard = Unknown) -> Unit! {
   // self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
     self.mem[i] = 0x00
