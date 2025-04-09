@@ -34,7 +34,7 @@ enum CRAFlags {
   TODIN
 }
 
-fn op_get(self : CRAFlags, flag : CRAFlags) -> Int {
+fn CRAFlags::op_get(self : CRAFlags, flag : CRAFlags) -> Int {
   match flag {
     NONE => 0
     //
@@ -49,22 +49,22 @@ fn op_get(self : CRAFlags, flag : CRAFlags) -> Int {
   }
 }
 
-fn land(self : CRA, value : CRAFlags) -> CRA {
-  self.0 & value[value]
+fn CRA::land(self : CRA, value : CRAFlags) -> CRA {
+  self._ & value[value]
 }
 
-fn lor(self : CRA, value : CRA) -> CRA {
-  self.0 | value.0
+fn CRA::lor(self : CRA, value : CRA) -> CRA {
+  self._ | value._
 }
 
 fn cra(flag : CRAFlags) -> Int {
   flag[flag]
 }
 
-fn has(self : CRA, mask : CRAFlags) -> Bool {
-  (self.0 & mask[mask]) != 0
+fn CRA::has(self : CRA, mask : CRAFlags) -> Bool {
+  (self._ & mask[mask]) != 0
 }
 
-fn clear(self : CRA, mask : CRAFlags) -> CRA {
-  self.0 & (-mask[mask] - 1)
+fn CRA::clear(self : CRA, mask : CRAFlags) -> CRA {
+  self._ & (-mask[mask] - 1)
 }

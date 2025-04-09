@@ -28,7 +28,7 @@ pub fn sidtest() -> Unit {
 
   //
   let c64 = @lib.C64::new(
-    ~mem,
+    mem,
     model=psid.flags.model,
     videoStandard=psid.videoStandard(),
     realSID=psid.realSID,

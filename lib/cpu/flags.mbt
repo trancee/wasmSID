@@ -37,7 +37,7 @@ struct Flags {
   mut n : Bool // 7: Negative Flag
 } derive(Show, Eq)
 
-fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
+fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
   {
     c: flags.bit(0),
     z: flags.bit(1),
@@ -62,7 +62,7 @@ fn Flags::new(~flags : UInt8 = 0x00) -> Flags {
 //   } + if self[C] { "C" } else { "c" }
 // }
 
-fn op_get(self : Flags, flag : Flag) -> Bool {
+fn Flags::op_get(self : Flags, flag : Flag) -> Bool {
   match flag {
     C => self.c
     Z => self.z
@@ -75,7 +75,7 @@ fn op_get(self : Flags, flag : Flag) -> Bool {
   }
 }
 
-fn op_set(self : Flags, flag : Flag, value : Bool) -> Unit {
+fn Flags::op_set(self : Flags, flag : Flag, value : Bool) -> Unit {
   match flag {
     C => self.c = value
     Z => self.z = value
@@ -88,7 +88,7 @@ fn op_set(self : Flags, flag : Flag, value : Bool) -> Unit {
   }
 }
 
-fn reset(self : Flags) -> Unit {
+fn Flags::reset(self : Flags) -> Unit {
   self[C] = false
   self[Z] = false
   self[I] = false

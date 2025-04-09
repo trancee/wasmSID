@@ -37,16 +37,16 @@ struct CIA {
   register : CIARegister
 
   //
-  mut debug : Bool
+  debug : Bool
 }
 
 pub fn CIA::new(
-  ~mem? : Memory,
+  mem? : Memory,
   baseaddress : Int,
   //
 
-  ~videoStandard : VideoStandard = Unknown,
-  ~debug : Bool = false
+  videoStandard~ : VideoStandard = Unknown,
+  debug~ : Bool = false
 ) -> CIA {
   println("CIA::new")
   //
@@ -82,7 +82,7 @@ pub fn CIA::new(
               panic()
             }
           }
-          cia.read(register, ~dummy)._
+          cia.read(register, dummy~)._
         },
         fn(address : UInt16, value : UInt8, dummy : Bool) {
           let register = try {
@@ -93,19 +93,19 @@ pub fn CIA::new(
               panic()
             }
           }
-          cia.write(register, value, ~dummy)
+          cia.write(register, value, dummy~)
         },
       )
   }
 
   //
-  cia.reset(~videoStandard)
+  cia.reset(videoStandard~)
 
   //
   cia
 }
 
-pub fn reset(self : CIA, ~videoStandard : VideoStandard = Unknown) -> Unit {
+pub fn reset(self : CIA, videoStandard~ : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
   // self.rom.reset()
   // self.ram.reset()
@@ -232,7 +232,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
   self.register.interruptControl.interrupt
 }
 
-fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
+fn CIA::read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8 {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
   if self.debug && not(dummy) {
     println(
@@ -459,15 +459,15 @@ fn read(self : CIA, register : CIAregister, ~dummy : Bool = false) -> UInt8 {
   }
 }
 
-fn op_get(self : CIA, register : CIAregister) -> UInt8 {
+fn CIA::op_get(self : CIA, register : CIAregister) -> UInt8 {
   self.read(register)
 }
 
-fn write(
+fn CIA::write(
   self : CIA,
   register : CIAregister,
   value : UInt8,
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
   if self.debug && not(dummy) {
@@ -585,20 +585,20 @@ fn write(
       self.register.directionB[7] = value.bit(7)
     }
     TA_LO => {
-      self.timerA.counter = (self.timerA.counter & 0xFF00) | u16(value).0
-      self.timerA.latch = (self.timerA.latch & 0xFF00) | u16(value).0
+      self.timerA.counter = (self.timerA.counter & 0xFF00) | u16(value)._
+      self.timerA.latch = (self.timerA.latch & 0xFF00) | u16(value)._
     }
     TA_HI => {
-      self.timerA.counter = (u16(value) << 8).0 | (self.timerA.counter & 0x00FF)
-      self.timerA.latch = (u16(value) << 8).0 | (self.timerA.latch & 0x00FF)
+      self.timerA.counter = (u16(value) << 8)._ | (self.timerA.counter & 0x00FF)
+      self.timerA.latch = (u16(value) << 8)._ | (self.timerA.latch & 0x00FF)
     }
     TB_LO => {
-      self.timerB.counter = (self.timerB.counter & 0xFF00) | u16(value).0
-      self.timerB.latch = (self.timerB.latch & 0xFF00) | u16(value).0
+      self.timerB.counter = (self.timerB.counter & 0xFF00) | u16(value)._
+      self.timerB.latch = (self.timerB.latch & 0xFF00) | u16(value)._
     }
     TB_HI => {
-      self.timerB.counter = (u16(value) << 8).0 | (self.timerB.counter & 0x00FF)
-      self.timerB.latch = (u16(value) << 8).0 | (self.timerB.latch & 0x00FF)
+      self.timerB.counter = (u16(value) << 8)._ | (self.timerB.counter & 0x00FF)
+      self.timerB.latch = (u16(value) << 8)._ | (self.timerB.latch & 0x00FF)
     }
     TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
@@ -671,7 +671,7 @@ fn write(
       self.register.controlA.forceLoad = value.bit(4)
       /// Bit 5:  Timer A input mode (1=count microprocessor cycles, 0=count signals on
       ///         CNT line at pin 4 of User Port)
-      self.register.controlA.inputMode = match (value & 0b00100000).0 >> 5 {
+      self.register.controlA.inputMode = match (value & 0b00100000)._ >> 5 {
         0b01 => TimerAInputMode::CountCycles
         0b00 => TimerAInputMode::CountSignals
       }
@@ -704,7 +704,7 @@ fn write(
       ///            01 = Count signals on CNT line at pin 4 of User Port
       ///            10 = Count each time that Timer A counts down to 0
       ///            11 = Count Timer A 0's when CNT pulses are also present
-      self.register.controlB.inputMode = match (value & 0b01100000).0 >> 5 {
+      self.register.controlB.inputMode = match (value & 0b01100000)._ >> 5 {
         0b00 => TimerBInputMode::CountCycles
         0b01 => TimerBInputMode::CountSignals
         0b10 => TimerBInputMode::CountTimerA

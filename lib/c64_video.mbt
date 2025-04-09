@@ -16,7 +16,7 @@ fn VideoStandard::from_int(value : Int) -> VideoStandard! {
   }
 }
 
-fn to_int(self : VideoStandard) -> Int! {
+fn VideoStandard::to_int(self : VideoStandard) -> Int! {
   match self {
     NTSC => 0
     PAL => 1
@@ -24,7 +24,7 @@ fn to_int(self : VideoStandard) -> Int! {
   }
 }
 
-fn op_get(self : VideoStandard, value : VideoStandard) -> Int! {
+fn VideoStandard::op_get(self : VideoStandard, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -32,8 +32,8 @@ fn op_get(self : VideoStandard, value : VideoStandard) -> Int! {
 
 type CPUClock VideoStandard derive(Show, Eq)
 
-fn to_int(self : CPUClock) -> Int! {
-  match self.0 {
+fn CPUClock::to_int(self : CPUClock) -> Int! {
+  match self._ {
     Unknown => 0
     NTSC => 1022727
     PAL => 985248
@@ -41,11 +41,11 @@ fn to_int(self : CPUClock) -> Int! {
   }
 }
 
-fn op_get(self : CPUClock, value : VideoStandard) -> Int! {
+fn CPUClock::op_get(self : CPUClock, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
-fn op_shl(self : CPUClock, bits : Int) -> Int {
+fn CPUClock::op_shl(self : CPUClock, bits : Int) -> Int {
   try {
     self.to_int!() << bits
   } catch {
@@ -94,15 +94,15 @@ test "CPUClock::PAL shift left" {
 
 type ScanLines VideoStandard derive(Show, Eq)
 
-fn to_int(self : ScanLines) -> Int! {
-  match self.0 {
+fn ScanLines::to_int(self : ScanLines) -> Int! {
+  match self._ {
     NTSC => 262
     PAL => 312
     _ => raise UnknownScanLines
   }
 }
 
-fn op_get(self : ScanLines, value : VideoStandard) -> Int! {
+fn ScanLines::op_get(self : ScanLines, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -134,15 +134,15 @@ test "error ScanLines::Both" {
 
 type ScanLineCycles VideoStandard derive(Show, Eq)
 
-fn to_int(self : ScanLineCycles) -> Int! {
-  match self.0 {
+fn ScanLineCycles::to_int(self : ScanLineCycles) -> Int! {
+  match self._ {
     NTSC => 65
     PAL => 63
     _ => raise UnknownScanLineCycles
   }
 }
 
-fn op_get(self : ScanLineCycles, value : VideoStandard) -> Int! {
+fn ScanLineCycles::op_get(self : ScanLineCycles, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -174,15 +174,15 @@ test "error ScanLineCycles::Both" {
 
 type FrameRate VideoStandard derive(Show, Eq)
 
-fn to_int(self : FrameRate) -> Int! {
-  match self.0 {
+fn FrameRate::to_int(self : FrameRate) -> Int! {
+  match self._ {
     NTSC => 60
     PAL => 50
     _ => raise UnknownFrameRate
   }
 }
 
-fn op_get(self : FrameRate, value : VideoStandard) -> Int! {
+fn FrameRate::op_get(self : FrameRate, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 

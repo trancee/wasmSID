@@ -79,7 +79,7 @@ struct Memory {
   hooks : Array[Hook]
 }
 
-pub fn Memory::new(~length : Int = 0xFFFF, ~value : Int = 0x00) -> Memory {
+pub fn Memory::new(length~ : Int = 0xFFFF, value~ : Int = 0x00) -> Memory {
   { mem: FixedArray::make(length + 1, value), hooks: [] }
 }
 
@@ -158,9 +158,9 @@ pub fn clear(self : Memory) -> Unit {
 
 fn dump(
   self : Memory,
-  ~addr : UInt16 = 0x0000,
-  ~cols : Int = 0x10,
-  ~rows : Int = 0x10
+  addr~ : UInt16 = 0x0000,
+  cols~ : Int = 0x10,
+  rows~ : Int = 0x10
 ) -> Unit {
   let mut i = 0
   let mut str = ""
@@ -184,7 +184,7 @@ fn dump(
   }
 }
 
-pub fn read(self : Memory, address : UInt16, ~dummy : Bool = false) -> UInt8 {
+pub fn read(self : Memory, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println("Memory::read $\{u16(addr).to_hex()} \{_dummy}")
 
@@ -231,7 +231,7 @@ pub fn write(
   address : UInt16,
   value : UInt8,
   //
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println(

@@ -71,6 +71,7 @@ impl C64 {
   read(Self, Int, ~dummy : Bool = ..) -> Int
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
+  set_bank(Self, IOPort) -> Unit
   set_flags(Self, @cpu.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
   write(Self, Int, Int, ~dummy : Bool = ..) -> Unit
@@ -443,6 +444,7 @@ type ICRFlags
 type IOPort
 impl IOPort {
   default() -> Self
+  from_int(UInt8) -> Self
   to_string(Self) -> String
 }
 

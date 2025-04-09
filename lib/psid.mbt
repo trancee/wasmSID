@@ -24,9 +24,9 @@ pub struct PSID {
   mut startPage : UInt8
   mut pageLength : UInt8
   //
-  mut sid2Flags : SIDFlags
-  mut sid3Flags : SIDFlags
-  mut sid4Flags : SIDFlags
+  sid2Flags : SIDFlags
+  sid3Flags : SIDFlags
+  sid4Flags : SIDFlags
   //
   mut sid2Address : UInt8
   mut sid3Address : UInt8

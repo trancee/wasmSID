@@ -16,7 +16,7 @@ fn Model::from_int(value : Int) -> Model! {
   }
 }
 
-fn to_int(self : Model) -> Int! {
+fn Model::to_int(self : Model) -> Int! {
   match self {
     MOS6581 => 6581
     MOS8580 => 8580
@@ -24,7 +24,7 @@ fn to_int(self : Model) -> Int! {
   }
 }
 
-fn op_get(self : Model, value : Model) -> Int! {
+fn Model::op_get(self : Model, value : Model) -> Int! {
   value.to_int!()
 }
 
@@ -46,7 +46,7 @@ fn Channel::from_int(value : Int) -> Channel! {
   }
 }
 
-fn to_int(self : Channel) -> Int! {
+fn Channel::to_int(self : Channel) -> Int! {
   match self {
     Left => 1
     Right => 2
@@ -55,6 +55,6 @@ fn to_int(self : Channel) -> Int! {
   }
 }
 
-fn op_get(self : Channel, value : Channel) -> Int! {
+fn Channel::op_get(self : Channel, value : Channel) -> Int! {
   value.to_int!()
 }

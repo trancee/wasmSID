@@ -27,7 +27,7 @@ enum Waveform {
   PulseSawTriangle
 } derive(Eq)
 
-fn array(self : Waveform) -> FixedArray[UInt8] {
+fn Waveform::array(self : Waveform) -> FixedArray[UInt8] {
   match self {
     SawTriangle => sawTriangle
     PulseTriangle => pulseTriangle
@@ -36,7 +36,7 @@ fn array(self : Waveform) -> FixedArray[UInt8] {
   }
 }
 
-fn op_get(self : Waveform, index : Int) -> UInt8 {
+fn Waveform::op_get(self : Waveform, index : Int) -> UInt8 {
   self.array()[index]
 }
 

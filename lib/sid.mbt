@@ -130,18 +130,18 @@ struct SID {
   register : SIDRegister
 
   //
-  mut debug : Bool
+  debug : Bool
 }
 
 pub fn SID::new(
-  ~mem? : Memory,
+  mem? : Memory,
   baseaddress : Int,
   //
 
-  ~model : Model = Unknown,
-  ~channel : Channel = Unknown,
-  ~videoStandard : VideoStandard = Unknown,
-  ~debug : Bool = false
+  model~ : Model = Unknown,
+  channel~ : Channel = Unknown,
+  videoStandard~ : VideoStandard = Unknown,
+  debug~ : Bool = false
 ) -> SID {
   println("SID::new")
   //
@@ -218,7 +218,7 @@ pub fn SID::new(
   sid
 }
 
-pub fn reset(self : SID, ~videoStandard : VideoStandard = Unknown) -> Unit {
+pub fn SID::reset(self : SID, videoStandard~ : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=sid_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
     self.mem[i] = 0x00
@@ -731,7 +731,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
   wavOutput
 }
 
-fn op_get(self : SID, register : SIDregister) -> UInt8 {
+fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
   if self.debug {
@@ -833,7 +833,7 @@ fn op_get(self : SID, register : SIDregister) -> UInt8 {
   }
 }
 
-fn op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
+fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
   if self.debug {

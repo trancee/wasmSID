@@ -13,7 +13,7 @@ enum ICRFlags {
   IR
 }
 
-fn op_get(self : ICRFlags, flag : ICRFlags) -> Int {
+fn ICRFlags::op_get(self : ICRFlags, flag : ICRFlags) -> Int {
   match flag {
     NONE => 0
     //
@@ -29,11 +29,11 @@ fn op_get(self : ICRFlags, flag : ICRFlags) -> Int {
   }
 }
 
-fn land(self : ICR, value : ICRFlags) -> ICR {
+fn ICR::land(self : ICR, value : ICRFlags) -> ICR {
   self._ & value[value]
 }
 
-fn lor(self : ICR, value : ICR) -> ICR {
+fn ICR::lor(self : ICR, value : ICR) -> ICR {
   self._ | value._
 }
 
@@ -41,10 +41,10 @@ fn icr(flag : ICRFlags) -> Int {
   flag[flag]
 }
 
-fn has(self : ICR, mask : ICRFlags) -> Bool {
+fn ICR::has(self : ICR, mask : ICRFlags) -> Bool {
   (self._ & mask[mask]) != 0
 }
 
-fn clear(self : ICR, mask : ICRFlags) -> CRA {
+fn ICR::clear(self : ICR, mask : ICRFlags) -> CRA {
   self._ & (-mask[mask] - 1)
 }

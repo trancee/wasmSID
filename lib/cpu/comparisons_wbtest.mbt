@@ -391,7 +391,7 @@ struct CMPTestData {
   expectN : Bool
 }
 
-fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!Error {
+fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
@@ -421,6 +421,7 @@ fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!Error {
     A => cpu.write(t.pc + 0, CMP.to_int())
     X => cpu.write(t.pc + 0, CPX.to_int())
     Y => cpu.write(t.pc + 0, CPY.to_int())
+    SP => fail!("SP")
   }
   cpu.write(t.pc + 1, t.op)
 
@@ -449,7 +450,7 @@ fn testCompareImmediate(t : CMPTestData, ~r : Register = A) -> Unit!Error {
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
-fn testCompareZeroPage(t : CMPTestData, ~r : Register = A) -> Unit!Error {
+fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
@@ -479,6 +480,7 @@ fn testCompareZeroPage(t : CMPTestData, ~r : Register = A) -> Unit!Error {
     A => cpu.write(t.pc + 0, CMP_ZP.to_int())
     X => cpu.write(t.pc + 0, CPX_ZP.to_int())
     Y => cpu.write(t.pc + 0, CPY_ZP.to_int())
+    SP => fail!("SP")
   }
   cpu.write(t.pc + 1, 0x42)
 
@@ -559,7 +561,7 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
-fn testCompareAbsolute(t : CMPTestData, ~r : Register = A) -> Unit!Error {
+fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
@@ -589,6 +591,7 @@ fn testCompareAbsolute(t : CMPTestData, ~r : Register = A) -> Unit!Error {
     A => cpu.write(t.pc + 0, CMP_ABS.to_int())
     X => cpu.write(t.pc + 0, CPX_ABS.to_int())
     Y => cpu.write(t.pc + 0, CPY_ABS.to_int())
+    SP => fail!("SP")
   }
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)

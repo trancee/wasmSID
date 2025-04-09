@@ -34,7 +34,7 @@ enum CRBFlags {
   ALARM
 }
 
-fn op_get(self : CRBFlags, flag : CRBFlags) -> Int {
+fn CRBFlags::op_get(self : CRBFlags, flag : CRBFlags) -> Int {
   match flag {
     NONE => 0
     //
@@ -49,12 +49,12 @@ fn op_get(self : CRBFlags, flag : CRBFlags) -> Int {
   }
 }
 
-fn land(self : CRB, value : CRBFlags) -> CRB {
-  self.0 & value[value]
+fn CRB::land(self : CRB, value : CRBFlags) -> CRB {
+  self._ & value[value]
 }
 
-fn lor(self : CRB, value : CRB) -> CRB {
-  self.0 | value.0
+fn CRB::lor(self : CRB, value : CRB) -> CRB {
+  self._ | value._
 }
 
 fn crb(flag : CRBFlags) -> Int {
@@ -62,9 +62,9 @@ fn crb(flag : CRBFlags) -> Int {
 }
 
 fn has(self : CRB, mask : CRBFlags) -> Bool {
-  (self.0 & mask[mask]) != 0
+  (self._ & mask[mask]) != 0
 }
 
-fn clear(self : CRB, mask : CRBFlags) -> CRB {
-  self.0 & (-mask[mask] - 1)
+fn CRB::clear(self : CRB, mask : CRBFlags) -> CRB {
+  self._ & (-mask[mask] - 1)
 }

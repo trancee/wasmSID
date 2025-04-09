@@ -5,14 +5,14 @@ pub struct NES {
 }
 
 pub fn NES::new(
-  ~baseaddress : Int = 0x0000,
-  ~data : FixedArray[Int] = [],
-  ~addr : Int = 0x0000,
-  ~length : Int = data.length()
+  baseaddress~ : Int = 0x0000,
+  data~ : FixedArray[Int] = [],
+  addr~ : Int = 0x0000,
+  length~ : Int = data.length()
 ) -> NES {
   let cpu = @cpu.CPU::new(pc=baseaddress, decimal_mode=false)
   let mem = Memory::new()
-  let addr = cpu.load(addr, data, ~length)
+  let addr = cpu.load(addr, data, length~)
   let nes : NES = { baseaddress, mem, cpu }
   nes
 }
@@ -20,10 +20,10 @@ pub fn NES::new(
 pub fn load(
   self : NES,
   data : FixedArray[Int],
-  ~addr : Int = 0,
-  ~length : Int = data.length()
+  addr~ : Int = 0,
+  length~ : Int = data.length()
 ) -> Unit {
-  let addr = self.cpu.load(addr, data, ~length)
+  let addr = self.cpu.load(addr, data, length~)
 
 }
 

@@ -13,7 +13,7 @@ let cpu_mem_end = 0xFFFF
 
 let cpu_mem_size = 0xFFFF
 
-struct CPU {
+pub struct CPU {
   mem : FixedArray[Int]
   //
   mut read : ((Int, Bool) -> Int)?
@@ -22,8 +22,8 @@ struct CPU {
   mut cycles : Int
   //
   mut pc : UInt16 // Program Counter
-  mut registers : Registers
-  mut flags : Flags
+  registers : Registers
+  flags : Flags
   //
   decimal_mode : Bool
   // mut needs_interrupt : Vector
@@ -36,15 +36,15 @@ struct CPU {
 }
 
 pub fn CPU::new(
-  ~pc : Int = 0x0000,
+  pc~ : Int = 0x0000,
   //
-  ~data : FixedArray[Int] = [],
-  ~addr : Int = 0,
-  ~length : Int = data.length(),
+  data~ : FixedArray[Int] = [],
+  addr~ : Int = 0,
+  length~ : Int = data.length(),
   //
-  ~decimal_mode : Bool = true,
+  decimal_mode~ : Bool = true,
   //
-  ~debug : Bool = false
+  debug~ : Bool = false
 ) -> CPU {
   let registers = Registers::new()
   let flags = Flags::new()
@@ -125,6 +125,7 @@ enum Vector {
 
 fn addr(self : Vector) -> Int {
   match self {
+    None => 0x0000
     NMI => 0xFFFA
     RESET => 0xFFFC
     IRQ => 0xFFFE
@@ -135,7 +136,7 @@ pub fn setRESET(self : CPU, pc : UInt16) -> Unit {
   self.write16(RESET.addr(), pc)
 }
 
-pub fn reset(self : CPU, ~baseaddress? : Int) -> Unit {
+pub fn CPU::reset(self : CPU, baseaddress? : Int) -> Unit {
   // self.mem.clear()
 
   self.cycles = 0
@@ -151,11 +152,11 @@ pub fn reset(self : CPU, ~baseaddress? : Int) -> Unit {
   self.flags.reset()
 }
 
-pub fn set_nmi(self : CPU, ~state : Bool = true) -> Unit {
+pub fn set_nmi(self : CPU, state~ : Bool = true) -> Unit {
   self.nmi = state
 }
 
-pub fn set_irq(self : CPU, ~state : Bool = true) -> Unit {
+pub fn set_irq(self : CPU, state~ : Bool = true) -> Unit {
   self.irq = state
 }
 
@@ -183,11 +184,11 @@ pub fn has_interrupt(self : CPU) -> Bool {
   self.flags[I]
 }
 
-pub fn clear_interrupt(self : CPU) -> Unit {
+pub fn CPU::clear_interrupt(self : CPU) -> Unit {
   self.flags[I] = false
 }
 
-pub fn set_interrupt(self : CPU) -> Unit {
+pub fn CPU::set_interrupt(self : CPU) -> Unit {
   self.flags[I] = true
 }
 
@@ -214,9 +215,9 @@ pub fn load(
   address : Int,
   //
   data : FixedArray[Int],
-  ~length : Int = data.length(),
+  length~ : Int = data.length(),
   //
-  ~has_load_address : Bool = false
+  has_load_address~ : Bool = false
 ) -> Int {
   // println(
   //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
@@ -233,29 +234,29 @@ pub fn load(
   address
 }
 
-pub fn read(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt8 {
+pub fn read(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt8 {
   match self.read {
     Some(read) => read(addr._, dummy)
     None => self.mem[addr._]
   }
 }
 
-fn read16(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt16 {
+fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
   //   "$" + u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
-  self.read(addr._, ~dummy) | (self.read(addr._ + 1, ~dummy) << 8) |> u16
+  self.read(addr._, dummy~) | (self.read(addr._ + 1, dummy~) << 8) |> u16
 }
 
-fn read16zp(self : CPU, addr : UInt16, ~dummy : Bool = false) -> UInt16 {
+fn read16zp(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
   //   ("read16zp $" + addr.to_hex() + ":#$" + self.read(addr).to_hex() + " $" + (addr +
   //   1)&(0x00FF)) | (addr&(0xFF00).to_hex() + ":#$" + self.read(
   //     (addr + 1)&(0x00FF) | addr&(0xFF00),
   //   ).to_hex()),
   // )
-  self.read(addr._, ~dummy) |
-  (self.read(((addr._ + 1) & 0x00FF) | (addr._ & 0xFF00), ~dummy) << 8)
+  self.read(addr._, dummy~) |
+  (self.read(((addr._ + 1) & 0x00FF) | (addr._ & 0xFF00), dummy~) << 8)
   |> u16
 }
 
@@ -263,7 +264,7 @@ pub fn write(
   self : CPU,
   addr : UInt16,
   value : UInt8,
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
   match self.write {
     Some(write) => write(addr._, value._, dummy)
@@ -276,17 +277,17 @@ pub fn write16(
   self : CPU,
   addr : UInt16,
   value : UInt16,
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
-  self.write(addr._, value._, ~dummy)
-  self.write(addr._ + 1, value._ >> 8, ~dummy)
+  self.write(addr._, value._, dummy~)
+  self.write(addr._ + 1, value._ >> 8, dummy~)
   // println(
   //   "$" + u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
 }
 
-pub fn push(self : CPU, value : UInt8, ~dummy : Bool = false) -> Unit {
-  self.write(self.registers[SP]._ | 0x0100, value._, ~dummy)
+pub fn push(self : CPU, value : UInt8, dummy~ : Bool = false) -> Unit {
+  self.write(self.registers[SP]._ | 0x0100, value._, dummy~)
   self.registers[SP] -= 1
 }
 
@@ -295,9 +296,9 @@ pub fn push16(self : CPU, value : UInt16) -> Unit {
   self.push(value._)
 }
 
-fn pop(self : CPU, ~dummy : Bool = false) -> UInt8 {
+fn pop(self : CPU, dummy~ : Bool = false) -> UInt8 {
   self.registers[SP] += 1
-  self.read(self.registers[SP]._ | 0x0100, ~dummy)
+  self.read(self.registers[SP]._ | 0x0100, dummy~)
 }
 
 fn pop16(self : CPU) -> UInt16 {
@@ -310,7 +311,7 @@ pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
 
 /// triggers a NMI IRQ in the processor
 /// this is very similar to the BRK instruction
-pub fn nmi(self : CPU, ~pc? : Int) -> Unit {
+pub fn nmi(self : CPU, pc? : Int) -> Unit {
   println(
     "*** NMI $" +
     UInt16(NMI.addr()).to_hex() +
@@ -330,7 +331,7 @@ pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
 
 /// triggers a normal IRQ
 /// this is very similar to the BRK instruction
-pub fn irq(self : CPU, ~pc? : Int) -> Unit {
+pub fn irq(self : CPU, pc? : Int) -> Unit {
   println(
     "*** IRQ $" +
     UInt16(IRQ.addr()).to_hex() +
@@ -392,29 +393,29 @@ pub fn step(self : CPU) -> Int {
   self.cycles - cycles
 }
 
-fn get_addr(self : CPU, mode : Mode, ~dummy : Bool = true) -> UInt16 {
+fn get_addr(self : CPU, mode : Mode, dummy~ : Bool = true) -> UInt16 {
   match mode {
     Implied => 0
     Accumulator => 0
     Immediate => self.pc + 1
-    Indirect => self.read16zp(self.read16(self.pc + 1, ~dummy), ~dummy)
+    Indirect => self.read16zp(self.read16(self.pc + 1, dummy~), dummy~)
     IndexedIndirect =>
       self.read16zp(
-        (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
-        ~dummy,
+        (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> u16,
+        dummy~,
       )
     IndirectIndexed =>
-      self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy) +
+      self.read16zp(self.read(self.pc + 1, dummy~) |> u16, dummy~) +
       self.registers[Y]._
-    Absolute => self.read16(self.pc + 1, ~dummy)
-    AbsoluteX => self.read16(self.pc + 1, ~dummy) + self.registers[X]._
-    AbsoluteY => self.read16(self.pc + 1, ~dummy) + self.registers[Y]._
-    ZeroPage => self.read(self.pc + 1, ~dummy) & 0xFF |> u16
+    Absolute => self.read16(self.pc + 1, dummy~)
+    AbsoluteX => self.read16(self.pc + 1, dummy~) + self.registers[X]._
+    AbsoluteY => self.read16(self.pc + 1, dummy~) + self.registers[Y]._
+    ZeroPage => self.read(self.pc + 1, dummy~) & 0xFF |> u16
     ZeroPageX =>
-      (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16
+      (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> u16
     ZeroPageY =>
-      (self.read(self.pc + 1, ~dummy) + self.registers[Y]) & 0xFF |> u16
-    Relative => self.pc + 2 + self.read(self.pc + 1, ~dummy).to_signed()
+      (self.read(self.pc + 1, dummy~) + self.registers[Y]) & 0xFF |> u16
+    Relative => self.pc + 2 + self.read(self.pc + 1, dummy~).to_signed()
     _ => {
       println("unknown CPU mode \{mode}")
       panic()
@@ -432,14 +433,15 @@ fn dump_step(
   illegal : Bool
 ) -> Unit {
   let dummy = true
-  let read8 = fn() { "$" + self.read(self.pc + 1, ~dummy).to_hex() }
+  let read8 = fn() { "$" + self.read(self.pc + 1, dummy~).to_hex() }
   let read16 = fn() {
     "$" +
-    self.read(self.pc + 1 + 1, ~dummy).to_hex() +
-    self.read(self.pc + 1, ~dummy).to_hex()
+    self.read(self.pc + 1 + 1, dummy~).to_hex() +
+    self.read(self.pc + 1, dummy~).to_hex()
   }
   let unofficial = if illegal { "*" } else { " " }
   let addr_mode = match mode {
+    None => ""
     Implied =>
       // Implied Addressing
       // https://www.c64-wiki.com/wiki/Implied_addressing
@@ -471,7 +473,7 @@ fn dump_step(
       read16() +
       ")" +
       " = " +
-      self.read16zp(self.read16(self.pc + 1, ~dummy), ~dummy).to_hex()
+      self.read16zp(self.read16(self.pc + 1, dummy~), dummy~).to_hex()
     IndexedIndirect =>
       // Indexed-Indirect Addressing
       // https://www.c64-wiki.com/wiki/Indexed-indirect_addressing
@@ -481,20 +483,20 @@ fn dump_step(
       " (" +
       read8() +
       ",X) @ " +
-      (self.read(self.pc + 1, ~dummy) + self.registers[X]).to_hex() +
+      (self.read(self.pc + 1, dummy~) + self.registers[X]).to_hex() +
       " = " +
       self
       .read16zp(
-        (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
-        ~dummy,
+        (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> u16,
+        dummy~,
       )
       .to_hex() +
       " = " +
       self
       .read(
         self.read16zp(
-          (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
-          ~dummy,
+          (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> u16,
+          dummy~,
         ),
       )
       .to_hex()
@@ -508,16 +510,16 @@ fn dump_step(
       " (" +
       read8() +
       "),Y = " +
-      self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy).to_hex() +
+      self.read16zp(self.read(self.pc + 1, dummy~) |> u16, dummy~).to_hex() +
       " @ " +
-      (self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy) +
+      (self.read16zp(self.read(self.pc + 1, dummy~) |> u16, dummy~) +
       self.registers[Y]._).to_hex() +
       " = " +
       self
       .read(
-        self.read16zp(self.read(self.pc + 1, ~dummy) |> u16, ~dummy) +
+        self.read16zp(self.read(self.pc + 1, dummy~) |> u16, dummy~) +
         self.registers[Y]._,
-        ~dummy,
+        dummy~,
       )
       .to_hex()
     Absolute =>
@@ -531,7 +533,7 @@ fn dump_step(
       (match name {
         "JMP" | "JSR" => ""
         _ =>
-          " = " + self.read(self.read16(self.pc + 1, ~dummy), ~dummy).to_hex()
+          " = " + self.read(self.read16(self.pc + 1, dummy~), dummy~).to_hex()
       })
     AbsoluteX =>
       // Indexed Absolute Addressing
@@ -542,10 +544,10 @@ fn dump_step(
       " " +
       read16() +
       ",X @ " +
-      (self.read16(self.pc + 1, ~dummy) + self.registers[X]._).to_hex() +
+      (self.read16(self.pc + 1, dummy~) + self.registers[X]._).to_hex() +
       " = " +
       self
-      .read(self.read16(self.pc + 1, ~dummy) + self.registers[X]._, ~dummy)
+      .read(self.read16(self.pc + 1, dummy~) + self.registers[X]._, dummy~)
       .to_hex()
     AbsoluteY =>
       // Indexed Absolute Addressing
@@ -556,10 +558,10 @@ fn dump_step(
       " " +
       read16() +
       ",Y @ " +
-      (self.read16(self.pc + 1, ~dummy) + self.registers[Y]._).to_hex() +
+      (self.read16(self.pc + 1, dummy~) + self.registers[Y]._).to_hex() +
       " = " +
       self
-      .read(self.read16(self.pc + 1, ~dummy) + self.registers[Y]._, ~dummy)
+      .read(self.read16(self.pc + 1, dummy~) + self.registers[Y]._, dummy~)
       .to_hex()
     ZeroPage =>
       // Zeropage Addressing
@@ -570,7 +572,7 @@ fn dump_step(
       " " +
       read8() +
       " = " +
-      self.read(self.read(self.pc + 1, ~dummy) & 0xFF |> u16, ~dummy).to_hex()
+      self.read(self.read(self.pc + 1, dummy~) & 0xFF |> u16, dummy~).to_hex()
     ZeroPageX =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
@@ -580,12 +582,12 @@ fn dump_step(
       " " +
       read8() +
       ",X @ " +
-      ((self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF).to_hex() +
+      ((self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF).to_hex() +
       " = " +
       self
       .read(
-        (self.read(self.pc + 1, ~dummy) + self.registers[X]) & 0xFF |> u16,
-        ~dummy,
+        (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> u16,
+        dummy~,
       )
       .to_hex()
     ZeroPageY =>
@@ -597,12 +599,12 @@ fn dump_step(
       " " +
       read8() +
       ",Y @ " +
-      ((self.read(self.pc + 1, ~dummy) + self.registers[Y]) & 0xFF).to_hex() +
+      ((self.read(self.pc + 1, dummy~) + self.registers[Y]) & 0xFF).to_hex() +
       " = " +
       self
       .read(
-        (self.read(self.pc + 1, ~dummy) + self.registers[Y]) & 0xFF |> u16,
-        ~dummy,
+        (self.read(self.pc + 1, dummy~) + self.registers[Y]) & 0xFF |> u16,
+        dummy~,
       )
       .to_hex()
     Relative =>
@@ -612,12 +614,12 @@ fn dump_step(
       // A single, signed-integer byte that specifies, in relative terms, how far "up" or "down" to jump if the required conditions are met.
       // This signed 8-bit figure is called the offset.
       // BCC, BCS, BEQ, BMI, BNE, BPL, BVC, and BVS.
-      " $" + (self.pc + 2 + self.read(self.pc + 1, ~dummy).to_signed()).to_hex()
+      " $" + (self.pc + 2 + self.read(self.pc + 1, dummy~).to_signed()).to_hex()
   }
   let mut instr = ""
   for i = 0; i < 3; i = i + 1 {
     instr += " " +
-      (if i < size { self.read(self.pc + i, ~dummy).to_hex() } else { "  " })
+      (if i < size { self.read(self.pc + i, dummy~).to_hex() } else { "  " })
   }
   let mut spaces = ""
   for i = 32 - name.length() - addr_mode.length(); i > 0; i = i - 1 {
@@ -2177,7 +2179,7 @@ enum Instruction {
 //   get_opcode(instruction)
 // }
 
-fn to_int(self : Instruction) -> Int {
+fn Instruction::to_int(self : Instruction) -> Int {
   get_opcode(self)._
 }
 
@@ -2381,10 +2383,10 @@ fn get_opcode(instruction : Instruction) -> UInt8 {
   }
 }
 
-fn op_get(self : CPU, address : Int) -> Int {
+fn CPU::op_get(self : CPU, address : Int) -> Int {
   self.read(address, dummy=true)._
 }
 
-fn op_set(self : CPU, address : Int, value : Int) -> Unit {
+fn CPU::op_set(self : CPU, address : Int, value : Int) -> Unit {
   self.write(address, value, dummy=true)
 }

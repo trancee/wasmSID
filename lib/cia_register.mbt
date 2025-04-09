@@ -34,7 +34,7 @@ enum RunMode {
   Continuous
 } derive(Show, Eq)
 
-fn to_int(self : RunMode) -> Int {
+fn RunMode::to_int(self : RunMode) -> Int {
   match self {
     OneShot => 1
     Continuous => 0
@@ -46,7 +46,7 @@ enum SerialMode {
   Input
 } derive(Show, Eq)
 
-fn to_int(self : SerialMode) -> Int {
+fn SerialMode::to_int(self : SerialMode) -> Int {
   match self {
     Output => 1
     Input => 0
@@ -140,9 +140,9 @@ fn ControlB::default() -> ControlB {
 struct CIAInterruptControl {
   mut timerA : Bool
   mut timerB : Bool
-  mut alarm : Bool
-  mut serial : Bool
-  mut flag : Bool
+  alarm : Bool
+  serial : Bool
+  flag : Bool
   mut interrupt : Bool
 } derive(Show, Default)
 
@@ -202,7 +202,7 @@ struct CIARegister {
 
   /// 56328         $DC08          TODTEN
   /// Time of Day Clock Tenths of Seconds
-  mut timeOfDay : TimeOfDay
+  timeOfDay : TimeOfDay
 
   /// 56332         $DC0C          CIASDR
   /// Serial Data Port
@@ -211,7 +211,7 @@ struct CIARegister {
   /// 56333         $DC0D          CIAICR
   /// Interrupt Control Register
   mut interruptControl : CIAInterruptControl
-  mut interruptEnable : CIAInterruptEnable
+  interruptEnable : CIAInterruptEnable
 
   /// 56334         $DC0E          CIACRA
   /// Control Register A

@@ -79,7 +79,7 @@ fn FilterResonanceControl::from_u8(value : UInt8) -> FilterResonanceControl {
     /// Bit 3:  Filter the output from the external input?  1=yes
     external: (value & (1 << 3)) != 0,
     /// Bits 4-7:  Select filter resonance 0-15
-    resonance: (value & 0xF0).0 >> 4,
+    resonance: (value & 0xF0)._ >> 4,
   }
 }
 
@@ -128,7 +128,7 @@ struct Voice {
   /// 54277         $D405          ATDCY1
   /// 54278         $D406          SUREL1
   /// Voice Attack/Decay/Sustain/Release Control Register
-  mut envelope : Envelope
+  envelope : Envelope
 } derive(Show, Default)
 
 struct FilterSelect {
@@ -468,7 +468,7 @@ fn VoiceControl::from_u8(value : UInt8) -> VoiceControl {
   }
 }
 
-fn to_u8(self : VoiceControl) -> UInt8 {
+fn VoiceControl::to_u8(self : VoiceControl) -> UInt8 {
   /// Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
   (self.gateBit.to_int() << 0) |
   /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency

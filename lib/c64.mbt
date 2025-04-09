@@ -39,18 +39,18 @@ pub struct C64 {
   realSID : Bool
   //
   mut sampleRate : Int
-  mut highQuality : Bool
-  mut stereo : Bool
-  mut playbackSpeed : Int
-  mut paused : Bool
+  highQuality : Bool
+  stereo : Bool
+  playbackSpeed : Int
+  paused : Bool
   //
   // C64-machine related:
   //
-  mut videoStandard : VideoStandard
+  videoStandard : VideoStandard
   mut cpuFrequency : CPUClock
   mut sampleClockRatio : Int //ratio of CPU-clock and samplerate
-  mut selectedModel : Model
-  mut mainVolume : Double
+  selectedModel : Model
+  mainVolume : Double
   //
   // SID-file related:
   //
@@ -66,33 +66,33 @@ pub struct C64 {
   mut overSampleCycleCnt : Int
   //
   mut finished : Bool
-  mut returned : Bool
+  returned : Bool
   //
   mut irq : Bool //collected IRQ line from devices
   mut nmi : Bool //collected NMI line from devices
   //
   mut prevNMI : Bool //used for NMI leading edge detection
   //
-  mut debug : Bool
+  debug : Bool
 }
 
 let defaultSampleRate = 44100
 
 pub fn C64::new(
-  ~baseaddress : Int = 0x0000,
-  ~mem? : Memory,
+  baseaddress~ : Int = 0x0000,
+  mem? : Memory,
   //
-  ~data : FixedArray[Int] = [],
-  ~address : Int = 0x0000,
-  ~length : Int = data.length(),
+  data~ : FixedArray[Int] = [],
+  address~ : Int = 0x0000,
+  length~ : Int = data.length(),
   //
-  ~sampleRate : Int = defaultSampleRate,
-  ~model : FixedArray[Model] = [MOS6581],
-  ~videoStandard : VideoStandard = VideoStandard::PAL,
+  sampleRate~ : Int = defaultSampleRate,
+  model~ : FixedArray[Model] = [MOS6581],
+  videoStandard~ : VideoStandard = VideoStandard::PAL,
   //
-  ~realSID : Bool = false,
+  realSID~ : Bool = false,
   //
-  ~debug : Bool = false
+  debug~ : Bool = false
 ) -> C64 {
   let mem = mem.or(Memory::new())
 
@@ -100,18 +100,18 @@ pub fn C64::new(
   let cpu = @cpu.CPU::new(
     pc=baseaddress,
     //
-    ~debug,
+    debug~,
   )
 
   // mem.setROM()
 
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let sid = [SID::new(~mem, sid1_mem_start, ~videoStandard, ~debug)]
+  let sid = [SID::new(mem~, sid1_mem_start, videoStandard~, debug~)]
   let cia = [
-    CIA::new(~mem, cia1_mem_start, ~videoStandard, ~debug),
-    CIA::new(~mem, cia2_mem_start, ~videoStandard, ~debug),
+    CIA::new(mem~, cia1_mem_start, videoStandard~, debug~),
+    CIA::new(mem~, cia2_mem_start, videoStandard~, debug~),
   ]
-  let vic = VIC::new(~mem, vic_mem_start, ~videoStandard, ~debug)
+  let vic = VIC::new(mem~, vic_mem_start, videoStandard~, debug~)
   //
 
   let c64 : C64 = {
@@ -163,16 +163,16 @@ pub fn C64::new(
   // c64.initC64()
 
   cpu.set_read(
-    fn(address : Int, dummy : Bool) -> Int { c64.read(address, ~dummy) },
+    fn(address : Int, dummy : Bool) -> Int { c64.read(address, dummy~) },
   )
   cpu.set_write(
     fn(address : Int, value : Int, dummy : Bool) -> Unit {
-      c64.write(address, value, ~dummy)
+      c64.write(address, value, dummy~)
     },
   )
 
   // must happen after read/write functions set
-  let _ = cpu.load(address, data, ~length)
+  let _ = cpu.load(address, data, length~)
 
   //
   try {
@@ -205,7 +205,7 @@ pub fn set_bank(self : C64, port : IOPort) -> Unit {
 }
 
 //set hardware-parameters (Models, SIDs) for playback of loaded SID-tune
-pub fn reset(self : C64) -> Unit! {
+pub fn C64::reset(self : C64) -> Unit! {
   println(">> C64::reset")
 
   //
@@ -459,11 +459,11 @@ pub fn reset(self : C64) -> Unit! {
   println("<< C64::reset")
 }
 
-pub fn initCPU(self : C64, ~baseaddress? : Int) -> Unit {
+pub fn initCPU(self : C64, baseaddress? : Int) -> Unit {
   // println(">> C64::initCPU")
 
   //
-  self.cpu.reset(~baseaddress?)
+  self.cpu.reset(baseaddress?)
   //
   self.prevNMI = false
 
@@ -533,7 +533,7 @@ pub fn initC64(self : C64) -> Unit! {
   println("<< C64::initC64")
 }
 
-pub fn emulate(self : C64) -> Output {
+pub fn C64::emulate(self : C64) -> Output {
   // println(">> C64::emulate")
   //
 
@@ -730,28 +730,28 @@ pub fn emulate(self : C64) -> Output {
   output
 }
 
-pub fn load(
+pub fn C64::load(
   self : C64,
   //
   data : FixedArray[Int],
   //
-  ~offset : Int = 0,
-  ~length : Int = data.length(),
+  offset~ : Int = 0,
+  length~ : Int = data.length(),
   //
-  ~has_load_address : Bool = false
+  has_load_address~ : Bool = false
 ) -> Int {
-  self.cpu.load(offset, data, ~length, ~has_load_address)
+  self.cpu.load(offset, data, length~, has_load_address~)
 }
 
-fn step(self : C64) -> Int {
+fn C64::step(self : C64) -> Int {
   self.cpu.step()
 }
 
-pub fn hook(self : C64, address : Int, hook : (Int) -> Unit) -> Unit {
+pub fn C64::hook(self : C64, address : Int, hook : (Int) -> Unit) -> Unit {
   self.cpu.hook(address, hook)
 }
 
-pub fn pc(self : C64) -> Int {
+pub fn C64::pc(self : C64) -> Int {
   self.cpu.pc()
 }
 
@@ -771,7 +771,7 @@ pub fn get_flags(self : C64) -> @cpu.Flags {
   self.cpu.get_flags()
 }
 
-pub fn set_flags(self : C64, flags : @cpu.UInt8) -> Unit {
+pub fn C64::set_flags(self : C64, flags : @cpu.UInt8) -> Unit {
   self.cpu.set_flags(flags)
 }
 
@@ -783,11 +783,11 @@ pub fn setA(self : C64, value : Int) -> Unit {
   self.cpu.register(@cpu.A, value)
 }
 
-pub fn push(self : C64, value : @cpu.UInt8) -> Unit {
+pub fn C64::push(self : C64, value : @cpu.UInt8) -> Unit {
   self.cpu.push(value)
 }
 
-pub fn push16(self : C64, value : @cpu.UInt16) -> Unit {
+pub fn C64::push16(self : C64, value : @cpu.UInt16) -> Unit {
   self.cpu.push16(value)
 }
 
@@ -836,7 +836,7 @@ fn interrupts(self : C64) -> Bool {
 // static const uint16_t kAddrKernalFirstPage = 0xe000;
 // static const uint16_t kAddrKernalLastPage = 0xff00;
 
-pub fn read(self : C64, address : Int, ~dummy : Bool = false) -> Int {
+pub fn C64::read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
   if self.debug && not(dummy) {
     let register = try {
       " | \{C64register::from_int!(address)}"
@@ -909,14 +909,14 @@ pub fn read(self : C64, address : Int, ~dummy : Bool = false) -> Int {
   self.read_direct(address)
 }
 
-fn read_direct(self : C64, address : Int) -> Int {
+fn C64::read_direct(self : C64, address : Int) -> Int {
   // println("C64::read_direct $" + UInt16(addr).to_hex())
   //
 
   self.mem.read(address)._
 }
 
-fn op_get(self : C64, register : C64register) -> UInt8 {
+fn C64::op_get(self : C64, register : C64register) -> UInt8 {
   // println("C64::op_get $" + UInt16(addr).to_hex())
   //
 
@@ -926,13 +926,13 @@ fn op_get(self : C64, register : C64register) -> UInt8 {
   self.read(address)
 }
 
-pub fn write(
+pub fn C64::write(
   self : C64,
   //
   address : Int,
   value : Int,
   //
-  ~dummy : Bool = false
+  dummy~ : Bool = false
 ) -> Unit {
   if self.debug && not(dummy) {
     let register = try {
@@ -1008,7 +1008,7 @@ pub fn write(
   self.write_direct(address, value)
 }
 
-fn write_direct(self : C64, address : UInt16, value : UInt8) -> Unit {
+fn C64::write_direct(self : C64, address : UInt16, value : UInt8) -> Unit {
   self.mem.write(address._, value._)
 }
 
@@ -1065,7 +1065,7 @@ pub fn write_array(
   }
 }
 
-pub fn op_set(self : C64, register : C64register, value : UInt8) -> Unit {
+pub fn C64::op_set(self : C64, register : C64register, value : UInt8) -> Unit {
   // println("C64::op_set $" + address.to_hex() + " = " + value.to_hex())
 
   let address = c64(register)
