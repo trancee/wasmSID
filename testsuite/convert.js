@@ -13,7 +13,7 @@ const convert = async () => {
         const data = fs.readFileSync(file)
         const buffer = Buffer.from(data, "ascii")
 
-        let output = `pub let ${name.replace(" ", "_")} : FixedArray[Int] = [`
+        let output = `pub let ${name.replace(" ", "_")} : FixedArray[Byte] = [`
         for (const [index, value] of buffer.entries()) {
             if ((index) % 14 === 0) {
                 output += `\n  `

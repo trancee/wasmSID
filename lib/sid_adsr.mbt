@@ -1,5 +1,5 @@
 ///|
-struct ADSR {
+pub struct ADSR {
   state : ADSRState
   mut rateCounter : UInt16
   mut envelopeCounter : Int

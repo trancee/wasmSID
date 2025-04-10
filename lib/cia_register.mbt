@@ -18,7 +18,7 @@
 /// ICR      | INTERRUPT CONTROL REGISTER
 /// CRA      | CONTROL REG A
 /// CRB      | CONTROL REG B
-struct TimeOfDay {
+pub struct TimeOfDay {
   mut tenth : UInt8
   mut seconds : UInt8
   mut minutes : UInt8
@@ -29,7 +29,7 @@ struct TimeOfDay {
 } derive(Show, Default)
 
 ///|
-enum RunMode {
+pub enum RunMode {
   OneShot
   Continuous
 } derive(Show, Eq)
@@ -43,7 +43,7 @@ fn RunMode::to_int(self : RunMode) -> Int {
 }
 
 ///|
-enum SerialMode {
+pub enum SerialMode {
   Output
   Input
 } derive(Show, Eq)
@@ -57,7 +57,7 @@ fn SerialMode::to_int(self : SerialMode) -> Int {
 }
 
 ///|
-struct ControlA {
+pub struct ControlA {
   /// Bit 0:  Start Timer A (1=start, 0=stop)
   mut start : Bool
   /// Bit 1:  Select Timer A output on Port B (1=Timer A output appears on Bit 6 of
@@ -100,7 +100,7 @@ fn ControlA::default() -> ControlA {
 }
 
 ///|
-struct ControlB {
+pub struct ControlB {
   /// Bit 0:  Start Timer B (1=start, 0=stop)
   mut start : Bool
   /// Bit 1:  Select Timer B output on Port B (1=Timer B output appears on
@@ -147,7 +147,7 @@ fn ControlB::default() -> ControlB {
 }
 
 ///|
-struct CIAInterruptControl {
+pub struct CIAInterruptControl {
   mut timerA : Bool
   mut timerB : Bool
   alarm : Bool
@@ -157,7 +157,7 @@ struct CIAInterruptControl {
 } derive(Show, Default)
 
 ///|
-struct CIAInterruptEnable {
+pub struct CIAInterruptEnable {
   mut timerA : Bool
   mut timerB : Bool
   mut alarm : Bool
@@ -166,7 +166,7 @@ struct CIAInterruptEnable {
 } derive(Show, Default)
 
 ///|
-struct CIARegister {
+pub struct CIARegister {
   /// 56320-56335   $DC00-$DC0F
   /// Complex Interface Adapter (CIA) #1 Registers
 
@@ -258,7 +258,7 @@ fn CIARegister::default() -> CIARegister {
 }
 
 ///|
-enum CIAregister {
+pub enum CIAregister {
   PRA
   PRB
   DDRA

@@ -28,7 +28,7 @@ fn VideoStandard::to_int(self : VideoStandard) -> Int! {
 }
 
 ///|
-fn VideoStandard::op_get(self : VideoStandard, value : VideoStandard) -> Int! {
+fn VideoStandard::op_get(_ : VideoStandard, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -46,7 +46,7 @@ fn CPUClock::to_int(self : CPUClock) -> Int! {
 }
 
 ///|
-fn CPUClock::op_get(self : CPUClock, value : VideoStandard) -> Int! {
+fn CPUClock::op_get(_ : CPUClock, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -104,7 +104,7 @@ test "CPUClock::PAL shift left" {
 }
 
 ///|
-type ScanLines VideoStandard derive(Show, Eq)
+pub type ScanLines VideoStandard derive(Show, Eq)
 
 ///|
 fn ScanLines::to_int(self : ScanLines) -> Int! {
@@ -116,7 +116,7 @@ fn ScanLines::to_int(self : ScanLines) -> Int! {
 }
 
 ///|
-fn ScanLines::op_get(self : ScanLines, value : VideoStandard) -> Int! {
+fn ScanLines::op_get(_ : ScanLines, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -149,7 +149,7 @@ test "error ScanLines::Both" {
 }
 
 ///|
-type ScanLineCycles VideoStandard derive(Show, Eq)
+pub type ScanLineCycles VideoStandard derive(Show, Eq)
 
 ///|
 fn ScanLineCycles::to_int(self : ScanLineCycles) -> Int! {
@@ -161,7 +161,7 @@ fn ScanLineCycles::to_int(self : ScanLineCycles) -> Int! {
 }
 
 ///|
-fn ScanLineCycles::op_get(self : ScanLineCycles, value : VideoStandard) -> Int! {
+fn ScanLineCycles::op_get(_ : ScanLineCycles, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 
@@ -194,7 +194,7 @@ test "error ScanLineCycles::Both" {
 }
 
 ///|
-type FrameRate VideoStandard derive(Show, Eq)
+pub type FrameRate VideoStandard derive(Show, Eq)
 
 ///|
 fn FrameRate::to_int(self : FrameRate) -> Int! {
@@ -206,7 +206,7 @@ fn FrameRate::to_int(self : FrameRate) -> Int! {
 }
 
 ///|
-fn FrameRate::op_get(self : FrameRate, value : VideoStandard) -> Int! {
+fn FrameRate::op_get(_ : FrameRate, value : VideoStandard) -> Int! {
   value.to_int!()
 }
 

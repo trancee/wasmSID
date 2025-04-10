@@ -1,5 +1,5 @@
 ///|
-enum Color {
+pub enum Color {
   Black
   White
   Red

@@ -2,7 +2,7 @@
 pub type ICR UInt8 derive(Eq, Compare)
 
 ///|
-enum ICRFlags {
+pub enum ICRFlags {
   NONE
   //
   TA
@@ -16,7 +16,7 @@ enum ICRFlags {
 }
 
 ///|
-fn ICRFlags::op_get(self : ICRFlags, flag : ICRFlags) -> Int {
+fn ICRFlags::op_get(_ : ICRFlags, flag : ICRFlags) -> Int {
   match flag {
     NONE => 0
     //

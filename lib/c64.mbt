@@ -93,7 +93,7 @@ pub fn C64::new(
   baseaddress~ : Int = 0x0000,
   mem? : Memory,
   //
-  data~ : FixedArray[Int] = [],
+  data~ : FixedArray[Byte] = [],
   address~ : Int = 0x0000,
   length~ : Int = data.length(),
   //
@@ -119,8 +119,8 @@ pub fn C64::new(
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
   let sid = [SID::new(mem~, sid1_mem_start, videoStandard~, debug~)]
   let cia = [
-    CIA::new(mem~, cia1_mem_start, videoStandard~, debug~),
-    CIA::new(mem~, cia2_mem_start, videoStandard~, debug~),
+    CIA::new(mem~, CIA1_MEM_START, videoStandard~, debug~),
+    CIA::new(mem~, CIA2_MEM_START, videoStandard~, debug~),
   ]
   let vic = VIC::new(mem~, vic_mem_start, videoStandard~, debug~)
   //
@@ -471,7 +471,7 @@ pub fn C64::reset(self : C64) -> Unit! {
 }
 
 ///|
-pub fn initCPU(self : C64, baseaddress? : Int) -> Unit {
+pub fn initCPU(self : C64, baseaddress? : UInt16) -> Unit {
   // println(">> C64::initCPU")
 
   //
@@ -734,13 +734,13 @@ pub fn C64::emulate(self : C64) -> Output {
 pub fn C64::load(
   self : C64,
   //
-  data : FixedArray[Int],
+  data : FixedArray[Byte],
   //
   offset~ : Int = 0,
   length~ : Int = data.length(),
   //
   has_load_address~ : Bool = false
-) -> Int {
+) -> UInt16 {
   self.cpu.load(offset, data, length~, has_load_address~)
 }
 

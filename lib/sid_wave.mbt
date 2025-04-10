@@ -1,5 +1,5 @@
 ///|
-struct Wave {
+pub struct Wave {
   phaseAccu : Int
   mut prevPhaseAccu : Int
   mut syncSourceMSBrise : Bool
@@ -23,7 +23,7 @@ fn Wave::new() -> Wave {
 }
 
 ///|
-enum Waveform {
+pub enum Waveform {
   SawTriangle
   PulseTriangle
   PulseSawtooth

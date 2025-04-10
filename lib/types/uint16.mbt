@@ -36,6 +36,11 @@ pub impl U16 for UInt16 with u16(self) {
 }
 
 ///|
+pub impl U16 for Byte with u16(self) {
+  UInt16::new(self.to_int())
+}
+
+///|
 pub fn UInt16::op_add(self : UInt16, other : UInt16) -> UInt16 {
   U16::u16(self._ + other._) // handle overflow
 }

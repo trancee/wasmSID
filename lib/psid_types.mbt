@@ -1,5 +1,5 @@
 ///|
-enum SIDheader {
+pub enum SIDheader {
   Magic // 0x00 String[4]
   //
   Version // 0x04 Word

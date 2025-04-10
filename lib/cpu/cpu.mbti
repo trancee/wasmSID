@@ -5,6 +5,12 @@ import(
 )
 
 // Values
+const CPU_MEM_END : Int = 0xFFFF
+
+const CPU_MEM_SIZE : Int = 0xFFFF
+
+const CPU_MEM_START : Int = 0x0000
+
 fn a(CPU) -> @types.UInt8
 
 fn clear_flags(CPU) -> Unit
@@ -25,7 +31,7 @@ fn interrupts(CPU) -> Bool
 
 fn irq(CPU, pc? : Int) -> Unit
 
-fn load(CPU, Int, FixedArray[Int], length~ : Int = .., has_load_address~ : Bool = ..) -> Int
+fn load(CPU, @types.UInt16, FixedArray[Byte], length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
 
 fn nmi(CPU, pc? : Int) -> Unit
 
@@ -90,15 +96,15 @@ impl CPU {
   hook(Self, Int, (Int) -> Unit) -> Unit
   interrupts(Self) -> Bool
   irq(Self, pc? : Int) -> Unit
-  load(Self, Int, FixedArray[Int], length~ : Int = .., has_load_address~ : Bool = ..) -> Int
-  new(pc~ : Int = .., data~ : FixedArray[Int] = .., addr~ : Int = .., length~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
+  load(Self, @types.UInt16, FixedArray[Byte], length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
+  new(pc~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
   nmi(Self, pc? : Int) -> Unit
   pc(Self) -> Int
   push(Self, @types.UInt8, dummy~ : Bool = ..) -> Unit
   push16(Self, @types.UInt16) -> Unit
   read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
   register(Self, Register, Int) -> Unit
-  reset(Self, baseaddress? : Int) -> Unit
+  reset(Self, baseaddress? : @types.UInt16) -> Unit
   setIRQ(Self, @types.UInt16) -> Unit
   setNMI(Self, @types.UInt16) -> Unit
   setRESET(Self, @types.UInt16) -> Unit

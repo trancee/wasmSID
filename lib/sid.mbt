@@ -122,8 +122,8 @@ struct SID {
   //Output-stage:
   mut nonFiltedSample : Int
   mut filterInputSample : Int
-  mut prevNonFiltedSample : Int
-  mut prevFilterInputSample : Int
+  // mut prevNonFiltedSample : Int
+  // mut prevFilterInputSample : Int
   //
   mut prevVolume : Int //lowpass-filtered version of Volume-band register
   mut output : Int //not attenuated (range:0.._xFFFFF depending on SID's main-volume)
@@ -169,8 +169,8 @@ pub fn SID::new(
     //Output-stage:
     nonFiltedSample: 0,
     filterInputSample: 0,
-    prevNonFiltedSample: 0,
-    prevFilterInputSample: 0,
+    // prevNonFiltedSample: 0,
+    // prevFilterInputSample: 0,
     //
     prevVolume: 0,
     output: 0,
@@ -190,7 +190,7 @@ pub fn SID::new(
         baseaddress,
         baseaddress + sid_mem_size,
         // mem,
-        fn(address : UInt16, dummy : Bool) -> UInt8 {
+        fn(address : UInt16, _ : Bool) -> UInt8 {
           let register = try {
             SIDregister::from_int!(address._ - baseaddress)
           } catch {
@@ -201,7 +201,7 @@ pub fn SID::new(
           }
           sid[register]._
         },
-        fn(address : UInt16, value : UInt8, dummy : Bool) {
+        fn(address : UInt16, value : UInt8, _ : Bool) {
           let register = try {
             SIDregister::from_int!(address._ - baseaddress)
           } catch {

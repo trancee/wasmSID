@@ -49,7 +49,7 @@
 ///       $FFFA         Non-Maskable Interrupt Hardware Vector
 ///       $FFFC         System Reset (RES) Hardware Vector
 ///       $FFFE         Maskable Interrupt Request and Break Hardware Vectors
-struct Hook {
+pub struct Hook {
   start : Int
   end : Int
   //

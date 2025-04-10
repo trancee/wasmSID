@@ -67,10 +67,12 @@ impl U8 for UInt8
 pub trait U16 {
   u16(Self) -> UInt16
 }
+impl U16 for Byte
 impl U16 for Int
 
 pub trait U8 {
   u8(Self) -> UInt8
 }
+impl U8 for Byte
 impl U8 for Int
 

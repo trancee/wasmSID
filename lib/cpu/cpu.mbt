@@ -10,13 +10,13 @@ fn AddressHook::new(address : Int, hook : (Int) -> Unit) -> AddressHook {
 }
 
 ///|
-const CPU_MEM_START = 0x0000
+pub const CPU_MEM_START = 0x0000
 
 ///|
-const CPU_MEM_END = 0xFFFF
+pub const CPU_MEM_END = 0xFFFF
 
 ///|
-const CPU_MEM_SIZE = 0xFFFF
+pub const CPU_MEM_SIZE = 0xFFFF
 
 ///|
 pub struct CPU {
@@ -45,9 +45,9 @@ pub struct CPU {
 pub fn CPU::new(
   pc~ : Int = 0x0000,
   //
-  data~ : FixedArray[Int] = [],
-  addr~ : Int = 0,
-  length~ : Int = data.length(),
+  // data~ : FixedArray[Int] = [],
+  // addr~ : Int = 0,
+  // length~ : Int = data.length(),
   //
   decimal_mode~ : Bool = true,
   //
@@ -140,7 +140,7 @@ pub fn setRESET(self : CPU, pc : UInt16) -> Unit {
 }
 
 ///|
-pub fn CPU::reset(self : CPU, baseaddress? : Int) -> Unit {
+pub fn CPU::reset(self : CPU, baseaddress? : UInt16) -> Unit {
   // self.mem.clear()
 
   self.cycles = 0
@@ -231,24 +231,24 @@ pub fn register(self : CPU, register : Register, value : Int) -> Unit {
 pub fn load(
   self : CPU,
   //
-  address : Int,
+  address : UInt16,
   //
-  data : FixedArray[Int],
+  data : FixedArray[Byte],
   length~ : Int = data.length(),
   //
   has_load_address~ : Bool = false
-) -> Int {
+) -> UInt16 {
   // println(
   //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
   // )
   let address = if has_load_address {
-    data[0] | (data[1] << 8)
+    U16::u16(data[0]) | (U16::u16(data[1]) << 8)
   } else {
     address
   }
   let start = if has_load_address { 2 } else { 0 }
   for i = 0; i < length - start; i = i + 1 {
-    self.write(address + i, data[i + start], dummy=true)
+    self.write(address + i, U8::u8(data[i + start]), dummy=true)
   }
   address
 }
@@ -1194,7 +1194,7 @@ fn opRTI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   println("*** RTI")
   // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
   // self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
-  self.flags.set(self.pop())
+  self.flags.set(self.pop() | BREAK | UNUSED)
   self.pc = self.pop16()
   // self.opSEI(addr, mode)
 }

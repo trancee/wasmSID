@@ -1,535 +1,535 @@
 package "trancee/wasmSID/testsuite"
 
 // Values
-let _start : FixedArray[Int]
+let _start : FixedArray[Byte]
 
-let adca : FixedArray[Int]
+let adca : FixedArray[Byte]
 
-let adcax : FixedArray[Int]
+let adcax : FixedArray[Byte]
 
-let adcay : FixedArray[Int]
+let adcay : FixedArray[Byte]
 
-let adcb : FixedArray[Int]
+let adcb : FixedArray[Byte]
 
-let adcix : FixedArray[Int]
+let adcix : FixedArray[Byte]
 
-let adciy : FixedArray[Int]
+let adciy : FixedArray[Byte]
 
-let adcz : FixedArray[Int]
+let adcz : FixedArray[Byte]
 
-let adczx : FixedArray[Int]
+let adczx : FixedArray[Byte]
 
-let alrb : FixedArray[Int]
+let alrb : FixedArray[Byte]
 
-let ancb : FixedArray[Int]
+let ancb : FixedArray[Byte]
 
-let anda : FixedArray[Int]
+let anda : FixedArray[Byte]
 
-let andax : FixedArray[Int]
+let andax : FixedArray[Byte]
 
-let anday : FixedArray[Int]
+let anday : FixedArray[Byte]
 
-let andb : FixedArray[Int]
+let andb : FixedArray[Byte]
 
-let andix : FixedArray[Int]
+let andix : FixedArray[Byte]
 
-let andiy : FixedArray[Int]
+let andiy : FixedArray[Byte]
 
-let andz : FixedArray[Int]
+let andz : FixedArray[Byte]
 
-let andzx : FixedArray[Int]
+let andzx : FixedArray[Byte]
 
-let aneb : FixedArray[Int]
+let aneb : FixedArray[Byte]
 
-let arrb : FixedArray[Int]
+let arrb : FixedArray[Byte]
 
-let asla : FixedArray[Int]
+let asla : FixedArray[Byte]
 
-let aslax : FixedArray[Int]
+let aslax : FixedArray[Byte]
 
-let asln : FixedArray[Int]
+let asln : FixedArray[Byte]
 
-let aslz : FixedArray[Int]
+let aslz : FixedArray[Byte]
 
-let aslzx : FixedArray[Int]
+let aslzx : FixedArray[Byte]
 
-let asoa : FixedArray[Int]
+let asoa : FixedArray[Byte]
 
-let asoax : FixedArray[Int]
+let asoax : FixedArray[Byte]
 
-let asoay : FixedArray[Int]
+let asoay : FixedArray[Byte]
 
-let asoix : FixedArray[Int]
+let asoix : FixedArray[Byte]
 
-let asoiy : FixedArray[Int]
+let asoiy : FixedArray[Byte]
 
-let asoz : FixedArray[Int]
+let asoz : FixedArray[Byte]
 
-let asozx : FixedArray[Int]
+let asozx : FixedArray[Byte]
 
-let axsa : FixedArray[Int]
+let axsa : FixedArray[Byte]
 
-let axsix : FixedArray[Int]
+let axsix : FixedArray[Byte]
 
-let axsz : FixedArray[Int]
+let axsz : FixedArray[Byte]
 
-let axszy : FixedArray[Int]
+let axszy : FixedArray[Byte]
 
-let bccr : FixedArray[Int]
+let bccr : FixedArray[Byte]
 
-let bcsr : FixedArray[Int]
+let bcsr : FixedArray[Byte]
 
-let beqr : FixedArray[Int]
+let beqr : FixedArray[Byte]
 
-let bita : FixedArray[Int]
+let bita : FixedArray[Byte]
 
-let bitz : FixedArray[Int]
+let bitz : FixedArray[Byte]
 
-let bmir : FixedArray[Int]
+let bmir : FixedArray[Byte]
 
-let bner : FixedArray[Int]
+let bner : FixedArray[Byte]
 
-let bplr : FixedArray[Int]
+let bplr : FixedArray[Byte]
 
-let branchwrap : FixedArray[Int]
+let branchwrap : FixedArray[Byte]
 
-let brkn : FixedArray[Int]
+let brkn : FixedArray[Byte]
 
-let bvcr : FixedArray[Int]
+let bvcr : FixedArray[Byte]
 
-let bvsr : FixedArray[Int]
+let bvsr : FixedArray[Byte]
 
-let cia1pb6 : FixedArray[Int]
+let cia1pb6 : FixedArray[Byte]
 
-let cia1pb7 : FixedArray[Int]
+let cia1pb7 : FixedArray[Byte]
 
-let cia1ta : FixedArray[Int]
+let cia1ta : FixedArray[Byte]
 
-let cia1tab : FixedArray[Int]
+let cia1tab : FixedArray[Byte]
 
-let cia1tb : FixedArray[Int]
+let cia1tb : FixedArray[Byte]
 
-let cia1tb123 : FixedArray[Int]
+let cia1tb123 : FixedArray[Byte]
 
-let cia2pb6 : FixedArray[Int]
+let cia2pb6 : FixedArray[Byte]
 
-let cia2pb7 : FixedArray[Int]
+let cia2pb7 : FixedArray[Byte]
 
-let cia2ta : FixedArray[Int]
+let cia2ta : FixedArray[Byte]
 
-let cia2tb : FixedArray[Int]
+let cia2tb : FixedArray[Byte]
 
-let cia2tb123 : FixedArray[Int]
+let cia2tb123 : FixedArray[Byte]
 
-let clcn : FixedArray[Int]
+let clcn : FixedArray[Byte]
 
-let cldn : FixedArray[Int]
+let cldn : FixedArray[Byte]
 
-let clin : FixedArray[Int]
+let clin : FixedArray[Byte]
 
-let clvn : FixedArray[Int]
+let clvn : FixedArray[Byte]
 
-let cmpa : FixedArray[Int]
+let cmpa : FixedArray[Byte]
 
-let cmpax : FixedArray[Int]
+let cmpax : FixedArray[Byte]
 
-let cmpay : FixedArray[Int]
+let cmpay : FixedArray[Byte]
 
-let cmpb : FixedArray[Int]
+let cmpb : FixedArray[Byte]
 
-let cmpix : FixedArray[Int]
+let cmpix : FixedArray[Byte]
 
-let cmpiy : FixedArray[Int]
+let cmpiy : FixedArray[Byte]
 
-let cmpz : FixedArray[Int]
+let cmpz : FixedArray[Byte]
 
-let cmpzx : FixedArray[Int]
+let cmpzx : FixedArray[Byte]
 
-let cntdef : FixedArray[Int]
+let cntdef : FixedArray[Byte]
 
-let cnto2 : FixedArray[Int]
+let cnto2 : FixedArray[Byte]
 
-let cpuport : FixedArray[Int]
+let cpuport : FixedArray[Byte]
 
-let cputiming : FixedArray[Int]
+let cputiming : FixedArray[Byte]
 
-let cpxa : FixedArray[Int]
+let cpxa : FixedArray[Byte]
 
-let cpxb : FixedArray[Int]
+let cpxb : FixedArray[Byte]
 
-let cpxz : FixedArray[Int]
+let cpxz : FixedArray[Byte]
 
-let cpya : FixedArray[Int]
+let cpya : FixedArray[Byte]
 
-let cpyb : FixedArray[Int]
+let cpyb : FixedArray[Byte]
 
-let cpyz : FixedArray[Int]
+let cpyz : FixedArray[Byte]
 
-let dcma : FixedArray[Int]
+let dcma : FixedArray[Byte]
 
-let dcmax : FixedArray[Int]
+let dcmax : FixedArray[Byte]
 
-let dcmay : FixedArray[Int]
+let dcmay : FixedArray[Byte]
 
-let dcmix : FixedArray[Int]
+let dcmix : FixedArray[Byte]
 
-let dcmiy : FixedArray[Int]
+let dcmiy : FixedArray[Byte]
 
-let dcmz : FixedArray[Int]
+let dcmz : FixedArray[Byte]
 
-let dcmzx : FixedArray[Int]
+let dcmzx : FixedArray[Byte]
 
-let deca : FixedArray[Int]
+let deca : FixedArray[Byte]
 
-let decax : FixedArray[Int]
+let decax : FixedArray[Byte]
 
-let decz : FixedArray[Int]
+let decz : FixedArray[Byte]
 
-let deczx : FixedArray[Int]
+let deczx : FixedArray[Byte]
 
-let dexn : FixedArray[Int]
+let dexn : FixedArray[Byte]
 
-let deyn : FixedArray[Int]
+let deyn : FixedArray[Byte]
 
-let eora : FixedArray[Int]
+let eora : FixedArray[Byte]
 
-let eorax : FixedArray[Int]
+let eorax : FixedArray[Byte]
 
-let eoray : FixedArray[Int]
+let eoray : FixedArray[Byte]
 
-let eorb : FixedArray[Int]
+let eorb : FixedArray[Byte]
 
-let eorix : FixedArray[Int]
+let eorix : FixedArray[Byte]
 
-let eoriy : FixedArray[Int]
+let eoriy : FixedArray[Byte]
 
-let eorz : FixedArray[Int]
+let eorz : FixedArray[Byte]
 
-let eorzx : FixedArray[Int]
+let eorzx : FixedArray[Byte]
 
-let finish : FixedArray[Int]
+let finish : FixedArray[Byte]
 
-let flipos : FixedArray[Int]
+let flipos : FixedArray[Byte]
 
-let icr01 : FixedArray[Int]
+let icr01 : FixedArray[Byte]
 
-let imr : FixedArray[Int]
+let imr : FixedArray[Byte]
 
-let inca : FixedArray[Int]
+let inca : FixedArray[Byte]
 
-let incax : FixedArray[Int]
+let incax : FixedArray[Byte]
 
-let incz : FixedArray[Int]
+let incz : FixedArray[Byte]
 
-let inczx : FixedArray[Int]
+let inczx : FixedArray[Byte]
 
-let insa : FixedArray[Int]
+let insa : FixedArray[Byte]
 
-let insax : FixedArray[Int]
+let insax : FixedArray[Byte]
 
-let insay : FixedArray[Int]
+let insay : FixedArray[Byte]
 
-let insix : FixedArray[Int]
+let insix : FixedArray[Byte]
 
-let insiy : FixedArray[Int]
+let insiy : FixedArray[Byte]
 
-let insz : FixedArray[Int]
+let insz : FixedArray[Byte]
 
-let inszx : FixedArray[Int]
+let inszx : FixedArray[Byte]
 
-let inxn : FixedArray[Int]
+let inxn : FixedArray[Byte]
 
-let inyn : FixedArray[Int]
+let inyn : FixedArray[Byte]
 
-let irq : FixedArray[Int]
+let irq : FixedArray[Byte]
 
-let jmpi : FixedArray[Int]
+let jmpi : FixedArray[Byte]
 
-let jmpw : FixedArray[Int]
+let jmpw : FixedArray[Byte]
 
-let jsrw : FixedArray[Int]
+let jsrw : FixedArray[Byte]
 
-let lasay : FixedArray[Int]
+let lasay : FixedArray[Byte]
 
-let laxa : FixedArray[Int]
+let laxa : FixedArray[Byte]
 
-let laxay : FixedArray[Int]
+let laxay : FixedArray[Byte]
 
-let laxix : FixedArray[Int]
+let laxix : FixedArray[Byte]
 
-let laxiy : FixedArray[Int]
+let laxiy : FixedArray[Byte]
 
-let laxz : FixedArray[Int]
+let laxz : FixedArray[Byte]
 
-let laxzy : FixedArray[Int]
+let laxzy : FixedArray[Byte]
 
-let ldaa : FixedArray[Int]
+let ldaa : FixedArray[Byte]
 
-let ldaax : FixedArray[Int]
+let ldaax : FixedArray[Byte]
 
-let ldaay : FixedArray[Int]
+let ldaay : FixedArray[Byte]
 
-let ldab : FixedArray[Int]
+let ldab : FixedArray[Byte]
 
-let ldaix : FixedArray[Int]
+let ldaix : FixedArray[Byte]
 
-let ldaiy : FixedArray[Int]
+let ldaiy : FixedArray[Byte]
 
-let ldaz : FixedArray[Int]
+let ldaz : FixedArray[Byte]
 
-let ldazx : FixedArray[Int]
+let ldazx : FixedArray[Byte]
 
-let ldxa : FixedArray[Int]
+let ldxa : FixedArray[Byte]
 
-let ldxay : FixedArray[Int]
+let ldxay : FixedArray[Byte]
 
-let ldxb : FixedArray[Int]
+let ldxb : FixedArray[Byte]
 
-let ldxz : FixedArray[Int]
+let ldxz : FixedArray[Byte]
 
-let ldxzy : FixedArray[Int]
+let ldxzy : FixedArray[Byte]
 
-let ldya : FixedArray[Int]
+let ldya : FixedArray[Byte]
 
-let ldyax : FixedArray[Int]
+let ldyax : FixedArray[Byte]
 
-let ldyb : FixedArray[Int]
+let ldyb : FixedArray[Byte]
 
-let ldyz : FixedArray[Int]
+let ldyz : FixedArray[Byte]
 
-let ldyzx : FixedArray[Int]
+let ldyzx : FixedArray[Byte]
 
-let loadth : FixedArray[Int]
+let loadth : FixedArray[Byte]
 
-let lsea : FixedArray[Int]
+let lsea : FixedArray[Byte]
 
-let lseax : FixedArray[Int]
+let lseax : FixedArray[Byte]
 
-let lseay : FixedArray[Int]
+let lseay : FixedArray[Byte]
 
-let lseix : FixedArray[Int]
+let lseix : FixedArray[Byte]
 
-let lseiy : FixedArray[Int]
+let lseiy : FixedArray[Byte]
 
-let lsez : FixedArray[Int]
+let lsez : FixedArray[Byte]
 
-let lsezx : FixedArray[Int]
+let lsezx : FixedArray[Byte]
 
-let lsra : FixedArray[Int]
+let lsra : FixedArray[Byte]
 
-let lsrax : FixedArray[Int]
+let lsrax : FixedArray[Byte]
 
-let lsrn : FixedArray[Int]
+let lsrn : FixedArray[Byte]
 
-let lsrz : FixedArray[Int]
+let lsrz : FixedArray[Byte]
 
-let lsrzx : FixedArray[Int]
+let lsrzx : FixedArray[Byte]
 
-let lxab : FixedArray[Int]
+let lxab : FixedArray[Byte]
 
-let mmu : FixedArray[Int]
+let mmu : FixedArray[Byte]
 
-let mmufetch : FixedArray[Int]
+let mmufetch : FixedArray[Byte]
 
-let nmi : FixedArray[Int]
+let nmi : FixedArray[Byte]
 
-let nopa : FixedArray[Int]
+let nopa : FixedArray[Byte]
 
-let nopax : FixedArray[Int]
+let nopax : FixedArray[Byte]
 
-let nopb : FixedArray[Int]
+let nopb : FixedArray[Byte]
 
-let nopn : FixedArray[Int]
+let nopn : FixedArray[Byte]
 
-let nopz : FixedArray[Int]
+let nopz : FixedArray[Byte]
 
-let nopzx : FixedArray[Int]
+let nopzx : FixedArray[Byte]
 
-let oneshot : FixedArray[Int]
+let oneshot : FixedArray[Byte]
 
-let oraa : FixedArray[Int]
+let oraa : FixedArray[Byte]
 
-let oraax : FixedArray[Int]
+let oraax : FixedArray[Byte]
 
-let oraay : FixedArray[Int]
+let oraay : FixedArray[Byte]
 
-let orab : FixedArray[Int]
+let orab : FixedArray[Byte]
 
-let oraix : FixedArray[Int]
+let oraix : FixedArray[Byte]
 
-let oraiy : FixedArray[Int]
+let oraiy : FixedArray[Byte]
 
-let oraz : FixedArray[Int]
+let oraz : FixedArray[Byte]
 
-let orazx : FixedArray[Int]
+let orazx : FixedArray[Byte]
 
-let phan : FixedArray[Int]
+let phan : FixedArray[Byte]
 
-let phpn : FixedArray[Int]
+let phpn : FixedArray[Byte]
 
-let plan : FixedArray[Int]
+let plan : FixedArray[Byte]
 
-let plpn : FixedArray[Int]
+let plpn : FixedArray[Byte]
 
-let rlaa : FixedArray[Int]
+let rlaa : FixedArray[Byte]
 
-let rlaax : FixedArray[Int]
+let rlaax : FixedArray[Byte]
 
-let rlaay : FixedArray[Int]
+let rlaay : FixedArray[Byte]
 
-let rlaix : FixedArray[Int]
+let rlaix : FixedArray[Byte]
 
-let rlaiy : FixedArray[Int]
+let rlaiy : FixedArray[Byte]
 
-let rlaz : FixedArray[Int]
+let rlaz : FixedArray[Byte]
 
-let rlazx : FixedArray[Int]
+let rlazx : FixedArray[Byte]
 
-let rola : FixedArray[Int]
+let rola : FixedArray[Byte]
 
-let rolax : FixedArray[Int]
+let rolax : FixedArray[Byte]
 
-let roln : FixedArray[Int]
+let roln : FixedArray[Byte]
 
-let rolz : FixedArray[Int]
+let rolz : FixedArray[Byte]
 
-let rolzx : FixedArray[Int]
+let rolzx : FixedArray[Byte]
 
-let rora : FixedArray[Int]
+let rora : FixedArray[Byte]
 
-let rorax : FixedArray[Int]
+let rorax : FixedArray[Byte]
 
-let rorn : FixedArray[Int]
+let rorn : FixedArray[Byte]
 
-let rorz : FixedArray[Int]
+let rorz : FixedArray[Byte]
 
-let rorzx : FixedArray[Int]
+let rorzx : FixedArray[Byte]
 
-let rraa : FixedArray[Int]
+let rraa : FixedArray[Byte]
 
-let rraax : FixedArray[Int]
+let rraax : FixedArray[Byte]
 
-let rraay : FixedArray[Int]
+let rraay : FixedArray[Byte]
 
-let rraix : FixedArray[Int]
+let rraix : FixedArray[Byte]
 
-let rraiy : FixedArray[Int]
+let rraiy : FixedArray[Byte]
 
-let rraz : FixedArray[Int]
+let rraz : FixedArray[Byte]
 
-let rrazx : FixedArray[Int]
+let rrazx : FixedArray[Byte]
 
-let rtin : FixedArray[Int]
+let rtin : FixedArray[Byte]
 
-let rtsn : FixedArray[Int]
+let rtsn : FixedArray[Byte]
 
-let sbca : FixedArray[Int]
+let sbca : FixedArray[Byte]
 
-let sbcax : FixedArray[Int]
+let sbcax : FixedArray[Byte]
 
-let sbcay : FixedArray[Int]
+let sbcay : FixedArray[Byte]
 
-let sbcb : FixedArray[Int]
+let sbcb : FixedArray[Byte]
 
-let sbcbeb : FixedArray[Int]
+let sbcbeb : FixedArray[Byte]
 
-let sbcix : FixedArray[Int]
+let sbcix : FixedArray[Byte]
 
-let sbciy : FixedArray[Int]
+let sbciy : FixedArray[Byte]
 
-let sbcz : FixedArray[Int]
+let sbcz : FixedArray[Byte]
 
-let sbczx : FixedArray[Int]
+let sbczx : FixedArray[Byte]
 
-let sbxb : FixedArray[Int]
+let sbxb : FixedArray[Byte]
 
-let secn : FixedArray[Int]
+let secn : FixedArray[Byte]
 
-let sedn : FixedArray[Int]
+let sedn : FixedArray[Byte]
 
-let sein : FixedArray[Int]
+let sein : FixedArray[Byte]
 
-let shaay : FixedArray[Int]
+let shaay : FixedArray[Byte]
 
-let shaiy : FixedArray[Int]
+let shaiy : FixedArray[Byte]
 
-let shsay : FixedArray[Int]
+let shsay : FixedArray[Byte]
 
-let shxay : FixedArray[Int]
+let shxay : FixedArray[Byte]
 
-let shyax : FixedArray[Int]
+let shyax : FixedArray[Byte]
 
-let staa : FixedArray[Int]
+let staa : FixedArray[Byte]
 
-let staax : FixedArray[Int]
+let staax : FixedArray[Byte]
 
-let staay : FixedArray[Int]
+let staay : FixedArray[Byte]
 
-let staix : FixedArray[Int]
+let staix : FixedArray[Byte]
 
-let staiy : FixedArray[Int]
+let staiy : FixedArray[Byte]
 
-let staz : FixedArray[Int]
+let staz : FixedArray[Byte]
 
-let stazx : FixedArray[Int]
+let stazx : FixedArray[Byte]
 
-let stxa : FixedArray[Int]
+let stxa : FixedArray[Byte]
 
-let stxz : FixedArray[Int]
+let stxz : FixedArray[Byte]
 
-let stxzy : FixedArray[Int]
+let stxzy : FixedArray[Byte]
 
-let stya : FixedArray[Int]
+let stya : FixedArray[Byte]
 
-let styz : FixedArray[Int]
+let styz : FixedArray[Byte]
 
-let styzx : FixedArray[Int]
+let styzx : FixedArray[Byte]
 
-let taxn : FixedArray[Int]
+let taxn : FixedArray[Byte]
 
-let tayn : FixedArray[Int]
+let tayn : FixedArray[Byte]
 
-let trap1 : FixedArray[Int]
+let trap1 : FixedArray[Byte]
 
-let trap10 : FixedArray[Int]
+let trap10 : FixedArray[Byte]
 
-let trap11 : FixedArray[Int]
+let trap11 : FixedArray[Byte]
 
-let trap12 : FixedArray[Int]
+let trap12 : FixedArray[Byte]
 
-let trap13 : FixedArray[Int]
+let trap13 : FixedArray[Byte]
 
-let trap14 : FixedArray[Int]
+let trap14 : FixedArray[Byte]
 
-let trap15 : FixedArray[Int]
+let trap15 : FixedArray[Byte]
 
-let trap16 : FixedArray[Int]
+let trap16 : FixedArray[Byte]
 
-let trap17 : FixedArray[Int]
+let trap17 : FixedArray[Byte]
 
-let trap2 : FixedArray[Int]
+let trap2 : FixedArray[Byte]
 
-let trap3 : FixedArray[Int]
+let trap3 : FixedArray[Byte]
 
-let trap4 : FixedArray[Int]
+let trap4 : FixedArray[Byte]
 
-let trap5 : FixedArray[Int]
+let trap5 : FixedArray[Byte]
 
-let trap6 : FixedArray[Int]
+let trap6 : FixedArray[Byte]
 
-let trap7 : FixedArray[Int]
+let trap7 : FixedArray[Byte]
 
-let trap8 : FixedArray[Int]
+let trap8 : FixedArray[Byte]
 
-let trap9 : FixedArray[Int]
+let trap9 : FixedArray[Byte]
 
-let tsxn : FixedArray[Int]
+let tsxn : FixedArray[Byte]
 
-let txan : FixedArray[Int]
+let txan : FixedArray[Byte]
 
-let txsn : FixedArray[Int]
+let txsn : FixedArray[Byte]
 
-let tyan : FixedArray[Int]
+let tyan : FixedArray[Byte]
 
 // Types and methods
 

@@ -912,13 +912,13 @@ fn C64register::from_int(value : Int) -> C64register! {
     // 0x0057 => TEMPF1
     // 0x005C => TEMPF2
     0x0061 => FAC1 // FP
-    0x0061 => FACEXP // Exponent
+    // 0x0061 => FACEXP // Exponent
     0x0062 => FACHO // Mantissa
     0x0066 => FACSGN // Sign
     0x0067 => SGNFLG
     0x0068 => BITS
     0x0069 => AFAC // FP
-    0x0069 => ARGEXP // Exponent
+    // 0x0069 => ARGEXP // Exponent
     0x006A => ARGHO // Mantissa
     0x006E => ARGSGN // Sign
     0x006F => ARISGN
@@ -943,7 +943,7 @@ fn C64register::from_int(value : Int) -> C64register! {
     0x009C => DPSW
     0x009D => MSGFLG
     0x009E => FNMIDX
-    0x009E => PTR1
+    // 0x009E => PTR1
     0x009F => PTR2
     0x00A0 => TIME // ARRAY[3]
     0x00A1 => TIME // ARRAY[3]
@@ -1132,7 +1132,7 @@ fn C64register::from_int(value : Int) -> C64register! {
 
     ///
     0x8000 => CARTROM
-    0xA000 => BASICROM
+    // 0xA000 => BASICROM
     0xE000 => KERNALROM
 
     ///

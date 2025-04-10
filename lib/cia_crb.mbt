@@ -4,7 +4,7 @@ pub type CRB UInt8 derive(Eq, Compare)
 ///| There are two control registers in the 6526, CRA and CRB.
 /// CRA is associated with TIMER A and CRB is associated with TIMER B.
 /// The register format is as follows:
-enum CRBFlags {
+pub enum CRBFlags {
   NONE
   //
   /// 1 = START TIMER A
@@ -61,9 +61,9 @@ fn CRB::lor(self : CRB, value : CRB) -> CRB {
 }
 
 ///|
-fn crb(flag : CRBFlags) -> Int {
-  flag[flag]
-}
+// fn crb(flag : CRBFlags) -> Int {
+//   flag[flag]
+// }
 
 ///|
 fn CRB::has(self : CRB, mask : CRBFlags) -> Bool {

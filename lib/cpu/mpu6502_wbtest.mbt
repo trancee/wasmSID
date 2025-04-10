@@ -1755,7 +1755,7 @@ test "bcc_carry_clear_branches_relative_backward" {
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0000 BCC -6
-  let _ = cpu.load(0x0050, [0x90, rel])
+  let _ = cpu.load(0x0050, [0x90, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -1787,7 +1787,7 @@ test "bcs_carry_set_branches_relative_backward" {
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0000 BCS -6
-  let _ = cpu.load(0x0050, [0xB0, rel])
+  let _ = cpu.load(0x0050, [0xB0, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -1819,7 +1819,7 @@ test "beq_zero_set_branches_relative_backward" {
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0000 BEQ -6
-  let _ = cpu.load(0x0050, [0xF0, rel])
+  let _ = cpu.load(0x0050, [0xF0, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -2045,7 +2045,7 @@ test "bmi_negative_set_branches_relative_backward" {
   cpu.pc = 0x0050
   // $0000 BMI -6
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
-  let _ = cpu.load(0x0050, [0x30, rel])
+  let _ = cpu.load(0x0050, [0x30, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -2077,7 +2077,7 @@ test "bne_zero_clear_branches_relative_backward" {
   cpu.pc = 0x0050
   // $0050 BNE -6
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
-  let _ = cpu.load(0x0050, [0xD0, rel])
+  let _ = cpu.load(0x0050, [0xD0, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -2109,7 +2109,7 @@ test "bpl_negative_clear_branches_relative_backward" {
   cpu.pc = 0x0050
   // $0050 BPL -6
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
-  let _ = cpu.load(0x0050, [0x10, rel])
+  let _ = cpu.load(0x0050, [0x10, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -2187,7 +2187,7 @@ test "bvc_overflow_clear_branches_relative_backward" {
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0050 BVC -6
-  let _ = cpu.load(0x0050, [0x50, rel])
+  let _ = cpu.load(0x0050, [0x50, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -2219,7 +2219,7 @@ test "bvs_overflow_set_branches_relative_backward" {
   cpu.pc = 0x0050
   let rel = (0x06 ^ 0xFF) + 1 // two's complement of 6
   // $0050 BVS -6
-  let _ = cpu.load(0x0050, [0x70, rel])
+  let _ = cpu.load(0x0050, [0x70, rel.to_byte()])
   assert_eq!(cpu.step(), 3)
   assert_eq!(cpu.pc, 0x0052 - 0x06)
 }
@@ -4922,7 +4922,7 @@ test "rti_restores_status_and_pc_and_updates_sp" {
   cpu.registers[SP] = 0xFC
   assert_eq!(cpu.step(), 6)
   assert_eq!(cpu.pc, 0xC003)
-  assert_eq!(cpu.flags.get(), 0xEC) // FIXME: 0xFC (nestest)
+  assert_eq!(cpu.flags.get(), 0xFC)
   assert_eq!(cpu.registers[SP], 0xFF)
 }
 
@@ -4934,7 +4934,7 @@ test "rti_forces_break_and_unused_flags_high" {
   let _ = cpu.load(0x01FD, [0x00, 0x03, 0xC0]) // Status, PCL, PCH
   cpu.registers[SP] = 0xFC
   assert_eq!(cpu.step(), 6)
-  // assert_eq!(cpu.flags[B], true) // FIXME (nestest)
+  assert_eq!(cpu.flags[B], true)
   assert_eq!(cpu.flags[U], true)
 }
 

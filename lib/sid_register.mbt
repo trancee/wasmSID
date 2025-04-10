@@ -1,5 +1,5 @@
 ///| MOS 6581 SOUND INTERFACE DEVICE (SID)
-enum SIDspecs {
+pub enum SIDspecs {
   CHANNELS
   VOLUME_MAX
   D418_DIGI_VOLUME
@@ -23,20 +23,20 @@ fn sidSpecs(value : SIDspecs) -> Int {
 // }
 
 ///|
-struct Output {
+pub struct Output {
   mut left : Int
   mut right : Int
 } derive(Default)
 
 ///|
-struct SIDwavOutput {
+pub struct SIDwavOutput {
   mut nonFilted : Int
   mut filterInput : Int
 } derive(Default)
 
 ///| 54295         $D417          RESON
 /// Filter Resonance Control Register
-struct FilterResonanceControl {
+pub struct FilterResonanceControl {
   /// Bits 0-3 are used to control which of the voices will be altered by
   /// the filters.  If one of these bits is set to 1, the corresponding
   /// voice will be processed through the filter, and its harmonic content
@@ -102,7 +102,7 @@ fn to_u8(self : FilterResonanceControl) -> UInt8 {
 }
 
 ///|
-struct Envelope {
+pub struct Envelope {
   /// 54277         $D405          ATDCY1
   /// Bits 4-7:  Select attack cycle duration (0-15)
   mut attack : Int
@@ -117,7 +117,7 @@ struct Envelope {
 } derive(Show, Default)
 
 ///|
-struct Voice {
+pub struct Voice {
   /// 54272         $D400          FRELO1
   /// 54273         $D401          FREHI1
   /// Voice Frequency Control
@@ -139,7 +139,7 @@ struct Voice {
 } derive(Show, Default)
 
 ///|
-struct FilterSelect {
+pub struct FilterSelect {
   /// Select Filter Low-Pass Mode: 1 = On
   mut lowPass : Bool
   /// Select Filter Band-Pass Mode: 1 = On
@@ -149,7 +149,7 @@ struct FilterSelect {
 } derive(Show, Default)
 
 ///|
-struct SIDRegister {
+pub struct SIDRegister {
   /// $00 - $01
   /// Voice Frequency Control
   ///
@@ -225,7 +225,7 @@ fn SIDRegister::default() -> SIDRegister {
 }
 
 ///|
-enum SIDregister {
+pub enum SIDregister {
   /// Voice 1 Frequency Control (low byte)
   FRELO1
   /// Voice 1 Frequency Control (high byte)

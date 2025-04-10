@@ -28,7 +28,7 @@ fn Model::to_int(self : Model) -> Int! {
 }
 
 ///|
-fn Model::op_get(self : Model, value : Model) -> Int! {
+fn Model::op_get(_ : Model, value : Model) -> Int! {
   value.to_int!()
 }
 
@@ -63,6 +63,6 @@ fn Channel::to_int(self : Channel) -> Int! {
 }
 
 ///|
-fn Channel::op_get(self : Channel, value : Channel) -> Int! {
+fn Channel::op_get(_ : Channel, value : Channel) -> Int! {
   value.to_int!()
 }

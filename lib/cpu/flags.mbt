@@ -14,13 +14,13 @@ pub(all) enum Flag {
 const CARRY = 0b00000001
 
 ///| 0x02 Zero Flag
-const ZERO = 0b00000010
+// const ZERO = 0b00000010
 
 ///| 0x04 Interrupt Disable Flag
-const INTERRUPT = 0b00000100
+// const INTERRUPT = 0b00000100
 
 ///| 0x08 Decimal Mode Flag
-const DECIMAL = 0b00001000
+// const DECIMAL = 0b00001000
 
 ///| 0x10 Break Command Flag
 const BREAK = 0b00010000

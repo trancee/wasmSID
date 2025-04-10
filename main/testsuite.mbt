@@ -1,11 +1,11 @@
 ///|
-let irq : FixedArray[Int] = [
+let irq : FixedArray[Byte] = [
   0x48, 0x8A, 0x48, 0x98, 0x48, 0xBA, 0xBD, 0x04, 0x01, 0x29, 0x10, 0xF0, 0x03, 0x6C,
   0x16, 0x03, 0x6C, 0x14, 0x03,
 ]
 
 ///|
-let testcases : Map[String, FixedArray[Int]] = {
+let testcases : Map[String, FixedArray[Byte]] = {
   "start": @testsuite._start
 
   /// LDA
@@ -570,7 +570,7 @@ pub fn testsuite() -> Unit {
 }
 
 ///|
-fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
+fn setup(c64 : @lib.C64, data : FixedArray[Byte]) -> Unit {
   let addr = c64.load(data, has_load_address=true)
   c64.set_bank(@lib.IOPort::from_int(0x00))
 
@@ -614,7 +614,7 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
 }
 
 ///|
-fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
+fn load(c64 : @lib.C64, data : FixedArray[Byte]) -> Unit {
   let mut output = ""
 
   //

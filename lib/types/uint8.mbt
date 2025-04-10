@@ -36,6 +36,11 @@ pub impl U8 for UInt16 with u8(self) {
 }
 
 ///|
+pub impl U8 for Byte with u8(self) {
+  UInt8::new(self.to_int())
+}
+
+///|
 pub fn UInt8::op_add(self : UInt8, other : UInt8) -> UInt8 {
   U8::u8(self._ + other._) // FIXME: Overflow
 }
@@ -142,7 +147,11 @@ pub fn UInt8::has(self : UInt8, mask : UInt8) -> Bool {
 
 ///|
 pub fn UInt8::to_signed(self : UInt8) -> Int {
-  self._ - ((self & 0x80) << 1)._
+  match self.bit(7) {
+    false => self._
+    true => self._ - 0x100
+  }
+  // self._ - ((self & 0x80) << 1)._
 }
 
 ///|

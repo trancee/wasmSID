@@ -7,22 +7,22 @@
 /// $DD00-$DDFF CIA #2
 /// $DD00-$DD0F Complex Interface Adapter (CIA) #2 Registers
 /// $DD10-$DDFF CIA #2 Register Images  The result is that every 16-byte area in this 256-byte block is a mirror of every other.
-let cia_mem_start = 0xDC00
+const CIA_MEM_START = 0xDC00
 
 ///|
-pub let cia1_mem_start = 0xDC00
+const CIA_MEM_END = 0xDDFF
 
 ///|
-pub let cia2_mem_start = 0xDD00
+const CIA1_MEM_START = 0xDC00
 
 ///|
-let cia_mem_end = 0xDDFF
+const CIA2_MEM_START = 0xDD00
 
 ///|
-let cia_mem_size = 0x00FF
+const CIA_MEM_SIZE = 0x00FF
 
 ///|
-struct Timer {
+pub struct Timer {
   mut latch : Int
   mut counter : Int
   // mut underflow : Bool
@@ -58,7 +58,7 @@ pub fn CIA::new(
   //
 
   let cia : CIA = {
-    mem: FixedArray::make(cia_mem_size + 1, 0x00),
+    mem: FixedArray::make(CIA_MEM_SIZE + 1, 0x00),
     baseaddress,
 
     //
@@ -77,7 +77,7 @@ pub fn CIA::new(
     Some(mem) =>
       mem.hook(
         baseaddress,
-        baseaddress + cia_mem_size,
+        baseaddress + CIA_MEM_SIZE,
         // mem,
         fn(address : UInt16, dummy : Bool) -> UInt8 {
           let register = try {
@@ -128,7 +128,7 @@ pub fn reset(self : CIA, videoStandard~ : VideoStandard = Unknown) -> Unit {
 
   //
   match self.baseaddress {
-    cia1_mem_start => {
+    CIA1_MEM_START => {
       //Imitate CIA1 keyboard/joy port, some tunes check if buttons are not pressed
       self[PRA] = 0x10
       self[PRB] = 0xFF
@@ -153,13 +153,17 @@ pub fn reset(self : CIA, videoStandard~ : VideoStandard = Unknown) -> Unit {
       // //All counters other than CIA1 TimerA should be disabled and set to 0xFF for PSID:
       // self[CRB] = 0x00
     }
-    cia2_mem_start => {
+    CIA2_MEM_START => {
       //VICbank-selector default
       self[PRA] = 0x03
 
       //
       self[TA_LO] = 0xFF
       self[TA_HI] = 0xFF
+    }
+    _ => {
+      println("CIA::reset unknown baseaddress")
+      panic()
     }
   }
 }
@@ -267,8 +271,8 @@ fn CIA::read(
       " | \{register}",
     )
   }
-  if self.baseaddress + address < cia_mem_start ||
-    self.baseaddress + address > cia_mem_end {
+  if self.baseaddress + address < CIA_MEM_START ||
+    self.baseaddress + address > CIA_MEM_END {
     // self.dump()
     println(
       "CIA \{register} $" +
@@ -476,10 +480,10 @@ fn CIA::read(
       /// Bit 7:  Select Time of Day write (0=writing to TOD registers sets
       ///         alarm, 1=writing to TOD registers sets clock)
       (self.register.controlB.writeMode.to_int() << 7)
-    _ => {
-      println("unknown read register \{register}")
-      panic()
-    }
+    // _ => {
+    //   println("unknown read register \{register}")
+    //   panic()
+    // }
   }
 }
 
@@ -505,8 +509,8 @@ fn CIA::write(
       " | \{register}",
     )
   }
-  if self.baseaddress + address < cia_mem_start ||
-    self.baseaddress + address > cia_mem_end {
+  if self.baseaddress + address < CIA_MEM_START ||
+    self.baseaddress + address > CIA_MEM_END {
     // self.dump()
     println(
       "CIA \{register} $" +
@@ -754,10 +758,10 @@ fn CIA::write(
       ///         (0=writing to TOD registers sets alarm, 1=writing to TOD registers sets clock)
       self.register.controlB.writeMode = value.bit(7)
     }
-    _ => {
-      println("unknown write register \{register}")
-      panic()
-    }
+    // _ => {
+    //   println("unknown write register \{register}")
+    //   panic()
+    // }
   }
 }
 
@@ -771,7 +775,7 @@ test "cia1_instantiate" {
   let timer = 3
   //
 
-  let cia = CIA::new(cia_mem_start)
+  let cia = CIA::new(CIA_MEM_START)
   //
 
   cia[TA_HI] = timer >> 8
@@ -804,7 +808,7 @@ test "cia1_timera" {
   let timer = 3
   //
 
-  let cia = CIA::new(cia_mem_start)
+  let cia = CIA::new(CIA_MEM_START)
   //
 
   cia[TA_HI] = timer >> 8
@@ -875,7 +879,7 @@ test "cia1_timera_forceload" {
   let timer = 3
   //
 
-  let cia = CIA::new(cia_mem_start)
+  let cia = CIA::new(CIA_MEM_START)
   //
 
   cia[TA_HI] = timer >> 8
@@ -960,7 +964,7 @@ test "cia1_timera_oneshot" {
   let timer = 3
   //
 
-  let cia = CIA::new(cia_mem_start)
+  let cia = CIA::new(CIA_MEM_START)
   //
 
   cia[TA_HI] = timer >> 8

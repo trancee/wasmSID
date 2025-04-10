@@ -95,7 +95,7 @@ pub fn VIC::new(
         baseaddress,
         baseaddress + vic_mem_size,
         //
-        fn(address : UInt16, dummy : Bool) -> UInt8 {
+        fn(address : UInt16, _ : Bool) -> UInt8 {
           let register = try {
             VICregister::from_int!(address._ - baseaddress)
           } catch {
@@ -106,7 +106,7 @@ pub fn VIC::new(
           }
           vic[register]
         },
-        fn(address : UInt16, value : UInt8, dummy : Bool) {
+        fn(address : UInt16, value : UInt8, _ : Bool) {
           let register = try {
             VICregister::from_int!(address._ - baseaddress)
           } catch {

@@ -4,7 +4,7 @@
 ///
 /// The VIC-II chip is capable of generating a maskable request (IRQ) when
 /// certain conditions relating to the video display are fulfilled.
-struct InterruptFlag {
+pub struct InterruptFlag {
   /// Bit 0:  Flag:  Is the Raster Compare a possible source of an IRQ? (1=yes)
   mut rasterCompare : Bool
   /// Bit 1:  Flag:  Is a collision between a sprite and the normal graphics display a possible source of an IRQ?  (1=yes)
@@ -22,7 +22,7 @@ struct InterruptFlag {
 ///
 /// This register is used to enable an IRQ request to occur when one of
 /// the VIC-II chip interrupt conditions is met.
-struct InterruptEnable {
+pub struct InterruptEnable {
   /// Bit 0:  Enable Raster Compare IRQ (1=interrupt enabled)
   mut rasterCompare : Bool
   /// Bit 1:  Enable IRQ to occure when sprite collides with display of normal graphics data (1=interrupt enabled)
@@ -35,7 +35,7 @@ struct InterruptEnable {
 } derive(Default)
 
 ///|
-struct ControlRegister {
+pub struct ControlRegister {
   /// SCROLY
   mut rowDisplay : Bool
   mut blankScreen : Bool
@@ -49,13 +49,13 @@ struct ControlRegister {
 } derive(Default)
 
 ///|
-struct Coordinate {
+pub struct Coordinate {
   mut x : Int
   mut y : Int
 } derive(Default)
 
 ///|
-struct VICRegister {
+pub struct VICRegister {
   spritePosition : FixedArray[Coordinate]
   spriteEnable : FixedArray[Bool]
   spriteExpandX : FixedArray[Bool]
@@ -131,7 +131,7 @@ fn VICRegister::default() -> VICRegister {
 }
 
 ///|
-enum VICregister {
+pub enum VICregister {
   /// Location Range: 53248-53264 ($D000-$D010)
   /// Sprite Horizontal and Vertical Position Registers
 
@@ -441,55 +441,55 @@ fn VICregister::from_int(value : Int) -> VICregister! {
 }
 
 ///|
-enum ControlRegisterVertical {
-  RasterCompare
-  ExtendedColorTextMode
-  BitMapMode
-  BlankScreenBorderColor
-  SelectRowTextDisplay
-  SmoothScrollYDotPosition
-}
+// enum ControlRegisterVertical {
+//   RasterCompare
+//   ExtendedColorTextMode
+//   BitMapMode
+//   BlankScreenBorderColor
+//   SelectRowTextDisplay
+//   SmoothScrollYDotPosition
+// }
 
 ///|
-fn op_get(
-  self : ControlRegisterVertical,
-  flag : ControlRegisterVertical
-) -> Int {
-  match flag {
-    /// Raster Compare: (Bit 8)	See $D012
-    RasterCompare => 1 << 7
-    /// Extended Color Text Mode 1 = Enable
-    ExtendedColorTextMode => 1 << 6
-    /// Bit Map Mode. 1 = Enable
-    BitMapMode => 1 << 5
-    /// Blank Screen to Border Color: 0 = Blank
-    BlankScreenBorderColor => 1 << 4
-    /// Select 24/25 Row Text Display: 1 = 25 Rows
-    SelectRowTextDisplay => 1 << 3
-    /// Smooth Scroll to Y Dot-Position (0-7)
-    SmoothScrollYDotPosition => (1 << 2) | (1 << 1) | (1 << 0)
-  }
-}
+// fn op_get(
+//   self : ControlRegisterVertical,
+//   flag : ControlRegisterVertical
+// ) -> Int {
+//   match flag {
+//     /// Raster Compare: (Bit 8)	See $D012
+//     RasterCompare => 1 << 7
+//     /// Extended Color Text Mode 1 = Enable
+//     ExtendedColorTextMode => 1 << 6
+//     /// Bit Map Mode. 1 = Enable
+//     BitMapMode => 1 << 5
+//     /// Blank Screen to Border Color: 0 = Blank
+//     BlankScreenBorderColor => 1 << 4
+//     /// Select 24/25 Row Text Display: 1 = 25 Rows
+//     SelectRowTextDisplay => 1 << 3
+//     /// Smooth Scroll to Y Dot-Position (0-7)
+//     SmoothScrollYDotPosition => (1 << 2) | (1 << 1) | (1 << 0)
+//   }
+// }
 
 ///|
-fn cr(flag : ControlRegisterVertical) -> Int {
-  flag[flag]
-}
+// fn cr(flag : ControlRegisterVertical) -> Int {
+//   flag[flag]
+// }
 
 ///|
-enum ControlRegisterHorizontal {
-  Unused /// 	7-6	Unused
-  MultiColorMode /// 	4	  Multi-Color Mode: 1 = Enable (Text or Bit-Map)
-  SelectColumnTextDisplay /// 	3	  Select 38/40 Column Text Display: 1 = 40 Cols
-  SmoothScrollXPos /// 	2-0	Smooth Scroll to X Pos
-}
+// enum ControlRegisterHorizontal {
+//   Unused /// 	7-6	Unused
+//   MultiColorMode /// 	4	  Multi-Color Mode: 1 = Enable (Text or Bit-Map)
+//   SelectColumnTextDisplay /// 	3	  Select 38/40 Column Text Display: 1 = 40 Cols
+//   SmoothScrollXPos /// 	2-0	Smooth Scroll to X Pos
+// }
 
 ///|
-enum MemoryControlRegister {
-  VideoMatrixBaseAddress /// 	7-4	Video Matrix Base Address (inside VIC)
-  CharacterDotDataBaseAddress /// 	3-1	Character Dot-Data Base	Address (inside VIC)
-  SelectCharacterSet /// 	0	  Select upper/lower Character Set
-}
+// enum MemoryControlRegister {
+//   VideoMatrixBaseAddress /// 	7-4	Video Matrix Base Address (inside VIC)
+//   CharacterDotDataBaseAddress /// 	3-1	Character Dot-Data Base	Address (inside VIC)
+//   SelectCharacterSet /// 	0	  Select upper/lower Character Set
+// }
 
 // enum InterruptFlagRegister {
 //   SetAnyEnabledVICIRQCondition /// 	7	  Set on Any Enabled VIC IRQ Condition

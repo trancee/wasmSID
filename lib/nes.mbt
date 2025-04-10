@@ -8,13 +8,13 @@ pub struct NES {
 ///|
 pub fn NES::new(
   baseaddress~ : Int = 0x0000,
-  data~ : FixedArray[Int] = [],
+  data~ : FixedArray[Byte] = [],
   addr~ : Int = 0x0000,
   length~ : Int = data.length()
 ) -> NES {
   let cpu = @cpu.CPU::new(pc=baseaddress, decimal_mode=false)
   let mem = Memory::new()
-  let addr = cpu.load(addr, data, length~)
+  let _ = cpu.load(addr, data, length~)
   let nes : NES = { baseaddress, mem, cpu }
   nes
 }
@@ -22,11 +22,11 @@ pub fn NES::new(
 ///|
 pub fn NES::load(
   self : NES,
-  data : FixedArray[Int],
+  data : FixedArray[Byte],
   addr~ : Int = 0,
   length~ : Int = data.length()
 ) -> Unit {
-  let addr = self.cpu.load(addr, data, length~)
+  let _ = self.cpu.load(addr, data, length~)
 
 }
 

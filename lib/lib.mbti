@@ -6,10 +6,6 @@ import(
 )
 
 // Values
-let cia1_mem_start : Int
-
-let cia2_mem_start : Int
-
 fn clear(Memory) -> Unit
 
 fn clear_flags(C64) -> Unit
@@ -26,7 +22,7 @@ fn hook(Memory, Int, Int, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16,
 
 fn initC64(C64) -> Unit!
 
-fn initCPU(C64, baseaddress? : Int) -> Unit
+fn initCPU(C64, baseaddress? : @types.UInt16) -> Unit
 
 fn process(PSID) -> Unit!
 
@@ -55,7 +51,12 @@ fn write_array(C64, C64register, Array[@types.UInt8]) -> Unit
 fn write_direct(Memory, @types.UInt16, @types.UInt8) -> Unit
 
 // Types and methods
-type ADSR
+pub struct ADSR {
+  state : ADSRState
+  mut rateCounter : @types.UInt16
+  mut envelopeCounter : Int
+  mut exponentCounter : @types.UInt8
+}
 
 type ADSRState
 
@@ -104,9 +105,9 @@ impl C64 {
   get_registers(Self) -> @cpu.Registers
   hook(Self, Int, (Int) -> Unit) -> Unit
   initC64(Self) -> Unit!
-  initCPU(Self, baseaddress? : Int) -> Unit
-  load(Self, FixedArray[Int], offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> Int
-  new(baseaddress~ : Int = .., mem? : Memory, data~ : FixedArray[Int] = .., address~ : Int = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self
+  initCPU(Self, baseaddress? : @types.UInt16) -> Unit
+  load(Self, FixedArray[Byte], offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
+  new(baseaddress~ : Int = .., mem? : Memory, data~ : FixedArray[Byte] = .., address~ : Int = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self
   op_set(Self, C64register, @types.UInt8) -> Unit
   pc(Self) -> Int
   push(Self, @types.UInt8) -> Unit
@@ -355,18 +356,59 @@ impl CIA {
   reset(Self, videoStandard~ : VideoStandard = ..) -> Unit
 }
 
-type CIAInterruptControl
+pub struct CIAInterruptControl {
+  mut timerA : Bool
+  mut timerB : Bool
+  alarm : Bool
+  serial : Bool
+  flag : Bool
+  mut interrupt : Bool
+}
 impl Default for CIAInterruptControl
 impl Show for CIAInterruptControl
 
-type CIAInterruptEnable
+pub struct CIAInterruptEnable {
+  mut timerA : Bool
+  mut timerB : Bool
+  mut alarm : Bool
+  mut serial : Bool
+  mut flag : Bool
+}
 impl Default for CIAInterruptEnable
 impl Show for CIAInterruptEnable
 
-type CIARegister
+pub struct CIARegister {
+  portA : FixedArray[Bool]
+  portB : FixedArray[Bool]
+  directionA : FixedArray[Bool]
+  directionB : FixedArray[Bool]
+  timeOfDay : TimeOfDay
+  mut serialData : @types.UInt8
+  mut interruptControl : CIAInterruptControl
+  interruptEnable : CIAInterruptEnable
+  controlA : ControlA
+  controlB : ControlB
+}
 impl Show for CIARegister
 
-type CIAregister
+pub enum CIAregister {
+  PRA
+  PRB
+  DDRA
+  DDRB
+  TA_LO
+  TA_HI
+  TB_LO
+  TB_HI
+  TOD_10TH
+  TOD_SEC
+  TOD_MIN
+  TOD_HR
+  SDR
+  ICR
+  CRA
+  CRB
+}
 impl Eq for CIAregister
 impl Show for CIAregister
 
@@ -378,38 +420,104 @@ pub type CRA @types.UInt8
 impl Compare for CRA
 impl Eq for CRA
 
-type CRAFlags
+pub enum CRAFlags {
+  NONE
+  START
+  PBON
+  OUTMODE
+  RUNMODE
+  LOAD
+  INMODE
+  SPMODE
+  TODIN
+}
 
 pub type CRB @types.UInt8
 impl Compare for CRB
 impl Eq for CRB
 
-type CRBFlags
+pub enum CRBFlags {
+  NONE
+  START
+  PBON
+  OUTMODE
+  RUNMODE
+  LOAD
+  INMODE
+  UNDERFLOW
+  ALARM
+}
 
 type Channel
 impl Eq for Channel
 impl Show for Channel
 
-type Color
+pub enum Color {
+  Black
+  White
+  Red
+  Cyan
+  Purple
+  Green
+  Blue
+  Yellow
+  Orange
+  Brown
+  LightRed
+  DarkGray
+  MediumGray
+  LightGreen
+  LightBlue
+  LightGray
+}
 
-type ControlA
+pub struct ControlA {
+  mut start : Bool
+  mut output : Bool
+  mut outputMode : Bool
+  mut runMode : RunMode
+  mut forceLoad : Bool
+  mut inputMode : TimerAInputMode
+  mut serialMode : SerialMode
+  mut clockFrequency : Bool
+}
 impl Eq for ControlA
 impl Show for ControlA
 
-type ControlB
+pub struct ControlB {
+  mut start : Bool
+  mut output : Bool
+  mut outputMode : Bool
+  mut runMode : RunMode
+  mut forceLoad : Bool
+  mut inputMode : TimerBInputMode
+  mut writeMode : Bool
+}
 impl Show for ControlB
 
-type ControlRegister
+pub struct ControlRegister {
+  mut rowDisplay : Bool
+  mut blankScreen : Bool
+  mut bitmapMode : Bool
+  mut extendedColorMode : Bool
+  mut columnDisplay : Bool
+  mut multicolorMode : Bool
+  mut videoChipReset : Bool
+}
 impl Default for ControlRegister
 
-type ControlRegisterHorizontal
-
-type ControlRegisterVertical
-
-type Coordinate
+pub struct Coordinate {
+  mut x : Int
+  mut y : Int
+}
 impl Default for Coordinate
 
-type Envelope
+pub struct Envelope {
+  mut attack : Int
+  mut decay : Int
+  mut sustain : Int
+  mut release : Int
+}
 impl Default for Envelope
 impl Show for Envelope
 
@@ -419,10 +527,18 @@ impl Exception {
 }
 impl Show for Exception
 
-type FilterResonanceControl
+pub struct FilterResonanceControl {
+  voice : FixedArray[Bool]
+  external : Bool
+  resonance : Int
+}
 impl Show for FilterResonanceControl
 
-type FilterSelect
+pub struct FilterSelect {
+  mut lowPass : Bool
+  mut bandPass : Bool
+  mut highPass : Bool
+}
 impl Default for FilterSelect
 impl Show for FilterSelect
 
@@ -435,17 +551,31 @@ pub struct Flags {
 impl Eq for Flags
 impl Show for Flags
 
-type FrameRate
+pub type FrameRate VideoStandard
 impl Eq for FrameRate
 impl Show for FrameRate
 
-type Hook
+pub struct Hook {
+  start : Int
+  end : Int
+  read : (@types.UInt16, Bool) -> @types.UInt8
+  write : (@types.UInt16, @types.UInt8, Bool) -> Unit
+}
 
 pub type ICR @types.UInt8
 impl Compare for ICR
 impl Eq for ICR
 
-type ICRFlags
+pub enum ICRFlags {
+  NONE
+  TA
+  TB
+  ALRM
+  SP
+  FLG
+  SC
+  IR
+}
 
 type IOPort
 impl IOPort {
@@ -454,10 +584,21 @@ impl IOPort {
 impl Default for IOPort
 impl Show for IOPort
 
-type InterruptEnable
+pub struct InterruptEnable {
+  mut rasterCompare : Bool
+  mut spriteCollide : Bool
+  mut spritesCollide : Bool
+  mut lightPenTrigger : Bool
+}
 impl Default for InterruptEnable
 
-type InterruptFlag
+pub struct InterruptFlag {
+  mut rasterCompare : Bool
+  mut spriteCollide : Bool
+  mut spritesCollide : Bool
+  mut lightPenTrigger : Bool
+  mut interrupt : Bool
+}
 impl Default for InterruptFlag
 impl Show for InterruptFlag
 
@@ -471,8 +612,6 @@ impl Memory {
   write(Self, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
   write_direct(Self, @types.UInt16, @types.UInt8) -> Unit
 }
-
-type MemoryControlRegister
 
 type Mode
 impl Eq for Mode
@@ -488,8 +627,8 @@ pub struct NES {
   cpu : @cpu.CPU
 }
 impl NES {
-  load(Self, FixedArray[Int], addr~ : Int = .., length~ : Int = ..) -> Unit
-  new(baseaddress~ : Int = .., data~ : FixedArray[Int] = .., addr~ : Int = .., length~ : Int = ..) -> Self
+  load(Self, FixedArray[Byte], addr~ : Int = .., length~ : Int = ..) -> Unit
+  new(baseaddress~ : Int = .., data~ : FixedArray[Byte] = .., addr~ : Int = .., length~ : Int = ..) -> Self
   pc(Self) -> Int
   push(Self, @types.UInt8) -> Unit
   push16(Self, @types.UInt16) -> Unit
@@ -497,7 +636,10 @@ impl NES {
   step(Self) -> Int
 }
 
-type Output
+pub struct Output {
+  mut left : Int
+  mut right : Int
+}
 impl Default for Output
 
 pub struct PSID {
@@ -530,7 +672,10 @@ impl PSID {
   videoStandard(Self) -> VideoStandard
 }
 
-type RunMode
+pub enum RunMode {
+  OneShot
+  Continuous
+}
 impl Eq for RunMode
 impl Show for RunMode
 
@@ -544,39 +689,116 @@ type SIDFlags
 impl Eq for SIDFlags
 impl Show for SIDFlags
 
-type SIDRegister
+pub struct SIDRegister {
+  voice : FixedArray[Voice]
+  mut cutoffFrequency : @types.UInt16
+  mut filterResonanceControl : FilterResonanceControl
+  mut volume : @types.UInt8
+  filterSelect : FilterSelect
+  mut disconnectVoice : Bool
+  input : FixedArray[@types.UInt8]
+  mut random : @types.UInt8
+  mut envelope : @types.UInt8
+}
 impl Show for SIDRegister
 
-type SIDheader
+pub enum SIDheader {
+  Magic
+  Version
+  DataOffset
+  LoadAddress
+  InitAddress
+  PlayAddress
+  Songs
+  DefaultSong
+  Speed
+  Title
+  Author
+  ReleaseInfo
+  Flags
+  StartPage
+  PageLength
+  SID2Address
+  SID3Address
+}
 impl Show for SIDheader
 
-type SIDregister
+pub enum SIDregister {
+  FRELO1
+  FREHI1
+  PWLO1
+  PWHI1
+  VCREG1
+  ATDCY1
+  SUREL1
+  FRELO2
+  FREHI2
+  PWLO2
+  PWHI2
+  VCREG2
+  ATDCY2
+  SUREL2
+  FRELO3
+  FREHI3
+  PWLO3
+  PWHI3
+  VCREG3
+  ATDCY3
+  SUREL3
+  CUTLO
+  CUTHI
+  RESON
+  SIGVOL
+  POTX
+  POTY
+  RANDOM
+  ENV3
+}
 impl Compare for SIDregister
 impl Eq for SIDregister
 impl Show for SIDregister
 
-type SIDspecs
+pub enum SIDspecs {
+  CHANNELS
+  VOLUME_MAX
+  D418_DIGI_VOLUME
+}
 
-type SIDwavOutput
+pub struct SIDwavOutput {
+  mut nonFilted : Int
+  mut filterInput : Int
+}
 impl Default for SIDwavOutput
 
-type ScanLineCycles
+pub type ScanLineCycles VideoStandard
 impl Eq for ScanLineCycles
 impl Show for ScanLineCycles
 
-type ScanLines
+pub type ScanLines VideoStandard
 impl Eq for ScanLines
 impl Show for ScanLines
 
-type SerialMode
+pub enum SerialMode {
+  Output
+  Input
+}
 impl Eq for SerialMode
 impl Show for SerialMode
 
-type TimeOfDay
+pub struct TimeOfDay {
+  mut tenth : @types.UInt8
+  mut seconds : @types.UInt8
+  mut minutes : @types.UInt8
+  mut hours : @types.UInt8
+  mut pm : Bool
+}
 impl Default for TimeOfDay
 impl Show for TimeOfDay
 
-type Timer
+pub struct Timer {
+  mut latch : Int
+  mut counter : Int
+}
 impl Default for Timer
 impl Show for Timer
 
@@ -594,9 +816,79 @@ impl VIC {
   reset(Self, videoStandard~ : VideoStandard = ..) -> Unit!
 }
 
-type VICRegister
+pub struct VICRegister {
+  spritePosition : FixedArray[Coordinate]
+  spriteEnable : FixedArray[Bool]
+  spriteExpandX : FixedArray[Bool]
+  spriteExpandY : FixedArray[Bool]
+  spritePriority : FixedArray[Bool]
+  spriteMode : FixedArray[Bool]
+  spriteCollide : FixedArray[Bool]
+  spritesCollide : FixedArray[Bool]
+  mut borderColor : Color
+  backgroundColor : FixedArray[Color]
+  spriteMulticolor : FixedArray[Color]
+  spriteColor : FixedArray[Color]
+  scroll : Coordinate
+  controlRegister : ControlRegister
+  interruptFlag : InterruptFlag
+  interruptEnable : InterruptEnable
+  mut rasterScanLine : Int
+  lightPen : Coordinate
+  mut characterDataArea : Int
+  mut videoMatrixArea : Int
+}
 
-type VICregister
+pub enum VICregister {
+  SP0X
+  SP0Y
+  SP1X
+  SP1Y
+  SP2X
+  SP2Y
+  SP3X
+  SP3Y
+  SP4X
+  SP4Y
+  SP5X
+  SP5Y
+  SP6X
+  SP6Y
+  SP7X
+  SP7Y
+  MSIGX
+  SCROLY
+  RASTER
+  LPENX
+  LPENY
+  SPENA
+  SCROLX
+  YXPAND
+  VMCSB
+  VICIRQ
+  IRQMASK
+  SPBGPR
+  SPMC
+  XXPAND
+  SPSPCL
+  SPBGCL
+  EXTCOL
+  BGCOL0
+  BGCOL1
+  BGCOL2
+  BGCOL3
+  SPMC0
+  SPMC1
+  SP0COL
+  SP1COL
+  SP2COL
+  SP3COL
+  SP4COL
+  SP5COL
+  SP6COL
+  SP7COL
+  UNUSED
+}
 impl Compare for VICregister
 impl Eq for VICregister
 impl Show for VICregister
@@ -609,7 +901,12 @@ type VideoStandard
 impl Eq for VideoStandard
 impl Show for VideoStandard
 
-type Voice
+pub struct Voice {
+  mut frequency : @types.UInt16
+  mut pulseWidth : @types.UInt16
+  mut control : VoiceControl
+  envelope : Envelope
+}
 impl Default for Voice
 impl Show for Voice
 
@@ -617,9 +914,22 @@ type VoiceControl
 impl Default for VoiceControl
 impl Show for VoiceControl
 
-type Wave
+pub struct Wave {
+  phaseAccu : Int
+  mut prevPhaseAccu : Int
+  mut syncSourceMSBrise : Bool
+  mut ringSourceMSB : Int
+  mut noiseLFSR : Int
+  mut prevWavGenOut : Int
+  mut prevWavData : @types.UInt8
+}
 
-type Waveform
+pub enum Waveform {
+  SawTriangle
+  PulseTriangle
+  PulseSawtooth
+  PulseSawTriangle
+}
 impl Eq for Waveform
 
 // Type aliases
