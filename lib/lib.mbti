@@ -28,15 +28,7 @@ fn initC64(C64) -> Unit!
 
 fn initCPU(C64, baseaddress? : Int) -> Unit
 
-fn load(NES, FixedArray[Int], addr~ : Int = .., length~ : Int = ..) -> Unit
-
-fn pc(NES) -> Int
-
 fn process(PSID) -> Unit!
-
-fn push(NES, @types.UInt8) -> Unit
-
-fn push16(NES, @types.UInt16) -> Unit
 
 fn read(Memory, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
 
@@ -48,11 +40,7 @@ fn setA(C64, Int) -> Unit
 
 fn set_bank(C64, IOPort) -> Unit
 
-fn set_flags(NES, @types.UInt8) -> Unit
-
 fn set_interrupt_flag(C64) -> Unit
-
-fn step(NES) -> Int
 
 fn to_string(Exception) -> String
 

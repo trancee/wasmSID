@@ -13,8 +13,6 @@ fn clear_registers(CPU) -> Unit
 
 fn debug(CPU, Bool) -> Bool
 
-fn get(Flags) -> @types.UInt8
-
 fn get_flags(CPU) -> Flags
 
 fn get_registers(CPU) -> Registers
@@ -29,8 +27,6 @@ fn irq(CPU, pc? : Int) -> Unit
 
 fn load(CPU, Int, FixedArray[Int], length~ : Int = .., has_load_address~ : Bool = ..) -> Int
 
-fn lor(Flag, Flag) -> Int
-
 fn nmi(CPU, pc? : Int) -> Unit
 
 fn pc(CPU) -> Int
@@ -43,8 +39,6 @@ fn read(CPU, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
 
 fn register(CPU, Register, Int) -> Unit
 
-fn set(Flags, @types.UInt8) -> Unit
-
 fn setIRQ(CPU, @types.UInt16) -> Unit
 
 fn setNMI(CPU, @types.UInt16) -> Unit
@@ -52,8 +46,6 @@ fn setNMI(CPU, @types.UInt16) -> Unit
 fn setRESET(CPU, @types.UInt16) -> Unit
 
 fn set_flags(CPU, @types.UInt8) -> Unit
-
-fn set_interrupt(Flags) -> Unit
 
 fn set_irq(CPU, state~ : Bool = ..) -> Unit
 
@@ -121,7 +113,7 @@ impl CPU {
   write16(Self, @types.UInt16, @types.UInt16, dummy~ : Bool = ..) -> Unit
 }
 
-pub enum Flag {
+pub(all) enum Flag {
   C
   Z
   I
@@ -145,23 +137,25 @@ impl Flags {
 impl Eq for Flags
 impl Show for Flags
 
-type Instruction
-
-type Mode
-impl Eq for Mode
-impl Show for Mode
-
-pub enum Register {
+pub(all) enum Register {
   SP
   A
   X
   Y
 }
 
-type Registers
-
-type Vector
-impl Eq for Vector
+pub struct Registers {
+  mut sp : @types.UInt8
+  mut a : @types.UInt8
+  mut x : @types.UInt8
+  mut y : @types.UInt8
+}
+impl Registers {
+  new(sp~ : @types.UInt8 = ..) -> Self
+  op_get(Self, Register) -> @types.UInt8
+  op_set(Self, Register, @types.UInt8) -> Unit
+  reset(Self) -> Unit
+}
 
 // Type aliases
 

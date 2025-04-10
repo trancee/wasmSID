@@ -1,22 +1,46 @@
 ///|
-pub enum Flag {
-  C // Carry Flag
-  Z // Zero Flag
-  I // Interrupt Disable Flag
-  D // Decimal Mode Flag
-  B // Break Command Flag
-  U // Unused Flag
-  V // Overflow Flag
-  N // Negative Flag
+pub(all) enum Flag {
+  C = 0b00000001 // 0x01 Carry Flag
+  Z = 0b00000010 // 0x02 Zero Flag
+  I = 0b00000100 // 0x04 Interrupt Disable Flag
+  D = 0b00001000 // 0x08 Decimal Mode Flag
+  B = 0b00010000 // 0x10 Break Command Flag
+  U = 0b00100000 // 0x20 Unused Flag
+  V = 0b01000000 // 0x40 Overflow Flag
+  N = 0b10000000 // 0x80 Negative Flag
 } derive(Eq)
 
+///| 0x01 Carry Flag
+const CARRY = 0b00000001
+
+///| 0x02 Zero Flag
+const ZERO = 0b00000010
+
+///| 0x04 Interrupt Disable Flag
+const INTERRUPT = 0b00000100
+
+///| 0x08 Decimal Mode Flag
+const DECIMAL = 0b00001000
+
+///| 0x10 Break Command Flag
+const BREAK = 0b00010000
+
+///| 0x20 Unused Flag
+const UNUSED = 0b00100000
+
+///| 0x40 Overflow Flag
+const OVERFLOW = 0b01000000
+
+///| 0x80 Negative Flag
+const NEGATIVE = 0b10000000
+
 ///|
-pub fn lor(self : Flag, flag : Flag) -> Int {
+pub fn Flag::lor(self : Flag, flag : Flag) -> Int {
   self.bits() | flag.bits()
 }
 
 ///|
-fn bits(self : Flag) -> Int {
+fn Flag::bits(self : Flag) -> Int {
   match self {
     C => 0b00000001 // 0x01 Carry Flag
     Z => 0b00000010 // 0x02 Zero Flag
@@ -108,32 +132,32 @@ fn Flags::reset(self : Flags) -> Unit {
 }
 
 ///|
-fn clear(self : Flags, flag : Flag) -> Unit {
+fn Flags::clear(self : Flags, flag : Flag) -> Unit {
   self[flag] = false
 }
 
 ///|
-fn is_clear(self : Flags, flag : Flag) -> Bool {
+fn Flags::is_clear(self : Flags, flag : Flag) -> Bool {
   self[flag] == false
 }
 
 ///|
-fn not_set(self : Flags, flag : Flag) -> Bool {
+fn Flags::not_set(self : Flags, flag : Flag) -> Bool {
   self[flag] == false
 }
 
-// fn set(self : Flags, flag : Flag) -> Unit {
+// fn Flags::set(self : Flags, flag : Flag) -> Unit {
 //   self[flag] = true
 // }
 
 ///|
-fn is_set(self : Flags, flag : Flag) -> Bool {
+fn Flags::is_set(self : Flags, flag : Flag) -> Bool {
   self[flag] == true
 }
 
 // Get status register value.
 ///|
-pub fn get(self : Flags) -> UInt8 {
+pub fn Flags::get(self : Flags) -> UInt8 {
   self.getC() |
   self.getZ() |
   self.getI() |
@@ -146,7 +170,7 @@ pub fn get(self : Flags) -> UInt8 {
 
 // Set status register value.
 ///|
-pub fn set(self : Flags, flags : UInt8) -> Unit {
+pub fn Flags::set(self : Flags, flags : UInt8) -> Unit {
   self[C] = flags.bit(0)
   self[Z] = flags.bit(1)
   self[I] = flags.bit(2)
@@ -158,177 +182,202 @@ pub fn set(self : Flags, flags : UInt8) -> Unit {
 }
 
 ///|
-fn carry(self : Flags) -> Bool {
+fn Flags::carry(self : Flags) -> Bool {
   self[C]
 }
 
 ///|
-fn not_carry(self : Flags) -> Bool {
+fn Flags::not_carry(self : Flags) -> Bool {
   not(self.carry())
 }
 
 ///|
-fn clear_carry(self : Flags) -> Unit {
+fn Flags::clear_carry(self : Flags) -> Unit {
   self[C] = false
 }
 
 ///|
-fn set_carry(self : Flags) -> Unit {
+fn Flags::set_carry(self : Flags) -> Unit {
   self[C] = true
 }
 
 ///|
-fn zero(self : Flags) -> Bool {
+fn Flags::zero(self : Flags) -> Bool {
   self[Z]
 }
 
 ///|
-fn not_zero(self : Flags) -> Bool {
+fn Flags::not_zero(self : Flags) -> Bool {
   not(self.zero())
 }
 
 ///|
-fn interrupt(self : Flags) -> Bool {
+fn Flags::interrupt(self : Flags) -> Bool {
   self[I]
 }
 
-// fn not_interrupt(self : Flags) -> Bool {
+// fn Flags::not_interrupt(self : Flags) -> Bool {
 //   not(self.interrupt())
 // }
 
 ///|
-fn clear_interrupt(self : Flags) -> Unit {
+fn Flags::clear_interrupt(self : Flags) -> Unit {
   self[I] = false
 }
 
 ///|
-pub fn set_interrupt(self : Flags) -> Unit {
+pub fn Flags::set_interrupt(self : Flags) -> Unit {
   self[I] = true
 }
 
 ///|
-fn set_break(self : Flags) -> Unit {
+fn Flags::clear_break(self : Flags) -> Unit {
+  self[B] = false
+}
+
+///|
+fn Flags::set_break(self : Flags) -> Unit {
   self[B] = true
 }
 
 ///|
-fn decimal(self : Flags) -> Bool {
+fn Flags::decimal(self : Flags) -> Bool {
   self[D]
 }
 
 ///|
-fn clear_decimal(self : Flags) -> Unit {
+fn Flags::clear_decimal(self : Flags) -> Unit {
   self[D] = false
 }
 
 ///|
-fn set_decimal(self : Flags) -> Unit {
+fn Flags::set_decimal(self : Flags) -> Unit {
   self[D] = true
 }
 
 ///|
-fn not_decimal(self : Flags) -> Bool {
+fn Flags::not_decimal(self : Flags) -> Bool {
   not(self.decimal())
 }
 
 ///|
-fn overflow(self : Flags) -> Bool {
+fn Flags::unused(self : Flags) -> Bool {
+  self[U]
+}
+
+///|
+fn Flags::clear_unused(self : Flags) -> Unit {
+  self[U] = false
+}
+
+///|
+fn Flags::set_unused(self : Flags) -> Unit {
+  self[U] = true
+}
+
+///|
+fn Flags::overflow(self : Flags) -> Bool {
   self[V]
 }
 
 ///|
-fn not_overflow(self : Flags) -> Bool {
+fn Flags::not_overflow(self : Flags) -> Bool {
   not(self.overflow())
 }
 
 ///|
-fn clear_overflow(self : Flags) -> Unit {
+fn Flags::clear_overflow(self : Flags) -> Unit {
   self[V] = false
 }
 
 ///|
-fn negative(self : Flags) -> Bool {
+fn Flags::negative(self : Flags) -> Bool {
   self[N]
 }
 
 ///|
-fn not_negative(self : Flags) -> Bool {
+fn Flags::not_negative(self : Flags) -> Bool {
   not(self.negative())
 }
 
 ///|
-fn getC(self : Flags) -> Int {
+fn Flags::getC(self : Flags) -> Int {
   self[C].to_int() << 0
 }
 
 ///|
-fn getZ(self : Flags) -> Int {
+fn Flags::getZ(self : Flags) -> Int {
   self[Z].to_int() << 1
 }
 
 ///|
-fn getI(self : Flags) -> Int {
+fn Flags::getI(self : Flags) -> Int {
   self[I].to_int() << 2
 }
 
 ///|
-fn getD(self : Flags) -> Int {
+fn Flags::getD(self : Flags) -> Int {
   self[D].to_int() << 3
 }
 
 ///|
-fn getB(self : Flags) -> Int {
+fn Flags::getB(self : Flags) -> Int {
   self[B].to_int() << 4
 }
 
 ///|
-fn getU(self : Flags) -> Int {
+fn Flags::getU(self : Flags) -> Int {
   self[U].to_int() << 5
 }
 
 ///|
-fn getV(self : Flags) -> Int {
+fn Flags::getV(self : Flags) -> Int {
   self[V].to_int() << 6
 }
 
 ///|
-fn getN(self : Flags) -> Int {
+fn Flags::getN(self : Flags) -> Int {
   self[N].to_int() << 7
 }
 
 ///|
-fn setN(self : Flags, value : Bool) -> Unit {
+fn Flags::setN(self : Flags, value : Bool) -> Unit {
   self[N] = value
 }
 
 ///|
-fn setB(self : Flags, value : Bool) -> Unit {
+fn Flags::setB(self : Flags, value : Bool) -> Unit {
   self[B] = value
 }
 
 ///|
-fn setI(self : Flags, value : Bool) -> Unit {
+fn Flags::setI(self : Flags, value : Bool) -> Unit {
   self[I] = value
 }
 
 ///|
-fn setV(self : Flags, value : Bool) -> Unit {
+fn Flags::setU(self : Flags, value : Bool) -> Unit {
+  self[U] = value
+}
+
+///|
+fn Flags::setV(self : Flags, value : Bool) -> Unit {
   self[V] = value
 }
 
 ///|
-fn setC(self : Flags, value : Bool) -> Unit {
+fn Flags::setC(self : Flags, value : Bool) -> Unit {
   self[C] = value
 }
 
 ///|
-fn setZ(self : Flags, value : Bool) -> Unit {
+fn Flags::setZ(self : Flags, value : Bool) -> Unit {
   self[Z] = value
 }
 
 // Set N and Z flag values.
 ///|
-fn setZN(self : Flags, value : UInt8) -> Unit {
+fn Flags::setZN(self : Flags, value : UInt8) -> Unit {
   self.setZ(value == 0)
   self.setN(value.bit(7))
 }

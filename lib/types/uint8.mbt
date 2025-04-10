@@ -16,92 +16,78 @@ pub fn UInt8::new(self : Int) -> UInt8 {
 }
 
 ///|
-pub fn UInt8::u8(self : Int) -> UInt8 {
-  self & 0xFF
+pub trait U8 {
+  u8(Self) -> UInt8
 }
 
-// pub trait U8 {
-//   u8(Self) -> UInt8
-// }
-
-// pub fn U8::u8(self : Int) -> UInt8 {
-//   self & 0xFF
-// }
-
-// fn U8::u8(self : UInt8) -> UInt8 {
-//   self & 0xFF
-// }
-
-// fn U8::u8(self : UInt16) -> UInt8 {
-//   self.0 & 0xFF
-// }
-
-// fn U8::u8(self : Bool) -> UInt8 {
-//   if self {
-//     1
-//   } else {
-//     0
-//   }
-// }
+///|
+pub impl U8 for Int with u8(self) {
+  UInt8::new(self)
+}
 
 ///|
-pub fn u8(self : UInt16) -> UInt8 {
-  self._ & 0xFF
+pub impl U8 for UInt8 with u8(self) {
+  UInt8::new(self._)
+}
+
+///|
+pub impl U8 for UInt16 with u8(self) {
+  UInt8::new(self._)
 }
 
 ///|
 pub fn UInt8::op_add(self : UInt8, other : UInt8) -> UInt8 {
-  self._ + other._ // FIXME: Overflow
+  U8::u8(self._ + other._) // FIXME: Overflow
 }
 
 ///|
 pub fn UInt8::op_sub(self : UInt8, other : UInt8) -> UInt8 {
-  self._ - other._ // FIXME: Underflow
+  U8::u8(self._ - other._) // FIXME: Underflow
 }
 
 ///|
 pub fn UInt8::op_mul(self : UInt8, other : UInt8) -> UInt8 {
-  self._ * other._ // FIXME: Overflow
+  U8::u8(self._ * other._) // FIXME: Overflow
 }
 
 ///|
 pub fn UInt8::op_div(self : UInt8, other : UInt8) -> UInt8 {
-  self._ / other._ // FIXME: Underflow
+  U8::u8(self._ / other._) // FIXME: Underflow
 }
 
 ///|
 pub fn UInt8::op_mod(self : UInt8, other : UInt8) -> UInt8 {
-  self._ % other._
+  U8::u8(self._ % other._)
 }
 
 ///|
 pub fn UInt8::op_shl(self : UInt8, bit : UInt8) -> UInt8 {
-  self._ << bit._
+  U8::u8(self._ << bit._)
 }
 
 ///|
 pub fn UInt8::op_shr(self : UInt8, bit : UInt8) -> UInt8 {
-  self._ >> bit._
+  U8::u8(self._ >> bit._)
 }
 
 ///|
-pub fn UInt8::flip(self : UInt8, other : UInt8) -> UInt8 {
-  self._ & (-other._ - 1)
+pub fn UInt8::flip(self : UInt8, bit : UInt8) -> UInt8 {
+  U8::u8(self._ & (-bit._ - 1))
 }
 
 ///|
-pub fn UInt8::land(self : UInt8, other : UInt8) -> UInt8 {
-  self._ & other._
+pub fn UInt8::land(self : UInt8, bit : UInt8) -> UInt8 {
+  U8::u8(self._ & bit._)
 }
 
 ///|
 pub fn UInt8::lor(self : UInt8, bit : UInt8) -> UInt8 {
-  self._ | bit._
+  U8::u8(self._ | bit._)
 }
 
 ///|
 pub fn UInt8::lxor(self : UInt8, bit : UInt8) -> UInt8 {
-  self._ ^ bit._
+  U8::u8(self._ ^ bit._)
 }
 
 ///|
@@ -115,7 +101,7 @@ pub fn UInt8::bit(self : UInt8, bit : UInt8) -> Bool {
     println("UInt8::bit out of bounds")
     abort("out of bounds")
   }
-  ((self >> bit) & 1) == 1
+  self.bitn(bit) == 1
 }
 
 ///|
@@ -125,17 +111,17 @@ pub fn UInt8::bitn(self : UInt8, bit : UInt8) -> UInt8 {
 
 ///|
 pub fn UInt8::clr(self : UInt8, mask : UInt8) -> UInt8 {
-  self._ & (-mask._ - 1)
+  U8::u8(self._ & (-mask._ - 1))
 }
 
 ///|
 pub fn UInt8::set(self : UInt8, mask : UInt8) -> UInt8 {
-  self._ | mask._
+  U8::u8(self._ | mask._)
 }
 
 ///|
 pub fn UInt8::has(self : UInt8, mask : UInt8) -> Bool {
-  (self._ & mask._) != 0
+  U8::u8(self._ & mask._) != 0
 }
 
 // fn to_byte(

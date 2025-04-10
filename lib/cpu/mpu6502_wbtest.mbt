@@ -2139,7 +2139,7 @@ test "brk_pushes_pc_plus_2_and_status_then_sets_pc_to_irq_vector" {
 ///|
 test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
   let cpu = CPU::new(debug=true)
-  cpu.flags.set(0b00100000)
+  cpu.flags.set(UNUSED)
   let _ = cpu.load(NMI, [0x88, 0x77])
   let _ = cpu.load(IRQ, [0xCD, 0xAB])
   cpu.pc = 0xC123
@@ -2147,7 +2147,7 @@ test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
   assert_eq!(cpu.pc, 0xABCD)
   assert_eq!(cpu[0x1FF], 0xC1) // PCH
   assert_eq!(cpu[0x1FE], 0x23) // PCL
-  assert_eq!(cpu[0x1FD], 0b00110100) // Status [I B U]
+  assert_eq!(cpu[0x1FD], UNUSED) // Status
   assert_eq!(cpu.registers[SP], 0xFC)
   assert_eq!(cpu.flags.get(), U | I)
   assert_eq!(cpu.cycles, 7)
@@ -2156,7 +2156,7 @@ test "irq_pushes_pc_and_correct_status_then_sets_pc_to_irq_vector" {
 ///|
 test "nmi_pushes_pc_and_correct_status_then_sets_pc_to_nmi_vector" {
   let cpu = CPU::new(debug=true)
-  cpu.flags.set(0b00100000)
+  cpu.flags.set(UNUSED)
   let _ = cpu.load(NMI, [0x88, 0x77])
   let _ = cpu.load(IRQ, [0xCD, 0xAB])
   cpu.pc = 0xC123
@@ -2164,7 +2164,7 @@ test "nmi_pushes_pc_and_correct_status_then_sets_pc_to_nmi_vector" {
   assert_eq!(cpu.pc, 0x7788)
   assert_eq!(cpu[0x1FF], 0xC1) // PCH
   assert_eq!(cpu[0x1FE], 0x23) // PCL
-  assert_eq!(cpu[0x1FD], 0b00110100) // Status [I B U]
+  assert_eq!(cpu[0x1FD], UNUSED) // Status
   assert_eq!(cpu.registers[SP], 0xFC)
   assert_eq!(cpu.flags.get(), U | I)
   assert_eq!(cpu.cycles, 7)
@@ -5175,7 +5175,7 @@ test "sbc_bcd_on_immediate_9a_minus_00_carry_set" {
   cpu.flags[D] = true
   cpu.flags[C] = true
   cpu.registers[A] = 0x9a
-  //$0000 SBC #$00
+  // $0000 SBC #$00
   let _ = cpu.load(0x0000, [0xe9, 0x00])
   assert_eq!(cpu.step(), 2)
   assert_eq!(cpu.pc, 0x0002)
@@ -6591,9 +6591,9 @@ test "lda_zp_x_has_page_wrap_bug" {
 ///|
 test "jmp_jumps_to_address_with_page_wrap_bug" {
   let cpu = CPU::new(debug=true)
-  cpu[0x00ff] = 0
+  cpu[0x00ff] = 0x00
   // $0000 JMP ($00)
-  let _ = cpu.load(0, [0x6c, 0xff, 0x00])
+  let _ = cpu.load(0x0000, [0x6c, 0xff, 0x00])
   assert_eq!(cpu.step(), 5)
   assert_eq!(cpu.pc, 0x6c00)
   assert_eq!(cpu.cycles, 5)

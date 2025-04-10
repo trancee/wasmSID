@@ -186,7 +186,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     self.register.controlA.forceLoad = false //strobe is edge-sensitive
   }
   if self.register.controlA.start { // Enabled, counts Phi2
-    println("TA:#$" + @t.u16(self.timerA.counter).to_hex() + " \{cycles}")
+    println("TA:#$" + U16::u16(self.timerA.counter).to_hex() + " \{cycles}")
     //count timer
     let mut tmp = self.timerA.counter - cycles
     // println("TimerA Start #\{tmp}")
@@ -216,7 +216,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     //what about clocking TimerB by TimerA? (maybe not used in any music)
   }
   if self.register.controlB.start { // Enabled, counts Phi2
-    println("TB:#$" + @t.u16(self.timerB.counter).to_hex() + " \{cycles}")
+    println("TB:#$" + U16::u16(self.timerB.counter).to_hex() + " \{cycles}")
     //count timer
     let mut tmp = self.timerB.counter -
       (match self.register.controlB.inputMode {
@@ -261,9 +261,9 @@ fn CIA::read(
   if self.debug && not(dummy) {
     println(
       "💻 CIA $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      @t.u8(self.mem[address]).to_hex() +
+      U8::u8(self.mem[address]).to_hex() +
       " | \{register}",
     )
   }
@@ -272,9 +272,9 @@ fn CIA::read(
     // self.dump()
     println(
       "CIA \{register} $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      @t.u8(self.mem[address]).to_hex(),
+      U8::u8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
   }
@@ -367,10 +367,10 @@ fn CIA::read(
       (self.register.directionB[6].to_int() << 6) |
       /// Bit 7:  Select Bit 7 of Data Port B for input or output (0=input, 1=output)
       (self.register.directionB[7].to_int() << 7)
-    TA_LO => @t.u8(self.timerA.counter)
-    TA_HI => @t.u8(self.timerA.counter >> 8)
-    TB_LO => @t.u8(self.timerB.counter)
-    TB_HI => @t.u8(self.timerB.counter >> 8)
+    TA_LO => U8::u8(self.timerA.counter)
+    TA_HI => U8::u8(self.timerA.counter >> 8)
+    TB_LO => U8::u8(self.timerB.counter)
+    TB_HI => U8::u8(self.timerB.counter >> 8)
     TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
       /// Bits 4-7:  Unused
@@ -411,7 +411,7 @@ fn CIA::read(
       if not(dummy) {
         println(
           "ICR #$" +
-          @t.u8(value).to_hex() +
+          U8::u8(value).to_hex() +
           " \{self.register.interruptControl} | \{value}",
         )
         self.register.interruptControl = CIAInterruptControl::default()
@@ -499,7 +499,7 @@ fn CIA::write(
   if self.debug && not(dummy) {
     println(
       "💻 CIA $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex() +
       " | \{register}",
@@ -510,7 +510,7 @@ fn CIA::write(
     // self.dump()
     println(
       "CIA \{register} $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex(),
     )
@@ -611,22 +611,22 @@ fn CIA::write(
       self.register.directionB[7] = value.bit(7)
     }
     TA_LO => {
-      self.timerA.counter = (self.timerA.counter & 0xFF00) | @t.u16(value)._
-      self.timerA.latch = (self.timerA.latch & 0xFF00) | @t.u16(value)._
+      self.timerA.counter = (self.timerA.counter & 0xFF00) | value.to_int()
+      self.timerA.latch = (self.timerA.latch & 0xFF00) | value.to_int()
     }
     TA_HI => {
-      self.timerA.counter = (@t.u16(value) << 8)._ |
+      self.timerA.counter = (value.to_int() << 8) |
         (self.timerA.counter & 0x00FF)
-      self.timerA.latch = (@t.u16(value) << 8)._ | (self.timerA.latch & 0x00FF)
+      self.timerA.latch = (value.to_int() << 8) | (self.timerA.latch & 0x00FF)
     }
     TB_LO => {
-      self.timerB.counter = (self.timerB.counter & 0xFF00) | @t.u16(value)._
-      self.timerB.latch = (self.timerB.latch & 0xFF00) | @t.u16(value)._
+      self.timerB.counter = (self.timerB.counter & 0xFF00) | value.to_int()
+      self.timerB.latch = (self.timerB.latch & 0xFF00) | value.to_int()
     }
     TB_HI => {
-      self.timerB.counter = (@t.u16(value) << 8)._ |
+      self.timerB.counter = (value.to_int() << 8) |
         (self.timerB.counter & 0x00FF)
-      self.timerB.latch = (@t.u16(value) << 8)._ | (self.timerB.latch & 0x00FF)
+      self.timerB.latch = (value.to_int() << 8) | (self.timerB.latch & 0x00FF)
     }
     TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)

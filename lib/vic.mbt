@@ -277,9 +277,9 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
   if self.debug {
     println(
       "💻 VIC $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      @t.u8(self.mem[address]).to_hex() +
+      U8::u8(self.mem[address]).to_hex() +
       " | \{register}",
     )
   }
@@ -290,9 +290,9 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
     // self.dump()
     println(
       "VIC \{register} $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      @t.u8(self.mem[address]).to_hex(),
+      U8::u8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
   }
@@ -304,22 +304,22 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
 
   match register {
     /// Sprite Horizontal and Vertical Position Registers
-    SP0X => @t.u8(self.register.spritePosition[0].x)
-    SP0Y => @t.u8(self.register.spritePosition[0].y)
-    SP1X => @t.u8(self.register.spritePosition[1].x)
-    SP1Y => @t.u8(self.register.spritePosition[1].y)
-    SP2X => @t.u8(self.register.spritePosition[2].x)
-    SP2Y => @t.u8(self.register.spritePosition[2].y)
-    SP3X => @t.u8(self.register.spritePosition[3].x)
-    SP3Y => @t.u8(self.register.spritePosition[3].y)
-    SP4X => @t.u8(self.register.spritePosition[4].x)
-    SP4Y => @t.u8(self.register.spritePosition[4].y)
-    SP5X => @t.u8(self.register.spritePosition[5].x)
-    SP5Y => @t.u8(self.register.spritePosition[5].y)
-    SP6X => @t.u8(self.register.spritePosition[6].x)
-    SP6Y => @t.u8(self.register.spritePosition[6].y)
-    SP7X => @t.u8(self.register.spritePosition[7].x)
-    SP7Y => @t.u8(self.register.spritePosition[7].y)
+    SP0X => U8::u8(self.register.spritePosition[0].x)
+    SP0Y => U8::u8(self.register.spritePosition[0].y)
+    SP1X => U8::u8(self.register.spritePosition[1].x)
+    SP1Y => U8::u8(self.register.spritePosition[1].y)
+    SP2X => U8::u8(self.register.spritePosition[2].x)
+    SP2Y => U8::u8(self.register.spritePosition[2].y)
+    SP3X => U8::u8(self.register.spritePosition[3].x)
+    SP3Y => U8::u8(self.register.spritePosition[3].y)
+    SP4X => U8::u8(self.register.spritePosition[4].x)
+    SP4Y => U8::u8(self.register.spritePosition[4].y)
+    SP5X => U8::u8(self.register.spritePosition[5].x)
+    SP5Y => U8::u8(self.register.spritePosition[5].y)
+    SP6X => U8::u8(self.register.spritePosition[6].x)
+    SP6Y => U8::u8(self.register.spritePosition[6].y)
+    SP7X => U8::u8(self.register.spritePosition[7].x)
+    SP7Y => U8::u8(self.register.spritePosition[7].y)
 
     /// Most Significant Bits of Sprites 0-7 Horizontal Position
     MSIGX =>
@@ -599,7 +599,7 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   if self.debug {
     println(
       "💻 VIC $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex() +
       " | \{register}",
@@ -612,7 +612,7 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
     // self.dump()
     println(
       "VIC \{register} $" +
-      @t.u16(self.baseaddress + address).to_hex() +
+      U16::u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex(),
     )

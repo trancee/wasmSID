@@ -863,7 +863,7 @@ pub fn C64::read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
     println(
       "\t\t\t\t\t\t\t\t\t\t" +
       "$" +
-      @t.u16(address).to_hex() +
+      U16::u16(address).to_hex() +
       " → #$" +
       self.mem.read(address, dummy=true).to_hex() +
       register,
@@ -963,9 +963,9 @@ pub fn C64::write(
     println(
       "\t\t\t\t\t\t\t\t\t\t" +
       "$" +
-      @t.u16(address).to_hex() +
+      U16::u16(address).to_hex() +
       " ← #$" +
-      @t.u8(value).to_hex() +
+      U8::u8(value).to_hex() +
       register,
     )
   }

@@ -1,5 +1,5 @@
 ///|
-pub enum Register {
+pub(all) enum Register {
   SP // Stack Pointer
   A // Accumulator
   X // Index Register X
@@ -7,7 +7,7 @@ pub enum Register {
 }
 
 ///|
-struct Registers {
+pub struct Registers {
   mut sp : UInt8 // Stack Pointer
   mut a : UInt8 // Accumulator
   mut x : UInt8 // Index Register X
@@ -15,12 +15,12 @@ struct Registers {
 }
 
 ///|
-fn Registers::new(sp~ : UInt8 = 0xFF) -> Registers {
-  { sp, a: 0, x: 0, y: 0 }
+pub fn Registers::new(sp~ : UInt8 = 0xFF) -> Registers {
+  { sp: U8::u8(sp), a: 0x00, x: 0x00, y: 0x00 }
 }
 
 ///|
-fn reset(self : Registers) -> Unit {
+pub fn Registers::reset(self : Registers) -> Unit {
   self.sp = 0xFF
   self.a = 0x00
   self.x = 0x00
@@ -28,7 +28,7 @@ fn reset(self : Registers) -> Unit {
 }
 
 ///|
-fn op_get(self : Registers, register : Register) -> UInt8 {
+pub fn Registers::op_get(self : Registers, register : Register) -> UInt8 {
   match register {
     SP => self.sp
     A => self.a
@@ -38,7 +38,11 @@ fn op_get(self : Registers, register : Register) -> UInt8 {
 }
 
 ///|
-fn op_set(self : Registers, register : Register, value : UInt8) -> Unit {
+pub fn Registers::op_set(
+  self : Registers,
+  register : Register,
+  value : UInt8
+) -> Unit {
   match register {
     SP => self.sp = value & 0xFF
     A => self.a = value & 0xFF

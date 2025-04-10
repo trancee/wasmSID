@@ -1,9 +1,6 @@
 package "trancee/wasmSID/lib/types"
 
 // Values
-fn u16(UInt8) -> UInt16
-
-fn u8(UInt16) -> UInt8
 
 // Types and methods
 pub(all) type UInt16 Int
@@ -23,13 +20,13 @@ impl UInt16 {
   to_byte(Self) -> Byte
   to_hex(Self) -> String
   to_int(Self) -> Int
-  u16(Int) -> Self
-  u8(Self) -> UInt8
 }
 impl Compare for UInt16
 impl Default for UInt16
 impl Eq for UInt16
 impl Show for UInt16
+impl U16 for UInt16
+impl U8 for UInt16
 
 pub(all) type UInt8 Int
 impl UInt8 {
@@ -56,15 +53,24 @@ impl UInt8 {
   to_hex(Self) -> String
   to_int(Self) -> Int
   to_signed(Self) -> Int
-  u16(Self) -> UInt16
-  u8(Int) -> Self
 }
 impl Compare for UInt8
 impl Default for UInt8
 impl Eq for UInt8
 impl Show for UInt8
+impl U16 for UInt8
+impl U8 for UInt8
 
 // Type aliases
 
 // Traits
+pub trait U16 {
+  u16(Self) -> UInt16
+}
+impl U16 for Int
+
+pub trait U8 {
+  u8(Self) -> UInt8
+}
+impl U8 for Int
 

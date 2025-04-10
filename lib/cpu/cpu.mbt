@@ -10,13 +10,13 @@ fn AddressHook::new(address : Int, hook : (Int) -> Unit) -> AddressHook {
 }
 
 ///|
-let cpu_mem_start = 0x0000
+const CPU_MEM_START = 0x0000
 
 ///|
-let cpu_mem_end = 0xFFFF
+const CPU_MEM_END = 0xFFFF
 
 ///|
-let cpu_mem_size = 0xFFFF
+const CPU_MEM_SIZE = 0xFFFF
 
 ///|
 pub struct CPU {
@@ -58,7 +58,7 @@ pub fn CPU::new(
 
   //
   let cpu : CPU = {
-    mem: FixedArray::make(cpu_mem_size + 1, 0x00),
+    mem: FixedArray::make(CPU_MEM_SIZE + 1, 0x00),
     //
     read: None,
     write: None,
@@ -255,18 +255,20 @@ pub fn load(
 
 ///|
 pub fn read(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt8 {
-  match self.read {
-    Some(read) => read(addr._, dummy)
-    None => self.mem[addr._]
-  }
+  U8::u8(
+    match self.read {
+      Some(read) => read(addr._, dummy)
+      None => self.mem[addr._]
+    },
+  )
 }
 
 ///|
 fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
-  //   "$" + @t.u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
+  //   "$" + U16::u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
-  self.read(addr._, dummy~) | (self.read(addr._ + 1, dummy~) << 8) |> @t.u16
+  U16::u16(self.read(addr._, dummy~)._ | (self.read(addr._ + 1, dummy~)._ << 8))
 }
 
 ///|
@@ -277,9 +279,10 @@ fn read16zp(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   //     (addr + 1)&(0x00FF) | addr&(0xFF00),
   //   ).to_hex()),
   // )
-  self.read(addr._, dummy~) |
-  (self.read(((addr._ + 1) & 0x00FF) | (addr._ & 0xFF00), dummy~) << 8)
-  |> @t.u16
+  U16::u16(
+    self.read(addr._, dummy~)._ |
+    (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), dummy~)._ << 8),
+  )
 }
 
 ///|
@@ -293,7 +296,7 @@ pub fn write(
     Some(write) => write(addr._, value._, dummy)
     None => self.mem[addr._] = value._
   }
-  // println("$" + @t.u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
+  // println("$" + U16::u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
 }
 
 ///|
@@ -306,7 +309,7 @@ pub fn write16(
   self.write(addr._, value._, dummy~)
   self.write(addr._ + 1, value._ >> 8, dummy~)
   // println(
-  //   "$" + @t.u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
+  //   "$" + U16::u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
 }
 
@@ -330,7 +333,7 @@ fn pop(self : CPU, dummy~ : Bool = false) -> UInt8 {
 
 ///|
 fn pop16(self : CPU) -> UInt16 {
-  self.pop() | (self.pop() << 8) |> @t.u16
+  self.pop()._ | (self.pop()._ << 8)
 }
 
 ///|
@@ -342,7 +345,7 @@ pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
 /// this is very similar to the BRK instruction
 pub fn nmi(self : CPU, pc? : Int) -> Unit {
   println(
-    "*** NMI $" + @t.u16(NMI).to_hex() + " #$" + self.read16(NMI).to_hex(),
+    "*** NMI $" + U16::u16(NMI).to_hex() + " #$" + self.read16(NMI).to_hex(),
   )
   self.push16(self.pc)
   self.push(self.flags.get())
@@ -360,9 +363,11 @@ pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
 /// this is very similar to the BRK instruction
 pub fn irq(self : CPU, pc? : Int) -> Unit {
   println(
-    "*** IRQ $" + @t.u16(IRQ).to_hex() + " #$" + self.read16(IRQ).to_hex(),
+    "*** IRQ $" + U16::u16(IRQ).to_hex() + " #$" + self.read16(IRQ).to_hex(),
   )
   self.push16(self.pc)
+  // self.flags.clear_break()
+  // self.push(self.flags.get() | UNUSED)
   self.push(self.flags.get())
   self.flags.set_interrupt()
   self.pc = pc.or(self.read16(IRQ)._)
@@ -428,25 +433,26 @@ fn get_addr(self : CPU, mode : Mode, dummy~ : Bool = true) -> UInt16 {
     Indirect => self.read16zp(self.read16(self.pc + 1, dummy~), dummy~)
     IndexedIndirect =>
       self.read16zp(
-        (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> @t.u16,
+        U16::u16(self.read(self.pc + 1, dummy~)._ + self.registers[X]._) & 0xFF,
         dummy~,
       )
     IndirectIndexed =>
-      self.read16zp(self.read(self.pc + 1, dummy~) |> @t.u16, dummy~) +
-      self.registers[Y]._
+      U16::u16(
+        self.read16zp(self.read(self.pc + 1, dummy~)._, dummy~)._ +
+        self.registers[Y]._,
+      )
     Absolute => self.read16(self.pc + 1, dummy~)
-    AbsoluteX => self.read16(self.pc + 1, dummy~) + self.registers[X]._
-    AbsoluteY => self.read16(self.pc + 1, dummy~) + self.registers[Y]._
-    ZeroPage => self.read(self.pc + 1, dummy~) & 0xFF |> @t.u16
+    AbsoluteX =>
+      U16::u16(self.read16(self.pc + 1, dummy~)._ + self.registers[X]._)
+    AbsoluteY =>
+      U16::u16(self.read16(self.pc + 1, dummy~)._ + self.registers[Y]._)
+    ZeroPage => U16::u16(self.read(self.pc + 1, dummy~) & 0xFF)
     ZeroPageX =>
-      (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> @t.u16
+      U16::u16((self.read(self.pc + 1, dummy~)._ + self.registers[X]._) & 0xFF)
     ZeroPageY =>
-      (self.read(self.pc + 1, dummy~) + self.registers[Y]) & 0xFF |> @t.u16
-    Relative => self.pc + 2 + self.read(self.pc + 1, dummy~).to_signed()
-    _ => {
-      println("unknown CPU mode \{mode}")
-      panic()
-    }
+      U16::u16((self.read(self.pc + 1, dummy~)._ + self.registers[Y]._) & 0xFF)
+    Relative =>
+      U16::u16(self.pc + 2 + self.read(self.pc + 1, dummy~).to_signed())
   }
 }
 
@@ -457,7 +463,7 @@ fn dump_step(
   name : String,
   mode : Mode,
   size : Int,
-  cycles : Int,
+  _ : Int, // cycles
   illegal : Bool
 ) -> Unit {
   let dummy = true
@@ -469,7 +475,6 @@ fn dump_step(
   }
   let unofficial = if illegal { "*" } else { " " }
   let addr_mode = match mode {
-    None => ""
     Implied =>
       // Implied Addressing
       // https://www.c64-wiki.com/wiki/Implied_addressing
@@ -515,7 +520,9 @@ fn dump_step(
       " = " +
       self
       .read16zp(
-        (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> @t.u16,
+        U16::u16(
+          (self.read(self.pc + 1, dummy~)._ + self.registers[X]._) & 0xFF,
+        ),
         dummy~,
       )
       .to_hex() +
@@ -523,7 +530,9 @@ fn dump_step(
       self
       .read(
         self.read16zp(
-          (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> @t.u16,
+          U16::u16(
+            (self.read(self.pc + 1, dummy~)._ + self.registers[X]._) & 0xFF,
+          ),
           dummy~,
         ),
       )
@@ -538,14 +547,14 @@ fn dump_step(
       " (" +
       read8() +
       "),Y = " +
-      self.read16zp(self.read(self.pc + 1, dummy~) |> @t.u16, dummy~).to_hex() +
+      self.read16zp(self.read(self.pc + 1, dummy~)._, dummy~).to_hex() +
       " @ " +
-      (self.read16zp(self.read(self.pc + 1, dummy~) |> @t.u16, dummy~) +
+      (self.read16zp(self.read(self.pc + 1, dummy~)._, dummy~) +
       self.registers[Y]._).to_hex() +
       " = " +
       self
       .read(
-        self.read16zp(self.read(self.pc + 1, dummy~) |> @t.u16, dummy~) +
+        self.read16zp(self.read(self.pc + 1, dummy~)._, dummy~) +
         self.registers[Y]._,
         dummy~,
       )
@@ -600,9 +609,7 @@ fn dump_step(
       " " +
       read8() +
       " = " +
-      self
-      .read(self.read(self.pc + 1, dummy~) & 0xFF |> @t.u16, dummy~)
-      .to_hex()
+      self.read(self.read(self.pc + 1, dummy~)._ & 0xFF, dummy~).to_hex()
     ZeroPageX =>
       // Indexed Zeropage Addressing
       // https://www.c64-wiki.com/wiki/Indexed_zeropage_addressing
@@ -616,7 +623,7 @@ fn dump_step(
       " = " +
       self
       .read(
-        (self.read(self.pc + 1, dummy~) + self.registers[X]) & 0xFF |> @t.u16,
+        (self.read(self.pc + 1, dummy~) + self.registers[X])._ & 0xFF,
         dummy~,
       )
       .to_hex()
@@ -633,7 +640,7 @@ fn dump_step(
       " = " +
       self
       .read(
-        (self.read(self.pc + 1, dummy~) + self.registers[Y]) & 0xFF |> @t.u16,
+        (self.read(self.pc + 1, dummy~) + self.registers[Y])._ & 0xFF,
         dummy~,
       )
       .to_hex()
@@ -741,9 +748,9 @@ fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
 ///
 /// Note on the MOS 6502:
 /// In decimal mode, the `N`, `V` and `Z` flags are not consistent with the decimal result.
-fn opADC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let a = self.registers[A]
-  let b = self.read(addr)
+fn opADC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+  let a = self.registers[A]._
+  let b = self.read(addr)._
   let c = self.flags[C].to_int()
   self.registers[A] = a + b + c
   if self.flags.decimal() && self.decimal_mode {
@@ -756,7 +763,7 @@ fn opADC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
       hi += 0x10
     }
     self.flags.setZ(self.registers[A] == 0)
-    self.flags.setN(hi.bit(7))
+    self.flags.setN((hi & 0x80) != 0)
     self.flags.setV(((a ^ b) & 0x80) == 0 && ((hi ^ a) & 0x80) != 0)
     if hi > 0x90 {
       hi += 0x60
@@ -783,7 +790,7 @@ fn opADC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// This instruction affects the accumulator;
 /// sets the `Z` flag if the result in the accumulator is `0`, otherwise resets the `Z` flag;
 /// sets the `N` flag if the result in the accumulator has bit `7` on, otherwise resets the `N` flag.
-fn opAND(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opAND(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.registers[A] & self.read(addr)
   self.flags.setZN(self.registers[A])
 }
@@ -803,25 +810,22 @@ fn opAND(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// sets `Z` flag if the result is equal to `0`,
 /// otherwise resets `Z` and stores the input bit `7` in the `C` flag.
 fn opASL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  match mode {
-    Accumulator => {
-      self.flags.setC((self.registers[A] & N.bits()) != 0)
-      self.registers[A] = self.registers[A]._ << 1 |> @t.u8 // overflow
-      self.flags.setZN(self.registers[A])
-    }
-    _ => {
-      let mut value = self.read(addr)
-      self.flags.setC((value & N.bits()) != 0)
-      value = value._ << 1 |> @t.u8 // overflow
-      self.write(addr, value)
-      self.flags.setZN(value)
-    }
+  if mode == Accumulator {
+    self.flags.setC((self.registers[A] & NEGATIVE) != 0)
+    self.registers[A] = self.registers[A] << 1 // overflow
+    self.flags.setZN(self.registers[A])
+  } else {
+    let mut value = self.read(addr)
+    self.flags.setC((value & NEGATIVE) != 0)
+    value = value << 1 // overflow
+    self.write(addr, value)
+    self.flags.setZN(value)
   }
 }
 
 // BCC - Branch if carry clear
 ///|
-fn opBCC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBCC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.not_carry() {
     self.branch(addr)
   }
@@ -829,7 +833,7 @@ fn opBCC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BCS - Branch if carry set
 ///|
-fn opBCS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBCS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.carry() {
     self.branch(addr)
   }
@@ -837,7 +841,7 @@ fn opBCS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BEQ - Branch if equal
 ///|
-fn opBEQ(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBEQ(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.zero() {
     self.branch(addr)
   }
@@ -845,16 +849,16 @@ fn opBEQ(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BIT - Bit test
 ///|
-fn opBIT(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBIT(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   let value = self.read(addr)
-  self.flags.setV((value & V.bits()) != 0)
+  self.flags.setV((value & OVERFLOW) != 0)
   self.flags.setZ((value & self.registers[A]) == 0)
   self.flags.setN(value.bit(7))
 }
 
 // BMI - Branch if minus
 ///|
-fn opBMI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBMI(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.negative() {
     self.branch(addr)
   }
@@ -862,7 +866,7 @@ fn opBMI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BNE - Branch if minus
 ///|
-fn opBNE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBNE(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.not_zero() {
     self.branch(addr)
   }
@@ -870,7 +874,7 @@ fn opBNE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BPL - Branch if positive
 ///|
-fn opBPL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBPL(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.not_negative() {
     self.branch(addr)
   }
@@ -897,7 +901,7 @@ fn opBPL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// If an IRQ happens at the same time as a `BRK` instruction, the `BRK` instruction is ignored.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
-fn opBRK(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBRK(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   println("*** BRK")
   if self.irq {
     return
@@ -921,7 +925,7 @@ fn opBRK(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BVC - Branch if overflow clear
 ///|
-fn opBVC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBVC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.not_overflow() {
     self.branch(addr)
   }
@@ -929,7 +933,7 @@ fn opBVC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // BVS - Branch if overflow set
 ///|
-fn opBVS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opBVS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   if self.flags.overflow() {
     self.branch(addr)
   }
@@ -937,43 +941,43 @@ fn opBVS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // CLC - Clear carry flag
 ///|
-fn opCLC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCLC(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.flags.clear_carry()
 }
 
 // CLD - Clear decimal mode
 ///|
-fn opCLD(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCLD(self : CPU, _ : UInt16, _mode : Mode) -> Unit {
   self.flags.clear_decimal()
 }
 
 // CLI - Clear interrupt disable
 ///|
-fn opCLI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCLI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.flags.clear_interrupt()
 }
 
 // CLV - Clear overflow flag
 ///|
-fn opCLV(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCLV(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.flags.clear_overflow()
 }
 
 // CMP - Compare
 ///|
-fn opCMP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCMP(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.compare(self.registers[A], self.read(addr))
 }
 
 // CPX - Compare x register
 ///|
-fn opCPX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCPX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.compare(self.registers[X], self.read(addr))
 }
 
 // CPY - Compare y register
 ///|
-fn opCPY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opCPY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.compare(self.registers[Y], self.read(addr))
 }
 
@@ -986,29 +990,29 @@ fn opCPY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 // If the byte is taken as a signed integer, DEC will "count down" from +127 thru −128, or +$7F thru −$80.
 // If a byte already holding the value −128/−$80 is DECremented, it "wraps over" to the value +127/$7F.
 ///|
-fn opDEC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let value = self.read(addr)._ - 1 |> @t.u8 // underflow
+fn opDEC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+  let value = self.read(addr) - 1 // underflow
   self.write(addr, value)
   self.flags.setZN(value)
 }
 
 // DEX - Decrement x register
 ///|
-fn opDEX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[X] -= 1 |> @t.u8 // underflow
+fn opDEX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  self.registers[X] -= 1 // underflow
   self.flags.setZN(self.registers[X])
 }
 
 // DEY - Decrement y register
 ///|
-fn opDEY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[Y] -= 1 |> @t.u8 // underflow
+fn opDEY(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  self.registers[Y] -= 1 // underflow
   self.flags.setZN(self.registers[Y])
 }
 
 // EOR - Exclusive or
 ///|
-fn opEOR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opEOR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.registers[A] ^ self.read(addr)
   self.flags.setZN(self.registers[A])
 }
@@ -1026,56 +1030,56 @@ fn opEOR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// if the increment causes the result to become `0`, the `Z` flag is set on, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#INC
-fn opINC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let value = self.read(addr)._ + 1 |> @t.u8 // overflow
+fn opINC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+  let value = self.read(addr) + 1 // overflow
   self.write(addr, value)
   self.flags.setZN(value)
 }
 
 // INX - Increment x register
 ///|
-fn opINX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[X] += 1 |> @t.u8 // overflow
+fn opINX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  self.registers[X] += 1 // overflow
   self.flags.setZN(self.registers[X])
 }
 
 // INY - Increment y register
 ///|
-fn opINY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.registers[Y] += 1 |> @t.u8 // overflow
+fn opINY(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  self.registers[Y] += 1 // overflow
   self.flags.setZN(self.registers[Y])
 }
 
 // JMP - Jump
 ///|
-fn opJMP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opJMP(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.pc = addr
 }
 
 // JSR - Jump to subroutine
 ///|
-fn opJSR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opJSR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.push16(self.pc - 1)
   self.pc = addr
 }
 
 // LDA - Load accumulator
 ///|
-fn opLDA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opLDA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.read(addr)
   self.flags.setZN(self.registers[A])
 }
 
 // LDX - Load x register
 ///|
-fn opLDX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opLDX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.registers[X] = self.read(addr)
   self.flags.setZN(self.registers[X])
 }
 
 // LDY - Load y register
 ///|
-fn opLDY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opLDY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.registers[Y] = self.read(addr)
   self.flags.setZN(self.registers[Y])
 }
@@ -1083,38 +1087,35 @@ fn opLDY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 // LSR - Logical shift right
 ///|
 fn opLSR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  match mode {
-    Accumulator => {
-      self.flags.setC((self.registers[A] & C.bits()) != 0)
-      self.registers[A] = self.registers[A]._ >> 1 |> @t.u8 // underflow
-      self.flags.setZN(self.registers[A])
-    }
-    _ => {
-      let mut value = self.read(addr)
-      self.flags.setC((value & C.bits()) != 0)
-      value = value._ >> 1 |> @t.u8 // underflow
-      self.write(addr, value)
-      self.flags.setZN(value)
-    }
+  if mode == Accumulator {
+    self.flags.setC((self.registers[A] & CARRY) != 0)
+    self.registers[A] = self.registers[A] >> 1 // underflow
+    self.flags.setZN(self.registers[A])
+  } else {
+    let mut value = self.read(addr)
+    self.flags.setC((value & CARRY) != 0)
+    value = value >> 1 // underflow
+    self.write(addr, value)
+    self.flags.setZN(value)
   }
 }
 
 // NOP - No operation
 ///|
-fn opNOP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opNOP(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
   //
 }
 
 // ORA - Logical inclusive or
 ///|
-fn opORA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opORA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.registers[A] | self.read(addr)
   self.flags.setZN(self.registers[A])
 }
 
 // PHA - Push accumulator
 ///|
-fn opPHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opPHA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.push(self.registers[A])
 }
 
@@ -1124,13 +1125,13 @@ fn opPHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// This instruction transfers the contents of the processor status reg­ister unchanged to the stack, as governed by the stack pointer.
 ///
 /// The `PHP` instruction affects no registers or flags in the micropro­cessor.
-fn opPHP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.push(self.flags.get() | B.bits() | U.bits())
+fn opPHP(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  self.push(self.flags.get() | BREAK | UNUSED)
 }
 
 // PLA - Pull accumulator
 ///|
-fn opPLA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opPLA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.pop()
   self.flags.setZN(self.registers[A])
 }
@@ -1142,28 +1143,25 @@ fn opPLA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// The `PLP` instruction affects no registers in the processor other than the status register.
 /// This instruction could affect all flags in the status register.
-fn opPLP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // self.flags.set(self.pop()&(0xCF)|(U.bits())|(B.bits())) // pull() & 0xEF | 0x20
-  self.flags.set((self.pop() & 0xEF) | U.bits()) // nestest: pull() & 0xEF | 0x20
+fn opPLP(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
+  self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
 }
 
 // ROL - Rotate left
 ///|
 fn opROL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   let c = self.flags[C].to_int()
-  match mode {
-    Accumulator => {
-      self.flags.setC((self.registers[A] & N.bits()) != 0)
-      self.registers[A] = (self.registers[A]._ << 1 |> @t.u8) | c // overflow
-      self.flags.setZN(self.registers[A])
-    }
-    _ => {
-      let mut value = self.read(addr)
-      self.flags.setC((value & N.bits()) != 0)
-      value = (value._ << 1 |> @t.u8) | c // overflow
-      self.write(addr, value)
-      self.flags.setZN(value)
-    }
+  if mode == Accumulator {
+    self.flags.setC((self.registers[A] & NEGATIVE) != 0)
+    self.registers[A] = (self.registers[A] << 1) | c // overflow
+    self.flags.setZN(self.registers[A])
+  } else {
+    let mut value = self.read(addr)
+    self.flags.setC((value & NEGATIVE) != 0)
+    value = (value << 1) | c // overflow
+    self.write(addr, value)
+    self.flags.setZN(value)
   }
 }
 
@@ -1171,19 +1169,16 @@ fn opROL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///|
 fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   let c = self.flags[C].to_int()
-  match mode {
-    Accumulator => {
-      self.flags.setC((self.registers[A] & C.bits()) != 0)
-      self.registers[A] = (self.registers[A]._ >> 1 |> @t.u8) | (c << 7) // underflow
-      self.flags.setZN(self.registers[A])
-    }
-    _ => {
-      let mut value = self.read(addr)
-      self.flags.setC((value & C.bits()) != 0)
-      value = (value._ >> 1 |> @t.u8) | (c << 7) // underflow
-      self.write(addr, value)
-      self.flags.setZN(value)
-    }
+  if mode == Accumulator {
+    self.flags.setC((self.registers[A] & CARRY) != 0)
+    self.registers[A] = (self.registers[A] >> 1) | (c << 7) // underflow
+    self.flags.setZN(self.registers[A])
+  } else {
+    let mut value = self.read(addr)
+    self.flags.setC((value & CARRY) != 0)
+    value = (value >> 1) | (c << 7) // underflow
+    self.write(addr, value)
+    self.flags.setZN(value)
   }
 }
 
@@ -1195,10 +1190,10 @@ fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// The `RTI` instruction reinitializes all flags to the position to the point they were at the time the interrupt was taken and sets the program counter back to its pre-interrupt state.
 /// It affects no other registers in the microprocessor.
-fn opRTI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opRTI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   println("*** RTI")
-  // self.flags.set(self.pop()&(0xCF)|(U.bits())|(B.bits())) // pull() & 0xEF | 0x20
-  // self.flags.set((self.pop() & 0xEF) | U.bits()) // nestest: pull() & 0xEF | 0x20
+  // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
+  // self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
   self.flags.set(self.pop())
   self.pc = self.pop16()
   // self.opSEI(addr, mode)
@@ -1206,20 +1201,20 @@ fn opRTI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // RTS - Return from subrouting
 ///|
-fn opRTS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.pc = self.pop16()._ + 1 |> @t.u16 // overflow
+fn opRTS(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+  self.pc = self.pop16() + 1 // overflow
 }
 
 // SBC - Subtract with carry
 ///|
-fn opSBC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let a = self.registers[A]
-  let b = self.read(addr)
+fn opSBC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+  let a = self.registers[A]._
+  let b = self.read(addr)._
   let c = self.flags[C].to_int()
   self.registers[A] = a - b - (1 - c)
   self.flags.setC(a - b - (1 - c) >= 0)
   self.flags.setV(
-    ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A]) & 0x80) != 0,
+    ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A]._) & 0x80) != 0,
   )
   self.flags.setZN(self.registers[A])
   if self.flags.decimal() && self.decimal_mode {
@@ -1238,13 +1233,13 @@ fn opSBC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
 // SEC - Set carry flag
 ///|
-fn opSEC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSEC(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.flags.set_carry()
 }
 
 // SED - Set decimal flag
 ///|
-fn opSED(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSED(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.flags.set_decimal()
 }
 
@@ -1255,52 +1250,52 @@ fn opSED(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// It is used to mask interrupt requests during system reset operations and during interrupt commands.
 ///
 /// It affects no registers in the microprocessor and no flags other than the interrupt disable which is set.
-fn opSEI(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSEI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.flags.set_interrupt()
 }
 
 // STA - Store accumulator
 ///|
-fn opSTA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSTA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.write(addr, self.registers[A])
 }
 
 // STX - Store x register
 ///|
-fn opSTX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSTX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.write(addr, self.registers[X])
 }
 
 // STY - Store y register
 ///|
-fn opSTY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSTY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   self.write(addr, self.registers[Y])
 }
 
 // TAX - Transfer accumulator to x
 ///|
-fn opTAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opTAX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[X] = self.registers[A]
   self.flags.setZN(self.registers[X])
 }
 
 // TAY - Transfer accumulator to y
 ///|
-fn opTAY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opTAY(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[Y] = self.registers[A]
   self.flags.setZN(self.registers[Y])
 }
 
 // TSX - Transfer stack pointer to x
 ///|
-fn opTSX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opTSX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[X] = self.registers[SP]
   self.flags.setZN(self.registers[X])
 }
 
 // TXA - Transfer x to accumulator
 ///|
-fn opTXA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opTXA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.registers[X]
   self.flags.setZN(self.registers[A])
 }
@@ -1315,7 +1310,7 @@ fn opTXA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// `TXS` changes only the stack pointer, making it equal to the content of the index register `X`.
 /// It does not affect any of the flags.
-fn opTXS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opTXS(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[SP] = self.registers[X]
 }
 
@@ -1330,7 +1325,7 @@ fn opTXS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// `TYA` does not affect any other register other than the accumula­tor and does not affect the `C` or `V` flag.
 /// If the result in the accumulator `A` has bit `7` on, the `N` flag is set, otherwise it is reset.
 /// If the resulting value in the accumulator `A` is `0`, then the `Z` flag is set, otherwise it is reset.
-fn opTYA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opTYA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   self.registers[A] = self.registers[Y]
   self.flags.setZN(self.registers[A])
 }
@@ -1343,10 +1338,10 @@ fn opTYA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 //
 
 ///|
-fn opAHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: AHX")
-  abort("unimplemented: AHX")
-}
+// fn opAHX(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
+//   println("unimplemented: AHX")
+//   abort("unimplemented: AHX")
+// }
 
 ///| `ASR` - `AND` then Logical Shift Right
 /// Operation: (A ∧ M) / 2 → A
@@ -1388,7 +1383,7 @@ fn opALR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// otherwise resets the negative flag and the carry flag.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ANC
-fn opANC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opANC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   let tmp = self.registers[A] & self.read(addr)
 
   //
@@ -1419,7 +1414,7 @@ fn opANC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///   The `C` flag is set if the result in the accumulator has bit 6 on, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ARR
-fn opARR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opARR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   let mut tmp = self.registers[A] & self.read(addr)
 
   //
@@ -1454,10 +1449,10 @@ fn opARR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
-fn opAXS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: AXS")
-  abort("unimplemented: AXS")
-}
+// fn opAXS(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
+//   println("unimplemented: AXS")
+//   abort("unimplemented: AXS")
+// }
 
 ///| `SBX` - Subtract Memory from Accumulator `"AND"` Index Register `X`
 /// Operation: (A ∧ X) - M → X
@@ -1476,7 +1471,7 @@ fn opAXS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// The `V` flag not affected at all.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SBX
-fn opSBX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSBX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   // println(
   //   "SBX A#$" +
   //   self.registers[A].to_hex() +
@@ -1514,7 +1509,7 @@ fn opISC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
-fn opJAM(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opJAM(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
   println("unimplemented: JAM")
   abort("unimplemented: JAM")
 }
@@ -1533,7 +1528,7 @@ fn opJAM(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// If the result is zero, then the `Z` flag is set, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LAS
-fn opLAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opLAS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   let tmp = self.registers[SP] & self.read(addr)
 
   //
@@ -1594,7 +1589,7 @@ fn opRRA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
-fn opSAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSAX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   // Stores the bitwise AND of A and X. As with STA and STX, no flags are affected.
   self.write(addr, self.registers[A] & self.registers[X])
 }
@@ -1633,16 +1628,18 @@ fn opSHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 
   let tmp = self.registers[A] &
     self.registers[X] &
-    (match mode {
-      AbsoluteY => (addr >> 8) + 1 |> @t.u8 // overflow
-      IndirectIndexed => (addr >> 8) + 1 |> @t.u8 // overflow
+    U8::u8(
+      match mode {
+        AbsoluteY => (addr >> 8) + 1 // overflow
+        IndirectIndexed => (addr >> 8) + 1 // overflow
 
-      ///
-      _ => {
-        println("unimplemented: SHA \{mode}")
-        abort("unimplemented: SHA \{mode}")
-      }
-    })
+        ///
+        _ => {
+          println("unimplemented: SHA \{mode}")
+          abort("unimplemented: SHA \{mode}")
+        }
+      },
+    )
   self.write(addr, tmp)
 }
 
@@ -1658,10 +1655,10 @@ fn opSHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHX
-fn opSHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSHX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   // println("SHX X#$" + self.registers[X].to_hex() + " $" + addr.to_hex())
 
-  let tmp = self.registers[X]._ & ((addr._ >> 8) + 1) |> @t.u8 // overflow
+  let tmp = self.registers[X] & U8::u8((addr >> 8) + 1) // overflow
   self.write(addr, tmp)
 
   // println("unimplemented: SHX")
@@ -1680,10 +1677,10 @@ fn opSHX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHY
-fn opSHY(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSHY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   // println("SHY X#$" + self.registers[Y].to_hex() + " $" + addr.to_hex())
 
-  let tmp = self.registers[Y]._ & ((addr._ >> 8) + 1) |> @t.u8 // overflow
+  let tmp = self.registers[Y] & U8::u8((addr >> 8) + 1) // overflow
   self.write(addr, tmp)
 
   // println("unimplemented: SHY")
@@ -1719,7 +1716,7 @@ fn opSRE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHS
-fn opSHS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opSHS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   // println(
   //   "SHS A#$" +
   //   self.registers[A].to_hex() +
@@ -1729,8 +1726,7 @@ fn opSHS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
   //   addr.to_hex(),
   // )
 
-  let tmp = (self.registers[A] & self.registers[X])._ & ((addr._ >> 8) + 1)
-    |> @t.u8 // overflow
+  let tmp = self.registers[A] & self.registers[X] & U8::u8((addr >> 8) + 1) // overflow
   self.write(addr, tmp)
 
   //
@@ -1741,10 +1737,10 @@ fn opSHS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
-fn opTAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  println("unimplemented: TAS")
-  abort("unimplemented: TAS")
-}
+// fn opTAS(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
+//   println("unimplemented: TAS")
+//   abort("unimplemented: TAS")
+// }
 
 ///| `XAA` - Non-deterministic Operation of Accumulator, Index Register `X`, Memory and Bus Contents
 /// Operation: (A ∨ V) ∧ X ∧ M → A
@@ -1763,7 +1759,7 @@ fn opTAS(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// It then transfers the result to the accumulator.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#XAA
-fn opXAA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opXAA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   let magic = 0xEF // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/ane/
 
   //
@@ -1775,8 +1771,7 @@ fn opXAA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
-enum Mode {
-  None
+priv enum Mode {
   Absolute // 0
   AbsoluteX // 1
   AbsoluteY // 2
@@ -2071,7 +2066,7 @@ let instructions : FixedArray[
 ]
 
 ///|
-enum Instruction {
+priv enum Instruction {
   // LDA
   LDA_IM // 0xA9
   // LDA_ZP // 0xA5

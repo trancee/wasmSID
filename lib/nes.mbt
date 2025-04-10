@@ -20,7 +20,7 @@ pub fn NES::new(
 }
 
 ///|
-pub fn load(
+pub fn NES::load(
   self : NES,
   data : FixedArray[Int],
   addr~ : Int = 0,
@@ -31,12 +31,12 @@ pub fn load(
 }
 
 ///|
-pub fn step(self : NES) -> Int {
+pub fn NES::step(self : NES) -> Int {
   self.cpu.step()
 }
 
 ///|
-pub fn pc(self : NES) -> Int {
+pub fn NES::pc(self : NES) -> Int {
   self.cpu.pc()
 }
 
@@ -45,17 +45,17 @@ pub fn pc(self : NES) -> Int {
 // }
 
 ///|
-pub fn set_flags(self : NES, flags : UInt8) -> Unit {
+pub fn NES::set_flags(self : NES, flags : UInt8) -> Unit {
   self.cpu.set_flags(flags)
 }
 
 ///|
-pub fn push(self : NES, value : UInt8) -> Unit {
+pub fn NES::push(self : NES, value : UInt8) -> Unit {
   self.cpu.push(value)
 }
 
 ///|
-pub fn push16(self : NES, value : UInt16) -> Unit {
+pub fn NES::push16(self : NES, value : UInt16) -> Unit {
   self.cpu.push16(value)
 }
 

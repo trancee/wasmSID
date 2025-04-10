@@ -16,71 +16,76 @@ pub fn UInt16::new(self : Int) -> UInt16 {
 }
 
 ///|
-pub fn UInt16::u16(self : Int) -> UInt16 {
-  self & 0xFFFF
+pub trait U16 {
+  u16(Self) -> UInt16
 }
 
 ///|
-// pub trait U16 {
-//   u16(Self) -> UInt16
-// }
+pub impl U16 for Int with u16(self) {
+  UInt16::new(self)
+}
 
 ///|
-pub fn u16(self : UInt8) -> UInt16 {
-  self._ & 0xFFFF
+pub impl U16 for UInt8 with u16(self) {
+  UInt16::new(self._)
+}
+
+///|
+pub impl U16 for UInt16 with u16(self) {
+  UInt16::new(self._)
 }
 
 ///|
 pub fn UInt16::op_add(self : UInt16, other : UInt16) -> UInt16 {
-  self._ + other._ |> u16 // handle overflow
+  U16::u16(self._ + other._) // handle overflow
 }
 
 ///|
 pub fn UInt16::op_sub(self : UInt16, other : UInt16) -> UInt16 {
-  self._ - other._ |> u16 // handle underflow
+  U16::u16(self._ - other._) // handle underflow
 }
 
 ///|
 pub fn UInt16::op_mul(self : UInt16, other : UInt16) -> UInt16 {
-  self._ * other._ |> u16 // handle overflow
+  U16::u16(self._ * other._) // handle overflow
 }
 
 ///|
 pub fn UInt16::op_div(self : UInt16, other : UInt16) -> UInt16 {
-  self._ / other._ |> u16 // handle underflow
+  U16::u16(self._ / other._) // handle underflow
 }
 
 ///|
 pub fn UInt16::op_shl(self : UInt16, bit : UInt16) -> UInt16 {
-  self._ << bit._ |> u16
+  U16::u16(self._ << bit._)
 }
 
 ///|
 pub fn UInt16::op_shr(self : UInt16, bit : UInt16) -> UInt16 {
-  self._ >> bit._ |> u16
+  U16::u16(self._ >> bit._)
 }
 
 // bitwise and
 ///|
-pub fn UInt16::land(self : UInt16, other : UInt16) -> UInt16 {
-  self._ & other._ |> u16
+pub fn UInt16::land(self : UInt16, bit : UInt16) -> UInt16 {
+  U16::u16(self._ & bit._)
 }
 
 // bitwise or
 ///|
 pub fn UInt16::lor(self : UInt16, bit : UInt16) -> UInt16 {
-  self._ | bit._ |> u16
+  U16::u16(self._ | bit._)
 }
 
 // bitwise xor
 ///|
 pub fn UInt16::lxor(self : UInt16, bit : UInt16) -> UInt16 {
-  self._ ^ bit._ |> u16
+  U16::u16(self._ ^ bit._)
 }
 
 ///|
 pub fn UInt16::has(self : UInt16, bit : UInt16) -> Bool {
-  (self._ & bit._) != 0
+  U16::u16(self._ & bit._) != 0
 }
 
 ///|
