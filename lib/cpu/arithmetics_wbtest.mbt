@@ -2,6 +2,7 @@
 
 // ADC Absolute
 
+///|
 test "ADCAbsCanAddZeroToZeroAndGetZero" {
   let t = {
     // Input
@@ -21,6 +22,7 @@ test "ADCAbsCanAddZeroToZeroAndGetZero" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsCanAddCarryAndZeroToZeroAndGetOne" {
   let t = {
     // Input
@@ -40,6 +42,7 @@ test "ADCAbsCanAddCarryAndZeroToZeroAndGetOne" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -59,6 +62,7 @@ test "ADCAbsCanAddTwoUnsignedNumbers" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -83,6 +87,7 @@ test "ADCAbsCanAddAPositiveAndNegativeNumber" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsCanAddOneToFFAndItWillCauseACarry" {
   let t = {
     // Input
@@ -102,6 +107,7 @@ test "ADCAbsCanAddOneToFFAndItWillCauseACarry" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsWillSetTheNegativeFlagWhenTheResultIsNegative" {
   let t = {
     // Input
@@ -121,6 +127,7 @@ test "ADCAbsWillSetTheNegativeFlagWhenTheResultIsNegative" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionFails" {
   // A: 10000000 -128
   // O: 11111111 -1
@@ -145,6 +152,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionFails" {
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionPassedDueToInitalCarryFlag" {
   // C: 00000001
   // A: 10000000 -128
@@ -170,6 +178,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionPassedDueToInitalCarr
   testADCAbsolute!(t)
 }
 
+///|
 test "ADCAbsWillSetTheOverflowFlagWhenSignedPositiveAddtionFails" {
   // A: 01111111 127
   // O: 00000001 1
@@ -196,6 +205,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedPositiveAddtionFails" {
 
 // ADC Immediate
 
+///|
 test "ADCImmediateCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -215,6 +225,7 @@ test "ADCImmediateCanAddTwoUnsignedNumbers" {
   testADCImmediate!(t)
 }
 
+///|
 test "ADCImmediateCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -241,6 +252,7 @@ test "ADCImmediateCanAddAPositiveAndNegativeNumber" {
 
 // ADC Zero Page
 
+///|
 test "ADCZeroPageCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -260,6 +272,7 @@ test "ADCZeroPageCanAddTwoUnsignedNumbers" {
   testADCZeroPage!(t)
 }
 
+///|
 test "ADCZeroPageCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -286,6 +299,7 @@ test "ADCZeroPageCanAddAPositiveAndNegativeNumber" {
 
 // ADC Zero Page, X
 
+///|
 test "ADCZeroPageXCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -305,6 +319,7 @@ test "ADCZeroPageXCanAddTwoUnsignedNumbers" {
   testADCZeroPageX!(t)
 }
 
+///|
 test "ADCZeroPageXCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -331,6 +346,7 @@ test "ADCZeroPageXCanAddAPositiveAndNegativeNumber" {
 
 // ADC Absolute, X
 
+///|
 test "ADCAbsXCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -350,6 +366,7 @@ test "ADCAbsXCanAddTwoUnsignedNumbers" {
   testADCAbsoluteX!(t)
 }
 
+///|
 test "ADCAbsXCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -376,6 +393,7 @@ test "ADCAbsXCanAddAPositiveAndNegativeNumber" {
 
 // ADC Absolute, Y
 
+///|
 test "ADCAbsYCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -395,6 +413,7 @@ test "ADCAbsYCanAddTwoUnsignedNumbers" {
   testADCAbsoluteY!(t)
 }
 
+///|
 test "ADCAbsYCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -421,6 +440,7 @@ test "ADCAbsYCanAddAPositiveAndNegativeNumber" {
 
 // ADC Indirect, X
 
+///|
 test "ADCIndXCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -440,6 +460,7 @@ test "ADCIndXCanAddTwoUnsignedNumbers" {
   testADCIndirectX!(t)
 }
 
+///|
 test "ADCIndXCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -466,6 +487,7 @@ test "ADCIndXCanAddAPositiveAndNegativeNumber" {
 
 // ADC Indirect, Y
 
+///|
 test "ADCIndYCanAddTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -485,6 +507,7 @@ test "ADCIndYCanAddTwoUnsignedNumbers" {
   testADCIndirectY!(t)
 }
 
+///|
 test "ADCIndYCanAddAPositiveAndNegativeNumber" {
   // A: 00010100 20
   // O: 11101111 -17
@@ -511,6 +534,7 @@ test "ADCIndYCanAddAPositiveAndNegativeNumber" {
 
 // SBC Absolute
 
+///|
 test "SBCAbsCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -530,6 +554,7 @@ test "SBCAbsCanSubtractZeroFromZeroAndGetZero" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -549,6 +574,7 @@ test "SBCAbsCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -568,6 +594,7 @@ test "SBCAbsCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -587,6 +614,7 @@ test "SBCAbsCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -606,6 +634,7 @@ test "SBCAbsCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -625,6 +654,7 @@ test "SBCAbsCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -644,6 +674,7 @@ test "SBCAbsCanSubtractTwoUnsignedNumbers" {
   testSBCAbsolute!(t)
 }
 
+///|
 test "SBCAbsCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -665,6 +696,7 @@ test "SBCAbsCanSubtractTwoNegativeNumbers" {
 
 // SBC Zero Page
 
+///|
 test "SBCZeroPageCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -684,6 +716,7 @@ test "SBCZeroPageCanSubtractZeroFromZeroAndGetZero" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -703,6 +736,7 @@ test "SBCZeroPageCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -722,6 +756,7 @@ test "SBCZeroPageCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -741,6 +776,7 @@ test "SBCZeroPageCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -760,6 +796,7 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -779,6 +816,7 @@ test "SBCZeroPageCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -798,6 +836,7 @@ test "SBCZeroPageCanSubtractTwoUnsignedNumbers" {
   testSBCZeroPage!(t)
 }
 
+///|
 test "SBCZeroPageCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -823,6 +862,7 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbers" {
 
 // SBC Immediate
 
+///|
 test "SBCImmediateCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -842,6 +882,7 @@ test "SBCImmediateCanSubtractZeroFromZeroAndGetZero" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -861,6 +902,7 @@ test "SBCImmediateCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -880,6 +922,7 @@ test "SBCImmediateCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -899,6 +942,7 @@ test "SBCImmediateCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -918,6 +962,7 @@ test "SBCImmediateCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -937,6 +982,7 @@ test "SBCImmediateCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -956,6 +1002,7 @@ test "SBCImmediateCanSubtractTwoUnsignedNumbers" {
   testSBCImmediate!(t)
 }
 
+///|
 test "SBCImmediateCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -977,6 +1024,7 @@ test "SBCImmediateCanSubtractTwoNegativeNumbers" {
 
 // SBC Zero Page, X
 
+///|
 test "SBCZeroPageXCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -996,6 +1044,7 @@ test "SBCZeroPageXCanSubtractZeroFromZeroAndGetZero" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -1015,6 +1064,7 @@ test "SBCZeroPageXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -1034,6 +1084,7 @@ test "SBCZeroPageXCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -1053,6 +1104,7 @@ test "SBCZeroPageXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1072,6 +1124,7 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1091,6 +1144,7 @@ test "SBCZeroPageXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -1110,6 +1164,7 @@ test "SBCZeroPageXCanSubtractTwoUnsignedNumbers" {
   testSBCZeroPageX!(t)
 }
 
+///|
 test "SBCZeroPageXCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -1131,6 +1186,7 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbers" {
 
 // SBC Absolute, X
 
+///|
 test "SBCAbsoluteXCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -1150,6 +1206,7 @@ test "SBCAbsoluteXCanSubtractZeroFromZeroAndGetZero" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -1169,6 +1226,7 @@ test "SBCAbsoluteXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -1188,6 +1246,7 @@ test "SBCAbsoluteXCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -1207,6 +1266,7 @@ test "SBCAbsoluteXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1226,6 +1286,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1245,6 +1306,7 @@ test "SBCAbsoluteXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -1264,6 +1326,7 @@ test "SBCAbsoluteXCanSubtractTwoUnsignedNumbers" {
   testSBCAbsoluteX!(t)
 }
 
+///|
 test "SBCAbsoluteXCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -1285,6 +1348,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbers" {
 
 // SBC Absolute, Y
 
+///|
 test "SBCAbsoluteYCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -1304,6 +1368,7 @@ test "SBCAbsoluteYCanSubtractZeroFromZeroAndGetZero" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -1323,6 +1388,7 @@ test "SBCAbsoluteYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -1342,6 +1408,7 @@ test "SBCAbsoluteYCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -1361,6 +1428,7 @@ test "SBCAbsoluteYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1380,6 +1448,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1399,6 +1468,7 @@ test "SBCAbsoluteYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -1418,6 +1488,7 @@ test "SBCAbsoluteYCanSubtractTwoUnsignedNumbers" {
   testSBCAbsoluteY!(t)
 }
 
+///|
 test "SBCAbsoluteYCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -1439,6 +1510,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbers" {
 
 // SBC Indirect, X
 
+///|
 test "SBCIndirectXCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -1458,6 +1530,7 @@ test "SBCIndirectXCanSubtractZeroFromZeroAndGetZero" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -1477,6 +1550,7 @@ test "SBCIndirectXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -1496,6 +1570,7 @@ test "SBCIndirectXCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -1515,6 +1590,7 @@ test "SBCIndirectXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1534,6 +1610,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1553,6 +1630,7 @@ test "SBCIndirectXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -1572,6 +1650,7 @@ test "SBCIndirectXCanSubtractTwoUnsignedNumbers" {
   testSBCIndirectX!(t)
 }
 
+///|
 test "SBCIndirectXCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -1593,6 +1672,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbers" {
 
 // SBC Indirect, Y
 
+///|
 test "SBCIndirectYCanSubtractZeroFromZeroAndGetZero" {
   let t = {
     // Input
@@ -1612,6 +1692,7 @@ test "SBCIndirectYCanSubtractZeroFromZeroAndGetZero" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   let t = {
     // Input
@@ -1631,6 +1712,7 @@ test "SBCIndirectYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractOneFromZeroAndGetMinusOne" {
   let t = {
     // Input
@@ -1650,6 +1732,7 @@ test "SBCIndirectYCanSubtractOneFromZeroAndGetMinusOne" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   let t = {
     // Input
@@ -1669,6 +1752,7 @@ test "SBCIndirectYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1688,6 +1772,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
@@ -1707,6 +1792,7 @@ test "SBCIndirectYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractTwoUnsignedNumbers" {
   let t = {
     // Input
@@ -1726,6 +1812,7 @@ test "SBCIndirectYCanSubtractTwoUnsignedNumbers" {
   testSBCIndirectY!(t)
 }
 
+///|
 test "SBCIndirectYCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
@@ -1747,6 +1834,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbers" {
 
 // Test
 
+///|
 struct ADCTestData {
   // Input
   c : Bool
@@ -1763,6 +1851,7 @@ struct ADCTestData {
   expectN : Bool
 }
 
+///|
 fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1808,10 +1897,12 @@ fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error 
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCAbsolute(t : ADCTestData) -> Unit!Error {
   testADCAbsolute!(t, ins=SBC_ABS)
 }
 
+///|
 fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1853,10 +1944,12 @@ fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCImmediate(t : ADCTestData) -> Unit!Error {
   testADCImmediate!(t, ins=SBC)
 }
 
+///|
 fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -1901,10 +1994,12 @@ fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCZeroPage(t : ADCTestData) -> Unit!Error {
   testADCZeroPage!(t, ins=SBC_ZP)
 }
 
+///|
 fn testADCZeroPageX(
   t : ADCTestData,
   ins~ : Instruction = ADC_ZPX
@@ -1953,10 +2048,12 @@ fn testADCZeroPageX(
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCZeroPageX(t : ADCTestData) -> Unit!Error {
   testADCZeroPageX!(t, ins=SBC_ZPX)
 }
 
+///|
 fn testADCAbsoluteX(
   t : ADCTestData,
   ins~ : Instruction = ADC_ABSX
@@ -2006,10 +2103,12 @@ fn testADCAbsoluteX(
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCAbsoluteX(t : ADCTestData) -> Unit!Error {
   testADCAbsoluteX!(t, ins=SBC_ABSX)
 }
 
+///|
 fn testADCAbsoluteY(
   t : ADCTestData,
   ins~ : Instruction = ADC_ABSY
@@ -2059,10 +2158,12 @@ fn testADCAbsoluteY(
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCAbsoluteY(t : ADCTestData) -> Unit!Error {
   testADCAbsoluteY!(t, ins=SBC_ABSY)
 }
 
+///|
 fn testADCIndirectX(
   t : ADCTestData,
   ins~ : Instruction = ADC_INDX
@@ -2115,10 +2216,12 @@ fn testADCIndirectX(
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCIndirectX(t : ADCTestData) -> Unit!Error {
   testADCIndirectX!(t, ins=SBC_INDX)
 }
 
+///|
 fn testADCIndirectY(
   t : ADCTestData,
   ins~ : Instruction = ADC_INDY
@@ -2171,6 +2274,7 @@ fn testADCIndirectY(
   assert_eq!(cpu.flags[N], t.expectN)
 }
 
+///|
 fn testSBCIndirectY(t : ADCTestData) -> Unit!Error {
   testADCIndirectY!(t, ins=SBC_INDY)
 }

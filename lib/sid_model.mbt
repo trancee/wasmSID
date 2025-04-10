@@ -1,4 +1,5 @@
 //values: 8580 / 6581
+///|
 enum Model {
   Unknown
   MOS6581
@@ -6,6 +7,7 @@ enum Model {
   Both
 } derive(Show, Eq)
 
+///|
 fn Model::from_int(value : Int) -> Model! {
   match value {
     0b00 => Unknown
@@ -16,6 +18,7 @@ fn Model::from_int(value : Int) -> Model! {
   }
 }
 
+///|
 fn Model::to_int(self : Model) -> Int! {
   match self {
     MOS6581 => 6581
@@ -24,11 +27,13 @@ fn Model::to_int(self : Model) -> Int! {
   }
 }
 
+///|
 fn Model::op_get(self : Model, value : Model) -> Int! {
   value.to_int!()
 }
 
 //1:left, 2:right, 3:both(middle)
+///|
 enum Channel {
   Unknown
   Left
@@ -36,6 +41,7 @@ enum Channel {
   Both
 } derive(Show, Eq)
 
+///|
 fn Channel::from_int(value : Int) -> Channel! {
   match value {
     0 => Unknown
@@ -46,6 +52,7 @@ fn Channel::from_int(value : Int) -> Channel! {
   }
 }
 
+///|
 fn Channel::to_int(self : Channel) -> Int! {
   match self {
     Left => 1
@@ -55,6 +62,7 @@ fn Channel::to_int(self : Channel) -> Int! {
   }
 }
 
+///|
 fn Channel::op_get(self : Channel, value : Channel) -> Int! {
   value.to_int!()
 }

@@ -1,3 +1,4 @@
+///|
 enum Color {
   Black
   White
@@ -17,7 +18,8 @@ enum Color {
   LightGray
 }
 
-fn to_int(self : Color) -> Int {
+///|
+fn Color::to_int(self : Color) -> Int {
   match self {
     Black => 0
     White => 1
@@ -38,6 +40,7 @@ fn to_int(self : Color) -> Int {
   }
 }
 
+///|
 fn Color::from_int(value : Int) -> Color! {
   match value & 0x0F {
     0 => Black

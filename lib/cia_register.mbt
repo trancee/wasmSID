@@ -1,4 +1,4 @@
-/// 6526 FUNCTIONAL DESCRIPTION
+///| 6526 FUNCTIONAL DESCRIPTION
 ///
 /// REGISTER MAP
 ///
@@ -18,7 +18,6 @@
 /// ICR      | INTERRUPT CONTROL REGISTER
 /// CRA      | CONTROL REG A
 /// CRB      | CONTROL REG B
-
 struct TimeOfDay {
   mut tenth : UInt8
   mut seconds : UInt8
@@ -29,11 +28,13 @@ struct TimeOfDay {
   mut pm : Bool
 } derive(Show, Default)
 
+///|
 enum RunMode {
   OneShot
   Continuous
 } derive(Show, Eq)
 
+///|
 fn RunMode::to_int(self : RunMode) -> Int {
   match self {
     OneShot => 1
@@ -41,11 +42,13 @@ fn RunMode::to_int(self : RunMode) -> Int {
   }
 }
 
+///|
 enum SerialMode {
   Output
   Input
 } derive(Show, Eq)
 
+///|
 fn SerialMode::to_int(self : SerialMode) -> Int {
   match self {
     Output => 1
@@ -53,6 +56,7 @@ fn SerialMode::to_int(self : SerialMode) -> Int {
   }
 }
 
+///|
 struct ControlA {
   /// Bit 0:  Start Timer A (1=start, 0=stop)
   mut start : Bool
@@ -75,11 +79,13 @@ struct ControlA {
   mut clockFrequency : Bool
 } derive(Show, Eq)
 
+///|
 enum TimerAInputMode {
   CountCycles
   CountSignals
 } derive(Show, Eq)
 
+///|
 fn ControlA::default() -> ControlA {
   {
     start: Bool::default(),
@@ -93,6 +99,7 @@ fn ControlA::default() -> ControlA {
   }
 }
 
+///|
 struct ControlB {
   /// Bit 0:  Start Timer B (1=start, 0=stop)
   mut start : Bool
@@ -118,6 +125,7 @@ struct ControlB {
   mut writeMode : Bool
 } derive(Show)
 
+///|
 enum TimerBInputMode {
   CountCycles
   CountSignals
@@ -125,6 +133,7 @@ enum TimerBInputMode {
   CountZero
 } derive(Show)
 
+///|
 fn ControlB::default() -> ControlB {
   {
     start: Bool::default(),
@@ -137,6 +146,7 @@ fn ControlB::default() -> ControlB {
   }
 }
 
+///|
 struct CIAInterruptControl {
   mut timerA : Bool
   mut timerB : Bool
@@ -146,6 +156,7 @@ struct CIAInterruptControl {
   mut interrupt : Bool
 } derive(Show, Default)
 
+///|
 struct CIAInterruptEnable {
   mut timerA : Bool
   mut timerB : Bool
@@ -154,6 +165,7 @@ struct CIAInterruptEnable {
   mut flag : Bool
 } derive(Show, Default)
 
+///|
 struct CIARegister {
   /// 56320-56335   $DC00-$DC0F
   /// Complex Interface Adapter (CIA) #1 Registers
@@ -222,6 +234,7 @@ struct CIARegister {
   controlB : ControlB
 } derive(Show)
 
+///|
 fn CIARegister::default() -> CIARegister {
   {
     portA: FixedArray::make(8, false),
@@ -244,6 +257,7 @@ fn CIARegister::default() -> CIARegister {
   }
 }
 
+///|
 enum CIAregister {
   PRA
   PRB
@@ -263,6 +277,7 @@ enum CIAregister {
   CRB
 } derive(Show, Eq)
 
+///|
 fn cia(register : CIAregister) -> Int {
   match register {
     PRA => 0x00
@@ -284,6 +299,7 @@ fn cia(register : CIAregister) -> Int {
   }
 }
 
+///|
 fn CIAregister::from_int(value : Int) -> CIAregister! {
   match value {
     0x00 => PRA

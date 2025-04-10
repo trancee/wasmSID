@@ -1,11 +1,11 @@
-/// MOS 6581 SOUND INTERFACE DEVICE (SID)
-
+///| MOS 6581 SOUND INTERFACE DEVICE (SID)
 enum SIDspecs {
   CHANNELS
   VOLUME_MAX
   D418_DIGI_VOLUME
 }
 
+///|
 fn sidSpecs(value : SIDspecs) -> Int {
   match value {
     CHANNELS => 3 + 1
@@ -22,17 +22,19 @@ fn sidSpecs(value : SIDspecs) -> Int {
 //   }
 // }
 
+///|
 struct Output {
   mut left : Int
   mut right : Int
 } derive(Default)
 
+///|
 struct SIDwavOutput {
   mut nonFilted : Int
   mut filterInput : Int
 } derive(Default)
 
-/// 54295         $D417          RESON
+///| 54295         $D417          RESON
 /// Filter Resonance Control Register
 struct FilterResonanceControl {
   /// Bits 0-3 are used to control which of the voices will be altered by
@@ -58,6 +60,7 @@ struct FilterResonanceControl {
   resonance : Int
 } derive(Show)
 
+///|
 fn FilterResonanceControl::default() -> FilterResonanceControl {
   {
     voice: [Bool::default(), Bool::default(), Bool::default()],
@@ -66,6 +69,7 @@ fn FilterResonanceControl::default() -> FilterResonanceControl {
   }
 }
 
+///|
 fn FilterResonanceControl::from_u8(value : UInt8) -> FilterResonanceControl {
   {
     voice: [
@@ -83,6 +87,7 @@ fn FilterResonanceControl::from_u8(value : UInt8) -> FilterResonanceControl {
   }
 }
 
+///|
 fn to_u8(self : FilterResonanceControl) -> UInt8 {
   /// Bit 0:  Filter the output of voice 1?  1=yes
   (self.voice[0].to_int() << 0) |
@@ -96,6 +101,7 @@ fn to_u8(self : FilterResonanceControl) -> UInt8 {
   (self.resonance << 4)
 }
 
+///|
 struct Envelope {
   /// 54277         $D405          ATDCY1
   /// Bits 4-7:  Select attack cycle duration (0-15)
@@ -110,6 +116,7 @@ struct Envelope {
   mut release : Int
 } derive(Show, Default)
 
+///|
 struct Voice {
   /// 54272         $D400          FRELO1
   /// 54273         $D401          FREHI1
@@ -131,6 +138,7 @@ struct Voice {
   envelope : Envelope
 } derive(Show, Default)
 
+///|
 struct FilterSelect {
   /// Select Filter Low-Pass Mode: 1 = On
   mut lowPass : Bool
@@ -140,6 +148,7 @@ struct FilterSelect {
   mut highPass : Bool
 } derive(Show, Default)
 
+///|
 struct SIDRegister {
   /// $00 - $01
   /// Voice Frequency Control
@@ -194,6 +203,7 @@ struct SIDRegister {
   mut envelope : UInt8
 } derive(Show)
 
+///|
 fn SIDRegister::default() -> SIDRegister {
   {
     voice: [Voice::default(), Voice::default(), Voice::default()],
@@ -214,6 +224,7 @@ fn SIDRegister::default() -> SIDRegister {
   }
 }
 
+///|
 enum SIDregister {
   /// Voice 1 Frequency Control (low byte)
   FRELO1
@@ -283,6 +294,7 @@ enum SIDregister {
   // UNUSED
 } derive(Show, Compare, Eq)
 
+///|
 fn sid(register : SIDregister) -> Int {
   match register {
     /// Voice 1
@@ -331,6 +343,7 @@ fn sid(register : SIDregister) -> Int {
   }
 }
 
+///|
 fn SIDregister::from_int(value : Int) -> SIDregister! {
   match value {
     /// Voice 1
@@ -390,7 +403,7 @@ fn SIDregister::from_int(value : Int) -> SIDregister! {
 //   self[register] = value
 // }
 
-/// Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
+///| Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
 /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency
 /// Bit 2:  Ring Modulation:  1=Ring modulate Oscillators 1 and 3
 /// Bit 3:  Test Bit:  1=Disable Oscillator 1
@@ -455,6 +468,7 @@ struct VoiceControl {
   /// and another is not recommended.
 } derive(Show, Default)
 
+///|
 fn VoiceControl::from_u8(value : UInt8) -> VoiceControl {
   {
     gateBit: (value & (1 << 0)) != 0,
@@ -468,6 +482,7 @@ fn VoiceControl::from_u8(value : UInt8) -> VoiceControl {
   }
 }
 
+///|
 fn VoiceControl::to_u8(self : VoiceControl) -> UInt8 {
   /// Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
   (self.gateBit.to_int() << 0) |
@@ -492,6 +507,7 @@ fn VoiceControl::to_u8(self : VoiceControl) -> UInt8 {
 //   (self.pulseWaveform.to_int() << 6) | (self.noiseWaveform.to_int() << 7)
 // }
 
+///|
 fn hasWaveform(self : VoiceControl) -> Bool {
   self.triangleWaveform ||
   self.sawtoothWaveform ||

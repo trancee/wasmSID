@@ -1,6 +1,6 @@
 /// MOS 6566 VIDEO INTERFACE CONTROLLER (VIC)
 
-/// VIC Interrupt Flag Register
+///| VIC Interrupt Flag Register
 ///
 /// The VIC-II chip is capable of generating a maskable request (IRQ) when
 /// certain conditions relating to the video display are fulfilled.
@@ -18,7 +18,7 @@ struct InterruptFlag {
   mut interrupt : Bool
 } derive(Show, Default)
 
-/// IRQ Mask Register
+///| IRQ Mask Register
 ///
 /// This register is used to enable an IRQ request to occur when one of
 /// the VIC-II chip interrupt conditions is met.
@@ -34,6 +34,7 @@ struct InterruptEnable {
   /// Bits 4-7:  Not used
 } derive(Default)
 
+///|
 struct ControlRegister {
   /// SCROLY
   mut rowDisplay : Bool
@@ -47,11 +48,13 @@ struct ControlRegister {
   mut videoChipReset : Bool
 } derive(Default)
 
+///|
 struct Coordinate {
   mut x : Int
   mut y : Int
 } derive(Default)
 
+///|
 struct VICRegister {
   spritePosition : FixedArray[Coordinate]
   spriteEnable : FixedArray[Bool]
@@ -87,6 +90,7 @@ struct VICRegister {
   mut videoMatrixArea : Int
 }
 
+///|
 fn VICRegister::default() -> VICRegister {
   {
     spritePosition: FixedArray::make(8, Coordinate::default()),
@@ -126,6 +130,7 @@ fn VICRegister::default() -> VICRegister {
   }
 }
 
+///|
 enum VICregister {
   /// Location Range: 53248-53264 ($D000-$D010)
   /// Sprite Horizontal and Vertical Position Registers
@@ -286,6 +291,7 @@ enum VICregister {
   UNUSED
 } derive(Show, Compare, Eq)
 
+///|
 fn vic(register : VICregister) -> Int {
   match register {
     SP0X => 0x00
@@ -349,6 +355,7 @@ fn vic(register : VICregister) -> Int {
   }
 }
 
+///|
 fn VICregister::from_int(value : Int) -> VICregister! {
   match value {
     0x00 => SP0X
@@ -433,6 +440,7 @@ fn VICregister::from_int(value : Int) -> VICregister! {
   }
 }
 
+///|
 enum ControlRegisterVertical {
   RasterCompare
   ExtendedColorTextMode
@@ -442,6 +450,7 @@ enum ControlRegisterVertical {
   SmoothScrollYDotPosition
 }
 
+///|
 fn op_get(
   self : ControlRegisterVertical,
   flag : ControlRegisterVertical
@@ -462,10 +471,12 @@ fn op_get(
   }
 }
 
+///|
 fn cr(flag : ControlRegisterVertical) -> Int {
   flag[flag]
 }
 
+///|
 enum ControlRegisterHorizontal {
   Unused /// 	7-6	Unused
   MultiColorMode /// 	4	  Multi-Color Mode: 1 = Enable (Text or Bit-Map)
@@ -473,6 +484,7 @@ enum ControlRegisterHorizontal {
   SmoothScrollXPos /// 	2-0	Smooth Scroll to X Pos
 }
 
+///|
 enum MemoryControlRegister {
   VideoMatrixBaseAddress /// 	7-4	Video Matrix Base Address (inside VIC)
   CharacterDotDataBaseAddress /// 	3-1	Character Dot-Data Base	Address (inside VIC)

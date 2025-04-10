@@ -1,9 +1,11 @@
+///|
 pub struct NES {
   baseaddress : UInt16
   mem : Memory
   cpu : @cpu.CPU
 }
 
+///|
 pub fn NES::new(
   baseaddress~ : Int = 0x0000,
   data~ : FixedArray[Int] = [],
@@ -17,6 +19,7 @@ pub fn NES::new(
   nes
 }
 
+///|
 pub fn load(
   self : NES,
   data : FixedArray[Int],
@@ -27,10 +30,12 @@ pub fn load(
 
 }
 
+///|
 pub fn step(self : NES) -> Int {
   self.cpu.step()
 }
 
+///|
 pub fn pc(self : NES) -> Int {
   self.cpu.pc()
 }
@@ -39,15 +44,18 @@ pub fn pc(self : NES) -> Int {
 //   self.cpu.get_flags()
 // }
 
-pub fn set_flags(self : NES, flags : @cpu.UInt8) -> Unit {
+///|
+pub fn set_flags(self : NES, flags : UInt8) -> Unit {
   self.cpu.set_flags(flags)
 }
 
-pub fn push(self : NES, value : @cpu.UInt8) -> Unit {
+///|
+pub fn push(self : NES, value : UInt8) -> Unit {
   self.cpu.push(value)
 }
 
-pub fn push16(self : NES, value : @cpu.UInt16) -> Unit {
+///|
+pub fn push16(self : NES, value : UInt16) -> Unit {
   self.cpu.push16(value)
 }
 

@@ -1,4 +1,4 @@
-package trancee/wasmSID/main
+package "trancee/wasmSID/main"
 
 // Values
 fn nestest() -> Unit
@@ -12,6 +12,4 @@ fn testsuite() -> Unit
 // Type aliases
 
 // Traits
-
-// Extension Methods
 

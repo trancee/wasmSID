@@ -1,4 +1,12 @@
 {
   "is-main": true,
-  "import": ["trancee/wasmSID/lib", "trancee/wasmSID/lib/cpu", "trancee/wasmSID/testsuite"]
+  "import": [
+    "trancee/wasmSID/lib",
+    {
+      "path": "trancee/wasmSID/lib/types",
+      "alias": "t"
+    },
+    "trancee/wasmSID/lib/cpu",
+    "trancee/wasmSID/testsuite"
+  ]
 }

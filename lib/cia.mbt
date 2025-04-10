@@ -1,4 +1,4 @@
-/// 6526
+///| 6526
 ///
 /// $DC00-$DCFF CIA #1
 /// $DC00-$DC0F Complex Interface Adapter (CIA) #1 Registers
@@ -7,17 +7,21 @@
 /// $DD00-$DDFF CIA #2
 /// $DD00-$DD0F Complex Interface Adapter (CIA) #2 Registers
 /// $DD10-$DDFF CIA #2 Register Images  The result is that every 16-byte area in this 256-byte block is a mirror of every other.
-
 let cia_mem_start = 0xDC00
 
+///|
 pub let cia1_mem_start = 0xDC00
 
+///|
 pub let cia2_mem_start = 0xDD00
 
+///|
 let cia_mem_end = 0xDDFF
 
+///|
 let cia_mem_size = 0x00FF
 
+///|
 struct Timer {
   mut latch : Int
   mut counter : Int
@@ -25,6 +29,7 @@ struct Timer {
   // mut interrupt : Bool // enable/disable underflow interrupt
 } derive(Show, Default)
 
+///|
 struct CIA {
   mem : FixedArray[Int]
   baseaddress : Int
@@ -40,6 +45,7 @@ struct CIA {
   debug : Bool
 }
 
+///|
 pub fn CIA::new(
   mem? : Memory,
   baseaddress : Int,
@@ -96,6 +102,12 @@ pub fn CIA::new(
           cia.write(register, value, dummy~)
         },
       )
+
+    /// no memory
+    _ => {
+      println("CIA::new no memory")
+      panic()
+    }
   }
 
   //
@@ -105,6 +117,7 @@ pub fn CIA::new(
   cia
 }
 
+///|
 pub fn reset(self : CIA, videoStandard~ : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=cia_mem_length)
   // self.rom.reset()
@@ -151,7 +164,7 @@ pub fn reset(self : CIA, videoStandard~ : VideoStandard = Unknown) -> Unit {
   }
 }
 
-/// p.127
+///| p.127
 /// Timers. Program 5-2 allows you to see the timers updating on the screen. Timer
 /// A normally controls the IRQ rate, which is why POKEs to $DC04 and $DC05 (56324
 /// and 56325) alter the cursor flash rate. TA counts down with the system clock about
@@ -173,7 +186,7 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     self.register.controlA.forceLoad = false //strobe is edge-sensitive
   }
   if self.register.controlA.start { // Enabled, counts Phi2
-    println("TA:#$" + UInt16(self.timerA.counter).to_hex() + " \{cycles}")
+    println("TA:#$" + @t.u16(self.timerA.counter).to_hex() + " \{cycles}")
     //count timer
     let mut tmp = self.timerA.counter - cycles
     // println("TimerA Start #\{tmp}")
@@ -203,12 +216,18 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
     //what about clocking TimerB by TimerA? (maybe not used in any music)
   }
   if self.register.controlB.start { // Enabled, counts Phi2
-    println("TB:#$" + UInt16(self.timerB.counter).to_hex() + " \{cycles}")
+    println("TB:#$" + @t.u16(self.timerB.counter).to_hex() + " \{cycles}")
     //count timer
     let mut tmp = self.timerB.counter -
       (match self.register.controlB.inputMode {
         CountCycles => cycles
         CountTimerA => if self.register.interruptControl.timerA { 1 } else { 0 }
+
+        ///
+        _ => {
+          println("ControlB inputMode not implemented")
+          panic()
+        }
       })
     // println("TimerB Start #\{tmp}")
     self.register.interruptControl.timerB = tmp <= 0
@@ -232,14 +251,19 @@ pub fn emulate(self : CIA, cycles : Int) -> Bool {
   self.register.interruptControl.interrupt
 }
 
-fn CIA::read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8 {
+///|
+fn CIA::read(
+  self : CIA,
+  register : CIAregister,
+  dummy~ : Bool = false
+) -> UInt8 {
   let address = cia(register) % 0x10 // (repeated every $10, 16 bytes)
   if self.debug && not(dummy) {
     println(
       "💻 CIA $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      UInt8(self.mem[address]).to_hex() +
+      @t.u8(self.mem[address]).to_hex() +
       " | \{register}",
     )
   }
@@ -248,9 +272,9 @@ fn CIA::read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8
     // self.dump()
     println(
       "CIA \{register} $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      UInt8(self.mem[address]).to_hex(),
+      @t.u8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
   }
@@ -343,10 +367,10 @@ fn CIA::read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8
       (self.register.directionB[6].to_int() << 6) |
       /// Bit 7:  Select Bit 7 of Data Port B for input or output (0=input, 1=output)
       (self.register.directionB[7].to_int() << 7)
-    TA_LO => u8(self.timerA.counter)
-    TA_HI => u8(self.timerA.counter >> 8)
-    TB_LO => u8(self.timerB.counter)
-    TB_HI => u8(self.timerB.counter >> 8)
+    TA_LO => @t.u8(self.timerA.counter)
+    TA_HI => @t.u8(self.timerA.counter >> 8)
+    TB_LO => @t.u8(self.timerB.counter)
+    TB_HI => @t.u8(self.timerB.counter >> 8)
     TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
       /// Bits 4-7:  Unused
@@ -387,7 +411,7 @@ fn CIA::read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8
       if not(dummy) {
         println(
           "ICR #$" +
-          UInt8(value).to_hex() +
+          @t.u8(value).to_hex() +
           " \{self.register.interruptControl} | \{value}",
         )
         self.register.interruptControl = CIAInterruptControl::default()
@@ -459,10 +483,12 @@ fn CIA::read(self : CIA, register : CIAregister, dummy~ : Bool = false) -> UInt8
   }
 }
 
+///|
 fn CIA::op_get(self : CIA, register : CIAregister) -> UInt8 {
   self.read(register)
 }
 
+///|
 fn CIA::write(
   self : CIA,
   register : CIAregister,
@@ -473,7 +499,7 @@ fn CIA::write(
   if self.debug && not(dummy) {
     println(
       "💻 CIA $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex() +
       " | \{register}",
@@ -484,7 +510,7 @@ fn CIA::write(
     // self.dump()
     println(
       "CIA \{register} $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex(),
     )
@@ -585,20 +611,22 @@ fn CIA::write(
       self.register.directionB[7] = value.bit(7)
     }
     TA_LO => {
-      self.timerA.counter = (self.timerA.counter & 0xFF00) | u16(value)._
-      self.timerA.latch = (self.timerA.latch & 0xFF00) | u16(value)._
+      self.timerA.counter = (self.timerA.counter & 0xFF00) | @t.u16(value)._
+      self.timerA.latch = (self.timerA.latch & 0xFF00) | @t.u16(value)._
     }
     TA_HI => {
-      self.timerA.counter = (u16(value) << 8)._ | (self.timerA.counter & 0x00FF)
-      self.timerA.latch = (u16(value) << 8)._ | (self.timerA.latch & 0x00FF)
+      self.timerA.counter = (@t.u16(value) << 8)._ |
+        (self.timerA.counter & 0x00FF)
+      self.timerA.latch = (@t.u16(value) << 8)._ | (self.timerA.latch & 0x00FF)
     }
     TB_LO => {
-      self.timerB.counter = (self.timerB.counter & 0xFF00) | u16(value)._
-      self.timerB.latch = (self.timerB.latch & 0xFF00) | u16(value)._
+      self.timerB.counter = (self.timerB.counter & 0xFF00) | @t.u16(value)._
+      self.timerB.latch = (self.timerB.latch & 0xFF00) | @t.u16(value)._
     }
     TB_HI => {
-      self.timerB.counter = (u16(value) << 8)._ | (self.timerB.counter & 0x00FF)
-      self.timerB.latch = (u16(value) << 8)._ | (self.timerB.latch & 0x00FF)
+      self.timerB.counter = (@t.u16(value) << 8)._ |
+        (self.timerB.counter & 0x00FF)
+      self.timerB.latch = (@t.u16(value) << 8)._ | (self.timerB.latch & 0x00FF)
     }
     TOD_10TH =>
       /// Bits 0-3:  Time of Day tenths of second digit (BCD)
@@ -674,6 +702,12 @@ fn CIA::write(
       self.register.controlA.inputMode = match (value & 0b00100000)._ >> 5 {
         0b01 => TimerAInputMode::CountCycles
         0b00 => TimerAInputMode::CountSignals
+
+        ///
+        _ => {
+          println("ControlA inputMode not implemented")
+          panic()
+        }
       }
       /// Bit 6:  Serial Port (56332, $DC0C) mode (1=output, 0=input)
       self.register.controlA.serialMode = if value.bit(6) {
@@ -709,6 +743,12 @@ fn CIA::write(
         0b01 => TimerBInputMode::CountSignals
         0b10 => TimerBInputMode::CountTimerA
         0b11 => TimerBInputMode::CountZero
+
+        ///
+        _ => {
+          println("ControlB inputMode not implemented")
+          panic()
+        }
       }
       /// Bit 7:  Select Time of Day write
       ///         (0=writing to TOD registers sets alarm, 1=writing to TOD registers sets clock)
@@ -721,10 +761,12 @@ fn CIA::write(
   }
 }
 
+///|
 fn op_set(self : CIA, register : CIAregister, value : UInt8) -> Unit {
   self.write(register, value)
 }
 
+///|
 test "cia1_instantiate" {
   let timer = 3
   //
@@ -757,6 +799,7 @@ test "cia1_instantiate" {
   assert_eq!(cia[ICR], icr(NONE))
 }
 
+///|
 test "cia1_timera" {
   let timer = 3
   //
@@ -827,6 +870,7 @@ test "cia1_timera" {
   assert_false!(cia.register.interruptControl.interrupt)
 }
 
+///|
 test "cia1_timera_forceload" {
   let timer = 3
   //
@@ -911,6 +955,7 @@ test "cia1_timera_forceload" {
   assert_true!(cia.register.interruptEnable.timerA) // stays true as no interrupt has occurred
 }
 
+///|
 test "cia1_timera_oneshot" {
   let timer = 3
   //

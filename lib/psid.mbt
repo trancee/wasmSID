@@ -1,3 +1,4 @@
+///|
 pub struct PSID {
   mem : Memory
   data : FixedArray[Int]
@@ -32,6 +33,7 @@ pub struct PSID {
   mut sid3Address : UInt8
 }
 
+///|
 pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
   let psid : PSID = {
     mem,
@@ -70,6 +72,7 @@ pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
   psid
 }
 
+///|
 pub fn process(self : PSID) -> Unit! {
   println(">> PSID::process")
 
@@ -279,6 +282,7 @@ pub fn process(self : PSID) -> Unit! {
   println("<< PSID::process")
 }
 
+///|
 fn readByte(self : PSID, header : SIDheader) -> Int! {
   match header {
     StartPage => self[0x78]
@@ -291,6 +295,7 @@ fn readByte(self : PSID, header : SIDheader) -> Int! {
   }
 }
 
+///|
 fn readWord(self : PSID, header : SIDheader) -> Int! {
   match header {
     Version => self.makeWord(0x04)
@@ -307,10 +312,12 @@ fn readWord(self : PSID, header : SIDheader) -> Int! {
   }
 }
 
+///|
 fn makeWord(self : PSID, offset : Int) -> Int {
   (self[offset] << 8) | self[offset + 1]
 }
 
+///|
 fn readString(self : PSID, header : SIDheader) -> String! {
   match header {
     Magic => self.makeString(0x00, 4)
@@ -323,19 +330,25 @@ fn readString(self : PSID, header : SIDheader) -> String! {
   }
 }
 
+///|
 fn makeString(self : PSID, offset : Int, length : Int) -> String {
-  let bytes : Bytes = Bytes::new(length << 1)
+  let builder = StringBuilder::new()
+
+  //let bytes : Bytes = Bytes::new(length << 1)
   for i = 0; i < length; i = i + 1 {
-    bytes[i << 1] = self[offset + i].to_byte()
+    //bytes[i << 1] = self[offset + i].to_byte()
+    builder.write_char(Char::from_int(self[offset + i]))
   }
-  bytes.to_string()
+  builder.to_string()
 }
 
+///|
 pub fn videoStandard(self : PSID) -> VideoStandard {
   self.flags.videoStandard
 }
 
-fn op_get(self : PSID, address : Int) -> Int {
+///|
+fn PSID::op_get(self : PSID, address : Int) -> Int {
   if address < 0x0000 || address > self.data.length() {
     // self.dump()
     println("PSID::get out of bounds")
@@ -348,7 +361,8 @@ fn op_get(self : PSID, address : Int) -> Int {
   self.data[address]
 }
 
-fn op_set(self : PSID, address : Int, value : Int) -> Unit {
+///|
+fn PSID::op_set(self : PSID, address : Int, value : Int) -> Unit {
   if address < 0x0000 || address > 0xFFFF {
     // self.dump()
     println("PSID::set out of bounds")

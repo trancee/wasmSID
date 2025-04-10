@@ -1,13 +1,93 @@
-package trancee/wasmSID/lib/cpu
+package "trancee/wasmSID/lib/cpu"
+
+import(
+  "trancee/wasmSID/lib/types"
+)
 
 // Values
+fn a(CPU) -> @types.UInt8
+
+fn clear_flags(CPU) -> Unit
+
+fn clear_registers(CPU) -> Unit
+
+fn debug(CPU, Bool) -> Bool
+
+fn get(Flags) -> @types.UInt8
+
+fn get_flags(CPU) -> Flags
+
+fn get_registers(CPU) -> Registers
+
+fn has_interrupt(CPU) -> Bool
+
+fn hook(CPU, Int, (Int) -> Unit) -> Unit
+
+fn interrupts(CPU) -> Bool
+
+fn irq(CPU, pc? : Int) -> Unit
+
+fn load(CPU, Int, FixedArray[Int], length~ : Int = .., has_load_address~ : Bool = ..) -> Int
+
+fn lor(Flag, Flag) -> Int
+
+fn nmi(CPU, pc? : Int) -> Unit
+
+fn pc(CPU) -> Int
+
+fn push(CPU, @types.UInt8, dummy~ : Bool = ..) -> Unit
+
+fn push16(CPU, @types.UInt16) -> Unit
+
+fn read(CPU, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
+
+fn register(CPU, Register, Int) -> Unit
+
+fn set(Flags, @types.UInt8) -> Unit
+
+fn setIRQ(CPU, @types.UInt16) -> Unit
+
+fn setNMI(CPU, @types.UInt16) -> Unit
+
+fn setRESET(CPU, @types.UInt16) -> Unit
+
+fn set_flags(CPU, @types.UInt8) -> Unit
+
+fn set_interrupt(Flags) -> Unit
+
+fn set_irq(CPU, state~ : Bool = ..) -> Unit
+
+fn set_nmi(CPU, state~ : Bool = ..) -> Unit
+
+fn set_read(CPU, (Int, Bool) -> Int) -> Unit
+
+fn set_write(CPU, (Int, Int, Bool) -> Unit) -> Unit
+
+fn step(CPU) -> Int
+
+fn write(CPU, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
+
+fn write16(CPU, @types.UInt16, @types.UInt16, dummy~ : Bool = ..) -> Unit
 
 // Types and methods
 type AddressHook
 
-type CPU
+pub struct CPU {
+  mem : FixedArray[Int]
+  mut read : ((Int, Bool) -> Int)?
+  mut write : ((Int, Int, Bool) -> Unit)?
+  mut cycles : Int
+  mut pc : @types.UInt16
+  registers : Registers
+  flags : Flags
+  decimal_mode : Bool
+  mut nmi : Bool
+  mut irq : Bool
+  hooks : Array[AddressHook]
+  mut debug : Bool
+}
 impl CPU {
-  a(Self) -> UInt8
+  a(Self) -> @types.UInt8
   clear_flags(Self) -> Unit
   clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
@@ -17,28 +97,28 @@ impl CPU {
   has_interrupt(Self) -> Bool
   hook(Self, Int, (Int) -> Unit) -> Unit
   interrupts(Self) -> Bool
-  irq(Self, ~pc? : Int) -> Unit
-  load(Self, Int, FixedArray[Int], ~length : Int = .., ~has_load_address : Bool = ..) -> Int
-  new(~pc : Int = .., ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = .., ~decimal_mode : Bool = .., ~debug : Bool = ..) -> Self
-  nmi(Self, ~pc? : Int) -> Unit
+  irq(Self, pc? : Int) -> Unit
+  load(Self, Int, FixedArray[Int], length~ : Int = .., has_load_address~ : Bool = ..) -> Int
+  new(pc~ : Int = .., data~ : FixedArray[Int] = .., addr~ : Int = .., length~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
+  nmi(Self, pc? : Int) -> Unit
   pc(Self) -> Int
-  push(Self, UInt8, ~dummy : Bool = ..) -> Unit
-  push16(Self, UInt16) -> Unit
-  read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
+  push(Self, @types.UInt8, dummy~ : Bool = ..) -> Unit
+  push16(Self, @types.UInt16) -> Unit
+  read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
   register(Self, Register, Int) -> Unit
-  reset(Self, ~baseaddress? : Int) -> Unit
-  setIRQ(Self, UInt16) -> Unit
-  setNMI(Self, UInt16) -> Unit
-  setRESET(Self, UInt16) -> Unit
-  set_flags(Self, UInt8) -> Unit
+  reset(Self, baseaddress? : Int) -> Unit
+  setIRQ(Self, @types.UInt16) -> Unit
+  setNMI(Self, @types.UInt16) -> Unit
+  setRESET(Self, @types.UInt16) -> Unit
+  set_flags(Self, @types.UInt8) -> Unit
   set_interrupt(Self) -> Unit
-  set_irq(Self, ~state : Bool = ..) -> Unit
-  set_nmi(Self, ~state : Bool = ..) -> Unit
+  set_irq(Self, state~ : Bool = ..) -> Unit
+  set_nmi(Self, state~ : Bool = ..) -> Unit
   set_read(Self, (Int, Bool) -> Int) -> Unit
   set_write(Self, (Int, Int, Bool) -> Unit) -> Unit
   step(Self) -> Int
-  write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
-  write16(Self, UInt16, UInt16, ~dummy : Bool = ..) -> Unit
+  write(Self, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
+  write16(Self, @types.UInt16, @types.UInt16, dummy~ : Bool = ..) -> Unit
 }
 
 pub enum Flag {
@@ -53,25 +133,23 @@ pub enum Flag {
 }
 impl Flag {
   lor(Self, Self) -> Int
-  op_equal(Self, Self) -> Bool
 }
+impl Eq for Flag
 
 type Flags
 impl Flags {
-  get(Self) -> UInt8
-  op_equal(Self, Self) -> Bool
-  set(Self, UInt8) -> Unit
+  get(Self) -> @types.UInt8
+  set(Self, @types.UInt8) -> Unit
   set_interrupt(Self) -> Unit
-  to_string(Self) -> String
 }
+impl Eq for Flags
+impl Show for Flags
 
 type Instruction
 
 type Mode
-impl Mode {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for Mode
+impl Show for Mode
 
 pub enum Register {
   SP
@@ -82,40 +160,10 @@ pub enum Register {
 
 type Registers
 
-pub type UInt16 Int
-impl UInt16 {
-  compare(Self, Self) -> Int
-  default() -> Self
-  op_equal(Self, Self) -> Bool
-  to_hex(Self) -> String
-  to_string(Self) -> String
-}
-
-pub type UInt8 Int
-impl UInt8 {
-  bit(Self, Self) -> Bool
-  compare(Self, Self) -> Int
-  default() -> Self
-  op_equal(Self, Self) -> Bool
-  to_hex(Self) -> String
-  to_string(Self) -> String
-}
-
 type Vector
-impl Vector {
-  op_equal(Self, Self) -> Bool
-}
+impl Eq for Vector
 
 // Type aliases
 
 // Traits
-
-// Extension Methods
-impl Show for Flags
-
-impl Show for Mode
-
-impl Show for UInt16
-
-impl Show for UInt8
 

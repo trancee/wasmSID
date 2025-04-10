@@ -1,3 +1,9 @@
 {
-  "import": ["trancee/wasmSID/lib/cpu"]
+  "import": [
+    "trancee/wasmSID/lib/cpu",
+    {
+      "path": "trancee/wasmSID/lib/types",
+      "alias": "t"
+    }
+  ]
 }

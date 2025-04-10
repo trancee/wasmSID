@@ -22,20 +22,22 @@
 /// memory.  When read, they will always give a value of 255 ($FF).  This
 /// value will not change after writing to them.
 
-/// ($D040-$D3FF)
+///| ($D040-$D3FF)
 /// VIC-II Register Images
 ///
 /// Since the VIC-II requires only enough addressing lines to handle 64
 /// locations (the minimum possible for its 47 registers), none of the
 /// higher bits are decoded when addressing this 1K area.  The result is
 /// that every 64 byte area in this 1K block is a mirror of every other.
-
 pub let vic_mem_start = 0xD000
 
+///|
 let vic_mem_end = 0xD3FF
 
+///|
 let vic_mem_size = 0x03FF
 
+///|
 struct VIC {
   mem : FixedArray[Int]
   baseaddress : Int
@@ -55,6 +57,7 @@ struct VIC {
   debug : Bool
 }
 
+///|
 pub fn VIC::new(
   mem? : Memory,
   baseaddress : Int,
@@ -115,6 +118,10 @@ pub fn VIC::new(
           vic[register] = value
         },
       )
+    None => {
+      println("VIC::new no memory")
+      panic()
+    }
   }
 
   //
@@ -131,8 +138,11 @@ pub fn VIC::new(
   vic
 }
 
-/// These registers are all intialized to 0 at power-up.
-pub fn VIC::reset(self : VIC, videoStandard~ : VideoStandard = Unknown) -> Unit! {
+///| These registers are all intialized to 0 at power-up.
+pub fn VIC::reset(
+  self : VIC,
+  videoStandard~ : VideoStandard = Unknown
+) -> Unit! {
   // self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
     self.mem[i] = 0x00
@@ -197,6 +207,7 @@ pub fn VIC::reset(self : VIC, videoStandard~ : VideoStandard = Unknown) -> Unit!
   self.rasterRowCycles = ScanLineCycles(videoStandard).to_int!() // HINT: should be inferred
 }
 
+///|
 pub fn VIC::emulate(self : VIC, cycles : Int) -> Bool {
   // if self.debug {
   //   println(">> VIC::emulate [\{cycles}]")
@@ -257,6 +268,7 @@ pub fn VIC::emulate(self : VIC, cycles : Int) -> Bool {
 //   )
 // }
 
+///|
 fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
   // VIC-II Register Images
   let address = vic(register) % 0x40 // (repeated every $40, 64 bytes)
@@ -265,9 +277,9 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
   if self.debug {
     println(
       "💻 VIC $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      UInt8(self.mem[address]).to_hex() +
+      @t.u8(self.mem[address]).to_hex() +
       " | \{register}",
     )
   }
@@ -278,9 +290,9 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
     // self.dump()
     println(
       "VIC \{register} $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      UInt8(self.mem[address]).to_hex(),
+      @t.u8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
   }
@@ -292,22 +304,22 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
 
   match register {
     /// Sprite Horizontal and Vertical Position Registers
-    SP0X => u8(self.register.spritePosition[0].x)
-    SP0Y => u8(self.register.spritePosition[0].y)
-    SP1X => u8(self.register.spritePosition[1].x)
-    SP1Y => u8(self.register.spritePosition[1].y)
-    SP2X => u8(self.register.spritePosition[2].x)
-    SP2Y => u8(self.register.spritePosition[2].y)
-    SP3X => u8(self.register.spritePosition[3].x)
-    SP3Y => u8(self.register.spritePosition[3].y)
-    SP4X => u8(self.register.spritePosition[4].x)
-    SP4Y => u8(self.register.spritePosition[4].y)
-    SP5X => u8(self.register.spritePosition[5].x)
-    SP5Y => u8(self.register.spritePosition[5].y)
-    SP6X => u8(self.register.spritePosition[6].x)
-    SP6Y => u8(self.register.spritePosition[6].y)
-    SP7X => u8(self.register.spritePosition[7].x)
-    SP7Y => u8(self.register.spritePosition[7].y)
+    SP0X => @t.u8(self.register.spritePosition[0].x)
+    SP0Y => @t.u8(self.register.spritePosition[0].y)
+    SP1X => @t.u8(self.register.spritePosition[1].x)
+    SP1Y => @t.u8(self.register.spritePosition[1].y)
+    SP2X => @t.u8(self.register.spritePosition[2].x)
+    SP2Y => @t.u8(self.register.spritePosition[2].y)
+    SP3X => @t.u8(self.register.spritePosition[3].x)
+    SP3Y => @t.u8(self.register.spritePosition[3].y)
+    SP4X => @t.u8(self.register.spritePosition[4].x)
+    SP4Y => @t.u8(self.register.spritePosition[4].y)
+    SP5X => @t.u8(self.register.spritePosition[5].x)
+    SP5Y => @t.u8(self.register.spritePosition[5].y)
+    SP6X => @t.u8(self.register.spritePosition[6].x)
+    SP6Y => @t.u8(self.register.spritePosition[6].y)
+    SP7X => @t.u8(self.register.spritePosition[7].x)
+    SP7Y => @t.u8(self.register.spritePosition[7].y)
 
     /// Most Significant Bits of Sprites 0-7 Horizontal Position
     MSIGX =>
@@ -578,6 +590,7 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
   }
 }
 
+///|
 fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   // VIC-II Register Images
   let address = vic(register) % 0x40 // (repeated every $40, 64 bytes)
@@ -586,7 +599,7 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   if self.debug {
     println(
       "💻 VIC $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex() +
       " | \{register}",
@@ -599,7 +612,7 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
     // self.dump()
     println(
       "VIC \{register} $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex(),
     )

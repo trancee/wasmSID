@@ -1,4 +1,4 @@
-/// Memory Map
+///| Memory Map
 /// https://sta.c64.org/cbm64mem.html
 ///
 /// $0000-$00FF         Zero Page
@@ -49,7 +49,6 @@
 ///       $FFFA         Non-Maskable Interrupt Hardware Vector
 ///       $FFFC         System Reset (RES) Hardware Vector
 ///       $FFFE         Maskable Interrupt Request and Break Hardware Vectors
-
 struct Hook {
   start : Int
   end : Int
@@ -58,6 +57,7 @@ struct Hook {
   write : (UInt16, UInt8, Bool) -> Unit
 }
 
+///|
 fn Hook::new(
   start : Int,
   end : Int,
@@ -70,6 +70,7 @@ fn Hook::new(
 
 // let memory : Array[Hook] = []
 
+///|
 struct Memory {
   mut mem : FixedArray[UInt8]
   //
@@ -79,10 +80,12 @@ struct Memory {
   hooks : Array[Hook]
 }
 
+///|
 pub fn Memory::new(length~ : Int = 0xFFFF, value~ : Int = 0x00) -> Memory {
   { mem: FixedArray::make(length + 1, value), hooks: [] }
 }
 
+///|
 pub fn hook(
   self : Memory,
   //
@@ -95,6 +98,7 @@ pub fn hook(
   self.hooks.push(Hook::new(start, end, read, write))
 }
 
+///|
 pub fn clear(self : Memory) -> Unit {
   self.mem = FixedArray::make(self.mem.length(), 0x00)
 }
@@ -156,6 +160,7 @@ pub fn clear(self : Memory) -> Unit {
 //   //copy KERNAL & BASIC ROM contents into the RAM under them? (So PSIDs that don't select bank correctly will work better.)
 // }
 
+///|
 fn dump(
   self : Memory,
   addr~ : UInt16 = 0x0000,
@@ -167,7 +172,7 @@ fn dump(
   if rows > 1 {
     str = "     "
     while i < cols {
-      str += UInt8(i).to_hex() + " "
+      str += @t.u8(i).to_hex() + " "
       i = i + 1
     }
     i = 0
@@ -184,6 +189,7 @@ fn dump(
   }
 }
 
+///|
 pub fn read(self : Memory, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println("Memory::read $\{u16(addr).to_hex()} \{_dummy}")
@@ -206,6 +212,7 @@ pub fn read(self : Memory, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   self.read_direct(address)
 }
 
+///|
 pub fn read_direct(self : Memory, address : UInt16) -> UInt8 {
   // println("Memory::read_direct $" + UInt16(addr).to_hex())
   //
@@ -225,6 +232,7 @@ pub fn read_direct(self : Memory, address : UInt16) -> UInt8 {
 //   self.read(addr)
 // }
 
+///|
 pub fn write(
   self : Memory,
   //
@@ -256,6 +264,7 @@ pub fn write(
   self.write_direct(address, value)
 }
 
+///|
 pub fn write_direct(self : Memory, address : UInt16, value : UInt8) -> Unit {
   // match self.write {
   //   Some(_) => self.write(addr, value)

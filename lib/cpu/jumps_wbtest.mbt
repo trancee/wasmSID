@@ -1,5 +1,6 @@
 // Tests
 
+///|
 test "CanJumpToASubroutineAndJumpBackAgain" {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -51,6 +52,7 @@ test "CanJumpToASubroutineAndJumpBackAgain" {
   assert_eq!(cpu.flags, p)
 }
 
+///|
 test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
   let cpu = CPU::new(pc=0xFF00)
 
@@ -73,6 +75,7 @@ test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
   assert_eq!(cpu.flags, p)
 }
 
+///|
 test "JumpIndirectCanJumpToAnNewLocationInTheProgram" {
   let cpu = CPU::new(pc=0xFF00)
 

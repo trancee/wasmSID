@@ -1,8 +1,10 @@
+///|
 let irq : FixedArray[Int] = [
   0x48, 0x8A, 0x48, 0x98, 0x48, 0xBA, 0xBD, 0x04, 0x01, 0x29, 0x10, 0xF0, 0x03, 0x6C,
   0x16, 0x03, 0x6C, 0x14, 0x03,
 ]
 
+///|
 let testcases : Map[String, FixedArray[Int]] = {
   "start": @testsuite._start
 
@@ -382,6 +384,7 @@ let testcases : Map[String, FixedArray[Int]] = {
   "irq": @testsuite.irq,
 }
 
+///|
 pub fn testsuite() -> Unit {
   let c64 = @lib.C64::new(realSID=true, debug=true)
   let _ = c64.load(irq, offset=0xFF48)
@@ -566,6 +569,7 @@ pub fn testsuite() -> Unit {
   }
 }
 
+///|
 fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   let addr = c64.load(data, has_load_address=true)
   c64.set_bank(@lib.IOPort::from_int(0x00))
@@ -609,6 +613,7 @@ fn setup(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   c64.set_interrupt_flag()
 }
 
+///|
 fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   let mut output = ""
 
@@ -616,61 +621,49 @@ fn load(c64 : @lib.C64, data : FixedArray[Int]) -> Unit {
   setup(c64, data)
 
   //
-  c64.hook(
-    0xE16F,
-    fn(pc) {
-      let testcase = output
-      match testcases[testcase] {
-        Some(data) => setup(c64, data)
-        _ => {
-          println("\x1b[31;1;6m\{output} not found\x1b[0m")
-          abort("test not found")
-        }
+  c64.hook(0xE16F, fn(_) {
+    let testcase = output
+    match testcases[testcase] {
+      Some(data) => setup(c64, data)
+      _ => {
+        println("\u{1B}[31;1;6m\{output} not found\u{1B}[0m")
+        abort("test not found")
       }
-    },
-  )
-  c64.hook(
-    0xFFD2,
-    fn(pc) {
-      let a = c64.cpu.a()._
-      match a {
-        13 => {
-          println("\x1b[33m\{output}\x1b[0m")
-          output = ""
-        }
-        14 => output += "" // text mode
-        145 => output += "\x1b[1A\x1b[1m" // ↑ up arrow
-        147 => output += "\x1bc" // Clear
-        _ => {
-          let a = if a >= 0xC1 && a <= 0xDA {
-            a - 0xC1 + 65
-          } else if a >= 0x41 && a <= 0x5A {
-            a - 0x41 + 97
-          } else if a < 32 || a >= 127 {
-            46
-          } else {
-            a
-          }
-          output += Char::from_int(a).to_string()
-        }
+    }
+  })
+  c64.hook(0xFFD2, fn(_) {
+    let a = c64.cpu.a()._
+    match a {
+      13 => {
+        println("\u{1B}[33m\{output}\u{1B}[0m")
+        output = ""
       }
-      c64[SAREG] = 0x00
-    },
-  )
-  c64.hook(
-    0x8000,
-    fn(pc) {
-      println("\x1b[31;1;6m\{output}\x1b[0m")
-      abort("test failed")
-    },
-  )
-  c64.hook(
-    0xA474,
-    fn(pc) {
-      println("\x1b[31;1;6m\{output}\x1b[0m")
-      abort("test failed")
-    },
-  )
+      14 => output += "" // text mode
+      145 => output += "\u{1B}[1A\u{1B}[1m" // ↑ up arrow
+      147 => output += "\u{1B}c" // Clear
+      _ => {
+        let a = if a >= 0xC1 && a <= 0xDA {
+          a - 0xC1 + 65
+        } else if a >= 0x41 && a <= 0x5A {
+          a - 0x41 + 97
+        } else if a < 32 || a >= 127 {
+          46
+        } else {
+          a
+        }
+        output += Char::from_int(a).to_string()
+      }
+    }
+    c64[SAREG] = 0x00
+  })
+  c64.hook(0x8000, fn(_) {
+    println("\u{1B}[31;1;6m\{output}\u{1B}[0m")
+    abort("test failed")
+  })
+  c64.hook(0xA474, fn(_) {
+    println("\u{1B}[31;1;6m\{output}\u{1B}[0m")
+    abort("test failed")
+  })
 }
 
 // const processor = fake6502();

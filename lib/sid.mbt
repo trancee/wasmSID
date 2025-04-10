@@ -80,7 +80,9 @@
 /// not used.  Reading them will always return a value of 255 ($FF), and
 /// writing to them will have no effect.
 
-/// ($D420-$D7FF)
+// https://www.oxyron.de/html/registers_sid.html
+
+///| ($D420-$D7FF)
 /// SID Register Images
 ///
 /// Since the SID chip requires enough addressing lines for only 32
@@ -89,17 +91,18 @@
 /// assigned to it.  The result is that every 32-byte area in this 1K
 /// block is a mirror of every other.  For the sake of clarity in your
 /// programs, it is advisable not to use these addresses at all.
-
-// https://www.oxyron.de/html/registers_sid.html
-
 let sid_mem_start = 0xD400
 
+///|
 let sid1_mem_start = 0xD400
 
+///|
 let sid_mem_end = 0xD7FF
 
+///|
 let sid_mem_size = 0x03FF
 
+///|
 struct SID {
   mem : FixedArray[Int]
   baseaddress : Int
@@ -133,6 +136,7 @@ struct SID {
   debug : Bool
 }
 
+///|
 pub fn SID::new(
   mem? : Memory,
   baseaddress : Int,
@@ -209,6 +213,12 @@ pub fn SID::new(
           sid[register] = value
         },
       )
+
+    ///
+    _ => {
+      println("SID::new no memory")
+      panic()
+    }
   }
 
   //
@@ -218,6 +228,7 @@ pub fn SID::new(
   sid
 }
 
+///|
 pub fn SID::reset(self : SID, videoStandard~ : VideoStandard = Unknown) -> Unit {
   // self.mem.reset(offset=self.baseaddress, length=sid_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
@@ -236,6 +247,7 @@ pub fn SID::reset(self : SID, videoStandard~ : VideoStandard = Unknown) -> Unit 
   }
 }
 
+///|
 fn emulateADSR(self : SID, cycles : Int) -> Unit {
   let mut prescalePeriod : UInt16 = 0
   for channel = 0; channel < 3; channel = channel + 1 {
@@ -297,6 +309,7 @@ fn emulateADSR(self : SID, cycles : Int) -> Unit {
   }
 }
 
+///|
 fn emulateWaves(
   self : SID,
   sampleClockRatio : Int,
@@ -501,6 +514,7 @@ fn emulateWaves(
   self.emulateSIDoutputStage(attenuation, realSID)
 }
 
+///|
 fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
   // println(
   //   ">> SID::emulateSIDoutputStage attenuation[\{attenuation}] realSID[\{realSID}]",
@@ -590,6 +604,7 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
 
 //----------------------- High-quality (oversampled) waveform-generation --------------------------
 
+///|
 fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
   self.nonFiltedSample = 0
   self.filterInputSample = 0
@@ -731,6 +746,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
   wavOutput
 }
 
+///|
 fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
@@ -738,9 +754,9 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     println(
       "\t\t\t\t\t\t\t\t\t " +
       "🎵 SID $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      UInt8(self.mem[address]).to_hex() +
+      @t.u8(self.mem[address]).to_hex() +
       " | \{register}",
     )
   }
@@ -749,9 +765,9 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     // self.dump()
     println(
       "SID \{register} $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      UInt8(self.mem[address]).to_hex(),
+      @t.u8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
   }
@@ -759,19 +775,19 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     match register {
       /// Voice 1 Frequency Control (low byte)
       /// 54272         $D400          FRELO1
-      FRELO1 | FRELO2 | FRELO3 => u8(voice.frequency)
+      FRELO1 | FRELO2 | FRELO3 => @t.u8(voice.frequency)
 
       /// Voice 1 Frequency Control (high byte)
       /// 54273         $D401          FREHI1
-      FREHI1 | FREHI2 | FREHI3 => u8(voice.frequency >> 8)
+      FREHI1 | FREHI2 | FREHI3 => @t.u8(voice.frequency >> 8)
 
       /// Voice 1 Pulse Waveform Width (low byte)
       /// 54274         $D402          PWLO1
-      PWLO1 | PWLO2 | PWLO3 => u8(voice.pulseWidth)
+      PWLO1 | PWLO2 | PWLO3 => @t.u8(voice.pulseWidth)
 
       /// Voice 1 Pulse Waveform Width (high nybble)
       /// 54275         $D403          PWHI1
-      PWHI1 | PWHI2 | PWHI3 => u8(voice.pulseWidth >> 8)
+      PWHI1 | PWHI2 | PWHI3 => @t.u8(voice.pulseWidth >> 8)
 
       /// Voice 1 Control Register
       /// 54276         $D404          VCREG1
@@ -792,6 +808,12 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
       /// Bits 0-3:  Select release cycle duration (0-15)
       SUREL1 | SUREL2 | SUREL3 =>
         (voice.envelope.sustain << 4) | voice.envelope.release
+
+      ///
+      _ => {
+        println("unknown SID register \{register}")
+        panic()
+      }
     }
   }
 
@@ -803,8 +825,8 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     FRELO3 | FREHI3 | PWLO3 | PWHI3 | VCREG3 | ATDCY3 | SUREL3 =>
       voice(self.register.voice[2])
     //
-    CUTLO => u8(self.register.cutoffFrequency)
-    CUTHI => u8(self.register.cutoffFrequency >> 8)
+    CUTLO => @t.u8(self.register.cutoffFrequency)
+    CUTHI => @t.u8(self.register.cutoffFrequency >> 8)
 
     /// Filter Resonance Control Register
     /// 54295         $D417          RESON
@@ -830,9 +852,16 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
       (self.register.filterSelect.bandPass.to_int() << 5) |
       (self.register.filterSelect.highPass.to_int() << 6) |
       (self.register.disconnectVoice.to_int() << 7)
+
+    ///
+    _ => {
+      println("unknown SID register \{register}")
+      panic()
+    }
   }
 }
 
+///|
 fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
   /// SID Register Images
   let address = sid(register) % 0x20 // (repeated every $20, 32 bytes)
@@ -840,7 +869,7 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     println(
       "\t\t\t\t\t\t\t\t\t " +
       "🎵 SID $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex() +
       " | \{register}",
@@ -851,7 +880,7 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     // self.dump()
     println(
       "SID \{register} $" +
-      UInt16(self.baseaddress + address).to_hex() +
+      @t.u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex(),
     )
@@ -861,21 +890,23 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     match register {
       /// Voice 1 Frequency Control (low byte)
       /// 54272         $D400          FRELO1
-      FRELO1 | FRELO2 | FRELO3 => voice.frequency = voice.frequency | u16(value)
+      FRELO1 | FRELO2 | FRELO3 =>
+        voice.frequency = voice.frequency | @t.u16(value)
 
       /// Voice 1 Frequency Control (high byte)
       /// 54273         $D401          FREHI1
       FREHI1 | FREHI2 | FREHI3 =>
-        voice.frequency = voice.frequency | (u16(value) << 8)
+        voice.frequency = voice.frequency | (@t.u16(value) << 8)
 
       /// Voice 1 Pulse Waveform Width (low byte)
       /// 54274         $D402          PWLO1
-      PWLO1 | PWLO2 | PWLO3 => voice.pulseWidth = voice.pulseWidth | u16(value)
+      PWLO1 | PWLO2 | PWLO3 =>
+        voice.pulseWidth = voice.pulseWidth | @t.u16(value)
 
       /// Voice 1 Pulse Waveform Width (high nybble)
       /// 54275         $D403          PWHI1
       PWHI1 | PWHI2 | PWHI3 =>
-        voice.pulseWidth = voice.pulseWidth | (u16(value) << 8)
+        voice.pulseWidth = voice.pulseWidth | (@t.u16(value) << 8)
 
       // /// Voice 1 Control Register
       // /// 54276         $D404          VCREG1
@@ -898,6 +929,12 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
         voice.envelope.sustain = (value._ & 0xF0) >> 4
         voice.envelope.release = value._ & 0x0F
       }
+
+      ///
+      _ => {
+        println("unknown SID register \{register}")
+        panic()
+      }
     }
   }
 
@@ -910,10 +947,11 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       voice(self.register.voice[2])
     //
     CUTLO =>
-      self.register.cutoffFrequency = self.register.cutoffFrequency | u16(value)
+      self.register.cutoffFrequency = self.register.cutoffFrequency |
+        @t.u16(value)
     CUTHI =>
       self.register.cutoffFrequency = self.register.cutoffFrequency |
-        (u16(value) << 8)
+        (@t.u16(value) << 8)
 
     /// Filter Resonance Control Register
     /// 54295         $D417          RESON

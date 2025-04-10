@@ -1,13 +1,70 @@
-package trancee/wasmSID/lib
+package "trancee/wasmSID/lib"
 
-alias @trancee/wasmSID/lib/cpu as @cpu
+import(
+  "trancee/wasmSID/lib/cpu"
+  "trancee/wasmSID/lib/types"
+)
 
 // Values
 let cia1_mem_start : Int
 
 let cia2_mem_start : Int
 
+fn clear(Memory) -> Unit
+
+fn clear_flags(C64) -> Unit
+
+fn clear_registers(C64) -> Unit
+
+fn emulate(CIA, Int) -> Bool
+
+fn get_flags(C64) -> @cpu.Flags
+
+fn get_registers(C64) -> @cpu.Registers
+
+fn hook(Memory, Int, Int, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
+
+fn initC64(C64) -> Unit!
+
+fn initCPU(C64, baseaddress? : Int) -> Unit
+
+fn load(NES, FixedArray[Int], addr~ : Int = .., length~ : Int = ..) -> Unit
+
+fn pc(NES) -> Int
+
+fn process(PSID) -> Unit!
+
+fn push(NES, @types.UInt8) -> Unit
+
+fn push16(NES, @types.UInt16) -> Unit
+
+fn read(Memory, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
+
+fn read_direct(Memory, @types.UInt16) -> @types.UInt8
+
+fn reset(CIA, videoStandard~ : VideoStandard = ..) -> Unit
+
+fn setA(C64, Int) -> Unit
+
+fn set_bank(C64, IOPort) -> Unit
+
+fn set_flags(NES, @types.UInt8) -> Unit
+
+fn set_interrupt_flag(C64) -> Unit
+
+fn step(NES) -> Int
+
+fn to_string(Exception) -> String
+
 let vic_mem_start : Int
+
+fn videoStandard(PSID) -> VideoStandard
+
+fn write(Memory, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
+
+fn write_array(C64, C64register, Array[@types.UInt8]) -> Unit
+
+fn write_direct(Memory, @types.UInt16, @types.UInt8) -> Unit
 
 // Types and methods
 type ADSR
@@ -15,43 +72,41 @@ type ADSR
 type ADSRState
 
 type Bank
-impl Bank {
-  op_equal(Self, Self) -> Bool
-}
+impl Eq for Bank
 
 pub struct C64 {
-  pub baseaddress : UInt16
-  pub mem : Memory
-  pub bank : FixedArray[Bank]
-  pub cpu : @cpu.CPU
-  pub sid : Array[SID]
-  pub cia : Array[CIA]
-  pub vic : VIC
-  pub model : FixedArray[Model]
-  pub realSID : Bool
-  pub sampleRate : Int
-  pub highQuality : Bool
-  pub stereo : Bool
-  pub playbackSpeed : Int
-  pub paused : Bool
-  pub videoStandard : VideoStandard
-  pub cpuFrequency : CPUClock
-  pub sampleClockRatio : Int
-  pub selectedModel : Model
-  pub mainVolume : Double
-  pub attenuation : Int
-  pub timerSource : Int
-  pub frameCycles : Int
-  pub frameCycleCnt : Int
-  pub prevRasterLine : Int
-  pub sampleCycleCnt : Int
-  pub overSampleCycleCnt : Int
-  pub finished : Bool
-  pub returned : Bool
-  pub irq : Bool
-  pub nmi : Bool
-  pub prevNMI : Bool
-  pub debug : Bool
+  baseaddress : @types.UInt16
+  mem : Memory
+  bank : FixedArray[Bank]
+  cpu : @cpu.CPU
+  sid : Array[SID]
+  cia : Array[CIA]
+  vic : VIC
+  model : FixedArray[Model]
+  realSID : Bool
+  mut sampleRate : Int
+  highQuality : Bool
+  stereo : Bool
+  playbackSpeed : Int
+  paused : Bool
+  videoStandard : VideoStandard
+  mut cpuFrequency : CPUClock
+  mut sampleClockRatio : Int
+  selectedModel : Model
+  mainVolume : Double
+  mut attenuation : Int
+  timerSource : Int
+  mut frameCycles : Int
+  mut frameCycleCnt : Int
+  mut prevRasterLine : Int
+  mut sampleCycleCnt : Int
+  mut overSampleCycleCnt : Int
+  mut finished : Bool
+  returned : Bool
+  mut irq : Bool
+  mut nmi : Bool
+  mut prevNMI : Bool
+  debug : Bool
 }
 impl C64 {
   clear_flags(Self) -> Unit
@@ -61,25 +116,25 @@ impl C64 {
   get_registers(Self) -> @cpu.Registers
   hook(Self, Int, (Int) -> Unit) -> Unit
   initC64(Self) -> Unit!
-  initCPU(Self, ~baseaddress? : Int) -> Unit
-  load(Self, FixedArray[Int], ~offset : Int = .., ~length : Int = .., ~has_load_address : Bool = ..) -> Int
-  new(~baseaddress : Int = .., ~mem? : Memory, ~data : FixedArray[Int] = .., ~address : Int = .., ~length : Int = .., ~sampleRate : Int = .., ~model : FixedArray[Model] = .., ~videoStandard : VideoStandard = .., ~realSID : Bool = .., ~debug : Bool = ..) -> Self
-  op_set(Self, C64register, UInt8) -> Unit
+  initCPU(Self, baseaddress? : Int) -> Unit
+  load(Self, FixedArray[Int], offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> Int
+  new(baseaddress~ : Int = .., mem? : Memory, data~ : FixedArray[Int] = .., address~ : Int = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self
+  op_set(Self, C64register, @types.UInt8) -> Unit
   pc(Self) -> Int
-  push(Self, @cpu.UInt8) -> Unit
-  push16(Self, @cpu.UInt16) -> Unit
-  read(Self, Int, ~dummy : Bool = ..) -> Int
+  push(Self, @types.UInt8) -> Unit
+  push16(Self, @types.UInt16) -> Unit
+  read(Self, Int, dummy~ : Bool = ..) -> Int
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_bank(Self, IOPort) -> Unit
-  set_flags(Self, @cpu.UInt8) -> Unit
+  set_flags(Self, @types.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
-  write(Self, Int, Int, ~dummy : Bool = ..) -> Unit
-  write_array(Self, C64register, Array[UInt8]) -> Unit
-  write_word(Self, C64register, UInt16) -> Unit
+  write(Self, Int, Int, dummy~ : Bool = ..) -> Unit
+  write_array(Self, C64register, Array[@types.UInt8]) -> Unit
+  write_word(Self, C64register, @types.UInt16) -> Unit
 }
 
-pub enum C64register {
+pub(all) enum C64register {
   D6510
   R6510
   UNUSED
@@ -302,231 +357,184 @@ pub enum C64register {
   RESET
   IRQ
 }
-impl C64register {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for C64register
+impl Show for C64register
 
 type CIA
 impl CIA {
   emulate(Self, Int) -> Bool
-  new(~mem? : Memory, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
-  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
+  new(mem? : Memory, Int, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
+  reset(Self, videoStandard~ : VideoStandard = ..) -> Unit
 }
 
 type CIAInterruptControl
-impl CIAInterruptControl {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for CIAInterruptControl
+impl Show for CIAInterruptControl
 
 type CIAInterruptEnable
-impl CIAInterruptEnable {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for CIAInterruptEnable
+impl Show for CIAInterruptEnable
 
 type CIARegister
-impl CIARegister {
-  to_string(Self) -> String
-}
+impl Show for CIARegister
 
 type CIAregister
-impl CIAregister {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for CIAregister
+impl Show for CIAregister
 
 type CPUClock
-impl CPUClock {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for CPUClock
+impl Show for CPUClock
 
-pub type CRA UInt8
-impl CRA {
-  compare(Self, Self) -> Int
-  op_equal(Self, Self) -> Bool
-}
+pub type CRA @types.UInt8
+impl Compare for CRA
+impl Eq for CRA
 
 type CRAFlags
 
-pub type CRB UInt8
-impl CRB {
-  compare(Self, Self) -> Int
-  op_equal(Self, Self) -> Bool
-}
+pub type CRB @types.UInt8
+impl Compare for CRB
+impl Eq for CRB
 
 type CRBFlags
 
 type Channel
-impl Channel {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for Channel
+impl Show for Channel
 
 type Color
 
 type ControlA
-impl ControlA {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for ControlA
+impl Show for ControlA
 
 type ControlB
-impl ControlB {
-  to_string(Self) -> String
-}
+impl Show for ControlB
 
 type ControlRegister
-impl ControlRegister {
-  default() -> Self
-}
+impl Default for ControlRegister
 
 type ControlRegisterHorizontal
 
 type ControlRegisterVertical
 
 type Coordinate
-impl Coordinate {
-  default() -> Self
-}
+impl Default for Coordinate
 
 type Envelope
-impl Envelope {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for Envelope
+impl Show for Envelope
 
 type Exception
 impl Exception {
   to_string(Self) -> String
 }
+impl Show for Exception
 
 type FilterResonanceControl
-impl FilterResonanceControl {
-  to_string(Self) -> String
-}
+impl Show for FilterResonanceControl
 
 type FilterSelect
-impl FilterSelect {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for FilterSelect
+impl Show for FilterSelect
 
 pub struct Flags {
-  pub player : Int
-  pub mode : Mode
-  pub videoStandard : VideoStandard
-  pub model : FixedArray[Model]
+  player : Int
+  mode : Mode
+  videoStandard : VideoStandard
+  model : FixedArray[Model]
 }
-impl Flags {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for Flags
+impl Show for Flags
 
 type FrameRate
-impl FrameRate {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for FrameRate
+impl Show for FrameRate
 
 type Hook
 
-pub type ICR UInt8
-impl ICR {
-  compare(Self, Self) -> Int
-  op_equal(Self, Self) -> Bool
-}
+pub type ICR @types.UInt8
+impl Compare for ICR
+impl Eq for ICR
 
 type ICRFlags
 
 type IOPort
 impl IOPort {
-  default() -> Self
-  from_int(UInt8) -> Self
-  to_string(Self) -> String
+  from_int(@types.UInt8) -> Self
 }
+impl Default for IOPort
+impl Show for IOPort
 
 type InterruptEnable
-impl InterruptEnable {
-  default() -> Self
-}
+impl Default for InterruptEnable
 
 type InterruptFlag
-impl InterruptFlag {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for InterruptFlag
+impl Show for InterruptFlag
 
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  hook(Self, Int, Int, (UInt16, Bool) -> UInt8, (UInt16, UInt8, Bool) -> Unit) -> Unit
-  new(~length : Int = .., ~value : Int = ..) -> Self
-  read(Self, UInt16, ~dummy : Bool = ..) -> UInt8
-  read_direct(Self, UInt16) -> UInt8
-  write(Self, UInt16, UInt8, ~dummy : Bool = ..) -> Unit
-  write_direct(Self, UInt16, UInt8) -> Unit
+  hook(Self, Int, Int, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
+  new(length~ : Int = .., value~ : Int = ..) -> Self
+  read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
+  read_direct(Self, @types.UInt16) -> @types.UInt8
+  write(Self, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
+  write_direct(Self, @types.UInt16, @types.UInt8) -> Unit
 }
 
 type MemoryControlRegister
 
 type Mode
-impl Mode {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for Mode
+impl Show for Mode
 
 type Model
-impl Model {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for Model
+impl Show for Model
 
 pub struct NES {
-  pub baseaddress : UInt16
-  pub mem : Memory
-  pub cpu : @cpu.CPU
+  baseaddress : @types.UInt16
+  mem : Memory
+  cpu : @cpu.CPU
 }
 impl NES {
-  load(Self, FixedArray[Int], ~addr : Int = .., ~length : Int = ..) -> Unit
-  new(~baseaddress : Int = .., ~data : FixedArray[Int] = .., ~addr : Int = .., ~length : Int = ..) -> Self
+  load(Self, FixedArray[Int], addr~ : Int = .., length~ : Int = ..) -> Unit
+  new(baseaddress~ : Int = .., data~ : FixedArray[Int] = .., addr~ : Int = .., length~ : Int = ..) -> Self
   pc(Self) -> Int
-  push(Self, @cpu.UInt8) -> Unit
-  push16(Self, @cpu.UInt16) -> Unit
-  set_flags(Self, @cpu.UInt8) -> Unit
+  push(Self, @types.UInt8) -> Unit
+  push16(Self, @types.UInt16) -> Unit
+  set_flags(Self, @types.UInt8) -> Unit
   step(Self) -> Int
 }
 
 type Output
-impl Output {
-  default() -> Self
-}
+impl Default for Output
 
 pub struct PSID {
-  pub mem : Memory
-  pub data : FixedArray[Int]
-  pub version : Version
-  pub realSID : Bool
-  pub digiMode : Bool
-  pub loadAddress : Int
-  pub initAddress : Int
-  pub playAddress : Int
-  pub endAddress : Int
-  pub title : String
-  pub author : String
-  pub info : String
-  pub songs : UInt16
-  pub defaultSong : UInt16
-  pub flags : Flags
-  pub startPage : UInt8
-  pub pageLength : UInt8
-  pub sid2Flags : SIDFlags
-  pub sid3Flags : SIDFlags
-  pub sid4Flags : SIDFlags
-  pub sid2Address : UInt8
-  pub sid3Address : UInt8
+  mem : Memory
+  data : FixedArray[Int]
+  mut version : Version
+  mut realSID : Bool
+  mut digiMode : Bool
+  mut loadAddress : Int
+  mut initAddress : Int
+  mut playAddress : Int
+  mut endAddress : Int
+  mut title : String
+  mut author : String
+  mut info : String
+  mut songs : @types.UInt16
+  mut defaultSong : @types.UInt16
+  mut flags : Flags
+  mut startPage : @types.UInt8
+  mut pageLength : @types.UInt8
+  sid2Flags : SIDFlags
+  sid3Flags : SIDFlags
+  sid4Flags : SIDFlags
+  mut sid2Address : @types.UInt8
+  mut sid3Address : @types.UInt8
 }
 impl PSID {
   new(Memory, FixedArray[Int]) -> Self!
@@ -535,231 +543,98 @@ impl PSID {
 }
 
 type RunMode
-impl RunMode {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for RunMode
+impl Show for RunMode
 
 type SID
 impl SID {
-  new(~mem? : Memory, Int, ~model : Model = .., ~channel : Channel = .., ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
-  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit
+  new(mem? : Memory, Int, model~ : Model = .., channel~ : Channel = .., videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
+  reset(Self, videoStandard~ : VideoStandard = ..) -> Unit
 }
 
 type SIDFlags
-impl SIDFlags {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for SIDFlags
+impl Show for SIDFlags
 
 type SIDRegister
-impl SIDRegister {
-  to_string(Self) -> String
-}
+impl Show for SIDRegister
 
 type SIDheader
-impl SIDheader {
-  to_string(Self) -> String
-}
+impl Show for SIDheader
 
 type SIDregister
-impl SIDregister {
-  compare(Self, Self) -> Int
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Compare for SIDregister
+impl Eq for SIDregister
+impl Show for SIDregister
 
 type SIDspecs
 
 type SIDwavOutput
-impl SIDwavOutput {
-  default() -> Self
-}
+impl Default for SIDwavOutput
 
 type ScanLineCycles
-impl ScanLineCycles {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for ScanLineCycles
+impl Show for ScanLineCycles
 
 type ScanLines
-impl ScanLines {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for ScanLines
+impl Show for ScanLines
 
 type SerialMode
-impl SerialMode {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for SerialMode
+impl Show for SerialMode
 
 type TimeOfDay
-impl TimeOfDay {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for TimeOfDay
+impl Show for TimeOfDay
 
 type Timer
-impl Timer {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for Timer
+impl Show for Timer
 
 type TimerAInputMode
-impl TimerAInputMode {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for TimerAInputMode
+impl Show for TimerAInputMode
 
 type TimerBInputMode
-impl TimerBInputMode {
-  to_string(Self) -> String
-}
-
-pub type UInt16 Int
-impl UInt16 {
-  compare(Self, Self) -> Int
-  default() -> Self
-  op_equal(Self, Self) -> Bool
-  to_hex(Self) -> String
-  to_string(Self) -> String
-}
-
-pub type UInt8 Int
-impl UInt8 {
-  compare(Self, Self) -> Int
-  default() -> Self
-  op_equal(Self, Self) -> Bool
-  to_hex(Self) -> String
-  to_string(Self) -> String
-}
+impl Show for TimerBInputMode
 
 type VIC
 impl VIC {
   emulate(Self, Int) -> Bool
-  new(~mem? : Memory, Int, ~videoStandard : VideoStandard = .., ~debug : Bool = ..) -> Self
-  reset(Self, ~videoStandard : VideoStandard = ..) -> Unit!
+  new(mem? : Memory, Int, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
+  reset(Self, videoStandard~ : VideoStandard = ..) -> Unit!
 }
 
 type VICRegister
 
 type VICregister
-impl VICregister {
-  compare(Self, Self) -> Int
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Compare for VICregister
+impl Eq for VICregister
+impl Show for VICregister
 
 type Version
-impl Version {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for Version
+impl Show for Version
 
 type VideoStandard
-impl VideoStandard {
-  op_equal(Self, Self) -> Bool
-  to_string(Self) -> String
-}
+impl Eq for VideoStandard
+impl Show for VideoStandard
 
 type Voice
-impl Voice {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for Voice
+impl Show for Voice
 
 type VoiceControl
-impl VoiceControl {
-  default() -> Self
-  to_string(Self) -> String
-}
+impl Default for VoiceControl
+impl Show for VoiceControl
 
 type Wave
 
 type Waveform
-impl Waveform {
-  op_equal(Self, Self) -> Bool
-}
+impl Eq for Waveform
 
 // Type aliases
 
 // Traits
-
-// Extension Methods
-impl Show for C64register
-
-impl Show for CIAInterruptControl
-
-impl Show for CIAInterruptEnable
-
-impl Show for CIARegister
-
-impl Show for CIAregister
-
-impl Show for CPUClock
-
-impl Show for Channel
-
-impl Show for ControlA
-
-impl Show for ControlB
-
-impl Show for Envelope
-
-impl Show for Exception
-
-impl Show for FilterResonanceControl
-
-impl Show for FilterSelect
-
-impl Show for Flags
-
-impl Show for FrameRate
-
-impl Show for IOPort
-
-impl Show for InterruptFlag
-
-impl Show for Mode
-
-impl Show for Model
-
-impl Show for RunMode
-
-impl Show for SIDFlags
-
-impl Show for SIDRegister
-
-impl Show for SIDheader
-
-impl Show for SIDregister
-
-impl Show for ScanLineCycles
-
-impl Show for ScanLines
-
-impl Show for SerialMode
-
-impl Show for TimeOfDay
-
-impl Show for Timer
-
-impl Show for TimerAInputMode
-
-impl Show for TimerBInputMode
-
-impl Show for UInt16
-
-impl Show for UInt8
-
-impl Show for VICregister
-
-impl Show for Version
-
-impl Show for VideoStandard
-
-impl Show for Voice
-
-impl Show for VoiceControl
 

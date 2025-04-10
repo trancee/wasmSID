@@ -1,3 +1,4 @@
+///|
 enum SIDheader {
   Magic // 0x00 String[4]
   //
@@ -26,7 +27,7 @@ enum SIDheader {
   SID3Address // 0x7B Byte
 } derive(Show)
 
-/// Valid values:
+///| Valid values:
 /// - 0x0001
 /// - 0x0002 (PSID V2NG, RSID)
 /// - 0x0003 (PSID V2NG, RSID)
@@ -48,6 +49,7 @@ enum Version {
   RSIDv4
 } derive(Show, Eq)
 
+///|
 fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
   if realSID {
     match value._ {
@@ -89,6 +91,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
 // bit1:(0:C64,1:PlaySIDsamples/RSID_BASICflag)
 // bit0:(0:builtin-player,1:MUS)
 
+///|
 enum Mode {
   // Unknown
   C64
@@ -96,6 +99,7 @@ enum Mode {
   BASIC
 } derive(Show, Eq)
 
+///|
 fn Mode::from_int(value : Int, realSID : Bool) -> Mode! {
   if realSID {
     match value {
@@ -116,15 +120,18 @@ fn Mode::from_int(value : Int, realSID : Bool) -> Mode! {
 // bit7 should be 'middle' channel-flag (overriding bit6 left/right)
 // bit6: output-channel (0(default):left, 1:right, ?:both?),
 // bit5..4:SIDmodel(00:setting,01:6581,10:8580,11:both)
+///|
 struct SIDFlags {
   channel : Channel
   model : Model
 } derive(Show, Eq)
 
+///|
 fn SIDFlags::default() -> SIDFlags! {
   SIDFlags::from_int!(0x0000)
 }
 
+///|
 fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
   {
     channel: Channel::from_int!((value._ >> 6) & 0b11),
@@ -132,6 +139,7 @@ fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
   }
 }
 
+///|
 pub struct Flags {
   player : Int
   mode : Mode
@@ -139,10 +147,12 @@ pub struct Flags {
   model : FixedArray[Model]
 } derive(Show, Eq)
 
+///|
 fn Flags::default() -> Flags! {
   Flags::from_int!(0x0000, false)
 }
 
+///|
 fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags! {
   {
     player: (value._ >> 0) & 0b01,
@@ -156,10 +166,12 @@ fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags! {
   }
 }
 
+///|
 fn op_shr(self : Flags, bits : Int) -> Int {
   self >> bits
 }
 
+///|
 fn land(self : Flags, bits : Int) -> Int {
   self & bits
 }

@@ -1,5 +1,4 @@
-/// clear; moon run main | diff -y nestest/nestest.log -
-
+///| clear; moon run main | diff -y nestest/nestest.log -
 pub fn nestest() -> Unit {
   let nes = @lib.NES::new(
     baseaddress=0xC000,
@@ -18,7 +17,7 @@ pub fn nestest() -> Unit {
     addr=0x4000,
   )
   // nes.load([0x20, 0x00, 0xC0], offset=0x0800)
-  nes.push16(@cpu.UInt16(0x07FF))
+  nes.push16(0x07FF)
   while nes.pc() != 0x0800 {
     let _ = nes.step()
     // if nes.pc() == 0xCFFC { break }
@@ -28,16 +27,17 @@ pub fn nestest() -> Unit {
     "$02 #" +
     nes.mem.read(0x02, dummy=true).to_hex() +
     " " +
-    if nes.mem.read(0x02) == UInt8(0x00) { "OK" } else { "FAIL" },
+    (if nes.mem.read(0x02) == 0x00 { "OK" } else { "FAIL" }),
   )
   println(
     "$03 #" +
     nes.mem.read(0x03, dummy=true).to_hex() +
     " " +
-    if nes.mem.read(0x03) == UInt8(0x00) { "OK" } else { "FAIL" },
+    (if nes.mem.read(0x03) == 0x00 { "OK" } else { "FAIL" }),
   )
 }
 
+///|
 let nesdata : FixedArray[Int] = [
   // 0x4E, 0x45, 0x53, 0x1A, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x10 iNES Header
   0x4C, 0xF5, 0xC5, 0x60, 0x78, 0xD8, 0xA2, 0xFF, 0x9A, 0xAD, 0x02, 0x20, 0x10, 0xFB,

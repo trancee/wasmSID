@@ -1,3 +1,4 @@
+///|
 pub enum Flag {
   C // Carry Flag
   Z // Zero Flag
@@ -9,10 +10,12 @@ pub enum Flag {
   N // Negative Flag
 } derive(Eq)
 
+///|
 pub fn lor(self : Flag, flag : Flag) -> Int {
   self.bits() | flag.bits()
 }
 
+///|
 fn bits(self : Flag) -> Int {
   match self {
     C => 0b00000001 // 0x01 Carry Flag
@@ -26,6 +29,7 @@ fn bits(self : Flag) -> Int {
   }
 }
 
+///|
 struct Flags {
   mut c : Bool // 0: Carry Flag
   mut z : Bool // 1: Zero Flag
@@ -37,6 +41,7 @@ struct Flags {
   mut n : Bool // 7: Negative Flag
 } derive(Show, Eq)
 
+///|
 fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
   {
     c: flags.bit(0),
@@ -62,6 +67,7 @@ fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
 //   } + if self[C] { "C" } else { "c" }
 // }
 
+///|
 fn Flags::op_get(self : Flags, flag : Flag) -> Bool {
   match flag {
     C => self.c
@@ -75,6 +81,7 @@ fn Flags::op_get(self : Flags, flag : Flag) -> Bool {
   }
 }
 
+///|
 fn Flags::op_set(self : Flags, flag : Flag, value : Bool) -> Unit {
   match flag {
     C => self.c = value
@@ -88,6 +95,7 @@ fn Flags::op_set(self : Flags, flag : Flag, value : Bool) -> Unit {
   }
 }
 
+///|
 fn Flags::reset(self : Flags) -> Unit {
   self[C] = false
   self[Z] = false
@@ -99,14 +107,17 @@ fn Flags::reset(self : Flags) -> Unit {
   self[N] = false
 }
 
+///|
 fn clear(self : Flags, flag : Flag) -> Unit {
   self[flag] = false
 }
 
+///|
 fn is_clear(self : Flags, flag : Flag) -> Bool {
   self[flag] == false
 }
 
+///|
 fn not_set(self : Flags, flag : Flag) -> Bool {
   self[flag] == false
 }
@@ -115,11 +126,13 @@ fn not_set(self : Flags, flag : Flag) -> Bool {
 //   self[flag] = true
 // }
 
+///|
 fn is_set(self : Flags, flag : Flag) -> Bool {
   self[flag] == true
 }
 
 // Get status register value.
+///|
 pub fn get(self : Flags) -> UInt8 {
   self.getC() |
   self.getZ() |
@@ -132,6 +145,7 @@ pub fn get(self : Flags) -> UInt8 {
 }
 
 // Set status register value.
+///|
 pub fn set(self : Flags, flags : UInt8) -> Unit {
   self[C] = flags.bit(0)
   self[Z] = flags.bit(1)
@@ -143,30 +157,37 @@ pub fn set(self : Flags, flags : UInt8) -> Unit {
   self[N] = flags.bit(7)
 }
 
+///|
 fn carry(self : Flags) -> Bool {
   self[C]
 }
 
+///|
 fn not_carry(self : Flags) -> Bool {
   not(self.carry())
 }
 
+///|
 fn clear_carry(self : Flags) -> Unit {
   self[C] = false
 }
 
+///|
 fn set_carry(self : Flags) -> Unit {
   self[C] = true
 }
 
+///|
 fn zero(self : Flags) -> Bool {
   self[Z]
 }
 
+///|
 fn not_zero(self : Flags) -> Bool {
   not(self.zero())
 }
 
+///|
 fn interrupt(self : Flags) -> Bool {
   self[I]
 }
@@ -175,111 +196,138 @@ fn interrupt(self : Flags) -> Bool {
 //   not(self.interrupt())
 // }
 
+///|
 fn clear_interrupt(self : Flags) -> Unit {
   self[I] = false
 }
 
+///|
 pub fn set_interrupt(self : Flags) -> Unit {
   self[I] = true
 }
 
+///|
 fn set_break(self : Flags) -> Unit {
   self[B] = true
 }
 
+///|
 fn decimal(self : Flags) -> Bool {
   self[D]
 }
 
+///|
 fn clear_decimal(self : Flags) -> Unit {
   self[D] = false
 }
 
+///|
 fn set_decimal(self : Flags) -> Unit {
   self[D] = true
 }
 
+///|
 fn not_decimal(self : Flags) -> Bool {
   not(self.decimal())
 }
 
+///|
 fn overflow(self : Flags) -> Bool {
   self[V]
 }
 
+///|
 fn not_overflow(self : Flags) -> Bool {
   not(self.overflow())
 }
 
+///|
 fn clear_overflow(self : Flags) -> Unit {
   self[V] = false
 }
 
+///|
 fn negative(self : Flags) -> Bool {
   self[N]
 }
 
+///|
 fn not_negative(self : Flags) -> Bool {
   not(self.negative())
 }
 
+///|
 fn getC(self : Flags) -> Int {
   self[C].to_int() << 0
 }
 
+///|
 fn getZ(self : Flags) -> Int {
   self[Z].to_int() << 1
 }
 
+///|
 fn getI(self : Flags) -> Int {
   self[I].to_int() << 2
 }
 
+///|
 fn getD(self : Flags) -> Int {
   self[D].to_int() << 3
 }
 
+///|
 fn getB(self : Flags) -> Int {
   self[B].to_int() << 4
 }
 
+///|
 fn getU(self : Flags) -> Int {
   self[U].to_int() << 5
 }
 
+///|
 fn getV(self : Flags) -> Int {
   self[V].to_int() << 6
 }
 
+///|
 fn getN(self : Flags) -> Int {
   self[N].to_int() << 7
 }
 
+///|
 fn setN(self : Flags, value : Bool) -> Unit {
   self[N] = value
 }
 
+///|
 fn setB(self : Flags, value : Bool) -> Unit {
   self[B] = value
 }
 
+///|
 fn setI(self : Flags, value : Bool) -> Unit {
   self[I] = value
 }
 
+///|
 fn setV(self : Flags, value : Bool) -> Unit {
   self[V] = value
 }
 
+///|
 fn setC(self : Flags, value : Bool) -> Unit {
   self[C] = value
 }
 
+///|
 fn setZ(self : Flags, value : Bool) -> Unit {
   self[Z] = value
 }
 
 // Set N and Z flag values.
+///|
 fn setZN(self : Flags, value : UInt8) -> Unit {
   self.setZ(value == 0)
   self.setN(value.bit(7))

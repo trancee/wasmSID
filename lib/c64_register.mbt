@@ -1,4 +1,4 @@
-/// 1             $1             R6510
+///| 1             $1             R6510
 /// 6510 On-Chip I/O Port Register
 ///
 /// Bit 0: LORAM signal.  Selects ROM or RAM at 40960 ($A000).  1=BASIC, 0=RAM
@@ -52,6 +52,7 @@ struct IOPort {
   cassette_motor_switch_control : Bool
 } derive(Show, Default)
 
+///|
 pub fn IOPort::from_int(value : UInt8) -> IOPort {
   {
     /// Bit 0: LORAM signal.  Selects ROM or RAM at 40960 ($A000).  1=BASIC, 0=RAM
@@ -72,7 +73,8 @@ pub fn IOPort::from_int(value : UInt8) -> IOPort {
   }
 }
 
-pub enum C64register {
+///|
+pub(all) enum C64register {
   /// 6510 On-Chip I/O Data Direction Register
   D6510
   /// 6510 On-Chip I/O Port Register
@@ -559,6 +561,7 @@ pub enum C64register {
   IRQ
 } derive(Show, Eq)
 
+///|
 fn c64(register : C64register) -> Int {
   match register {
     /// Page 0
@@ -814,9 +817,16 @@ fn c64(register : C64register) -> Int {
     CARTROM => 0x8000
     BASICROM => 0xA000
     KERNALROM => 0xE000
+
+    /// Invalid register
+    _ => {
+      println("unknown C64 register \{register}")
+      panic()
+    }
   }
 }
 
+///|
 fn C64register::from_int(value : Int) -> C64register! {
   match value {
     /// Page 0

@@ -1,1 +1,8 @@
-{}
+{
+    "import": [
+        {
+            "path": "trancee/wasmSID/lib/types",
+            "alias": "t"
+        }
+    ]
+}

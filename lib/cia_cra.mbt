@@ -1,9 +1,9 @@
+///|
 pub type CRA UInt8 derive(Eq, Compare)
 
-/// There are two control registers in the 6526, CRA and CRB.
+///| There are two control registers in the 6526, CRA and CRB.
 /// CRA is associated with TIMER A and CRB is associated with TIMER B.
 /// The register format is as follows:
-
 enum CRAFlags {
   NONE
   //
@@ -34,6 +34,7 @@ enum CRAFlags {
   TODIN
 }
 
+///|
 fn CRAFlags::op_get(self : CRAFlags, flag : CRAFlags) -> Int {
   match flag {
     NONE => 0
@@ -49,22 +50,27 @@ fn CRAFlags::op_get(self : CRAFlags, flag : CRAFlags) -> Int {
   }
 }
 
+///|
 fn CRA::land(self : CRA, value : CRAFlags) -> CRA {
   self._ & value[value]
 }
 
+///|
 fn CRA::lor(self : CRA, value : CRA) -> CRA {
   self._ | value._
 }
 
+///|
 fn cra(flag : CRAFlags) -> Int {
   flag[flag]
 }
 
+///|
 fn CRA::has(self : CRA, mask : CRAFlags) -> Bool {
   (self._ & mask[mask]) != 0
 }
 
+///|
 fn CRA::clear(self : CRA, mask : CRAFlags) -> CRA {
   self._ & (-mask[mask] - 1)
 }

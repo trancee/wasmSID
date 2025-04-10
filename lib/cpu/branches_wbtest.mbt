@@ -1,5 +1,6 @@
 // Tests
 
+///|
 test "BEQCanBranchForwardsWhenZeroIsSet" {
   let t = {
     // Input
@@ -26,6 +27,7 @@ test "BEQCanBranchForwardsWhenZeroIsSet" {
   testBEQ!(t)
 }
 
+///|
 test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
   let t = {
     // Input
@@ -52,6 +54,7 @@ test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
   testBEQ!(t)
 }
 
+///|
 test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
   let t = {
     // Input
@@ -78,6 +81,7 @@ test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
   testBEQ!(t)
 }
 
+///|
 test "BEQCanBranchBackwardsWhenZeroIsSet" {
   let t = {
     // Input
@@ -104,6 +108,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSet" {
   testBEQ!(t)
 }
 
+///|
 test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
   let t = {
     // Input
@@ -130,6 +135,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
   testBEQ!(t)
 }
 
+///|
 test "BNECanBranchForwardsWhenZeroIsNotSet" {
   let t = {
     // Input
@@ -156,6 +162,7 @@ test "BNECanBranchForwardsWhenZeroIsNotSet" {
   testBEQ!(t)
 }
 
+///|
 test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
   let t = {
     // Input
@@ -182,6 +189,7 @@ test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
   testBEQ!(t)
 }
 
+///|
 test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
   let t = {
     // Input
@@ -208,6 +216,7 @@ test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
   testBEQ!(t)
 }
 
+///|
 test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
   let t = {
     // Input
@@ -234,6 +243,7 @@ test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
   testBEQ!(t)
 }
 
+///|
 test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
   let t = {
     // Input
@@ -260,6 +270,7 @@ test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
   testBEQ!(t)
 }
 
+///|
 test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
   let t = {
     // Input
@@ -286,6 +297,7 @@ test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
   testBEQ!(t)
 }
 
+///|
 test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
   let t = {
     // Input
@@ -314,6 +326,7 @@ test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
 
 // Test
 
+///|
 struct BEQTestData {
   // Input
   pc : Int
@@ -337,6 +350,7 @@ struct BEQTestData {
   expectN : Bool
 }
 
+///|
 fn testBEQ(t : BEQTestData) -> Unit!Error {
   let cpu = CPU::new(pc=t.pc)
 
