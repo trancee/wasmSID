@@ -750,7 +750,7 @@ fn C64::step(self : C64) -> Int {
 }
 
 ///|
-pub fn C64::hook(self : C64, address : Int, hook : (Int) -> Unit) -> Unit {
+pub fn C64::hook(self : C64, address : UInt16, hook : (@cpu.CPU) -> Unit) -> Unit {
   self.cpu.hook(address, hook)
 }
 
@@ -947,14 +947,14 @@ fn C64::op_get(self : C64, register : C64register) -> UInt8 {
 pub fn C64::write(
   self : C64,
   //
-  address : Int,
-  value : Int,
+  address : UInt16,
+  value : UInt8,
   //
   dummy~ : Bool = false
 ) -> Unit {
   if self.debug && not(dummy) {
     let register = try {
-      " | \{C64register::from_int!(address)}"
+      " | \{C64register::from_int!(address.to_int())}"
     } catch {
       _ =>
         // println(err)

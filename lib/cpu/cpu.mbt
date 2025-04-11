@@ -1,11 +1,11 @@
 ///|
 struct AddressHook {
-  address : Int
-  hook : (Int) -> Unit
+  address : UInt16
+  hook : (CPU) -> Unit
 }
 
 ///|
-fn AddressHook::new(address : Int, hook : (Int) -> Unit) -> AddressHook {
+fn AddressHook::new(address : UInt16, hook : (CPU) -> Unit) -> AddressHook {
   { address, hook }
 }
 
@@ -207,7 +207,7 @@ pub fn CPU::set_interrupt(self : CPU) -> Unit {
 }
 
 ///|
-pub fn hook(self : CPU, address : Int, hook : (Int) -> Unit) -> Unit {
+pub fn hook(self : CPU, address : UInt16, hook : (CPU) -> Unit) -> Unit {
   self.hooks.push(AddressHook::new(address, hook))
 }
 
@@ -392,14 +392,20 @@ pub fn interrupts(self : CPU) -> Bool {
 pub fn step(self : CPU) -> Int {
   let cycles = self.cycles
   if not(self.interrupts()) {
+    let mut skip = false
     for i = 0; i < self.hooks.length(); i = i + 1 {
       if self.pc == self.hooks[i].address {
-        (self.hooks[i].hook)(self.pc._)
+        (self.hooks[i].hook)(self)
+        skip = true
       }
     }
 
     //
-    let opcode = self.read(self.pc, dummy=true)
+    let opcode = if skip {
+      U8::u8(0x60)
+    } else {
+      self.read(self.pc, dummy=true)
+    }
 
     //
     let (name, op, mode, _size, _cycles, _, illegal) = instructions[opcode._]

@@ -58,7 +58,7 @@ pub fn CIA::new(
   //
 
   let cia : CIA = {
-    mem: FixedArray::make(CIA_MEM_SIZE + 1, 0x00),
+    mem: FixedArray::make(CIA_MEM_SIZE, 0x00),
     baseaddress,
 
     //
@@ -73,41 +73,34 @@ pub fn CIA::new(
   }
 
   //
-  match mem {
-    Some(mem) =>
-      mem.hook(
-        baseaddress,
-        baseaddress + CIA_MEM_SIZE,
-        // mem,
-        fn(address : UInt16, dummy : Bool) -> UInt8 {
-          let register = try {
-            CIAregister::from_int!(address._ - baseaddress)
-          } catch {
-            err => {
-              println(err)
-              panic()
-            }
+  if mem is Some(mem) {
+    mem.hook(
+      baseaddress,
+      baseaddress + CIA_MEM_SIZE,
+      // mem,
+      fn(address : UInt16, dummy : Bool) -> UInt8 {
+        let register = try {
+          CIAregister::from_int!(address._ - baseaddress)
+        } catch {
+          err => {
+            println(err)
+            panic()
           }
-          cia.read(register, dummy~)._
-        },
-        fn(address : UInt16, value : UInt8, dummy : Bool) {
-          let register = try {
-            CIAregister::from_int!(address._ - baseaddress)
-          } catch {
-            err => {
-              println(err)
-              panic()
-            }
+        }
+        cia.read(register, dummy~)._
+      },
+      fn(address : UInt16, value : UInt8, dummy : Bool) {
+        let register = try {
+          CIAregister::from_int!(address._ - baseaddress)
+        } catch {
+          err => {
+            println(err)
+            panic()
           }
-          cia.write(register, value, dummy~)
-        },
-      )
-
-    /// no memory
-    _ => {
-      println("CIA::new no memory")
-      panic()
-    }
+        }
+        cia.write(register, value, dummy~)
+      },
+    )
   }
 
   //
