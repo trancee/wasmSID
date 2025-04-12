@@ -1,3 +1,5 @@
+
+
 ///|
 fn main {
   // let data : FixedArray[Int] = [
@@ -15,7 +17,7 @@ fn main {
   //   i += 1
   // }
 
-  // nestest()
+  nestest()
   // sidtest()
-  testsuite()
+  // testsuite()
 }

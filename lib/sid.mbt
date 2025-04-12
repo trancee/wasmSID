@@ -91,16 +91,13 @@
 /// assigned to it.  The result is that every 32-byte area in this 1K
 /// block is a mirror of every other.  For the sake of clarity in your
 /// programs, it is advisable not to use these addresses at all.
-let sid_mem_start = 0xD400
+const SID_MEM_START : Int = 0xD400
 
 ///|
-let sid1_mem_start = 0xD400
+const SID_MEM_END : Int = SID_MEM_START + SID_MEM_SIZE
 
 ///|
-let sid_mem_end = 0xD7FF
-
-///|
-let sid_mem_size = 0x03FF
+const SID_MEM_SIZE : Int = 0x03FF
 
 ///|
 struct SID {
@@ -151,7 +148,7 @@ pub fn SID::new(
   //
 
   let sid : SID = {
-    mem: FixedArray::make(sid_mem_size + 1, 0x00),
+    mem: FixedArray::make(SID_MEM_SIZE + 1, 0x00),
     baseaddress,
 
     //
@@ -188,7 +185,7 @@ pub fn SID::new(
     Some(mem) =>
       mem.hook(
         baseaddress,
-        baseaddress + sid_mem_size,
+        baseaddress + SID_MEM_SIZE,
         // mem,
         fn(address : UInt16, _ : Bool) -> UInt8 {
           let register = try {
@@ -760,8 +757,8 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
       " | \{register}",
     )
   }
-  if self.baseaddress + address < sid_mem_start ||
-    self.baseaddress + address > sid_mem_end {
+  if self.baseaddress + address < SID_MEM_START ||
+    self.baseaddress + address > SID_MEM_END {
     // self.dump()
     println(
       "SID \{register} $" +
@@ -875,8 +872,8 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       " | \{register}",
     )
   }
-  if self.baseaddress + address < sid_mem_start ||
-    self.baseaddress + address > sid_mem_end {
+  if self.baseaddress + address < SID_MEM_START ||
+    self.baseaddress + address > SID_MEM_END {
     // self.dump()
     println(
       "SID \{register} $" +

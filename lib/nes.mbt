@@ -1,33 +1,51 @@
 ///|
 pub struct NES {
-  baseaddress : UInt16
+  pc : UInt16
   mem : Memory
   cpu : @cpu.CPU
 }
 
 ///|
 pub fn NES::new(
-  baseaddress~ : Int = 0x0000,
-  data~ : FixedArray[Byte] = [],
-  addr~ : Int = 0x0000,
-  length~ : Int = data.length()
+  pc~ : UInt16 = 0x0000,
+  //
+  data~ : Bytes = [],
+  address~ : UInt16 = 0x0000,
+  length~ : Int = data.length(),
+  offset~ : Int = 0,
+  //
+  debug~ : Bool = false
 ) -> NES {
-  let cpu = @cpu.CPU::new(pc=baseaddress, decimal_mode=false)
+  let cpu = @cpu.CPU::new(
+    pc~,
+    //
+    address~,
+    data~,
+    length~,
+    offset~,
+    //
+    decimal_mode=false,
+    //
+    debug~,
+  )
+
+  //
   let mem = Memory::new()
-  let _ = cpu.load(addr, data, length~)
-  let nes : NES = { baseaddress, mem, cpu }
-  nes
+
+  //
+  { pc, mem, cpu }
 }
 
 ///|
 pub fn NES::load(
   self : NES,
-  data : FixedArray[Byte],
-  addr~ : Int = 0,
-  length~ : Int = data.length()
-) -> Unit {
-  let _ = self.cpu.load(addr, data, length~)
-
+  //
+  data : Bytes,
+  address~ : UInt16 = 0x0000,
+  length~ : Int = data.length(),
+  offset~ : Int = 0
+) -> UInt16 {
+  self.cpu.load(address, data, length~, offset~)
 }
 
 ///|
@@ -36,13 +54,9 @@ pub fn NES::step(self : NES) -> Int {
 }
 
 ///|
-pub fn NES::pc(self : NES) -> Int {
+pub fn NES::pc(self : NES) -> UInt16 {
   self.cpu.pc()
 }
-
-// pub fn get_flags(self : NES) -> @cpu.UInt8 {
-//   self.cpu.get_flags()
-// }
 
 ///|
 pub fn NES::set_flags(self : NES, flags : UInt8) -> Unit {
@@ -50,19 +64,6 @@ pub fn NES::set_flags(self : NES, flags : UInt8) -> Unit {
 }
 
 ///|
-pub fn NES::push(self : NES, value : UInt8) -> Unit {
-  self.cpu.push(value)
-}
-
-///|
 pub fn NES::push16(self : NES, value : UInt16) -> Unit {
   self.cpu.push16(value)
 }
-
-// pub fn op_get(self : NES, addr : Int) -> UInt8 {
-//   self.cpu.read(addr)
-// }
-
-// pub fn op_set(self : NES, addr : Int, value : Int) -> Unit {
-//   self.cpu.write(addr, value)
-// }

@@ -50,8 +50,8 @@
 ///       $FFFC         System Reset (RES) Hardware Vector
 ///       $FFFE         Maskable Interrupt Request and Break Hardware Vectors
 pub struct Hook {
-  start : Int
-  end : Int
+  start : UInt16
+  end : UInt16
   //
   read : (UInt16, Bool) -> UInt8
   write : (UInt16, UInt8, Bool) -> Unit
@@ -59,8 +59,8 @@ pub struct Hook {
 
 ///|
 fn Hook::new(
-  start : Int,
-  end : Int,
+  start : UInt16,
+  end : UInt16,
   //
   read : (UInt16, Bool) -> UInt8,
   write : (UInt16, UInt8, Bool) -> Unit
@@ -89,8 +89,8 @@ pub fn Memory::new(length~ : Int = 0xFFFF, value~ : Int = 0x00) -> Memory {
 pub fn hook(
   self : Memory,
   //
-  start : Int,
-  end : Int,
+  start : UInt16,
+  end : UInt16,
   //
   read : (UInt16, Bool) -> UInt8,
   write : (UInt16, UInt8, Bool) -> Unit

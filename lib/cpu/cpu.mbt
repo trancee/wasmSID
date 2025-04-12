@@ -1,12 +1,12 @@
 ///|
-struct AddressHook {
+struct Trap {
   address : UInt16
-  hook : (CPU) -> Unit
+  handler : (CPU) -> Unit
 }
 
 ///|
-fn AddressHook::new(address : UInt16, hook : (CPU) -> Unit) -> AddressHook {
-  { address, hook }
+fn Trap::new(address : UInt16, handler : (CPU) -> Unit) -> Trap {
+  { address, handler }
 }
 
 ///|
@@ -20,14 +20,15 @@ pub const CPU_MEM_SIZE = 0xFFFF
 
 ///|
 pub struct CPU {
-  mem : FixedArray[Int]
+  mem : FixedArray[UInt8]
   //
-  mut read : ((Int, Bool) -> Int)?
-  mut write : ((Int, Int, Bool) -> Unit)?
+  mut read : ((UInt16, Bool) -> UInt8)?
+  mut write : ((UInt16, UInt8, Bool) -> Unit)?
   //
   mut cycles : Int
   //
   mut pc : UInt16 // Program Counter
+  //
   registers : Registers
   flags : Flags
   //
@@ -36,18 +37,20 @@ pub struct CPU {
   mut nmi : Bool
   mut irq : Bool
   //
-  hooks : Array[AddressHook]
+  traps : Array[Trap]
   //
   mut debug : Bool
 }
 
 ///|
 pub fn CPU::new(
-  pc~ : Int = 0x0000,
+  pc~ : UInt16 = 0x0000,
   //
-  // data~ : FixedArray[Int] = [],
-  // addr~ : Int = 0,
-  // length~ : Int = data.length(),
+  address? : UInt16,
+  //
+  data~ : Bytes = [],
+  length~ : Int = data.length(),
+  offset~ : Int = 0,
   //
   decimal_mode~ : Bool = true,
   //
@@ -66,6 +69,7 @@ pub fn CPU::new(
     cycles: 0,
     //
     pc,
+    //
     registers,
     flags,
     //
@@ -74,40 +78,43 @@ pub fn CPU::new(
     nmi: false,
     irq: false,
     //
-    hooks: [],
+    traps: [],
     //
     debug,
   }
+
+  //
   cpu.write16(RESET, pc)
 
-  // if data.length() > 0 {
-  //   let addr = cpu.load(addr, data, ~length)
+  //
+  if data.length() > 0 {
+    let _ = cpu.load(address.or(pc), data, length~, offset~)
 
-  // }
+  }
+
+  //
   cpu
 }
 
 ///|
-pub fn set_read(self : CPU, read : (Int, Bool) -> Int) -> Unit {
+pub fn set_read(self : CPU, read : (UInt16, Bool) -> UInt8) -> Unit {
   self.read = Some(read)
 }
 
 ///|
-pub fn set_write(self : CPU, write : (Int, Int, Bool) -> Unit) -> Unit {
+pub fn set_write(self : CPU, write : (UInt16, UInt8, Bool) -> Unit) -> Unit {
   self.write = Some(write)
 }
 
 ///|
-pub fn debug(self : CPU, state : Bool) -> Bool {
-  let tmp = self.debug
-  self.debug = state
-  tmp
+pub fn set_debug(self : CPU, debug : Bool) -> Unit {
+  self.debug = debug
 }
 
 /// p.269
 /// Interrupts
 /// Defaults for NMI, BRK, and IRQ vectors (Non-Maskable Interrupt, BReaK, and Inter-
-/// rupt ReQuest vectors) are permanently stored in the top six bytes of the 651O's
+/// rupt ReQuest vectors) are permanently stored in the top six bytes of the 6510's
 /// memory. With the 64, NMI jumps to $FE43, BRK to $FE66, and IRQ to $FF43. Hard-
 /// ware reset (see Chapter 5) has no indirect vectors apart from the optional cartridge's
 /// start address.
@@ -135,19 +142,14 @@ const RESET = 0xFFFC
 const IRQ = 0xFFFE
 
 ///|
-pub fn setRESET(self : CPU, pc : UInt16) -> Unit {
-  self.write16(RESET, pc)
-}
-
-///|
-pub fn CPU::reset(self : CPU, baseaddress? : UInt16) -> Unit {
+pub fn CPU::reset(self : CPU, pc? : UInt16) -> Unit {
   // self.mem.clear()
 
   self.cycles = 0
 
   //
-  self.pc = match baseaddress {
-    Some(baseaddress) => baseaddress
+  self.pc = match pc {
+    Some(pc) => pc
     None => self.read16(RESET)
   }
 
@@ -207,13 +209,13 @@ pub fn CPU::set_interrupt(self : CPU) -> Unit {
 }
 
 ///|
-pub fn hook(self : CPU, address : UInt16, hook : (CPU) -> Unit) -> Unit {
-  self.hooks.push(AddressHook::new(address, hook))
+pub fn trap(self : CPU, address : UInt16, handler : (CPU) -> Unit) -> Unit {
+  self.traps.push(Trap::new(address, handler))
 }
 
 ///|
-pub fn pc(self : CPU) -> Int {
-  self.pc._
+pub fn pc(self : CPU) -> UInt16 {
+  self.pc
 }
 
 ///|
@@ -222,7 +224,7 @@ pub fn a(self : CPU) -> UInt8 {
 }
 
 ///|
-pub fn register(self : CPU, register : Register, value : Int) -> Unit {
+pub fn register(self : CPU, register : Register, value : UInt8) -> Unit {
   self.registers[register] = value
 }
 
@@ -233,8 +235,9 @@ pub fn load(
   //
   address : UInt16,
   //
-  data : FixedArray[Byte],
+  data : Bytes,
   length~ : Int = data.length(),
+  offset~ : Int = 0,
   //
   has_load_address~ : Bool = false
 ) -> UInt16 {
@@ -242,25 +245,23 @@ pub fn load(
   //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
   // )
   let address = if has_load_address {
-    U16::u16(data[0]) | (U16::u16(data[1]) << 8)
+    U16::u16((data[1].to_int() << 8) | data[0].to_int())
   } else {
     address
   }
-  let start = if has_load_address { 2 } else { 0 }
+  let start = if has_load_address { 2 } else { offset }
   for i = 0; i < length - start; i = i + 1 {
-    self.write(address + i, U8::u8(data[i + start]), dummy=true)
+    self.write(address + i, data[i + start].to_int(), dummy=true)
   }
   address
 }
 
 ///|
 pub fn read(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt8 {
-  U8::u8(
-    match self.read {
-      Some(read) => read(addr._, dummy)
-      None => self.mem[addr._]
-    },
-  )
+  match self.read {
+    Some(read) => read(addr._, dummy)
+    None => U8::u8(self.mem[addr._])
+  }
 }
 
 ///|
@@ -268,7 +269,10 @@ fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
   //   "$" + U16::u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
-  U16::u16(self.read(addr._, dummy~)._ | (self.read(addr._ + 1, dummy~)._ << 8))
+  U16::u16(
+    (self.read(addr._ + 1, dummy~)._ << 8) | // hi
+    self.read(addr._, dummy~)._, // lo
+  )
 }
 
 ///|
@@ -280,8 +284,8 @@ fn read16zp(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   //   ).to_hex()),
   // )
   U16::u16(
-    self.read(addr._, dummy~)._ |
-    (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), dummy~)._ << 8),
+    (self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), dummy~)._ << 8) | // hi
+    self.read(addr, dummy~)._, // lo
   )
 }
 
@@ -293,8 +297,8 @@ pub fn write(
   dummy~ : Bool = false
 ) -> Unit {
   match self.write {
-    Some(write) => write(addr._, value._, dummy)
-    None => self.mem[addr._] = value._
+    Some(write) => write(addr, value, dummy)
+    None => self.mem[addr._] = value
   }
   // println("$" + U16::u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
 }
@@ -306,8 +310,8 @@ pub fn write16(
   value : UInt16,
   dummy~ : Bool = false
 ) -> Unit {
-  self.write(addr._, value._, dummy~)
-  self.write(addr._ + 1, value._ >> 8, dummy~)
+  self.write(addr + 1, U8::u8(value >> 8), dummy~) // hi
+  self.write(addr, U8::u8(value), dummy~) // lo
   // println(
   //   "$" + U16::u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
@@ -315,14 +319,14 @@ pub fn write16(
 
 ///|
 pub fn push(self : CPU, value : UInt8, dummy~ : Bool = false) -> Unit {
-  self.write(self.registers[SP]._ | 0x0100, value._, dummy~)
+  self.write(self.registers[SP]._ | 0x0100, value, dummy~)
   self.registers[SP] -= 1
 }
 
 ///|
 pub fn push16(self : CPU, value : UInt16) -> Unit {
-  self.push(value._ >> 8)
-  self.push(value._ & 0xFF)
+  self.push(U8::u8(value >> 8)) // hi
+  self.push(U8::u8(value)) // lo
 }
 
 ///|
@@ -333,35 +337,28 @@ fn pop(self : CPU, dummy~ : Bool = false) -> UInt8 {
 
 ///|
 fn pop16(self : CPU) -> UInt16 {
-  self.pop()._ | (self.pop()._ << 8)
-}
-
-///|
-pub fn setNMI(self : CPU, pc : UInt16) -> Unit {
-  self.write16(NMI, pc)
+  U16::u16(
+    self.pop()._ | // lo 
+    (self.pop()._ << 8), // hi
+  )
 }
 
 ///| triggers a NMI IRQ in the processor
 /// this is very similar to the BRK instruction
-pub fn nmi(self : CPU, pc? : Int) -> Unit {
+pub fn nmi(self : CPU, pc? : UInt16) -> Unit {
   println(
     "*** NMI $" + U16::u16(NMI).to_hex() + " #$" + self.read16(NMI).to_hex(),
   )
   self.push16(self.pc)
   self.push(self.flags.get())
   self.flags.set_interrupt()
-  self.pc = pc.or(self.read16(NMI)._)
+  self.pc = pc.or(self.read16(NMI))
   self.cycles += 7
-}
-
-///|
-pub fn setIRQ(self : CPU, pc : UInt16) -> Unit {
-  self.write16(IRQ, pc)
 }
 
 ///| triggers a normal IRQ
 /// this is very similar to the BRK instruction
-pub fn irq(self : CPU, pc? : Int) -> Unit {
+pub fn irq(self : CPU, pc? : UInt16) -> Unit {
   println(
     "*** IRQ $" + U16::u16(IRQ).to_hex() + " #$" + self.read16(IRQ).to_hex(),
   )
@@ -370,7 +367,7 @@ pub fn irq(self : CPU, pc? : Int) -> Unit {
   // self.push(self.flags.get() | UNUSED)
   self.push(self.flags.get())
   self.flags.set_interrupt()
-  self.pc = pc.or(self.read16(IRQ)._)
+  self.pc = pc.or(self.read16(IRQ))
   self.cycles += 7
 }
 
@@ -391,39 +388,43 @@ pub fn interrupts(self : CPU) -> Bool {
 ///|
 pub fn step(self : CPU) -> Int {
   let cycles = self.cycles
+
+  //
   if not(self.interrupts()) {
     let mut skip = false
-    for i = 0; i < self.hooks.length(); i = i + 1 {
-      if self.pc == self.hooks[i].address {
-        (self.hooks[i].hook)(self)
+    for trap in self.traps {
+      if self.pc == trap.address {
+        (trap.handler)(self)
         skip = true
       }
     }
 
     //
-    let opcode = if skip {
-      U8::u8(0x60)
-    } else {
-      self.read(self.pc, dummy=true)
-    }
+    let opcode = self.read(self.pc, dummy=true)._
 
     //
-    let (name, op, mode, _size, _cycles, _, illegal) = instructions[opcode._]
+    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode]
     if self.debug {
-      self.dump_step(opcode, name, mode, _size, _cycles, illegal)
+      self.dump_step(opcode, name, mode, size, cycles, illegal)
     }
 
     //
     let addr = self.get_addr(mode)
 
     //
-    self.pc += _size
+    self.pc += size
 
     //
     op(self, addr, mode)
 
     //
-    self.cycles += _cycles
+    if skip {
+      // self.reset(pc=self.pc)
+      // abort("trap")
+      return 0
+    } else {
+      self.cycles += cycles
+    }
   }
 
   //
@@ -683,16 +684,9 @@ fn dump_step(
     instr +
     " " +
     unofficial +
-    (if opcode == 0xE3 ||
-      opcode == 0xE7 ||
-      opcode == 0xEF ||
-      opcode == 0xF3 ||
-      opcode == 0xF7 ||
-      opcode == 0xFB ||
-      opcode == 0xFF {
-      "ISB"
-    } else {
-      name
+    (match opcode._ {
+      0xE3 | 0xE7 | 0xEF | 0xF3 | 0xF7 | 0xFB | 0xFF => "ISB"
+      _ => name
     }) +
     addr_mode +
     spaces +
@@ -908,25 +902,29 @@ fn opBPL(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
 fn opBRK(self : CPU, _ : UInt16, _ : Mode) -> Unit {
-  println("*** BRK")
+  // println("*** BRK")
   if self.irq {
+    println("*** IRQ")
     return
   }
 
   //
-  self.flags.set_break()
   self.push16(self.pc + 1)
-  //
-  self.push(self.flags.get())
-  // self.flags.clear_decimal()
-  self.flags.set_interrupt()
+  self.push(self.flags.get() | BREAK | UNUSED)
 
   // self.pc = match self.needs_interrupt {
   //   NMI => self.read16(NMI)
   //   IRQ => self.read16(IRQ)
   //   _ => self.read16(IRQ)
   // }
+
+  //
+  // println("*** BRK: " + self.read16(IRQ, dummy=true).to_hex())
+  self.flags.set_interrupt() // brkn
+  self.flags.set_break()
   self.pc = self.read16(IRQ)
+
+  // abort("BRK")
 }
 
 // BVC - Branch if overflow clear
@@ -1197,11 +1195,16 @@ fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// The `RTI` instruction reinitializes all flags to the position to the point they were at the time the interrupt was taken and sets the program counter back to its pre-interrupt state.
 /// It affects no other registers in the microprocessor.
 fn opRTI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
-  println("*** RTI")
+  // println("*** RTI")
+
   // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
   // self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
-  self.flags.set(self.pop() | BREAK | UNUSED)
+  self.flags.set(self.pop() | UNUSED)
+  self.flags.clear_break()
+
+  //
   self.pc = self.pop16()
+
   // self.opSEI(addr, mode)
 }
 
@@ -1407,7 +1410,8 @@ fn opANC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// N	V	-	B	D	I	Z	C
 /// ✓	✓	-	-	-	-	✓	✓
 ///
-/// The undocumented `ARR` instruction performs a bit-by-bit `AND` operation of the accumulator and memory, then shifts the result right 1 bit with bit 0 shifted into the carry and carry shifted into bit 7.
+/// The undocumented `ARR` instruction performs a bit-by-bit `AND` operation of the accumulator and memory, 
+/// then shifts the result right 1 bit with bit 0 shifted into the carry and carry shifted into bit 7.
 /// It then stores the result back in the accumulator.
 ///
 /// If bit 7 of the result is on, then the `N` flag is set, otherwise it is reset.
@@ -1421,34 +1425,44 @@ fn opANC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ARR
 fn opARR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let mut tmp = self.registers[A] & self.read(addr)
+  // https://github.com/davidhorrocks/hoxs64/blob/master/hoxs64/C6502.cpp#L774
+  let t = self.registers[A] & self.read(addr)
+  let mut a = (t >> 1) | (self.flags.carry().to_int() << 7)
+  // println(
+  //   "\t{\{self.cycles}} ARR A#$\{self.registers[A].to_hex()} & #$\{self.read(addr, dummy=true).to_hex()} = #$" +
+  //   t.to_hex() +
+  //   " / 2 = #$" +
+  //   a.to_hex() +
+  //   " C:\{self.flags.carry().to_int()}|\{a.bit(6).to_int()}" +
+  //   " N:\{self.flags.negative().to_int()}|\{a.bit(7).to_int()}" +
+  //   " V:\{self.flags.overflow().to_int()}|\{(a.bitn(6) ^ a.bitn(5)).to_int()}" +
+  //   " Z:\{self.flags.zero().to_int()}|\{(a == 0).to_int()}" +
+  //   " D:\{self.flags.decimal().to_int()}",
+  // )
 
   //
   if self.flags.decimal() && self.decimal_mode {
-    let mut tmp2 = tmp
-    tmp2 = tmp2 | (self.flags.carry().to_int() << 8)
-    tmp2 = tmp2 >> 1
+    let ah = t >> 4
+    let al = t & 0x0F
     self.flags.setN(self.flags.carry())
-    self.flags.setZ(tmp2 == 0)
-    self.flags.setV((tmp2 ^ tmp).bit(6))
-    if (tmp & 0x0F) + (tmp & 0x01) > 0x05 {
-      tmp2 = (tmp2 & 0xF0) | ((tmp2 + 0x06) & 0x0F)
+    self.flags.setZ(a == 0)
+    self.flags.setV((t ^ a).bit(6))
+    if al + (al & 1) > 5 {
+      a = (a & 0xF0) | ((a + 0x06) & 0x0F)
     }
-    if (tmp & 0xF0) + (tmp & 0x10) > 0x50 {
-      tmp2 = (tmp2 & 0x0F) | ((tmp2 + 0x60) & 0xF0)
+    if ah + (ah & 1) > 5 {
+      a = (a & 0x0F) | ((a + 0x60) & 0xF0)
       self.flags.set_carry()
     } else {
       self.flags.clear_carry()
     }
-    self.registers[A] = tmp2
   } else {
-    tmp = tmp | (self.flags.carry().to_int() << 8)
-    tmp = tmp >> 1
-    self.flags.setZN(tmp)
-    self.flags.setC(tmp.bit(6))
-    self.flags.setV((tmp.bitn(6) ^ tmp.bitn(5)) != 0)
-    self.registers[A] = tmp
+    self.flags.setN(self.flags.carry())
+    self.flags.setZ(a == 0)
+    self.flags.setC(a.bit(6)) // 0x40
+    self.flags.setV((a.bitn(6) ^ a.bitn(5)) != 0)
   }
+  self.registers[A] = a
 
   // println("unimplemented: ARR")
   // abort("unimplemented: ARR")

@@ -393,6 +393,10 @@ pub(all) enum C64register {
   BAD
   STACK
   BSTACK
+  //
+  PC
+  PCL
+  PCH
 
   ///
   /// $200-$258      BUF
@@ -562,7 +566,7 @@ pub(all) enum C64register {
 } derive(Show, Eq)
 
 ///|
-fn c64(register : C64register) -> Int {
+fn c64(register : C64register) -> UInt16 {
   match register {
     /// Page 0
 
@@ -710,6 +714,10 @@ fn c64(register : C64register) -> Int {
     BAD => 0x0100 // ARRAY[62]
     STACK => 0x0100 // ARRAY[256]
     BSTACK => 0x013F // ARRAY[192]
+    //
+    PC => 0x01FE
+    PCL => 0x01FE
+    PCH => 0x01FF
 
     /// Page 2
 
@@ -1022,6 +1030,9 @@ fn C64register::from_int(value : Int) -> C64register! {
 
     // 0x0100 => STACK // ARRAY[256]
     0x013F => BSTACK // ARRAY[192]
+    //
+    0x01FE => PCL
+    0x01FF => PCH
 
     /// Page 2
 

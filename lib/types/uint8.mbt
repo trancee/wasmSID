@@ -120,8 +120,18 @@ pub fn UInt8::clr(self : UInt8, mask : UInt8) -> UInt8 {
 }
 
 ///|
+pub fn UInt8::clrb(self : UInt8, bit : UInt8) -> UInt8 {
+  self.clr(1 << bit._)
+}
+
+///|
 pub fn UInt8::set(self : UInt8, mask : UInt8) -> UInt8 {
   U8::u8(self._ | mask._)
+}
+
+///|
+pub fn UInt8::setb(self : UInt8, bit : UInt8) -> UInt8 {
+  self.set(1 << bit._)
 }
 
 ///|

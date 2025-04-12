@@ -1,40 +1,45 @@
 // https://www.zimmers.net/cbmpics/cbm/c64/
 
 ///|
-let c64_mem_start = 0x0000
+const C64_MEM_START : Int = 0x0000
 
 ///|
-let c64_mem_end = 0xFFFF
-
-// let c64_mem_size = 0xFFFF
+const C64_MEM_END : Int = C64_MEM_START + C64_MEM_SIZE
 
 ///|
-let c64_basic_mem_start = 0xA000
+const C64_MEM_SIZE : Int = 0xFFFF
 
 ///|
-let c64_basic_mem_end = 0xBFFF
-
-// let c64_basic_mem_size = 0x2000
+const C64_BASIC_MEM_START : Int = 0xA000
 
 ///|
-let c64_kernal_mem_start = 0xE000
+const C64_BASIC_MEM_END : Int = C64_BASIC_MEM_START + C64_BASIC_MEM_SIZE
 
 ///|
-let c64_kernal_mem_end = 0xFFFF
-
-// let c64_kernal_mem_size = 0x2000
+const C64_BASIC_MEM_SIZE : Int = 0x1FFF
 
 ///|
-let c64_characters_mem_start = 0xD000
+const C64_KERNAL_MEM_START : Int = 0xE000
 
 ///|
-let c64_characters_mem_end = 0xDFFF
+const C64_KERNAL_MEM_END : Int = C64_KERNAL_MEM_START + C64_KERNAL_MEM_SIZE
 
-// let c64_characters_mem_size = 0x1000
+///|
+const C64_KERNAL_MEM_SIZE : Int = 0x1FFF
+
+///|
+const C64_CHARACTERS_MEM_START : Int = 0xD000
+
+///|
+const C64_CHARACTERS_MEM_END : Int = C64_CHARACTERS_MEM_START +
+  C64_CHARACTERS_MEM_SIZE
+
+///|
+const C64_CHARACTERS_MEM_SIZE : Int = 0x0FFF
 
 ///|
 pub struct C64 {
-  baseaddress : UInt16
+  pc : UInt16
   mem : Memory
   //
   bank : FixedArray[Bank]
@@ -82,7 +87,9 @@ pub struct C64 {
   //
   mut prevNMI : Bool //used for NMI leading edge detection
   //
-  debug : Bool
+  mut cycles : Int
+  //
+  mut debug : Bool
 }
 
 ///|
@@ -90,11 +97,11 @@ let defaultSampleRate = 44100
 
 ///|
 pub fn C64::new(
-  baseaddress~ : Int = 0x0000,
+  pc~ : UInt16 = 0x0000,
   mem? : Memory,
   //
-  data~ : FixedArray[Byte] = [],
-  address~ : Int = 0x0000,
+  data~ : Bytes = [],
+  address~ : UInt16 = 0x0000,
   length~ : Int = data.length(),
   //
   sampleRate~ : Int = defaultSampleRate,
@@ -109,7 +116,7 @@ pub fn C64::new(
 
   //
   let cpu = @cpu.CPU::new(
-    pc=baseaddress,
+    pc~,
     //
     debug~,
   )
@@ -117,16 +124,16 @@ pub fn C64::new(
   // mem.setROM()
 
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
-  let sid = [SID::new(mem~, sid1_mem_start, videoStandard~, debug~)]
+  let sid = [SID::new(mem~, SID_MEM_START, videoStandard~, debug~)]
   let cia = [
     CIA::new(mem~, CIA1_MEM_START, videoStandard~, debug~),
     CIA::new(mem~, CIA2_MEM_START, videoStandard~, debug~),
   ]
-  let vic = VIC::new(mem~, vic_mem_start, videoStandard~, debug~)
+  let vic = VIC::new(mem~, VIC_MEM_START, videoStandard~, debug~)
   //
 
   let c64 : C64 = {
-    baseaddress,
+    pc,
     mem,
     //
     bank: FixedArray::make(8, Bank::RAM),
@@ -168,15 +175,17 @@ pub fn C64::new(
     //
     prevNMI: false,
     //
+    cycles: 0,
+    //
     debug,
   }
 
   // c64.initC64()
 
-  cpu.set_read(fn(address : Int, dummy : Bool) -> Int {
+  cpu.set_read(fn(address : UInt16, dummy : Bool) -> UInt8 {
     c64.read(address, dummy~)
   })
-  cpu.set_write(fn(address : Int, value : Int, dummy : Bool) -> Unit {
+  cpu.set_write(fn(address : UInt16, value : UInt8, dummy : Bool) -> Unit {
     c64.write(address, value, dummy~)
   })
 
@@ -198,19 +207,33 @@ pub fn C64::new(
 }
 
 ///|
+pub fn set_debug(self : C64, debug : Bool) -> Unit {
+  self.debug = debug
+  self.cpu.set_debug(debug)
+}
+
+///|
+fn clear_bank(self : C64) -> Unit {
+  self.bank[BANK_BASIC] = RAM
+  self.bank[BANK_KERNAL] = RAM
+  self.bank[BANK_CHARACTERS] = RAM
+}
+
+///|
 pub fn set_bank(self : C64, port : IOPort) -> Unit {
+  self.clear_bank()
   if port.hiram {
-    self.bank[bank_kernal] = ROM
+    self.bank[BANK_KERNAL] = ROM
   }
   if port.loram && port.hiram {
-    self.bank[bank_basic] = ROM
+    self.bank[BANK_BASIC] = ROM
   }
   if port.charen && (port.loram || port.hiram) {
-    self.bank[bank_characters] = IO
+    self.bank[BANK_CHARACTERS] = IO
   } else if port.charen && not(port.loram) && not(port.hiram) {
-    self.bank[bank_characters] = RAM
+    self.bank[BANK_CHARACTERS] = RAM
   } else {
-    self.bank[bank_characters] = ROM
+    self.bank[BANK_CHARACTERS] = ROM
   }
 }
 
@@ -457,13 +480,10 @@ pub fn C64::reset(self : C64) -> Unit! {
 
   /// Hardware vectors
   /// Execution address of non-maskable interrupt service routine.
-  // self.cpu.setNMI(0xFE43)
   self.write_word(NMI, 0xFE43)
   /// Execution address of cold reset.
-  // self.cpu.setRESET(0xFCE2)
   self.write_word(RESET, 0xFCE2)
   /// Execution address of interrupt service routine.
-  // self.cpu.setIRQ(0xFF48)
   self.write_word(IRQ, 0xFF48)
 
   //
@@ -471,11 +491,11 @@ pub fn C64::reset(self : C64) -> Unit! {
 }
 
 ///|
-pub fn initCPU(self : C64, baseaddress? : UInt16) -> Unit {
+pub fn initCPU(self : C64, pc? : UInt16) -> Unit {
   // println(">> C64::initCPU")
 
   //
-  self.cpu.reset(baseaddress?)
+  self.cpu.reset(pc?)
   //
   self.prevNMI = false
 
@@ -547,10 +567,11 @@ pub fn initC64(self : C64) -> Unit! {
 }
 
 ///|
-pub fn C64::emulate(self : C64) -> Output {
+pub fn C64::emulate(self : C64) -> Int {
   // println(">> C64::emulate")
   //
 
+  //
   let cpuClock = try {
     self.cpuFrequency.to_int!()
   } catch {
@@ -574,7 +595,7 @@ pub fn C64::emulate(self : C64) -> Output {
       if self.frameCycleCnt >= self.frameCycles {
         self.frameCycleCnt -= self.frameCycles
         if self.finished { //some tunes (e.g. Barbarian, A-Maze-Ing) doesn't always finish in 1 frame
-          // FIXME: self.initCPU(baseaddress=self.psid.playAddress) //(PSID docs say bank-register should always be set for each call's region)
+          // FIXME: self.initCPU(pc=self.psid.playAddress) //(PSID docs say bank-register should always be set for each call's region)
           self.finished = false
           // if self.timerSource == 0 {
           //   self[0xD019] = 0x81 //always simulate to player-calls that VIC-IRQ happened
@@ -727,14 +748,17 @@ pub fn C64::emulate(self : C64) -> Output {
   // )
 
   //
-  output
+  // output
+
+  self.cycles += instructionCycles
+  instructionCycles
 }
 
 ///|
 pub fn C64::load(
   self : C64,
   //
-  data : FixedArray[Byte],
+  data : Bytes,
   //
   offset~ : Int = 0,
   length~ : Int = data.length(),
@@ -750,12 +774,16 @@ fn C64::step(self : C64) -> Int {
 }
 
 ///|
-pub fn C64::hook(self : C64, address : UInt16, hook : (@cpu.CPU) -> Unit) -> Unit {
-  self.cpu.hook(address, hook)
+pub fn C64::trap(
+  self : C64,
+  address : UInt16,
+  handler : (@cpu.CPU) -> Unit
+) -> Unit {
+  self.cpu.trap(address, handler)
 }
 
 ///|
-pub fn C64::pc(self : C64) -> Int {
+pub fn C64::pc(self : C64) -> UInt16 {
   self.cpu.pc()
 }
 
@@ -851,10 +879,10 @@ fn interrupts(self : C64) -> Bool {
 // static const uint16_t kAddrKernalLastPage = 0xff00;
 
 ///|
-pub fn C64::read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
+pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   if self.debug && not(dummy) {
     let register = try {
-      " | \{C64register::from_int!(address)}"
+      " | \{C64register::from_int!(address._)}"
     } catch {
       _ =>
         // println(err)
@@ -863,7 +891,7 @@ pub fn C64::read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
     println(
       "\t\t\t\t\t\t\t\t\t\t" +
       "$" +
-      U16::u16(address).to_hex() +
+      address.to_hex() +
       " → #$" +
       self.mem.read(address, dummy=true).to_hex() +
       register,
@@ -871,40 +899,41 @@ pub fn C64::read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
   }
 
   //
-  if address < c64_mem_start || address > c64_mem_end {
+  if address < C64_MEM_START || address > C64_MEM_END {
     // self.dump()
     println("C64::get out of bounds")
     abort("C64::get out of bounds")
   }
 
   // VIC-II DMA or Character ROM
-  if address >= vic_mem_start && address <= vic_mem_end {
-    match self.bank[bank_characters] {
-      ROM => return c64_characters[address - vic_mem_start]
+  if address >= VIC_MEM_START && address <= VIC_MEM_END {
+    match self.bank[BANK_CHARACTERS] {
+      ROM => return c64_characters[address._ - VIC_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
   }
   // BASIC or RAM
-  if address >= c64_basic_mem_start && address <= c64_basic_mem_end {
-    match self.bank[bank_basic] {
-      ROM => return c64_basic[address - c64_basic_mem_start]
+  if address >= C64_BASIC_MEM_START && address <= C64_BASIC_MEM_END {
+    match self.bank[BANK_BASIC] {
+      ROM => return c64_basic[address._ - C64_BASIC_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
   }
   // KERNAL
-  if address >= c64_kernal_mem_start && address <= c64_kernal_mem_end {
-    match self.bank[bank_kernal] {
-      ROM => return c64_kernal[address - c64_kernal_mem_start]
+  if address >= C64_KERNAL_MEM_START && address <= C64_KERNAL_MEM_END {
+    match self.bank[BANK_KERNAL] {
+      ROM => return c64_kernal[address._ - C64_KERNAL_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
   }
   // CHARACTERS
-  if address >= c64_characters_mem_start && address <= c64_characters_mem_end {
-    match self.bank[bank_characters] {
-      ROM => return c64_characters[address - c64_characters_mem_start]
+  if address >= C64_CHARACTERS_MEM_START && address <= C64_CHARACTERS_MEM_END {
+    match self.bank[BANK_CHARACTERS] {
+      ROM =>
+        return c64_characters[address._ - C64_CHARACTERS_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -925,11 +954,11 @@ pub fn C64::read(self : C64, address : Int, dummy~ : Bool = false) -> Int {
 }
 
 ///|
-fn C64::read_direct(self : C64, address : Int) -> Int {
+fn C64::read_direct(self : C64, address : UInt16) -> UInt8 {
   // println("C64::read_direct $" + UInt16(addr).to_hex())
   //
 
-  self.mem.read(address)._
+  self.mem.read(address)
 }
 
 ///|
@@ -954,7 +983,7 @@ pub fn C64::write(
 ) -> Unit {
   if self.debug && not(dummy) {
     let register = try {
-      " | \{C64register::from_int!(address.to_int())}"
+      " | \{C64register::from_int!(address._)}"
     } catch {
       _ =>
         // println(err)
@@ -963,15 +992,15 @@ pub fn C64::write(
     println(
       "\t\t\t\t\t\t\t\t\t\t" +
       "$" +
-      U16::u16(address).to_hex() +
+      address.to_hex() +
       " ← #$" +
-      U8::u8(value).to_hex() +
+      value.to_hex() +
       register,
     )
   }
   //
 
-  if address < c64_mem_start || address > c64_mem_end {
+  if address < C64_MEM_START || address > C64_MEM_END {
     // self.dump()
     println("C64::set out of bounds")
     abort("C64::set out of bounds")
@@ -981,46 +1010,36 @@ pub fn C64::write(
   if address == 0x0001 {
     // bank switching
     return self.set_bank(IOPort::from_int(value))
-  } else if address >= vic_mem_start && address <= vic_mem_end {
+  } else if address >= VIC_MEM_START && address <= VIC_MEM_END {
     // VIC-II DMA or Character ROM
-    match self.bank[bank_characters] {
+    match self.bank[BANK_CHARACTERS] {
       ROM => return self.write_direct(address, value)
       RAM => return self.write_direct(address, value)
       IO => if self.debug {  }
     }
-  } else if address >= c64_basic_mem_start && address <= c64_basic_mem_end {
+  } else if address >= C64_BASIC_MEM_START && address <= C64_BASIC_MEM_END {
     // BASIC or RAM
-    match self.bank[bank_basic] {
+    match self.bank[BANK_BASIC] {
       ROM => return self.write_direct(address, value)
       RAM => return self.write_direct(address, value)
       IO => if self.debug {  }
     }
-  } else if address >= c64_kernal_mem_start && address <= c64_kernal_mem_end {
+  } else if address >= C64_KERNAL_MEM_START && address <= C64_KERNAL_MEM_END {
     // KERNAL
-    match self.bank[bank_kernal] {
+    match self.bank[BANK_KERNAL] {
       ROM => return self.write_direct(address, value)
       RAM => return self.write_direct(address, value)
       IO => if self.debug {  }
     }
-  } else if address >= c64_characters_mem_start &&
-    address <= c64_characters_mem_end {
+  } else if address >= C64_CHARACTERS_MEM_START &&
+    address <= C64_CHARACTERS_MEM_END {
     // CHARACTERS
-    match self.bank[bank_characters] {
+    match self.bank[BANK_CHARACTERS] {
       ROM => return self.write_direct(address, value)
       RAM => return self.write_direct(address, value)
       IO => if self.debug {  }
     }
   }
-
-  // //
-  // for i = 0; i < self.mem.hooks.length(); i = i + 1 {
-  //   if address >= self.mem.hooks[i].start && address <= self.mem.hooks[i].end {
-  //     // println(
-  //     //   "MEMORY[\{i}] \{UInt16(self.mem[i].start).to_hex()} - \{UInt16(self.mem[i].end).to_hex()}",
-  //     // )
-  //     return (self.mem.hooks[i].write)(address, value, dummy)
-  //   }
-  // }
 
   //
   self.write_direct(address, value)
@@ -1073,9 +1092,10 @@ pub fn C64::write_word(
     | RESET
     | TXTTAB
     | USRCMD
-    | WARM => {
-      self.write(address, value._ >> 8)
-      self.write(address + 1, value._ & 0xFF)
+    | WARM
+    | PC => {
+      self.write(address + 1, U8::u8(value >> 8)) // lo
+      self.write(address, U8::u8(value)) // hi
     }
     _ => {
       println("unknown C64 register \{register}")
@@ -1106,5 +1126,5 @@ pub fn C64::op_set(self : C64, register : C64register, value : UInt8) -> Unit {
   let address = c64(register)
 
   //
-  self.write(address, value._)
+  self.write(address, value)
 }

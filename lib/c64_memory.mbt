@@ -6,10 +6,10 @@ enum Bank {
 } derive(Eq)
 
 ///|
-let bank_basic = 3
+const BANK_BASIC = 3
 
 ///|
-let bank_characters = 5
+const BANK_CHARACTERS = 5
 
 ///|
-let bank_kernal = 6
+const BANK_KERNAL = 6

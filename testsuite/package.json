@@ -1,8 +1,0 @@
-{
-  "devDependencies": {
-    "@types/node": "^22.5.0"
-  },
-  "dependencies": {
-    "glob": "^10.4.5"
-  }
-}

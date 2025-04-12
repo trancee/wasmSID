@@ -34,6 +34,7 @@ impl UInt8 {
   bitn(Self, Self) -> Self
   borrow(Self) -> Bool
   clr(Self, Self) -> Self
+  clrb(Self, Self) -> Self
   flip(Self, Self) -> Self
   has(Self, Self) -> Bool
   init(Int) -> Self
@@ -49,6 +50,7 @@ impl UInt8 {
   op_shr(Self, Self) -> Self
   op_sub(Self, Self) -> Self
   set(Self, Self) -> Self
+  setb(Self, Self) -> Self
   to_byte(Self) -> Byte
   to_hex(Self) -> String
   to_int(Self) -> Int

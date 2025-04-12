@@ -291,6 +291,11 @@ fn Flags::clear_overflow(self : Flags) -> Unit {
 }
 
 ///|
+fn Flags::set_overflow(self : Flags) -> Unit {
+  self[V] = true
+}
+
+///|
 fn Flags::negative(self : Flags) -> Bool {
   self[N]
 }

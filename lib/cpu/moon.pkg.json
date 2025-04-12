@@ -3,6 +3,7 @@
         {
             "path": "trancee/wasmSID/lib/types",
             "alias": "t"
-        }
+        },
+        "moonbitlang/x/fs"
     ]
 }

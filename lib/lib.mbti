@@ -22,7 +22,7 @@ fn hook(Memory, Int, Int, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16,
 
 fn initC64(C64) -> Unit!
 
-fn initCPU(C64, baseaddress? : @types.UInt16) -> Unit
+fn initCPU(C64, pc? : @types.UInt16) -> Unit
 
 fn process(PSID) -> Unit!
 
@@ -35,6 +35,8 @@ fn reset(CIA, videoStandard~ : VideoStandard = ..) -> Unit
 fn setA(C64, Int) -> Unit
 
 fn set_bank(C64, IOPort) -> Unit
+
+fn set_debug(C64, Bool) -> Unit
 
 fn set_interrupt_flag(C64) -> Unit
 
@@ -64,7 +66,7 @@ type Bank
 impl Eq for Bank
 
 pub struct C64 {
-  baseaddress : @types.UInt16
+  pc : @types.UInt16
   mem : Memory
   bank : FixedArray[Bank]
   cpu : @cpu.CPU
@@ -95,30 +97,32 @@ pub struct C64 {
   mut irq : Bool
   mut nmi : Bool
   mut prevNMI : Bool
-  debug : Bool
+  mut cycles : Int
+  mut debug : Bool
 }
 impl C64 {
   clear_flags(Self) -> Unit
   clear_registers(Self) -> Unit
-  emulate(Self) -> Output
+  emulate(Self) -> Int
   get_flags(Self) -> @cpu.Flags
   get_registers(Self) -> @cpu.Registers
-  hook(Self, Int, (Int) -> Unit) -> Unit
   initC64(Self) -> Unit!
-  initCPU(Self, baseaddress? : @types.UInt16) -> Unit
-  load(Self, FixedArray[Byte], offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
-  new(baseaddress~ : Int = .., mem? : Memory, data~ : FixedArray[Byte] = .., address~ : Int = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self
+  initCPU(Self, pc? : @types.UInt16) -> Unit
+  load(Self, Bytes, offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
+  new(pc~ : @types.UInt16 = .., mem? : Memory, data~ : Bytes = .., address~ : @types.UInt16 = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self
   op_set(Self, C64register, @types.UInt8) -> Unit
-  pc(Self) -> Int
+  pc(Self) -> @types.UInt16
   push(Self, @types.UInt8) -> Unit
   push16(Self, @types.UInt16) -> Unit
-  read(Self, Int, dummy~ : Bool = ..) -> Int
+  read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_bank(Self, IOPort) -> Unit
+  set_debug(Self, Bool) -> Unit
   set_flags(Self, @types.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
-  write(Self, Int, Int, dummy~ : Bool = ..) -> Unit
+  trap(Self, @types.UInt16, (@cpu.CPU) -> Unit) -> Unit
+  write(Self, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
   write_array(Self, C64register, Array[@types.UInt8]) -> Unit
   write_word(Self, C64register, @types.UInt16) -> Unit
 }
@@ -262,6 +266,9 @@ pub(all) enum C64register {
   BAD
   STACK
   BSTACK
+  PC
+  PCL
+  PCH
   BUF
   LAT
   FAT
@@ -622,14 +629,14 @@ impl Eq for Model
 impl Show for Model
 
 pub struct NES {
-  baseaddress : @types.UInt16
+  pc : @types.UInt16
   mem : Memory
   cpu : @cpu.CPU
 }
 impl NES {
-  load(Self, FixedArray[Byte], addr~ : Int = .., length~ : Int = ..) -> Unit
-  new(baseaddress~ : Int = .., data~ : FixedArray[Byte] = .., addr~ : Int = .., length~ : Int = ..) -> Self
-  pc(Self) -> Int
+  load(Self, Bytes, addr~ : @types.UInt16 = .., length~ : Int = ..) -> Unit
+  new(pc~ : @types.UInt16 = .., data~ : Bytes = .., addr~ : @types.UInt16 = .., length~ : Int = ..) -> Self
+  pc(Self) -> @types.UInt16
   push(Self, @types.UInt8) -> Unit
   push16(Self, @types.UInt16) -> Unit
   set_flags(Self, @types.UInt8) -> Unit

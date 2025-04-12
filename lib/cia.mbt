@@ -58,7 +58,7 @@ pub fn CIA::new(
   //
 
   let cia : CIA = {
-    mem: FixedArray::make(CIA_MEM_SIZE, 0x00),
+    mem: FixedArray::make(CIA_MEM_SIZE + 1, 0x00),
     baseaddress,
 
     //

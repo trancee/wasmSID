@@ -7,7 +7,6 @@
       "alias": "t"
     },
     "trancee/wasmSID/lib/cpu",
-    "trancee/wasmSID/testsuite",
     "moonbitlang/x/fs"
   ]
 }

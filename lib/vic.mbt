@@ -29,18 +29,18 @@
 /// locations (the minimum possible for its 47 registers), none of the
 /// higher bits are decoded when addressing this 1K area.  The result is
 /// that every 64 byte area in this 1K block is a mirror of every other.
-pub let vic_mem_start = 0xD000
+const VIC_MEM_START : Int = 0xD000
 
 ///|
-let vic_mem_end = 0xD3FF
+const VIC_MEM_END : Int = VIC_MEM_START + VIC_MEM_SIZE
 
 ///|
-let vic_mem_size = 0x03FF
+const VIC_MEM_SIZE : Int = 0x03FF
 
 ///|
 struct VIC {
-  mem : FixedArray[Int]
-  baseaddress : Int
+  mem : FixedArray[UInt8]
+  baseaddress : UInt16
 
   //
   mut rowCycleCount : Int
@@ -60,7 +60,7 @@ struct VIC {
 ///|
 pub fn VIC::new(
   mem? : Memory,
-  baseaddress : Int,
+  baseaddress : UInt16,
   //
   videoStandard~ : VideoStandard = Unknown,
   //
@@ -70,7 +70,7 @@ pub fn VIC::new(
   //
 
   let vic : VIC = {
-    mem: FixedArray::make(vic_mem_size + 1, 0x00),
+    mem: FixedArray::make(VIC_MEM_SIZE + 1, 0x00),
     baseaddress,
 
     //
@@ -93,11 +93,11 @@ pub fn VIC::new(
     Some(mem) =>
       mem.hook(
         baseaddress,
-        baseaddress + vic_mem_size,
+        baseaddress + VIC_MEM_SIZE,
         //
         fn(address : UInt16, _ : Bool) -> UInt8 {
           let register = try {
-            VICregister::from_int!(address._ - baseaddress)
+            VICregister::from_int!((address - baseaddress)._)
           } catch {
             err => {
               println(err)
@@ -108,7 +108,7 @@ pub fn VIC::new(
         },
         fn(address : UInt16, value : UInt8, _ : Bool) {
           let register = try {
-            VICregister::from_int!(address._ - baseaddress)
+            VICregister::from_int!((address - baseaddress)._)
           } catch {
             err => {
               println(err)
@@ -198,7 +198,7 @@ pub fn VIC::reset(
   /// space.  Therefore, the remaining 17 addresses do not access any
   /// memory.  When read, they will always give a value of 255 ($FF).  This
   /// value will not change after writing to them.
-  for i = 0xD02F - self.baseaddress; i <= 0xD03F - 0xD02F; i = i + 1 {
+  for i = 0xD02F - self.baseaddress._; i <= 0xD03F - 0xD02F; i = i + 1 {
     self.mem[i] = 0xFF
   }
 
@@ -285,8 +285,8 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
   }
 
   //
-  if self.baseaddress + address < vic_mem_start ||
-    self.baseaddress + address > vic_mem_end {
+  if self.baseaddress + address < VIC_MEM_START ||
+    self.baseaddress + address > VIC_MEM_END {
     // self.dump()
     println(
       "VIC \{register} $" +
@@ -607,8 +607,8 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   }
 
   //
-  if self.baseaddress + address < vic_mem_start ||
-    self.baseaddress + address > vic_mem_end {
+  if self.baseaddress + address < VIC_MEM_START ||
+    self.baseaddress + address > VIC_MEM_END {
     // self.dump()
     println(
       "VIC \{register} $" +

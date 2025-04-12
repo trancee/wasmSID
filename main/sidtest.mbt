@@ -95,7 +95,7 @@ fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {
   }
 
   //determine init-address:
-  c64.initCPU(baseaddress=psid.initAddress)
+  c64.initCPU(pc=psid.initAddress)
   c64.setA(subtune - 1)
   c64.push16(0xFFFF)
   let mut i = 0
@@ -109,7 +109,7 @@ fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {
   if playAddress > 0 {
     //normal play-address called with JSR
   }
-  c64.initCPU(baseaddress=playAddress) //point CPU to play-routine
+  c64.initCPU(pc=playAddress) //point CPU to play-routine
 }
 
 // let siddata : FixedArray[Int] = [
