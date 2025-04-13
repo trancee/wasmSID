@@ -2,7 +2,7 @@
 /// clear; moon run main | diff -y nestest/nestest.log -
 /// 
 pub fn nestest() -> Unit {
-  let content = match @fs.read_file_to_bytes?("nestest/nestest.nes") {
+  let content = match @fs.read_file_to_bytes?("tests/nestest/nestest.nes") {
     Ok(content) => content
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")

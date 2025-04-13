@@ -376,8 +376,12 @@ pub fn dump(
 /// this is very similar to the BRK instruction
 pub fn nmi(self : CPU, pc? : UInt16) -> Unit {
   println(
-    "*** NMI $" + U16::u16(NMI).to_hex() + " #$" + self.read16(NMI).to_hex(),
+    "*** NMI $" +
+    U16::u16(NMI).to_hex() +
+    " #$" +
+    self.read16(NMI, dummy=true).to_hex(),
   )
+  // self.flags.set_break()
   self.push16(self.pc)
   self.push(self.flags.get())
   self.flags.set_interrupt()
@@ -388,12 +392,16 @@ pub fn nmi(self : CPU, pc? : UInt16) -> Unit {
 ///| triggers a normal IRQ
 /// this is very similar to the BRK instruction
 pub fn irq(self : CPU, pc? : UInt16) -> Unit {
+  if self.has_interrupt() {
+    return
+  }
   println(
-    "*** IRQ $" + U16::u16(IRQ).to_hex() + " #$" + self.read16(IRQ).to_hex(),
+    "*** IRQ $" +
+    U16::u16(IRQ).to_hex() +
+    " #$" +
+    self.read16(IRQ, dummy=true).to_hex(),
   )
   self.push16(self.pc)
-  // self.flags.clear_break()
-  // self.push(self.flags.get() | UNUSED)
   self.push(self.flags.get())
   self.flags.set_interrupt()
   self.pc = pc.or(self.read16(IRQ))
@@ -408,7 +416,7 @@ pub fn interrupts(self : CPU) -> Bool {
     return true
   } else if self.irq && not(self.has_interrupt()) {
     self.irq = false
-    self.irq()
+    let _ = self.irq()
     return true
   }
   return false

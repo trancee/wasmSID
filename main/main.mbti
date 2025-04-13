@@ -1,13 +1,13 @@
 package "trancee/wasmSID/main"
 
 // Values
-fn functionaltest() -> Unit
+fn dormann() -> Unit
+
+fn lorenz() -> Unit
 
 fn nestest() -> Unit
 
 fn sidtest() -> Unit
-
-fn testsuite() -> Unit
 
 // Types and methods
 
