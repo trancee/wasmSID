@@ -2,12 +2,12 @@
 const PATH = "testsuite-2.15/bin/"
 
 ///|
-const TESTCASE = " start" // aneb
+const TESTCASE = "aneb" // " start"
 
 ///|
 pub fn testsuite() -> Unit {
   //
-  let c64 = @lib.C64::new(realSID=true, debug=false)
+  let c64 = C64::new(realSID=true, debug=true)
 
   //
   setup(c64)
@@ -29,7 +29,7 @@ pub fn testsuite() -> Unit {
 }
 
 ///|
-fn load_testcase(c64 : @lib.C64, testcase : String, pc? : UInt16) -> Unit {
+fn load_testcase(c64 : C64, testcase : String, pc? : UInt16) -> Unit {
   let content = @fs.read_file_to_bytes?(PATH + testcase)
   match content {
     Ok(content) => reset(c64, content, pc?)
@@ -41,7 +41,7 @@ fn load_testcase(c64 : @lib.C64, testcase : String, pc? : UInt16) -> Unit {
 }
 
 ///|
-fn setup(c64 : @lib.C64) -> Unit {
+fn setup(c64 : C64) -> Unit {
   let builder = StringBuilder::new()
 
   // Print Character
@@ -119,7 +119,7 @@ fn setup(c64 : @lib.C64) -> Unit {
 }
 
 ///|
-fn reset(c64 : @lib.C64, data : Bytes, pc? : UInt16) -> Unit {
+fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit {
   let addr = c64.load(data, has_load_address=true)
 
   //

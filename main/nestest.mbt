@@ -11,7 +11,7 @@ pub fn nestest() -> Unit {
   }
 
   //
-  let nes = @lib.NES::new(
+  let nes = NES::new(
     pc=0xC000,
 
     //

@@ -161,7 +161,7 @@ pub fn clear(self : Memory) -> Unit {
 // }
 
 ///|
-fn dump(
+pub fn dump(
   self : Memory,
   addr~ : UInt16 = 0x0000,
   cols~ : Int = 0x10,

@@ -11,11 +11,19 @@ const CPU_MEM_SIZE : Int = 0xFFFF
 
 const CPU_MEM_START : Int = 0x0000
 
+const IRQ : Int = 0xFFFE
+
+const NMI : Int = 0xFFFA
+
+const RESET : Int = 0xFFFC
+
 fn a(CPU) -> @types.UInt8
 
 fn clear_flags(CPU) -> Unit
 
 fn clear_registers(CPU) -> Unit
+
+fn dump(CPU, addr~ : @types.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
 
 fn get_flags(CPU) -> Flags
 
@@ -27,7 +35,7 @@ fn interrupts(CPU) -> Bool
 
 fn irq(CPU, pc? : @types.UInt16) -> Unit
 
-fn load(CPU, @types.UInt16, Bytes, length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
+fn load(CPU, @types.UInt16, Bytes, length~ : Int = .., offset~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
 
 fn nmi(CPU, pc? : @types.UInt16) -> Unit
 
@@ -38,6 +46,8 @@ fn push(CPU, @types.UInt8, dummy~ : Bool = ..) -> Unit
 fn push16(CPU, @types.UInt16) -> Unit
 
 fn read(CPU, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
+
+fn read16(CPU, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt16
 
 fn register(CPU, Register, @types.UInt8) -> Unit
 
@@ -81,18 +91,20 @@ impl CPU {
   clear_flags(Self) -> Unit
   clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
+  dump(Self, addr~ : @types.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
   get_flags(Self) -> Flags
   get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
   interrupts(Self) -> Bool
   irq(Self, pc? : @types.UInt16) -> Unit
-  load(Self, @types.UInt16, Bytes, length~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
-  new(pc~ : @types.UInt16 = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
+  load(Self, @types.UInt16, Bytes, length~ : Int = .., offset~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
+  new(pc~ : @types.UInt16 = .., address? : @types.UInt16, data~ : Bytes = .., length~ : Int = .., offset~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
   nmi(Self, pc? : @types.UInt16) -> Unit
   pc(Self) -> @types.UInt16
   push(Self, @types.UInt8, dummy~ : Bool = ..) -> Unit
   push16(Self, @types.UInt16) -> Unit
   read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
+  read16(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt16
   register(Self, Register, @types.UInt8) -> Unit
   reset(Self, pc? : @types.UInt16) -> Unit
   set_debug(Self, Bool) -> Unit

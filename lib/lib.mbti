@@ -12,13 +12,15 @@ fn clear_flags(C64) -> Unit
 
 fn clear_registers(C64) -> Unit
 
+fn dump(Memory, addr~ : @types.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+
 fn emulate(CIA, Int) -> Bool
 
 fn get_flags(C64) -> @cpu.Flags
 
 fn get_registers(C64) -> @cpu.Registers
 
-fn hook(Memory, Int, Int, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
+fn hook(Memory, @types.UInt16, @types.UInt16, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
 
 fn initC64(C64) -> Unit!
 
@@ -41,8 +43,6 @@ fn set_debug(C64, Bool) -> Unit
 fn set_interrupt_flag(C64) -> Unit
 
 fn to_string(Exception) -> String
-
-let vic_mem_start : Int
 
 fn videoStandard(PSID) -> VideoStandard
 
@@ -68,6 +68,9 @@ impl Eq for Bank
 pub struct C64 {
   pc : @types.UInt16
   mem : Memory
+  basic : Bytes
+  characters : Bytes
+  kernal : Bytes
   bank : FixedArray[Bank]
   cpu : @cpu.CPU
   sid : Array[SID]
@@ -563,8 +566,8 @@ impl Eq for FrameRate
 impl Show for FrameRate
 
 pub struct Hook {
-  start : Int
-  end : Int
+  start : @types.UInt16
+  end : @types.UInt16
   read : (@types.UInt16, Bool) -> @types.UInt8
   write : (@types.UInt16, @types.UInt8, Bool) -> Unit
 }
@@ -612,7 +615,8 @@ impl Show for InterruptFlag
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  hook(Self, Int, Int, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
+  dump(Self, addr~ : @types.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+  hook(Self, @types.UInt16, @types.UInt16, (@types.UInt16, Bool) -> @types.UInt8, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
   new(length~ : Int = .., value~ : Int = ..) -> Self
   read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
   read_direct(Self, @types.UInt16) -> @types.UInt8
@@ -634,10 +638,9 @@ pub struct NES {
   cpu : @cpu.CPU
 }
 impl NES {
-  load(Self, Bytes, addr~ : @types.UInt16 = .., length~ : Int = ..) -> Unit
-  new(pc~ : @types.UInt16 = .., data~ : Bytes = .., addr~ : @types.UInt16 = .., length~ : Int = ..) -> Self
+  load(Self, Bytes, address~ : @types.UInt16 = .., length~ : Int = .., offset~ : Int = ..) -> @types.UInt16
+  new(pc~ : @types.UInt16 = .., data~ : Bytes = .., address~ : @types.UInt16 = .., length~ : Int = .., offset~ : Int = .., debug~ : Bool = ..) -> Self
   pc(Self) -> @types.UInt16
-  push(Self, @types.UInt8) -> Unit
   push16(Self, @types.UInt16) -> Unit
   set_flags(Self, @types.UInt8) -> Unit
   step(Self) -> Int
@@ -819,7 +822,7 @@ impl Show for TimerBInputMode
 type VIC
 impl VIC {
   emulate(Self, Int) -> Bool
-  new(mem? : Memory, Int, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
+  new(mem? : Memory, @types.UInt16, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
   reset(Self, videoStandard~ : VideoStandard = ..) -> Unit!
 }
 

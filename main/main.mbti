@@ -1,6 +1,8 @@
 package "trancee/wasmSID/main"
 
 // Values
+fn functionaltest() -> Unit
+
 fn nestest() -> Unit
 
 fn sidtest() -> Unit

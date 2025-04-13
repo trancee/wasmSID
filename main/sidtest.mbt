@@ -3,11 +3,11 @@ let subtune = 1
 
 ///|
 pub fn sidtest() -> Unit {
-  let mem = @lib.Memory::new()
+  let mem = Memory::new()
 
   //
   let psid = try {
-    @lib.PSID::new!(mem, siddata)
+    PSID::new!(mem, siddata)
   } catch {
     err => {
       println(err)
@@ -29,7 +29,7 @@ pub fn sidtest() -> Unit {
   println("---")
 
   //
-  let c64 = @lib.C64::new(
+  let c64 = C64::new(
     mem~,
     model=psid.flags.model,
     videoStandard=psid.videoStandard(),
@@ -86,7 +86,7 @@ pub fn sidtest() -> Unit {
 }
 
 ///|
-fn initSIDtune(c64 : @lib.C64, psid : @lib.PSID, subtune : Int) -> Unit {
+fn initSIDtune(c64 : C64, psid : PSID, subtune : Int) -> Unit {
   let mut subtune = subtune
   if subtune == 0 {
     subtune = 1

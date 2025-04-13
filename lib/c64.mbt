@@ -42,6 +42,10 @@ pub struct C64 {
   pc : UInt16
   mem : Memory
   //
+  basic: Bytes
+  characters: Bytes
+  kernal: Bytes
+  //
   bank : FixedArray[Bank]
   //
   cpu : @cpu.CPU
@@ -121,6 +125,29 @@ pub fn C64::new(
     debug~,
   )
 
+  //
+  let basic = match @fs.read_file_to_bytes?("files/ROM/basic.901226-01.bin") {
+    Ok(basic) => basic
+    Err(error) => {
+      println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
+      abort("file not found")
+    }
+  }
+  let characters = match @fs.read_file_to_bytes?("files/ROM/characters.906143-02.bin") {
+    Ok(characters) => characters
+    Err(error) => {
+      println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
+      abort("file not found")
+    }
+  }
+  let kernal = match @fs.read_file_to_bytes?("files/ROM/kernal.901227-03.bin") {
+    Ok(kernal) => kernal
+    Err(error) => {
+      println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
+      abort("file not found")
+    }
+  }
+
   // mem.setROM()
 
   //default C64 setup with only 1 SID and 2 CIAs and 1 VIC
@@ -135,6 +162,10 @@ pub fn C64::new(
   let c64 : C64 = {
     pc,
     mem,
+    //
+    basic,
+    characters,
+    kernal,
     //
     bank: FixedArray::make(8, Bank::RAM),
     //
@@ -908,7 +939,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // VIC-II DMA or Character ROM
   if address >= VIC_MEM_START && address <= VIC_MEM_END {
     match self.bank[BANK_CHARACTERS] {
-      ROM => return c64_characters[address._ - VIC_MEM_START].to_int()
+      ROM => return self.characters[address._ - VIC_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -916,7 +947,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // BASIC or RAM
   if address >= C64_BASIC_MEM_START && address <= C64_BASIC_MEM_END {
     match self.bank[BANK_BASIC] {
-      ROM => return c64_basic[address._ - C64_BASIC_MEM_START].to_int()
+      ROM => return self.basic[address._ - C64_BASIC_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -924,7 +955,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // KERNAL
   if address >= C64_KERNAL_MEM_START && address <= C64_KERNAL_MEM_END {
     match self.bank[BANK_KERNAL] {
-      ROM => return c64_kernal[address._ - C64_KERNAL_MEM_START].to_int()
+      ROM => return self.kernal[address._ - C64_KERNAL_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -933,7 +964,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   if address >= C64_CHARACTERS_MEM_START && address <= C64_CHARACTERS_MEM_END {
     match self.bank[BANK_CHARACTERS] {
       ROM =>
-        return c64_characters[address._ - C64_CHARACTERS_MEM_START].to_int()
+        return self.characters[address._ - C64_CHARACTERS_MEM_START].to_int()
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }

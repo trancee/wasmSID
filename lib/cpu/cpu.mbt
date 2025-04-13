@@ -130,16 +130,16 @@ pub fn set_debug(self : CPU, debug : Bool) -> Unit {
 ///| When the 6510/6502 receives an NMI (Non-Maskable
 /// Interrupt) signal, it causes a jump to the address held
 /// here.
-const NMI = 0xFFFA
+pub const NMI = 0xFFFA
 
 ///| When the 6510/6502 receives a RESET signal, it causes a
 /// jump to the address held here.
-const RESET = 0xFFFC
+pub const RESET = 0xFFFC
 
 ///| When the 6510/6502 receives an IRQ (Interrupt Re-
 /// Quest) Signal or processes a machine language BRK
 /// instruction, it causes a jump to the address held here.
-const IRQ = 0xFFFE
+pub const IRQ = 0xFFFE
 
 ///|
 pub fn CPU::reset(self : CPU, pc? : UInt16) -> Unit {
@@ -265,7 +265,7 @@ pub fn read(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt8 {
 }
 
 ///|
-fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
+pub fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
   //   "$" + U16::u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
@@ -341,6 +341,35 @@ fn pop16(self : CPU) -> UInt16 {
     self.pop()._ | // lo 
     (self.pop()._ << 8), // hi
   )
+}
+
+///|
+pub fn dump(
+  self : CPU,
+  addr~ : UInt16 = 0x0000,
+  cols~ : Int = 0x10,
+  rows~ : Int = 0x10
+) -> Unit {
+  let mut i = 0
+  let mut str = ""
+  if rows > 1 {
+    str = "     "
+    while i < cols {
+      str += U8::u8(i).to_hex() + " "
+      i = i + 1
+    }
+    i = 0
+  }
+  while i <= cols * rows {
+    if i % cols == 0 {
+      if str.length() > 0 {
+        println(str)
+      }
+      str = (addr + i).to_hex() + "|"
+    }
+    str += self.mem[(addr + i)._].to_hex() + " "
+    i = i + 1
+  }
 }
 
 ///| triggers a NMI IRQ in the processor
@@ -1200,7 +1229,6 @@ fn opRTI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
   // self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
   self.flags.set(self.pop() | UNUSED)
-  self.flags.clear_break()
 
   //
   self.pc = self.pop16()
