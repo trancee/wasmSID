@@ -80,7 +80,7 @@ pub fn sidtest() -> Unit {
   //
   let mut i = 0
   while c64.pc() != 0x0000 && i < 1000 {
-    let _ = c64.emulate()
+    c64.emulate() |> ignore
     i += 1
   }
 }
@@ -100,7 +100,7 @@ fn initSIDtune(c64 : C64, psid : PSID, subtune : Int) -> Unit {
   c64.push16(0xFFFF)
   let mut i = 0
   while c64.pc() != 0x0000 && i < 1000 {
-    let _ = c64.emulate()
+    c64.emulate() |> ignore
     i += 1
   }
 

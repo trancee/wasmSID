@@ -14,10 +14,10 @@ pub(all) enum Flag {
 const CARRY = 0b00000001
 
 ///| 0x02 Zero Flag
-// const ZERO = 0b00000010
+const ZERO = 0b00000010
 
 ///| 0x04 Interrupt Disable Flag
-// const INTERRUPT = 0b00000100
+const INTERRUPT = 0b00000100
 
 ///| 0x08 Decimal Mode Flag
 // const DECIMAL = 0b00001000
@@ -66,7 +66,13 @@ struct Flags {
 } derive(Show, Eq)
 
 ///|
-fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
+fn Flags::from_int(flags : Int) -> Flags {
+  Flags::new(flags=U8::u8(flags))
+}
+
+///|
+fn Flags::new(flags? : UInt8) -> Flags {
+  let flags = flags.or(U8::u8(0x00))
   {
     c: flags.bit(0),
     z: flags.bit(1),
@@ -170,7 +176,7 @@ pub fn Flags::get(self : Flags) -> UInt8 {
 
 // Set status register value.
 ///|
-pub fn Flags::set(self : Flags, flags : UInt8) -> Unit {
+pub fn Flags::set(self : Flags, flags : UInt8) -> UInt8 {
   self[C] = flags.bit(0)
   self[Z] = flags.bit(1)
   self[I] = flags.bit(2)
@@ -179,6 +185,7 @@ pub fn Flags::set(self : Flags, flags : UInt8) -> Unit {
   self[U] = flags.bit(5)
   self[V] = flags.bit(6)
   self[N] = flags.bit(7)
+  flags
 }
 
 ///|

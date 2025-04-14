@@ -88,8 +88,7 @@ pub fn CPU::new(
 
   //
   if data.length() > 0 {
-    let _ = cpu.load(address.or(pc), data, length~, offset~)
-
+    cpu.load(address.or(pc), data, length~, offset~) |> ignore
   }
 
   //
@@ -190,7 +189,7 @@ pub fn get_flags(self : CPU) -> Flags {
 
 ///|
 pub fn set_flags(self : CPU, flags : UInt8) -> Unit {
-  self.flags.set(flags)
+  self.flags.set(flags) |> ignore
 }
 
 ///|
@@ -416,7 +415,7 @@ pub fn interrupts(self : CPU) -> Bool {
     return true
   } else if self.irq && not(self.has_interrupt()) {
     self.irq = false
-    let _ = self.irq()
+    self.irq()
     return true
   }
   return false
@@ -1186,7 +1185,8 @@ fn opPLA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 /// This instruction could affect all flags in the status register.
 fn opPLP(self : CPU, _ : UInt16, _ : Mode) -> Unit {
   // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
-  self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
+  // self.flags.set((self.pop() & 0xEF) | UNUSED) |> ignore // nestest: pull() & 0xEF | 0x20
+  self.flags.set(self.pop()) |> ignore
 }
 
 // ROL - Rotate left
@@ -1236,7 +1236,7 @@ fn opRTI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 
   // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
   // self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
-  self.flags.set(self.pop() | UNUSED)
+  self.flags.set(self.pop() | UNUSED) |> ignore
 
   //
   self.pc = self.pop16()

@@ -152,7 +152,7 @@ fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit {
     // FF58  6C 14 03  JMP ($0314)
      0x6C, 0x14, 0x03,
   ]
-  let _ = c64.load(irq, offset=0xFF48)
+  c64.load(irq, offset=0xFF48) |> ignore
 
   //
   c64[R6510] = 0x00

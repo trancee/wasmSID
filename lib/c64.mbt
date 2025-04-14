@@ -42,9 +42,9 @@ pub struct C64 {
   pc : UInt16
   mem : Memory
   //
-  basic: Bytes
-  characters: Bytes
-  kernal: Bytes
+  basic : Bytes
+  characters : Bytes
+  kernal : Bytes
   //
   bank : FixedArray[Bank]
   //
@@ -133,7 +133,8 @@ pub fn C64::new(
       abort("file not found")
     }
   }
-  let characters = match @fs.read_file_to_bytes?("files/ROM/characters.906143-02.bin") {
+  let characters = match
+    @fs.read_file_to_bytes?("files/ROM/characters.906143-02.bin") {
     Ok(characters) => characters
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
@@ -221,7 +222,7 @@ pub fn C64::new(
   })
 
   // must happen after read/write functions set
-  let _ = cpu.load(address, data, length~)
+  cpu.load(address, data, length~) |> ignore
 
   //
   try {
