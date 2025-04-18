@@ -279,7 +279,7 @@ pub fn C64::reset(self : C64) -> Unit! {
     self.sampleRate = 44100
   }
   self.cpuFrequency = CPUClock(self.videoStandard)
-  self.sampleClockRatio = (self.cpuFrequency << 4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
+  self.sampleClockRatio = (self.cpuFrequency.to_int!() << 4) / self.sampleRate //shifting (multiplication) enhances SampleClockRatio precision
   //
   self.vic.rasterCompare = ScanLines(self.videoStandard).to_int!() // HINT: should be inferred
   self.vic.rasterRowCycles = ScanLineCycles(self.videoStandard).to_int!() // HINT: should be inferred
@@ -1126,8 +1126,8 @@ pub fn C64::write_word(
     | USRCMD
     | WARM
     | PC => {
-      self.write(address + 1, U8::u8(value >> 8)) // lo
-      self.write(address, U8::u8(value)) // hi
+      self.write(address + 1, u8(value._ >> 8)) // lo
+      self.write(address, u8(value._)) // hi
     }
     _ => {
       println("unknown C64 register \{register}")

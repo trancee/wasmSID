@@ -39,7 +39,7 @@ pub fn to_string(self : Exception) -> String {
     UnknownMode => "unknown mode"
     UnknownModel(scope) => "unknown \{scope} model"
     UnknownRegister(scope, value) =>
-      "unknown \{scope} register #$\{U16::u16(value).to_hex()}"
+      "unknown \{scope} register #$\{u16(value).to_hex()}"
     UnknownScanLineCycles => "unknown scan line cycles"
     UnknownScanLines => "unknown scan lines"
     UnknownVersion => "unknown version"

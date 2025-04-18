@@ -11,31 +11,31 @@ pub(all) enum Flag {
 } derive(Eq)
 
 ///| 0x01 Carry Flag
-const CARRY = 0b00000001
+pub const CARRY = 0b00000001
 
 ///| 0x02 Zero Flag
-const ZERO = 0b00000010
+pub const ZERO = 0b00000010
 
 ///| 0x04 Interrupt Disable Flag
-const INTERRUPT = 0b00000100
+pub const INTERRUPT = 0b00000100
 
 ///| 0x08 Decimal Mode Flag
 // const DECIMAL = 0b00001000
 
 ///| 0x10 Break Command Flag
-const BREAK = 0b00010000
+pub const BREAK = 0b00010000
 
 ///| 0x20 Unused Flag
-const UNUSED = 0b00100000
+pub const UNUSED = 0b00100000
 
 ///| 0x40 Overflow Flag
-const OVERFLOW = 0b01000000
+pub const OVERFLOW = 0b01000000
 
 ///| 0x80 Negative Flag
-const NEGATIVE = 0b10000000
+pub const NEGATIVE = 0b10000000
 
 ///|
-pub fn Flag::lor(self : Flag, flag : Flag) -> Int {
+pub fn Flag::lor(self : Flag, flag : Flag) -> UInt8 {
   self.bits() | flag.bits()
 }
 
@@ -67,12 +67,12 @@ struct Flags {
 
 ///|
 fn Flags::from_int(flags : Int) -> Flags {
-  Flags::new(flags=U8::u8(flags))
+  Flags::new(flags~)
 }
 
 ///|
 fn Flags::new(flags? : UInt8) -> Flags {
-  let flags = flags.or(U8::u8(0x00))
+  let flags = flags.or(0x00)
   {
     c: flags.bit(0),
     z: flags.bit(1),

@@ -1,8 +1,17 @@
 ///|
-typealias @t.UInt16
+typealias @uint8.UInt8
 
 ///|
-traitalias @t.(U8, U16)
+typealias @uint16.UInt16
 
+///|
+fnalias @uint8.u8
+
+///|
+fnalias @uint16.u16
+
+///|
 typealias @cpu.CPU
+
+///|
 typealias @lib.(C64, NES, PSID, Memory)

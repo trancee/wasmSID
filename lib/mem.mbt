@@ -172,7 +172,7 @@ pub fn dump(
   if rows > 1 {
     str = "     "
     while i < cols {
-      str += U8::u8(i).to_hex() + " "
+      str += u8(i).to_hex() + " "
       i = i + 1
     }
     i = 0

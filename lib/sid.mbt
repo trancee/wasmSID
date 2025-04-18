@@ -751,9 +751,9 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     println(
       "\t\t\t\t\t\t\t\t\t " +
       "🎵 SID $" +
-      U16::u16(self.baseaddress + address).to_hex() +
+      u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      U8::u8(self.mem[address]).to_hex() +
+      u8(self.mem[address]).to_hex() +
       " | \{register}",
     )
   }
@@ -762,9 +762,9 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     // self.dump()
     println(
       "SID \{register} $" +
-      U16::u16(self.baseaddress + address).to_hex() +
+      u16(self.baseaddress + address).to_hex() +
       " → #$" +
-      U8::u8(self.mem[address]).to_hex(),
+      u8(self.mem[address]).to_hex(),
     )
     abort("out of bounds")
   }
@@ -772,19 +772,19 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     match register {
       /// Voice 1 Frequency Control (low byte)
       /// 54272         $D400          FRELO1
-      FRELO1 | FRELO2 | FRELO3 => U8::u8(voice.frequency)
+      FRELO1 | FRELO2 | FRELO3 => u8(voice.frequency._)
 
       /// Voice 1 Frequency Control (high byte)
       /// 54273         $D401          FREHI1
-      FREHI1 | FREHI2 | FREHI3 => U8::u8(voice.frequency >> 8)
+      FREHI1 | FREHI2 | FREHI3 => u8(voice.frequency._ >> 8)
 
       /// Voice 1 Pulse Waveform Width (low byte)
       /// 54274         $D402          PWLO1
-      PWLO1 | PWLO2 | PWLO3 => U8::u8(voice.pulseWidth)
+      PWLO1 | PWLO2 | PWLO3 => u8(voice.pulseWidth._)
 
       /// Voice 1 Pulse Waveform Width (high nybble)
       /// 54275         $D403          PWHI1
-      PWHI1 | PWHI2 | PWHI3 => U8::u8(voice.pulseWidth >> 8)
+      PWHI1 | PWHI2 | PWHI3 => u8(voice.pulseWidth._ >> 8)
 
       /// Voice 1 Control Register
       /// 54276         $D404          VCREG1
@@ -822,8 +822,8 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     FRELO3 | FREHI3 | PWLO3 | PWHI3 | VCREG3 | ATDCY3 | SUREL3 =>
       voice(self.register.voice[2])
     //
-    CUTLO => U8::u8(self.register.cutoffFrequency)
-    CUTHI => U8::u8(self.register.cutoffFrequency >> 8)
+    CUTLO => u8(self.register.cutoffFrequency._)
+    CUTHI => u8(self.register.cutoffFrequency._ >> 8)
 
     /// Filter Resonance Control Register
     /// 54295         $D417          RESON
@@ -866,7 +866,7 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     println(
       "\t\t\t\t\t\t\t\t\t " +
       "🎵 SID $" +
-      U16::u16(self.baseaddress + address).to_hex() +
+      u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex() +
       " | \{register}",
@@ -877,7 +877,7 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     // self.dump()
     println(
       "SID \{register} $" +
-      U16::u16(self.baseaddress + address).to_hex() +
+      u16(self.baseaddress + address).to_hex() +
       " ← #$" +
       value.to_hex(),
     )
@@ -888,22 +888,22 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
       /// Voice 1 Frequency Control (low byte)
       /// 54272         $D400          FRELO1
       FRELO1 | FRELO2 | FRELO3 =>
-        voice.frequency = voice.frequency | U16::u16(value)
+        voice.frequency = voice.frequency | u16(value._)
 
       /// Voice 1 Frequency Control (high byte)
       /// 54273         $D401          FREHI1
       FREHI1 | FREHI2 | FREHI3 =>
-        voice.frequency = voice.frequency | (U16::u16(value) << 8)
+        voice.frequency = voice.frequency | (u16(value._) << 8)
 
       /// Voice 1 Pulse Waveform Width (low byte)
       /// 54274         $D402          PWLO1
       PWLO1 | PWLO2 | PWLO3 =>
-        voice.pulseWidth = voice.pulseWidth | U16::u16(value)
+        voice.pulseWidth = voice.pulseWidth | u16(value._)
 
       /// Voice 1 Pulse Waveform Width (high nybble)
       /// 54275         $D403          PWHI1
       PWHI1 | PWHI2 | PWHI3 =>
-        voice.pulseWidth = voice.pulseWidth | (U16::u16(value) << 8)
+        voice.pulseWidth = voice.pulseWidth | (u16(value._) << 8)
 
       // /// Voice 1 Control Register
       // /// 54276         $D404          VCREG1
@@ -945,10 +945,10 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     //
     CUTLO =>
       self.register.cutoffFrequency = self.register.cutoffFrequency |
-        U16::u16(value)
+        u16(value._)
     CUTHI =>
       self.register.cutoffFrequency = self.register.cutoffFrequency |
-        (U16::u16(value) << 8)
+        (u16(value._) << 8)
 
     /// Filter Resonance Control Register
     /// 54295         $D417          RESON

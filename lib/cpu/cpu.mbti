@@ -1,29 +1,44 @@
 package "trancee/wasmSID/lib/cpu"
 
 import(
-  "trancee/wasmSID/lib/types"
+  "trancee/wasmSID/lib/uint16"
+  "trancee/wasmSID/lib/uint8"
 )
 
 // Values
+const BREAK : Int = 0b00010000
+
+const CARRY : Int = 0b00000001
+
 const CPU_MEM_END : Int = 0xFFFF
 
 const CPU_MEM_SIZE : Int = 0xFFFF
 
 const CPU_MEM_START : Int = 0x0000
 
+const INTERRUPT : Int = 0b00000100
+
 const IRQ : Int = 0xFFFE
+
+const NEGATIVE : Int = 0b10000000
 
 const NMI : Int = 0xFFFA
 
+const OVERFLOW : Int = 0b01000000
+
 const RESET : Int = 0xFFFC
 
-fn a(CPU) -> @types.UInt8
+const UNUSED : Int = 0b00100000
+
+const ZERO : Int = 0b00000010
+
+fn a(CPU) -> @uint8.UInt8
 
 fn clear_flags(CPU) -> Unit
 
 fn clear_registers(CPU) -> Unit
 
-fn dump(CPU, addr~ : @types.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+fn dump(CPU, addr~ : @uint16.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
 
 fn get_flags(CPU) -> Flags
 
@@ -33,51 +48,51 @@ fn has_interrupt(CPU) -> Bool
 
 fn interrupts(CPU) -> Bool
 
-fn irq(CPU, pc? : @types.UInt16) -> Unit
+fn irq(CPU, pc? : @uint16.UInt16) -> Unit
 
-fn load(CPU, @types.UInt16, Bytes, length~ : Int = .., offset~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
+fn load(CPU, @uint16.UInt16, Bytes, length~ : @uint16.UInt16 = .., offset~ : @uint16.UInt16 = .., has_load_address~ : Bool = ..) -> @uint16.UInt16
 
-fn nmi(CPU, pc? : @types.UInt16) -> Unit
+fn nmi(CPU, pc? : @uint16.UInt16) -> Unit
 
-fn pc(CPU) -> @types.UInt16
+fn pc(CPU) -> @uint16.UInt16
 
-fn push(CPU, @types.UInt8, dummy~ : Bool = ..) -> Unit
+fn push(CPU, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
 
-fn push16(CPU, @types.UInt16) -> Unit
+fn push16(CPU, @uint16.UInt16) -> Unit
 
-fn read(CPU, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
+fn read(CPU, @uint16.UInt16, dummy~ : Bool = ..) -> @uint8.UInt8
 
-fn read16(CPU, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt16
+fn read16(CPU, @uint16.UInt16, dummy~ : Bool = ..) -> @uint16.UInt16
 
-fn register(CPU, Register, @types.UInt8) -> Unit
+fn register(CPU, Register, @uint8.UInt8) -> Unit
 
 fn set_debug(CPU, Bool) -> Unit
 
-fn set_flags(CPU, @types.UInt8) -> Unit
+fn set_flags(CPU, @uint8.UInt8) -> Unit
 
 fn set_irq(CPU, state~ : Bool = ..) -> Unit
 
 fn set_nmi(CPU, state~ : Bool = ..) -> Unit
 
-fn set_read(CPU, (@types.UInt16, Bool) -> @types.UInt8) -> Unit
+fn set_read(CPU, (@uint16.UInt16, Bool) -> @uint8.UInt8) -> Unit
 
-fn set_write(CPU, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
+fn set_write(CPU, (@uint16.UInt16, @uint8.UInt8, Bool) -> Unit) -> Unit
 
 fn step(CPU) -> Int
 
-fn trap(CPU, @types.UInt16, (CPU) -> Unit) -> Unit
+fn trap(CPU, @uint16.UInt16, (CPU) -> Unit) -> Unit
 
-fn write(CPU, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
+fn write(CPU, @uint16.UInt16, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
 
-fn write16(CPU, @types.UInt16, @types.UInt16, dummy~ : Bool = ..) -> Unit
+fn write16(CPU, @uint16.UInt16, @uint16.UInt16, dummy~ : Bool = ..) -> Unit
 
 // Types and methods
 pub struct CPU {
-  mem : FixedArray[@types.UInt8]
-  mut read : ((@types.UInt16, Bool) -> @types.UInt8)?
-  mut write : ((@types.UInt16, @types.UInt8, Bool) -> Unit)?
+  mem : FixedArray[@uint8.UInt8]
+  mut read : ((@uint16.UInt16, Bool) -> @uint8.UInt8)?
+  mut write : ((@uint16.UInt16, @uint8.UInt8, Bool) -> Unit)?
   mut cycles : Int
-  mut pc : @types.UInt16
+  mut pc : @uint16.UInt16
   registers : Registers
   flags : Flags
   decimal_mode : Bool
@@ -87,37 +102,37 @@ pub struct CPU {
   mut debug : Bool
 }
 impl CPU {
-  a(Self) -> @types.UInt8
+  a(Self) -> @uint8.UInt8
   clear_flags(Self) -> Unit
   clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
-  dump(Self, addr~ : @types.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+  dump(Self, addr~ : @uint16.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
   get_flags(Self) -> Flags
   get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
   interrupts(Self) -> Bool
-  irq(Self, pc? : @types.UInt16) -> Unit
-  load(Self, @types.UInt16, Bytes, length~ : Int = .., offset~ : Int = .., has_load_address~ : Bool = ..) -> @types.UInt16
-  new(pc~ : @types.UInt16 = .., address? : @types.UInt16, data~ : Bytes = .., length~ : Int = .., offset~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
-  nmi(Self, pc? : @types.UInt16) -> Unit
-  pc(Self) -> @types.UInt16
-  push(Self, @types.UInt8, dummy~ : Bool = ..) -> Unit
-  push16(Self, @types.UInt16) -> Unit
-  read(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt8
-  read16(Self, @types.UInt16, dummy~ : Bool = ..) -> @types.UInt16
-  register(Self, Register, @types.UInt8) -> Unit
-  reset(Self, pc? : @types.UInt16) -> Unit
+  irq(Self, pc? : @uint16.UInt16) -> Unit
+  load(Self, @uint16.UInt16, Bytes, length~ : @uint16.UInt16 = .., offset~ : @uint16.UInt16 = .., has_load_address~ : Bool = ..) -> @uint16.UInt16
+  new(pc~ : @uint16.UInt16 = .., address? : @uint16.UInt16, data~ : Bytes = .., length~ : Int = .., offset~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self
+  nmi(Self, pc? : @uint16.UInt16) -> Unit
+  pc(Self) -> @uint16.UInt16
+  push(Self, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
+  push16(Self, @uint16.UInt16) -> Unit
+  read(Self, @uint16.UInt16, dummy~ : Bool = ..) -> @uint8.UInt8
+  read16(Self, @uint16.UInt16, dummy~ : Bool = ..) -> @uint16.UInt16
+  register(Self, Register, @uint8.UInt8) -> Unit
+  reset(Self, pc? : @uint16.UInt16) -> Unit
   set_debug(Self, Bool) -> Unit
-  set_flags(Self, @types.UInt8) -> Unit
+  set_flags(Self, @uint8.UInt8) -> Unit
   set_interrupt(Self) -> Unit
   set_irq(Self, state~ : Bool = ..) -> Unit
   set_nmi(Self, state~ : Bool = ..) -> Unit
-  set_read(Self, (@types.UInt16, Bool) -> @types.UInt8) -> Unit
-  set_write(Self, (@types.UInt16, @types.UInt8, Bool) -> Unit) -> Unit
+  set_read(Self, (@uint16.UInt16, Bool) -> @uint8.UInt8) -> Unit
+  set_write(Self, (@uint16.UInt16, @uint8.UInt8, Bool) -> Unit) -> Unit
   step(Self) -> Int
-  trap(Self, @types.UInt16, (Self) -> Unit) -> Unit
-  write(Self, @types.UInt16, @types.UInt8, dummy~ : Bool = ..) -> Unit
-  write16(Self, @types.UInt16, @types.UInt16, dummy~ : Bool = ..) -> Unit
+  trap(Self, @uint16.UInt16, (Self) -> Unit) -> Unit
+  write(Self, @uint16.UInt16, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
+  write16(Self, @uint16.UInt16, @uint16.UInt16, dummy~ : Bool = ..) -> Unit
 }
 
 pub(all) enum Flag {
@@ -131,14 +146,14 @@ pub(all) enum Flag {
   N
 }
 impl Flag {
-  lor(Self, Self) -> Int
+  lor(Self, Self) -> @uint8.UInt8
 }
 impl Eq for Flag
 
 type Flags
 impl Flags {
-  get(Self) -> @types.UInt8
-  set(Self, @types.UInt8) -> @types.UInt8
+  get(Self) -> @uint8.UInt8
+  set(Self, @uint8.UInt8) -> @uint8.UInt8
   set_interrupt(Self) -> Unit
 }
 impl Eq for Flags
@@ -152,15 +167,15 @@ pub(all) enum Register {
 }
 
 pub struct Registers {
-  mut sp : @types.UInt8
-  mut a : @types.UInt8
-  mut x : @types.UInt8
-  mut y : @types.UInt8
+  mut sp : @uint8.UInt8
+  mut a : @uint8.UInt8
+  mut x : @uint8.UInt8
+  mut y : @uint8.UInt8
 }
 impl Registers {
-  new(sp~ : @types.UInt8 = ..) -> Self
-  op_get(Self, Register) -> @types.UInt8
-  op_set(Self, Register, @types.UInt8) -> Unit
+  new(sp~ : @uint8.UInt8 = ..) -> Self
+  op_get(Self, Register) -> @uint8.UInt8
+  op_set(Self, Register, @uint8.UInt8) -> Unit
   reset(Self) -> Unit
 }
 

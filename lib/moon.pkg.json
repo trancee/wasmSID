@@ -1,10 +1,8 @@
 {
   "import": [
     "trancee/wasmSID/lib/cpu",
-    {
-      "path": "trancee/wasmSID/lib/types",
-      "alias": "t"
-    },
+    "trancee/wasmSID/lib/uint8",
+    "trancee/wasmSID/lib/uint16",
     "moonbitlang/x/fs"
   ]
 }

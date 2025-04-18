@@ -64,7 +64,7 @@ fn dormann_functional() -> Unit {
   // })
 
   //
-  let mut last_test = U8::u8(0xFF)
+  let mut last_test = u8(0xFF)
 
   //
   let mut cycles = 0
@@ -342,8 +342,8 @@ fn dormann_extended_opcodes() -> Unit {
   })
 
   //
-  let mut last_pc = U16::u16(0xFFFF)
-  let mut last_test = U8::u8(0xFF)
+  let mut last_pc = u16(0xFFFF)
+  let mut last_test = u8(0xFF)
 
   //
   let mut cycles = 0

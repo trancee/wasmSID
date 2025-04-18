@@ -25,7 +25,7 @@ pub fn nestest() -> Unit {
   )
 
   //
-  nes.set_flags(@cpu.U | @cpu.I) // UNUSED + INTERRUPT
+  nes.set_flags(@cpu.UNUSED | @cpu.INTERRUPT)
 
   //
   nes.load(

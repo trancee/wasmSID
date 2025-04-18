@@ -48,17 +48,17 @@ pub fn sidtest() -> Unit {
   println("Author: \{author} , Title: \{title} , Info: \{info}")
   println(
     "Load-address:$" +
-    U16::u16(psid.loadAddress).to_hex() +
+    u16(psid.loadAddress).to_hex() +
     ", End-address:$" +
-    U16::u16(psid.endAddress).to_hex() +
+    u16(psid.endAddress).to_hex() +
     ", Size:" +
     (psid.endAddress - psid.loadAddress).to_string() +
     " bytes",
   )
-  println("Init-address:$" + U16::u16(psid.initAddress).to_hex())
+  println("Init-address:$" + u16(psid.initAddress).to_hex())
   let mut s = ""
   if not(psid.realSID) {
-    s += "Play-address:$" + U16::u16(psid.playAddress).to_hex() + ", "
+    s += "Play-address:$" + u16(psid.playAddress).to_hex() + ", "
     if psid.playAddress == 0 {
       s += "(IRQ), "
     }

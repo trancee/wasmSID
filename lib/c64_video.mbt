@@ -93,14 +93,14 @@ test "error CPUClock::Both" {
 test "CPUClock::NTSC shift left" {
   let value = CPUClock(NTSC)
   assert_eq!(value, NTSC)
-  inspect!(value << 4, content="16363632")
+  inspect!(value.to_int!() << 4, content="16363632")
 }
 
 ///|
 test "CPUClock::PAL shift left" {
   let value = CPUClock(PAL)
   assert_eq!(value, PAL)
-  inspect!(value << 4, content="15763968")
+  inspect!(value.to_int!() << 4, content="15763968")
 }
 
 ///|

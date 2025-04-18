@@ -15,8 +15,32 @@ pub struct Registers {
 }
 
 ///|
+test {
+  let r = Registers::new()
+  assert_eq!(r.sp, 0xFF)
+}
+
+///|
+test {
+  let r = Registers::new(sp=0xFFFF)
+  assert_eq!(r.sp, 0xFF)
+}
+
+///|
+test {
+  let r = Registers::new(sp=-1)
+  assert_eq!(r.sp, 0xFF)
+}
+
+///|
+test {
+  let r = Registers::new(sp=0)
+  assert_eq!(r.sp, 0x00)
+}
+
+///|
 pub fn Registers::new(sp~ : UInt8 = 0xFF) -> Registers {
-  { sp: U8::u8(sp), a: 0x00, x: 0x00, y: 0x00 }
+  { sp, a: 0x00, x: 0x00, y: 0x00 }
 }
 
 ///|

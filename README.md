@@ -1,5 +1,14 @@
 # trancee/wasmSID
 
+## Setup Moonbit
+
+Add the Moonbit extension in Visual Studio Code
+
+## Install dependencies
+
+moon update
+moon install
+
 #### Finding PSID v2
 ```sh
 LANG=C grep -obUaPr "\x50\x53\x49\x44\x00\x02" .

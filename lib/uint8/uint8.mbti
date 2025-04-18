@@ -1,0 +1,61 @@
+package "trancee/wasmSID/lib/uint8"
+
+// Values
+const DEFAULT_VALUE : Int = 0
+
+const MAX_VALUE : Int = 255
+
+const MIN_VALUE : Int = 0
+
+fn default() -> UInt8
+
+fn to_u8[T : U8](T) -> UInt8
+
+fn u8[T : U8](T) -> UInt8
+
+// Types and methods
+pub(all) type UInt8 Int
+impl UInt8 {
+  bit(Self, Int) -> Bool
+  bitn(Self, Self) -> Int
+  clr(Self, Self) -> Self
+  clrb(Self, Self) -> Self
+  has(Self, Self) -> Bool
+  init(Int) -> Self
+  is_neg(Self) -> Bool
+  new(Int) -> Self
+  set(Self, Self) -> Self
+  setb(Self, Self) -> Self
+  to_byte(Self) -> Byte
+  to_hex(Self) -> String
+  to_int(Self) -> Int
+  to_signed(Self) -> Int
+  to_uint16(Self) -> UInt16
+}
+impl Add for UInt8
+impl BitAnd for UInt8
+impl BitOr for UInt8
+impl BitXOr for UInt8
+impl Compare for UInt8
+impl Default for UInt8
+impl Div for UInt8
+impl Eq for UInt8
+impl Hash for UInt8
+impl Mod for UInt8
+impl Mul for UInt8
+impl Neg for UInt8
+impl Shl for UInt8
+impl Show for UInt8
+impl Shr for UInt8
+impl Sub for UInt8
+impl U8 for UInt8
+
+// Type aliases
+
+// Traits
+pub trait U8 {
+  u8(Self) -> UInt8
+}
+impl U8 for Byte
+impl U8 for Int
+
