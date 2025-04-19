@@ -824,6 +824,7 @@ impl VIC {
   emulate(Self, Int) -> Bool
   new(mem? : Memory, @core.UInt16, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
   reset(Self, videoStandard~ : VideoStandard = ..) -> Unit!
+  set_debug(Self, Bool) -> Unit
 }
 
 pub struct VICRegister {

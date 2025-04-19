@@ -4217,7 +4217,7 @@ test "plp_pulls_top_byte_from_stack_into_flags_and_updates_sp" {
   cpu.registers[SP] = 0xFE
   assert_eq!(cpu.step(), 4)
   assert_eq!(cpu.pc, 0x0001)
-  assert_eq!(0xBA, cpu.flags.get()._)
+  assert_eq!(0xAA, cpu.flags.get()._) // without BREAK
   assert_eq!(0xFF, cpu.registers[SP]._)
 }
 

@@ -4,8 +4,8 @@ let debug = false
 ///|
 fn main {
   try {
-    // dormann!()
-    lorenz!()
+    dormann!()
+    // lorenz!()
     // nestest!()
     // sidtest!()
   } catch {

@@ -1159,9 +1159,7 @@ fn opPLA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 /// The `PLP` instruction affects no registers in the processor other than the status register.
 /// This instruction could affect all flags in the status register.
 fn opPLP(self : CPU, _ : UInt16, _ : Mode) -> Unit {
-  // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
-  // self.flags.set((self.pop() & 0xEF) | UNUSED) |> ignore // nestest: pull() & 0xEF | 0x20
-  self.flags.set(self.pop()) |> ignore
+  self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore
 }
 
 // ROL - Rotate left
