@@ -1,0 +1,2 @@
+///|
+const HEX = "0123456789ABCDEF"

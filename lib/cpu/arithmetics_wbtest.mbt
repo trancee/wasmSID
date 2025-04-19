@@ -1854,7 +1854,7 @@ struct ADCTestData {
 
 ///|
 fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -1905,7 +1905,7 @@ fn testSBCAbsolute(t : ADCTestData) -> Unit!Error {
 
 ///|
 fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -1952,7 +1952,7 @@ fn testSBCImmediate(t : ADCTestData) -> Unit!Error {
 
 ///|
 fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2005,7 +2005,7 @@ fn testADCZeroPageX(
   t : ADCTestData,
   ins~ : Instruction = ADC_ZPX
 ) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2059,7 +2059,7 @@ fn testADCAbsoluteX(
   t : ADCTestData,
   ins~ : Instruction = ADC_ABSX
 ) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2114,7 +2114,7 @@ fn testADCAbsoluteY(
   t : ADCTestData,
   ins~ : Instruction = ADC_ABSY
 ) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2169,7 +2169,7 @@ fn testADCIndirectX(
   t : ADCTestData,
   ins~ : Instruction = ADC_INDX
 ) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2227,7 +2227,7 @@ fn testADCIndirectY(
   t : ADCTestData,
   ins~ : Instruction = ADC_INDY
 ) -> Unit!Error {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]

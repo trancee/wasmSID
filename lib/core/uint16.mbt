@@ -3,43 +3,57 @@
 //
 
 ///|
-pub const MAX_VALUE = 65535
+pub const UINT16_BITS = 16
 
 ///|
-pub const MIN_VALUE = 0
+pub const UINT16_SIGN_BIT = 15
 
 ///|
-pub const DEFAULT_VALUE = 0
+pub const UINT16_SIZE : Int = 1 << UINT16_BITS
 
 ///|
-const HEX = "0123456789ABCDEF"
+pub const UINT16_MAX = 0xFFFF
+
+///|
+pub const UINT16_MIN = 0x0000
+
+///|
+pub const UINT16_DEFAULT = 0x0000
 
 ///|
 pub(all) type UInt16 Int
 
 ///|
-pub fn default() -> UInt16 {
-  DEFAULT_VALUE
+pub fn UInt16::default() -> UInt16 {
+  UINT16_DEFAULT
 }
 
 ///|
 pub fn UInt16::init(self : Int) -> UInt16 {
-  self & MAX_VALUE
+  alu.zero = (self & UINT16_MAX) == UINT16_DEFAULT
+  alu.carry = (self & 0x10000) != 0
+  alu.overflow = self > UINT16_MAX
+  alu.underflow = self < UINT16_MIN
+  self & UINT16_MAX
 }
 
 ///|
 pub fn UInt16::new(self : Int) -> UInt16 {
-  self & MAX_VALUE
+  alu.zero = (self & UINT16_MAX) == UINT16_DEFAULT
+  alu.carry = (self & 0x10000) != 0
+  alu.overflow = self > UINT16_MAX
+  alu.underflow = self < UINT16_MIN
+  self & UINT16_MAX
 }
 
 ///|
 pub fn UInt16::to_int(self : UInt16) -> Int {
-  self._ & MAX_VALUE
+  self._ & UINT16_MAX
 }
 
 ///|
 pub fn UInt16::to_signed(self : UInt16) -> Int {
-  self.to_int() - (if self.bit(15) { MAX_VALUE + 1 } else { 0 })
+  self.to_int() - (if self.bit(UINT16_SIGN_BIT) { UINT16_SIZE } else { 0 })
 }
 
 ///|
@@ -60,24 +74,24 @@ pub fn UInt16::to_hex(self : UInt16) -> String {
 ///|
 test "MAX_VALUE/basic" {
   // MAX_VALUE should be exactly 65535 (0xFFFF)
-  inspect!(MAX_VALUE, content="65535")
+  inspect!(UINT16_MAX, content="65535")
 }
 
 ///|
 test "MIN_VALUE" {
-  inspect!(MIN_VALUE, content="0")
-  inspect!(MIN_VALUE <= MAX_VALUE, content="true")
-  inspect!(MIN_VALUE >= DEFAULT_VALUE, content="true")
+  inspect!(UINT16_MIN, content="0")
+  inspect!(UINT16_MIN <= UINT16_MAX, content="true")
+  inspect!(UINT16_MIN >= UINT16_DEFAULT, content="true")
 }
 
 ///|
 test "DEFAULT_VALUE" {
   // Test if DEFAULT_VALUE is actually zero
-  inspect!(DEFAULT_VALUE, content="0")
+  inspect!(UINT16_DEFAULT, content="0")
   // Test if DEFAULT_VALUE is equal to the minimum allowed value
-  inspect!(DEFAULT_VALUE == MIN_VALUE, content="true")
+  inspect!(UINT16_DEFAULT == UINT16_MIN, content="true")
   // Test if DEFAULT_VALUE is less than the maximum allowed value
-  inspect!(DEFAULT_VALUE < MAX_VALUE, content="true")
+  inspect!(UINT16_DEFAULT < UINT16_MAX, content="true")
 }
 
 ///|
@@ -105,8 +119,8 @@ test "UInt16/basic_range" {
 ///|
 test "default" {
   // Test that default value is indeed 0
-  inspect!(default(), content="0000")
-  inspect!(default()._, content="0")
+  inspect!(UInt16::default(), content="0000")
+  inspect!(UInt16::default()._, content="0")
 }
 
 ///|
@@ -222,18 +236,18 @@ test "UInt16::to_int" {
 ///|
 test "UInt16::to_int/boundary" {
   // Test boundary values
-  inspect!(UInt16::new(MAX_VALUE).to_int(), content="65535")
-  inspect!(UInt16::new(MIN_VALUE).to_int(), content="0")
+  inspect!(UInt16::new(UINT16_MAX).to_int(), content="65535")
+  inspect!(UInt16::new(UINT16_MIN).to_int(), content="0")
 }
 
 ///|
 test "UInt16::to_int/overflow" {
   // Test overflow behavior
-  inspect!(UInt16::new(MAX_VALUE + 1).to_int(), content="0")
-  inspect!(UInt16::new(2 * MAX_VALUE).to_int(), content="65534")
-  inspect!(UInt16::new(2 * (MAX_VALUE - 1)).to_int(), content="65532")
-  inspect!(UInt16::new(2 * (MAX_VALUE + 1)).to_int(), content="0")
-  inspect!(UInt16::new(2 * (MAX_VALUE + 1) - 1).to_int(), content="65535")
+  inspect!(UInt16::new(UINT16_MAX + 1).to_int(), content="0")
+  inspect!(UInt16::new(2 * UINT16_MAX).to_int(), content="65534")
+  inspect!(UInt16::new(2 * (UINT16_MAX - 1)).to_int(), content="65532")
+  inspect!(UInt16::new(2 * (UINT16_MAX + 1)).to_int(), content="0")
+  inspect!(UInt16::new(2 * (UINT16_MAX + 1) - 1).to_int(), content="65535")
 }
 
 ///|
@@ -262,7 +276,7 @@ test "UInt16::init/extreme" {
 ///|
 test "default/type_check" {
   // Test that default value is indeed a UInt16
-  let x = default()
+  let x = UInt16::default()
   inspect!(x, content="0000")
   inspect!(x.to_int(), content="0")
   inspect!(x.to_hex(), content="0000")
@@ -302,13 +316,13 @@ test "panic HEX/bounds" {
 ///|
 test "DEFAULT_VALUE/type_conversion" {
   // Test if DEFAULT_VALUE can be safely converted to UInt16
-  let uint16_val = UInt16::new(DEFAULT_VALUE)
+  let uint16_val = UInt16::new(UINT16_DEFAULT)
   inspect!(uint16_val.to_int(), content="0")
 }
 
 ///|
 test "MIN_VALUE/boundary" {
-  let u = UInt16::new(MIN_VALUE)
+  let u = UInt16::new(UINT16_MIN)
   inspect!(u.to_int(), content="0")
   inspect!(u - u, content="0000")
 }
@@ -316,14 +330,14 @@ test "MIN_VALUE/boundary" {
 ///|
 test "MAX_VALUE/boundary" {
   // MAX_VALUE should be the largest possible 16-bit unsigned integer
-  assert_true!(MAX_VALUE < (1 << 16))
-  assert_true!(MAX_VALUE >= (1 << 16) - 1)
-  assert_true!(MAX_VALUE + 1 == (1 << 16))
+  assert_true!(UINT16_MAX < UINT16_SIZE)
+  assert_true!(UINT16_MAX >= UINT16_SIZE - 1)
+  assert_true!(UINT16_MAX + 1 == UINT16_SIZE)
 }
 
 ///|
 test "MAX_VALUE/bitwise" {
   // All bits in MAX_VALUE should be set to 1
-  inspect!((MAX_VALUE & 0xFFFF) == MAX_VALUE, content="true")
-  inspect!((MAX_VALUE | 0x0000) == MAX_VALUE, content="true")
+  inspect!((UINT16_MAX & 0xFFFF) == UINT16_MAX, content="true")
+  inspect!((UINT16_MAX | 0x0000) == UINT16_MAX, content="true")
 }

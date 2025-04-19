@@ -65,7 +65,7 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                 line = line.replace(`target = `, `let target = `)
 
                 if (line.includes(`self._make_mpu`)) {
-                    line = line.replace(`mpu = self._make_mpu(`, `let cpu = CPU::new(`)
+                    line = line.replace(`mpu = self._make_mpu(`, `let cpu = CPU::new!(`)
                     line = line.replace(`pc=None`, ``)
 
                     if (line.endsWith(`()`)) {
@@ -80,7 +80,7 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                     if (!line.includes(`))`)) {
                         array_statement = true
                     }
-                    line = line.replace(`(`, `[`).replace(`)`, `]`).replace("self._write[mpu.memory, ", `cpu.load(`).replace(` (`, ` [`).replace(`)`, `) |> ignore`)
+                    line = line.replace(`(`, `[`).replace(`)`, `]`).replace("self._write[mpu.memory, ", `cpu.load!(`).replace(` (`, ` [`).replace(`)`, `) |> ignore`)
                 } else if (array_statement) {
                     if (line.includes(`))`)) {
                         line = line.replace(`))`, `,`) + `\n  ]) |> ignore`

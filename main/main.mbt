@@ -1,10 +1,14 @@
 ///|
-const DEBUG = false
+let debug = false
 
 ///|
 fn main {
-  // dormann()
-  // lorenz()
-  nestest()
-  // sidtest()
+  try {
+    // dormann!()
+    lorenz!()
+    // nestest!()
+    // sidtest!()
+  } catch {
+    error => println(error)
+  }
 }

@@ -1,0 +1,145 @@
+package "trancee/wasmSID/lib/core"
+
+// Values
+const UINT16_BITS : Int = 16
+
+const UINT16_DEFAULT : Int = 0x0000
+
+const UINT16_MAX : Int = 0xFFFF
+
+const UINT16_MIN : Int = 0x0000
+
+const UINT16_SIGN_BIT : Int = 15
+
+const UINT16_SIZE : Int = 65536
+
+const UINT8_BITS : Int = 8
+
+const UINT8_DEFAULT : Int = 0x00
+
+const UINT8_MAX : Int = 0xFF
+
+const UINT8_MIN : Int = 0x00
+
+const UINT8_SIGN_BIT : Int = 7
+
+const UINT8_SIZE : Int = 256
+
+fn to_uint16[T : U16](T) -> UInt16
+
+fn to_uint8[T : U8](T) -> UInt8
+
+fn u16[T : U16](T) -> UInt16
+
+fn u8[T : U8](T) -> UInt8
+
+// Types and methods
+pub struct ALU {
+  mut zero : Bool
+  mut carry : Bool
+  mut overflow : Bool
+  mut underflow : Bool
+}
+impl ALU {
+  carry() -> Bool
+  overflow() -> Bool
+  underflow() -> Bool
+  zero() -> Bool
+}
+
+pub(all) type UInt16 Int
+impl UInt16 {
+  bit(Self, Int) -> Bool
+  bitn(Self, Self) -> Int
+  clr(Self, Self) -> Self
+  clrb(Self, Self) -> Self
+  default() -> Self
+  has(Self, Self) -> Bool
+  init(Int) -> Self
+  is_neg(Self) -> Bool
+  is_not_neg(Self) -> Bool
+  is_not_pos(Self) -> Bool
+  is_pos(Self) -> Bool
+  new(Int) -> Self
+  set(Self, Self) -> Self
+  setb(Self, Self) -> Self
+  to_byte(Self) -> Byte
+  to_hex(Self) -> String
+  to_int(Self) -> Int
+  to_signed(Self) -> Int
+}
+impl Add for UInt16
+impl BitAnd for UInt16
+impl BitOr for UInt16
+impl BitXOr for UInt16
+impl Compare for UInt16
+impl Default for UInt16
+impl Div for UInt16
+impl Eq for UInt16
+impl Hash for UInt16
+impl Mod for UInt16
+impl Mul for UInt16
+impl Neg for UInt16
+impl Shl for UInt16
+impl Show for UInt16
+impl Shr for UInt16
+impl Sub for UInt16
+impl U16 for UInt16
+impl U8 for UInt16
+
+pub(all) type UInt8 Int
+impl UInt8 {
+  bit(Self, Int) -> Bool
+  bitn(Self, Self) -> Int
+  clr(Self, Self) -> Self
+  clrb(Self, Self) -> Self
+  default() -> Self
+  has(Self, Self) -> Bool
+  init(Int) -> Self
+  is_neg(Self) -> Bool
+  is_not_neg(Self) -> Bool
+  is_not_pos(Self) -> Bool
+  is_pos(Self) -> Bool
+  new(Int) -> Self
+  set(Self, Self) -> Self
+  setb(Self, Self) -> Self
+  to_byte(Self) -> Byte
+  to_hex(Self) -> String
+  to_int(Self) -> Int
+  to_signed(Self) -> Int
+  to_u16(Self) -> UInt16
+}
+impl Add for UInt8
+impl BitAnd for UInt8
+impl BitOr for UInt8
+impl BitXOr for UInt8
+impl Compare for UInt8
+impl Default for UInt8
+impl Div for UInt8
+impl Eq for UInt8
+impl Hash for UInt8
+impl Mod for UInt8
+impl Mul for UInt8
+impl Neg for UInt8
+impl Shl for UInt8
+impl Show for UInt8
+impl Shr for UInt8
+impl Sub for UInt8
+impl U16 for UInt8
+impl U8 for UInt8
+
+// Type aliases
+
+// Traits
+pub trait U16 {
+  u16(Self) -> UInt16
+}
+impl U16 for Byte
+impl U16 for Int
+
+pub trait U8 {
+  u8(Self) -> UInt8
+}
+impl U8 for Byte
+impl U8 for Int
+

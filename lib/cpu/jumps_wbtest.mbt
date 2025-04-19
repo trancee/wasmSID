@@ -2,7 +2,7 @@
 
 ///|
 test "CanJumpToASubroutineAndJumpBackAgain" {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   //
   let a = cpu.registers[A]
@@ -54,7 +54,7 @@ test "CanJumpToASubroutineAndJumpBackAgain" {
 
 ///|
 test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   //
   let sp = cpu.registers[SP]
@@ -77,7 +77,7 @@ test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
 
 ///|
 test "JumpIndirectCanJumpToAnNewLocationInTheProgram" {
-  let cpu = CPU::new(pc=0xFF00)
+  let cpu = CPU::new!(pc=0xFF00)
 
   //
   let sp = cpu.registers[SP]

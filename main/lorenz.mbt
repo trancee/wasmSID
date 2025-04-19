@@ -2,18 +2,18 @@
 const PATH = "tests/lorenz/"
 
 ///|
-const TESTCASE = "sbxb" // "start" // "sbxb"
+const TESTCASE = "start"
 
 ///|
-pub fn lorenz() -> Unit {
+pub fn lorenz() -> Unit! {
   //
-  let c64 = C64::new(realSID=true, debug=false)
+  let c64 = C64::new!(realSID=true, debug~)
 
   //
   setup(c64)
 
   //
-  load_testcase(c64, TESTCASE)
+  load_testcase!(c64, TESTCASE)
 
   //
   let mut cycles = 0
@@ -29,10 +29,10 @@ pub fn lorenz() -> Unit {
 }
 
 ///|
-fn load_testcase(c64 : C64, testcase : String, pc? : UInt16) -> Unit {
-  let content = @fs.read_file_to_bytes?(PATH + testcase)
-  match content {
-    Ok(content) => reset(c64, content, pc?)
+fn load_testcase(c64 : C64, testcase : String, pc? : UInt16) -> Unit! {
+  let data = @fs.read_file_to_bytes?(PATH + testcase)
+  match data {
+    Ok(data) => reset!(c64, data, pc?)
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("test not found")
@@ -52,7 +52,6 @@ fn setup(c64 : C64) -> Unit {
     // Set PC to return address
     // Re-start the CPU
 
-    c64[R6510] = 0x00
     c64[SAREG] = 0x00 // Storage for 6502 .A Register
 
     //
@@ -71,7 +70,7 @@ fn setup(c64 : C64) -> Unit {
         } else if a >= 0x41 && a <= 0x5A {
           a - 0x41 + 97
         } else if a < 32 || a >= 127 {
-          46
+          '.'
         } else {
           a
         }
@@ -91,10 +90,17 @@ fn setup(c64 : C64) -> Unit {
     // Re-start the CPU
 
     let testcase = builder.to_string()
-    load_testcase(c64, testcase, pc=0x0816)
+    try {
+      load_testcase!(c64, testcase, pc=0x0816)
+    } catch {
+      error => {
+        println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
+        abort("test failed")
+      }
+    }
   })
 
-  // Scan Keyboard
+  // Scan Keyboard (is already handled)
   // c64.trap(0xFFE4, fn(cpu) {
   //   // Set A to 3
   //   // Pop return address from stack
@@ -102,8 +108,7 @@ fn setup(c64 : C64) -> Unit {
   //   // Re-start the CPU
 
   //   cpu.registers[A] = 0x03
-  //   println("\u{1B}[31;1;6mSCAN KEYBOARD\u{1B}[0m")
-  //   // println("scan keyboard")
+  //   // println("\u{1B}[31;1;6mSCAN KEYBOARD\u{1B}[0m")
   //   // abort("scan keyboard")
   // })
 
@@ -119,43 +124,27 @@ fn setup(c64 : C64) -> Unit {
 }
 
 ///|
-fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit {
-  let addr = c64.load(data, has_load_address=true)
+fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit! {
+  let addr = c64.load!(data, has_load_address=true)
 
   //
   let irq : Bytes = [
-    // FF48  48        PHA
-    0x48,
-
-    // FF49  8A        TXA
-     0x8A,
-    // FF4A  48        PHA 
-     0x48,
-
-    // FF4B  98        TYA
-     0x98,
-    // FF4C  48        PHA 
-     0x48,
-
-    // FF4D  BA        TSX
-     0xBA,
-    // FF4E  BD 04 01  LDA $0104,X
-     0xBD, 0x04, 0x01,
-
-    // FF51  29 10     AND #$10   
-     0x29, 0x10,
-
-    // FF53  F0 03     BEQ $FF58
-     0xF0, 0x03,
-    // FF55  6C 16 03  JMP ($0316)
-     0x6C, 0x16, 0x03,
-    // FF58  6C 14 03  JMP ($0314)
-     0x6C, 0x14, 0x03,
+    0x48, // PHA
+     0x8A, // TXA
+     0x48, // PHA
+     0x98, // TYA
+     0x48, // PHA
+     0xBA, // TSX
+     0xBD, 0x04, 0x01, // LDA $0104,X
+     0x29, 0x10, // AND #$10
+     0xF0, 0x03, // BEQ $03
+     0x6C, 0x16, 0x03, // JMP ($0316)
+     0x6C, 0x14, 0x03, // JMP ($0314)
   ]
-  c64.load(irq, offset=0xFF48) |> ignore
+  c64.load!(irq, offset=0xFF48) |> ignore
 
   //
-  c64[R6510] = 0x00
+  c64[R6510] = 0x04 // VIC
 
   //
   c64[UNUSED] = 0x00
@@ -177,8 +166,7 @@ fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit {
   c64.write_array(GETIN, [0xA9, 0x03, 0x60]) // 0xFFE4
 
   //
-  // c64.initCPU(pc=pc.or(addr))
-  c64.initCPU(pc=addr)
+  c64.initCPU(pc=pc.or(addr))
 
   //
   c64.clear_flags()

@@ -1,50 +1,62 @@
 //
 // UInt8
 //
+///|
+pub const UINT8_BITS = 8
+///|
+pub const UINT8_SIGN_BIT = 7
 
 ///|
-pub const MAX_VALUE = 255
+pub const UINT8_SIZE : Int = 1 << UINT8_BITS
 
 ///|
-pub const MIN_VALUE = 0
+pub const UINT8_MAX = 0xFF
 
 ///|
-pub const DEFAULT_VALUE = 0
+pub const UINT8_MIN = 0x00
 
 ///|
-const HEX = "0123456789ABCDEF"
+pub const UINT8_DEFAULT = 0x00
 
 ///|
 pub(all) type UInt8 Int
 
 ///|
-pub fn default() -> UInt8 {
-  DEFAULT_VALUE
+pub fn UInt8::default() -> UInt8 {
+  UINT8_DEFAULT
 }
 
 ///|
 pub fn UInt8::init(self : Int) -> UInt8 {
-  self & MAX_VALUE
+  alu.zero = (self & UINT8_MAX) == UINT8_DEFAULT
+  alu.carry = (self & 0x100) != 0
+  alu.overflow = self > UINT8_MAX
+  alu.underflow = self < UINT8_MIN
+  self & UINT8_MAX
 }
 
 ///|
 pub fn UInt8::new(self : Int) -> UInt8 {
-  self & MAX_VALUE
+  alu.zero = (self & UINT8_MAX) == UINT8_DEFAULT
+  alu.carry = (self & 0x100) != 0
+  alu.overflow = self > UINT8_MAX
+  alu.underflow = self < UINT8_MIN
+  self & UINT8_MAX
 }
 
 ///|
 pub fn UInt8::to_int(self : UInt8) -> Int {
-  self._ & MAX_VALUE
+  self._ & UINT8_MAX
 }
 
 ///|
-pub fn UInt8::to_uint16(self : UInt8) -> UInt16 {
-  self.to_int().to_uint16()
+pub fn UInt8::to_u16(self : UInt8) -> UInt16 {
+  self.to_int() |> u16
 }
 
 ///|
 pub fn UInt8::to_signed(self : UInt8) -> Int {
-  self.to_int() - (if self.bit(7) { MAX_VALUE + 1 } else { 0 })
+  self.to_int() - (if self.bit(UINT8_SIGN_BIT) { UINT8_SIZE } else { 0 })
 }
 
 ///|

@@ -1,14 +1,8 @@
 ///|
-typealias @uint8.UInt8
+typealias @core.(UInt8, UInt16)
 
 ///|
-typealias @uint16.UInt16
-
-///|
-fnalias @uint8.u8
-
-///|
-fnalias @uint16.u16
+fnalias @core.(u8, u16)
 
 ///|
 typealias @cpu.CPU

@@ -55,7 +55,7 @@ pub fn CPU::new(
   decimal_mode~ : Bool = true,
   //
   debug~ : Bool = false
-) -> CPU {
+) -> CPU! {
   let registers = Registers::new()
   let flags = Flags::new()
 
@@ -88,7 +88,7 @@ pub fn CPU::new(
 
   //
   if data.length() > 0 {
-    cpu.load(address.or(pc), data, length~, offset~) |> ignore
+    cpu.load!(address.or(pc), data, length~, offset~) |> ignore
   }
 
   //
@@ -235,33 +235,39 @@ pub fn load(
   address : UInt16,
   //
   data : Bytes,
-  length~ : UInt16 = u16(data.length()),
-  offset~ : UInt16 = 0,
+  length~ : Int = data.length(),
+  offset~ : Int = 0,
   //
   has_load_address~ : Bool = false
-) -> UInt16 {
-  // println(
-  //   "CPU::load $" + UInt16(offset).to_hex() + " - $" + UInt16(length).to_hex(),
-  // )
-  let address : UInt16 = if has_load_address {
-    u16(data[1] << 8) | u16(data[0])
+) -> UInt16! {
+  if length > @core.UINT16_SIZE {
+    fail!("data too large")
+  }
+  // if self.debug {
+  //   println(
+  //     "CPU::load $" + u16(offset).to_hex() + " - $" + u16(length).to_hex(),
+  //   )
+  // }
+  let address = if has_load_address {
+    (u16(data[1]) << 8) | // hi
+    u16(data[0]) // lo
   } else {
     address
   }
-  let start : UInt16 = if has_load_address { 2 } else { offset }
-  let zero : UInt16 = 0
-  for i = zero; i < length - start; i = i + 1 {
-    self.write(address + i, u8(data[(i + start).to_int()]), dummy=true)
+  let start = if has_load_address { 2 } else { offset }
+  for i = 0; i < length - start; i = i + 1 {
+    self.write(address + i, u8(data[i + start]), dummy=true)
   }
   address
 }
 
 ///|
 pub fn read(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt8 {
-  match self.read {
+  (match self.read {
     Some(read) => read(addr, dummy)
-    None => u8(self.mem[addr.to_int()])
-  }
+    None => self.mem[addr.to_int()]
+  })
+  |> u8
 }
 
 ///|
@@ -269,8 +275,8 @@ pub fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
   //   "$" + U16::u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
-  (u16(self.read(addr + 1, dummy~)._) << 8) | // hi
-  u16(self.read(addr, dummy~)._) // lo
+  (u16(self.read(addr + 1, dummy~)) << 8) | // hi
+  u16(self.read(addr, dummy~)) // lo
 }
 
 ///|
@@ -281,8 +287,8 @@ fn read16zp(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
   //     (addr + 1)&(0x00FF) | addr&(0xFF00),
   //   ).to_hex()),
   // )
-  (u16(self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), dummy~)._) << 8) | // hi
-  u16(self.read(addr, dummy~)._) // lo
+  (u16(self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), dummy~)) << 8) | // hi
+  u16(self.read(addr, dummy~)) // lo
 }
 
 ///|
@@ -296,7 +302,7 @@ pub fn write(
     Some(write) => write(addr, value, dummy)
     None => self.mem[addr.to_int()] = value
   }
-  // println("$" + U16::u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
+  // println("$" + u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
 }
 
 ///|
@@ -309,13 +315,13 @@ pub fn write16(
   self.write(addr + 1, u8(value._ >> 8), dummy~) // hi
   self.write(addr, u8(value._), dummy~) // lo
   // println(
-  //   "$" + U16::u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
+  //   "$" + u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
   // )
 }
 
 ///|
 pub fn push(self : CPU, value : UInt8, dummy~ : Bool = false) -> Unit {
-  self.write(u16(self.registers[SP]._) | 0x0100, value, dummy~)
+  self.write(u16(self.registers[SP]) | 0x0100, value, dummy~)
   self.registers[SP] -= 1
 }
 
@@ -328,13 +334,13 @@ pub fn push16(self : CPU, value : UInt16) -> Unit {
 ///|
 fn pop(self : CPU, dummy~ : Bool = false) -> UInt8 {
   self.registers[SP] += 1
-  self.read(u16(self.registers[SP]._) | 0x0100, dummy~)
+  self.read(u16(self.registers[SP]) | 0x0100, dummy~)
 }
 
 ///|
 fn pop16(self : CPU) -> UInt16 {
-  u16(self.pop()._) | // lo 
-  (u16(self.pop()._) << 8) // hi
+  u16(self.pop()) | // lo 
+  (u16(self.pop()) << 8) // hi
 }
 
 ///|
@@ -471,25 +477,17 @@ fn get_addr(self : CPU, mode : Mode, dummy~ : Bool = true) -> UInt16 {
     Immediate => pc |> u16
     Indirect => self.read16zp(self.read16(pc, dummy~), dummy~) |> u16
     IndexedIndirect =>
-      self.read16zp(
-        (self.read(pc, dummy~).to_int() + self.registers[X].to_int()) & 0xFF,
-        dummy~,
-      )
+      self.read16zp(u16(self.read(pc, dummy~) + self.registers[X]), dummy~)
       |> u16
     IndirectIndexed =>
-      self.read16zp(self.read(pc, dummy~).to_int(), dummy~) +
-      self.registers[Y].to_int()
+      self.read16zp(u16(self.read(pc, dummy~)), dummy~) + u16(self.registers[Y])
       |> u16
     Absolute => self.read16(pc, dummy~) |> u16
-    AbsoluteX => self.read16(pc, dummy~) + self.registers[X].to_int() |> u16
-    AbsoluteY => self.read16(pc, dummy~) + self.registers[Y].to_int() |> u16
-    ZeroPage => self.read(pc, dummy~).to_int() & 0xFF |> u16
-    ZeroPageX =>
-      (self.read(pc, dummy~).to_int() + self.registers[X].to_int()) & 0xFF
-      |> u16
-    ZeroPageY =>
-      (self.read(pc, dummy~).to_int() + self.registers[Y].to_int()) & 0xFF
-      |> u16
+    AbsoluteX => self.read16(pc, dummy~) + u16(self.registers[X]) |> u16
+    AbsoluteY => self.read16(pc, dummy~) + u16(self.registers[Y]) |> u16
+    ZeroPage => self.read(pc, dummy~) |> u16
+    ZeroPageX => self.read(pc, dummy~) + self.registers[X] |> u16
+    ZeroPageY => self.read(pc, dummy~) + self.registers[Y] |> u16
     Relative => pc + 1 + self.read(pc, dummy~).to_signed() |> u16
   }
 }
@@ -556,18 +554,12 @@ fn dump_step(
       (self.read(pc, dummy~) + self.registers[X]).to_hex() +
       " = " +
       self
-      .read16zp(
-        (self.read(pc, dummy~).to_int() + self.registers[X].to_int()) & 0xFF,
-        dummy~,
-      )
+      .read16zp(u16(self.read(pc, dummy~) + self.registers[X]), dummy~)
       .to_hex() +
       " = " +
       self
       .read(
-        self.read16zp(
-          (self.read(pc, dummy~).to_int() + self.registers[X].to_int()) & 0xFF,
-          dummy~,
-        ),
+        self.read16zp(u16(self.read(pc, dummy~) + self.registers[X]), dummy~),
       )
       .to_hex()
     IndirectIndexed =>
@@ -580,15 +572,15 @@ fn dump_step(
       " (" +
       read8() +
       "),Y = " +
-      self.read16zp(self.read(pc, dummy~).to_int(), dummy~).to_hex() +
+      self.read16zp(u16(self.read(pc, dummy~)), dummy~).to_hex() +
       " @ " +
-      (self.read16zp(self.read(pc, dummy~).to_int(), dummy~) +
-      self.registers[Y].to_int()).to_hex() +
+      (self.read16zp(u16(self.read(pc, dummy~)), dummy~) +
+      u16(self.registers[Y])).to_hex() +
       " = " +
       self
       .read(
-        self.read16zp(self.read(pc, dummy~).to_int(), dummy~) +
-        self.registers[Y].to_int(),
+        self.read16zp(u16(self.read(pc, dummy~)), dummy~) +
+        u16(self.registers[Y]),
         dummy~,
       )
       .to_hex()
@@ -613,10 +605,10 @@ fn dump_step(
       " " +
       read16() +
       ",X @ " +
-      (self.read16(pc, dummy~) + self.registers[X].to_int()).to_hex() +
+      (self.read16(pc, dummy~) + u16(self.registers[X])).to_hex() +
       " = " +
       self
-      .read(self.read16(pc, dummy~) + self.registers[X].to_int(), dummy~)
+      .read(self.read16(pc, dummy~) + u16(self.registers[X]), dummy~)
       .to_hex()
     AbsoluteY =>
       // Indexed Absolute Addressing
@@ -1523,10 +1515,23 @@ fn opSBX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   //   " = #$" +
   //   ((self.registers[A] & self.registers[X]) - self.read(addr)).to_hex(),
   // )
-  let tmp = (self.registers[A] & self.registers[X]) - self.read(addr) // underflow
-  self.flags.setC(not(tmp.is_neg()))
-  self.registers[X] = tmp
-  self.flags.setZN(tmp)
+  let result = (self.registers[A] & self.registers[X]) - self.read(addr) // underflow
+  // let ov = UInt8::overflow()
+  // let uv = UInt8::underflow()
+  self.flags.setC(not(ALU::underflow()))
+  // println(
+  //   "[" +
+  //   (if ov { ">" } else { " " }) +
+  //   // "|" +
+  //   (if uv { "<" } else { " " }) +
+  //   "]" +
+  //   " A:\{self.registers[A]} & X:\{self.registers[X]} = \{(self.registers[A] & self.registers[X])} - \{self.read(addr, dummy=true)} = \{result}" +
+  //   " C:\{not(result.is_neg())}" +
+  //   "\n",
+  // )
+  // self.flags.setC(not(result.is_neg()))
+  self.flags.setZN(result)
+  self.registers[X] = result
 
   // println("unimplemented: SBX")
   // abort("unimplemented: SBX")

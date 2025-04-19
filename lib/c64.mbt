@@ -105,6 +105,7 @@ pub fn C64::new(
   mem? : Memory,
   //
   data~ : Bytes = [],
+  //
   address~ : UInt16 = 0x0000,
   length~ : Int = data.length(),
   //
@@ -115,11 +116,11 @@ pub fn C64::new(
   realSID~ : Bool = false,
   //
   debug~ : Bool = false
-) -> C64 {
+) -> C64! {
   let mem = mem.or(Memory::new())
 
   //
-  let cpu = @cpu.CPU::new(
+  let cpu = @cpu.CPU::new!(
     pc~,
     //
     debug~,
@@ -222,7 +223,7 @@ pub fn C64::new(
   })
 
   // must happen after read/write functions set
-  cpu.load(address, data, length~) |> ignore
+  cpu.load!(address, data, length~) |> ignore
 
   //
   try {
@@ -242,6 +243,7 @@ pub fn C64::new(
 pub fn set_debug(self : C64, debug : Bool) -> Unit {
   self.debug = debug
   self.cpu.set_debug(debug)
+  // self.vic.set_debug(debug)
 }
 
 ///|
@@ -796,8 +798,8 @@ pub fn C64::load(
   length~ : Int = data.length(),
   //
   has_load_address~ : Bool = false
-) -> UInt16 {
-  self.cpu.load(offset, data, length~, has_load_address~)
+) -> UInt16! {
+  self.cpu.load!(offset, data, length~, has_load_address~)
 }
 
 ///|

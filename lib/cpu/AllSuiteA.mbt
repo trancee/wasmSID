@@ -2,11 +2,11 @@
 
 ///|
 test {
-  let content = @fs.read_file_to_bytes?("lib/cpu/AllSuiteA.bin")
-  assert_eq!(content.is_ok(), true)
-  match content {
-    Ok(content) => {
-      let cpu = CPU::new(pc=0x4000, data=content, debug=false)
+  let data = @fs.read_file_to_bytes?("lib/cpu/AllSuiteA.bin")
+  assert_eq!(data.is_ok(), true)
+  match data {
+    Ok(data) => {
+      let cpu = CPU::new!(pc=0x4000, data~, debug=false)
       let mut cycles = 0
       while cpu.pc() != 0x45C0 {
         cycles += cpu.step()

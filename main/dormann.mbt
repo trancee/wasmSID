@@ -5,18 +5,18 @@
 /// 
 /// https://github.com/Klaus2m5/6502_65C02_functional_tests/tree/master
 ///
-pub fn dormann() -> Unit {
-  dormann_functional()
+pub fn dormann() -> Unit! {
+  dormann_functional!()
   println("")
-  dormann_interrupt()
+  dormann_interrupt!()
   println("")
-  dormann_decimal()
+  dormann_decimal!()
   // println("")
   // dormann_extended_opcodes()
 }
 
 ///|
-fn dormann_functional() -> Unit {
+fn dormann_functional() -> Unit! {
   let test_name = "6502_functional_test"
   let start_address = 0x0400
   let end_address = 0x3469 // 05-jan-2020
@@ -27,9 +27,9 @@ fn dormann_functional() -> Unit {
   println("--- \{test_name}")
 
   //
-  let content = match
+  let data = match
     @fs.read_file_to_bytes?("tests/dormann/" + test_name + ".bin") {
-    Ok(content) => content
+    Ok(data) => data
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("file not found")
@@ -37,16 +37,15 @@ fn dormann_functional() -> Unit {
   }
 
   //
-  let cpu = CPU::new(
+  let cpu = CPU::new!(
     pc=start_address,
 
     //
     address=0x0000,
-    //
-    data=content,
+    data~,
 
     //
-    debug=DEBUG,
+    debug~,
   )
 
   //
@@ -64,7 +63,7 @@ fn dormann_functional() -> Unit {
   // })
 
   //
-  let mut last_test = u8(0xFF)
+  let mut last_test : UInt8 = -1
 
   //
   let mut cycles = 0
@@ -77,7 +76,7 @@ fn dormann_functional() -> Unit {
         println("")
       }
       last_test = cpu.mem[test_case_address]
-      println("test case #$\{last_test.to_hex()} at $\{cpu.pc().to_hex()}")
+      println("test case #$\{last_test} at $\{cpu.pc()}")
     }
 
     //
@@ -109,7 +108,7 @@ fn dormann_functional() -> Unit {
 }
 
 ///|
-fn dormann_interrupt() -> Unit {
+fn dormann_interrupt() -> Unit! {
   let test_name = "6502_interrupt_test"
   let start_address = 0x0400
   let end_address = 0x06F5 // 15-aug-2014
@@ -125,9 +124,9 @@ fn dormann_interrupt() -> Unit {
   println("--- \{test_name}")
 
   //
-  let content = match
+  let data = match
     @fs.read_file_to_bytes?("tests/dormann/" + test_name + ".bin") {
-    Ok(content) => content
+    Ok(data) => data
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("file not found")
@@ -135,16 +134,16 @@ fn dormann_interrupt() -> Unit {
   }
 
   //
-  let cpu = CPU::new(
+  let cpu = CPU::new!(
     pc=start_address,
 
     //
     address=0x0000,
     //
-    data=content,
+    data~,
 
     //
-    debug=DEBUG,
+    debug~,
   )
 
   //
@@ -211,7 +210,7 @@ fn dormann_interrupt() -> Unit {
 }
 
 ///|
-fn dormann_decimal() -> Unit {
+fn dormann_decimal() -> Unit! {
   let test_name = "6502_decimal_test"
   let start_address = 0x0200
   let end_address = 0x024B
@@ -222,9 +221,9 @@ fn dormann_decimal() -> Unit {
   println("--- \{test_name}")
 
   //
-  let content = match
+  let data = match
     @fs.read_file_to_bytes?("tests/dormann/" + test_name + ".bin") {
-    Ok(content) => content
+    Ok(data) => data
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("file not found")
@@ -232,16 +231,16 @@ fn dormann_decimal() -> Unit {
   }
 
   //
-  let cpu = CPU::new(
+  let cpu = CPU::new!(
     pc=start_address,
 
     //
     address=start_address,
     //
-    data=content,
+    data~,
 
     //
-    debug=DEBUG,
+    debug~,
   )
 
   //
@@ -294,7 +293,7 @@ fn dormann_decimal() -> Unit {
 }
 
 ///|
-fn dormann_extended_opcodes() -> Unit {
+fn dormann_extended_opcodes() -> Unit! {
   let test_name = "65C02_extended_opcodes_test"
   let start_address = 0x0400
   let end_address = 0x24F1 // 04-dec-2017
@@ -305,9 +304,9 @@ fn dormann_extended_opcodes() -> Unit {
   println("--- \{test_name}")
 
   //
-  let content = match
+  let data = match
     @fs.read_file_to_bytes?("tests/dormann/" + test_name + ".bin") {
-    Ok(content) => content
+    Ok(data) => data
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("file not found")
@@ -315,16 +314,16 @@ fn dormann_extended_opcodes() -> Unit {
   }
 
   //
-  let cpu = CPU::new(
+  let cpu = CPU::new!(
     pc=start_address,
 
     //
     address=0x0000,
     //
-    data=content,
+    data~,
 
     //
-    debug=DEBUG,
+    debug~,
   )
 
   //

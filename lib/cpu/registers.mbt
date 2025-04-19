@@ -40,7 +40,7 @@ test {
 
 ///|
 pub fn Registers::new(sp~ : UInt8 = 0xFF) -> Registers {
-  { sp, a: 0x00, x: 0x00, y: 0x00 }
+  { sp: u8(sp), a: 0x00, x: 0x00, y: 0x00 }
 }
 
 ///|

@@ -454,7 +454,7 @@ struct CMPTestData {
 
 ///|
 fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -514,7 +514,7 @@ fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
 
 ///|
 fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -577,7 +577,7 @@ fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
 
 ///|
 fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -627,7 +627,7 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
 
 ///|
 fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -691,7 +691,7 @@ fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
 
 ///|
 fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -742,7 +742,7 @@ fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
 
 ///|
 fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -793,7 +793,7 @@ fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
 
 ///|
 fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -847,7 +847,7 @@ fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
 
 ///|
 fn testCompareIndirectY(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]

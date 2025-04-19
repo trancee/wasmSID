@@ -4,7 +4,7 @@
 
 ///|
 pub impl Default for UInt8 with default() {
-  DEFAULT_VALUE
+  UINT8_DEFAULT
 }
 
 ///|
@@ -102,28 +102,84 @@ test "uint8_arithmetic" {
 
   // Test addition
   assert_eq!(zero + one, one)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test overflow behavior
   assert_eq!(max + one, zero)
+  assert_eq!(ALU::zero(), true)
+  assert_eq!(ALU::carry(), true)
+  assert_eq!(ALU::overflow(), true)
+  assert_eq!(ALU::underflow(), false)
   // Test subtraction
   assert_eq!(max - one, 0xFE)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test underflow bevavior
   assert_eq!(zero - one, max)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), true)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), true)
   // Test multiplication
   assert_eq!(max * one, max)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   assert_eq!(zero * max, zero)
+  assert_eq!(ALU::zero(), true)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   assert_eq!(max * max, one)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), true)
+  assert_eq!(ALU::underflow(), false)
   // Test division
   assert_eq!(max / one, max)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test division by zero
   assert_eq!(zero / one, zero)
+  assert_eq!(ALU::zero(), true)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test division by max
   assert_eq!(max / max, one)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test negation
   assert_eq!(-max, one)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), true)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), true)
   assert_eq!(-one, max)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), true)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), true)
   assert_eq!(-zero, zero)
+  assert_eq!(ALU::zero(), true)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test modulo
   assert_eq!(max % one, zero)
+  assert_eq!(ALU::zero(), true)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
 }
 
 ///|
@@ -143,11 +199,31 @@ test "uint8_bitwise" {
 
   // Test shifts
   assert_eq!(max << 1, 0xFE)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), true)
+  assert_eq!(ALU::overflow(), true)
+  assert_eq!(ALU::underflow(), false)
   assert_eq!(max >> 1, 0x7F)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   // Test bitwise operations
   assert_eq!(max & one, 0x01)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   assert_eq!(max | one, 0xFF)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
   assert_eq!(max ^ one, 0xFE)
+  assert_eq!(ALU::zero(), false)
+  assert_eq!(ALU::carry(), false)
+  assert_eq!(ALU::overflow(), false)
+  assert_eq!(ALU::underflow(), false)
 }
 
 // Test comparison operations

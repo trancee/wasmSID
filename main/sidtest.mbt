@@ -2,7 +2,7 @@
 let subtune = 1
 
 ///|
-pub fn sidtest() -> Unit {
+pub fn sidtest() -> Unit! {
   let mem = Memory::new()
 
   //
@@ -29,7 +29,7 @@ pub fn sidtest() -> Unit {
   println("---")
 
   //
-  let c64 = C64::new(
+  let c64 = C64::new!(
     mem~,
     model=psid.flags.model,
     videoStandard=psid.videoStandard(),

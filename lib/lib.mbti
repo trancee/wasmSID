@@ -1,9 +1,8 @@
 package "trancee/wasmSID/lib"
 
 import(
+  "trancee/wasmSID/lib/core"
   "trancee/wasmSID/lib/cpu"
-  "trancee/wasmSID/lib/uint16"
-  "trancee/wasmSID/lib/uint8"
 )
 
 // Values
@@ -13,7 +12,7 @@ fn clear_flags(C64) -> Unit
 
 fn clear_registers(C64) -> Unit
 
-fn dump(Memory, addr~ : @uint16.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+fn dump(Memory, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
 
 fn emulate(CIA, Int) -> Bool
 
@@ -21,17 +20,17 @@ fn get_flags(C64) -> @cpu.Flags
 
 fn get_registers(C64) -> @cpu.Registers
 
-fn hook(Memory, @uint16.UInt16, @uint16.UInt16, (@uint16.UInt16, Bool) -> @uint8.UInt8, (@uint16.UInt16, @uint8.UInt8, Bool) -> Unit) -> Unit
+fn hook(Memory, @core.UInt16, @core.UInt16, (@core.UInt16, Bool) -> @core.UInt8, (@core.UInt16, @core.UInt8, Bool) -> Unit) -> Unit
 
 fn initC64(C64) -> Unit!
 
-fn initCPU(C64, pc? : @uint16.UInt16) -> Unit
+fn initCPU(C64, pc? : @core.UInt16) -> Unit
 
 fn process(PSID) -> Unit!
 
-fn read(Memory, @uint16.UInt16, dummy~ : Bool = ..) -> @uint8.UInt8
+fn read(Memory, @core.UInt16, dummy~ : Bool = ..) -> @core.UInt8
 
-fn read_direct(Memory, @uint16.UInt16) -> @uint8.UInt8
+fn read_direct(Memory, @core.UInt16) -> @core.UInt8
 
 fn reset(CIA, videoStandard~ : VideoStandard = ..) -> Unit
 
@@ -47,18 +46,18 @@ fn to_string(Exception) -> String
 
 fn videoStandard(PSID) -> VideoStandard
 
-fn write(Memory, @uint16.UInt16, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
+fn write(Memory, @core.UInt16, @core.UInt8, dummy~ : Bool = ..) -> Unit
 
-fn write_array(C64, C64register, Array[@uint8.UInt8]) -> Unit
+fn write_array(C64, C64register, Array[@core.UInt8]) -> Unit
 
-fn write_direct(Memory, @uint16.UInt16, @uint8.UInt8) -> Unit
+fn write_direct(Memory, @core.UInt16, @core.UInt8) -> Unit
 
 // Types and methods
 pub struct ADSR {
   state : ADSRState
-  mut rateCounter : @uint16.UInt16
+  mut rateCounter : @core.UInt16
   mut envelopeCounter : Int
-  mut exponentCounter : @uint8.UInt8
+  mut exponentCounter : @core.UInt8
 }
 
 type ADSRState
@@ -67,7 +66,7 @@ type Bank
 impl Eq for Bank
 
 pub struct C64 {
-  pc : @uint16.UInt16
+  pc : @core.UInt16
   mem : Memory
   basic : Bytes
   characters : Bytes
@@ -111,24 +110,24 @@ impl C64 {
   get_flags(Self) -> @cpu.Flags
   get_registers(Self) -> @cpu.Registers
   initC64(Self) -> Unit!
-  initCPU(Self, pc? : @uint16.UInt16) -> Unit
-  load(Self, Bytes, offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> @uint16.UInt16
-  new(pc~ : @uint16.UInt16 = .., mem? : Memory, data~ : Bytes = .., address~ : @uint16.UInt16 = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self
-  op_set(Self, C64register, @uint8.UInt8) -> Unit
-  pc(Self) -> @uint16.UInt16
-  push(Self, @uint8.UInt8) -> Unit
-  push16(Self, @uint16.UInt16) -> Unit
-  read(Self, @uint16.UInt16, dummy~ : Bool = ..) -> @uint8.UInt8
+  initCPU(Self, pc? : @core.UInt16) -> Unit
+  load(Self, Bytes, offset~ : Int = .., length~ : Int = .., has_load_address~ : Bool = ..) -> @core.UInt16!
+  new(pc~ : @core.UInt16 = .., mem? : Memory, data~ : Bytes = .., address~ : @core.UInt16 = .., length~ : Int = .., sampleRate~ : Int = .., model~ : FixedArray[Model] = .., videoStandard~ : VideoStandard = .., realSID~ : Bool = .., debug~ : Bool = ..) -> Self!
+  op_set(Self, C64register, @core.UInt8) -> Unit
+  pc(Self) -> @core.UInt16
+  push(Self, @core.UInt8) -> Unit
+  push16(Self, @core.UInt16) -> Unit
+  read(Self, @core.UInt16, dummy~ : Bool = ..) -> @core.UInt8
   reset(Self) -> Unit!
   setA(Self, Int) -> Unit
   set_bank(Self, IOPort) -> Unit
   set_debug(Self, Bool) -> Unit
-  set_flags(Self, @uint8.UInt8) -> Unit
+  set_flags(Self, @core.UInt8) -> Unit
   set_interrupt_flag(Self) -> Unit
-  trap(Self, @uint16.UInt16, (@cpu.CPU) -> Unit) -> Unit
-  write(Self, @uint16.UInt16, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
-  write_array(Self, C64register, Array[@uint8.UInt8]) -> Unit
-  write_word(Self, C64register, @uint16.UInt16) -> Unit
+  trap(Self, @core.UInt16, (@cpu.CPU) -> Unit) -> Unit
+  write(Self, @core.UInt16, @core.UInt8, dummy~ : Bool = ..) -> Unit
+  write_array(Self, C64register, Array[@core.UInt8]) -> Unit
+  write_word(Self, C64register, @core.UInt16) -> Unit
 }
 
 pub(all) enum C64register {
@@ -394,7 +393,7 @@ pub struct CIARegister {
   directionA : FixedArray[Bool]
   directionB : FixedArray[Bool]
   timeOfDay : TimeOfDay
-  mut serialData : @uint8.UInt8
+  mut serialData : @core.UInt8
   mut interruptControl : CIAInterruptControl
   interruptEnable : CIAInterruptEnable
   controlA : ControlA
@@ -427,7 +426,7 @@ type CPUClock
 impl Eq for CPUClock
 impl Show for CPUClock
 
-pub type CRA @uint8.UInt8
+pub type CRA @core.UInt8
 impl Compare for CRA
 impl Eq for CRA
 
@@ -443,7 +442,7 @@ pub enum CRAFlags {
   TODIN
 }
 
-pub type CRB @uint8.UInt8
+pub type CRB @core.UInt8
 impl Compare for CRB
 impl Eq for CRB
 
@@ -567,13 +566,13 @@ impl Eq for FrameRate
 impl Show for FrameRate
 
 pub struct Hook {
-  start : @uint16.UInt16
-  end : @uint16.UInt16
-  read : (@uint16.UInt16, Bool) -> @uint8.UInt8
-  write : (@uint16.UInt16, @uint8.UInt8, Bool) -> Unit
+  start : @core.UInt16
+  end : @core.UInt16
+  read : (@core.UInt16, Bool) -> @core.UInt8
+  write : (@core.UInt16, @core.UInt8, Bool) -> Unit
 }
 
-pub type ICR @uint8.UInt8
+pub type ICR @core.UInt8
 impl Compare for ICR
 impl Eq for ICR
 
@@ -590,7 +589,7 @@ pub enum ICRFlags {
 
 type IOPort
 impl IOPort {
-  from_int(@uint8.UInt8) -> Self
+  from_int(@core.UInt8) -> Self
 }
 impl Default for IOPort
 impl Show for IOPort
@@ -616,13 +615,13 @@ impl Show for InterruptFlag
 type Memory
 impl Memory {
   clear(Self) -> Unit
-  dump(Self, addr~ : @uint16.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
-  hook(Self, @uint16.UInt16, @uint16.UInt16, (@uint16.UInt16, Bool) -> @uint8.UInt8, (@uint16.UInt16, @uint8.UInt8, Bool) -> Unit) -> Unit
+  dump(Self, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+  hook(Self, @core.UInt16, @core.UInt16, (@core.UInt16, Bool) -> @core.UInt8, (@core.UInt16, @core.UInt8, Bool) -> Unit) -> Unit
   new(length~ : Int = .., value~ : Int = ..) -> Self
-  read(Self, @uint16.UInt16, dummy~ : Bool = ..) -> @uint8.UInt8
-  read_direct(Self, @uint16.UInt16) -> @uint8.UInt8
-  write(Self, @uint16.UInt16, @uint8.UInt8, dummy~ : Bool = ..) -> Unit
-  write_direct(Self, @uint16.UInt16, @uint8.UInt8) -> Unit
+  read(Self, @core.UInt16, dummy~ : Bool = ..) -> @core.UInt8
+  read_direct(Self, @core.UInt16) -> @core.UInt8
+  write(Self, @core.UInt16, @core.UInt8, dummy~ : Bool = ..) -> Unit
+  write_direct(Self, @core.UInt16, @core.UInt8) -> Unit
 }
 
 type Mode
@@ -634,16 +633,16 @@ impl Eq for Model
 impl Show for Model
 
 pub struct NES {
-  pc : @uint16.UInt16
+  pc : @core.UInt16
   mem : Memory
   cpu : @cpu.CPU
 }
 impl NES {
-  load(Self, Bytes, address~ : @uint16.UInt16 = .., length~ : Int = .., offset~ : Int = ..) -> @uint16.UInt16
-  new(pc~ : @uint16.UInt16 = .., data~ : Bytes = .., address~ : @uint16.UInt16 = .., length~ : Int = .., offset~ : Int = .., debug~ : Bool = ..) -> Self
-  pc(Self) -> @uint16.UInt16
-  push16(Self, @uint16.UInt16) -> Unit
-  set_flags(Self, @uint8.UInt8) -> Unit
+  load(Self, Bytes, address~ : @core.UInt16 = .., length~ : Int = .., offset~ : Int = ..) -> @core.UInt16!
+  new(pc~ : @core.UInt16 = .., data~ : Bytes = .., address~ : @core.UInt16 = .., length~ : Int = .., offset~ : Int = .., debug~ : Bool = ..) -> Self!
+  pc(Self) -> @core.UInt16
+  push16(Self, @core.UInt16) -> Unit
+  set_flags(Self, @core.UInt8) -> Unit
   step(Self) -> Int
 }
 
@@ -666,16 +665,16 @@ pub struct PSID {
   mut title : String
   mut author : String
   mut info : String
-  mut songs : @uint16.UInt16
-  mut defaultSong : @uint16.UInt16
+  mut songs : @core.UInt16
+  mut defaultSong : @core.UInt16
   mut flags : Flags
-  mut startPage : @uint8.UInt8
-  mut pageLength : @uint8.UInt8
+  mut startPage : @core.UInt8
+  mut pageLength : @core.UInt8
   sid2Flags : SIDFlags
   sid3Flags : SIDFlags
   sid4Flags : SIDFlags
-  mut sid2Address : @uint8.UInt8
-  mut sid3Address : @uint8.UInt8
+  mut sid2Address : @core.UInt8
+  mut sid3Address : @core.UInt8
 }
 impl PSID {
   new(Memory, FixedArray[Int]) -> Self!
@@ -702,14 +701,14 @@ impl Show for SIDFlags
 
 pub struct SIDRegister {
   voice : FixedArray[Voice]
-  mut cutoffFrequency : @uint16.UInt16
+  mut cutoffFrequency : @core.UInt16
   mut filterResonanceControl : FilterResonanceControl
-  mut volume : @uint8.UInt8
+  mut volume : @core.UInt8
   filterSelect : FilterSelect
   mut disconnectVoice : Bool
-  input : FixedArray[@uint8.UInt8]
-  mut random : @uint8.UInt8
-  mut envelope : @uint8.UInt8
+  input : FixedArray[@core.UInt8]
+  mut random : @core.UInt8
+  mut envelope : @core.UInt8
 }
 impl Show for SIDRegister
 
@@ -797,10 +796,10 @@ impl Eq for SerialMode
 impl Show for SerialMode
 
 pub struct TimeOfDay {
-  mut tenth : @uint8.UInt8
-  mut seconds : @uint8.UInt8
-  mut minutes : @uint8.UInt8
-  mut hours : @uint8.UInt8
+  mut tenth : @core.UInt8
+  mut seconds : @core.UInt8
+  mut minutes : @core.UInt8
+  mut hours : @core.UInt8
   mut pm : Bool
 }
 impl Default for TimeOfDay
@@ -823,7 +822,7 @@ impl Show for TimerBInputMode
 type VIC
 impl VIC {
   emulate(Self, Int) -> Bool
-  new(mem? : Memory, @uint16.UInt16, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
+  new(mem? : Memory, @core.UInt16, videoStandard~ : VideoStandard = .., debug~ : Bool = ..) -> Self
   reset(Self, videoStandard~ : VideoStandard = ..) -> Unit!
 }
 
@@ -913,8 +912,8 @@ impl Eq for VideoStandard
 impl Show for VideoStandard
 
 pub struct Voice {
-  mut frequency : @uint16.UInt16
-  mut pulseWidth : @uint16.UInt16
+  mut frequency : @core.UInt16
+  mut pulseWidth : @core.UInt16
   mut control : VoiceControl
   envelope : Envelope
 }
@@ -932,7 +931,7 @@ pub struct Wave {
   mut ringSourceMSB : Int
   mut noiseLFSR : Int
   mut prevWavGenOut : Int
-  mut prevWavData : @uint8.UInt8
+  mut prevWavData : @core.UInt8
 }
 
 pub enum Waveform {

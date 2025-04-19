@@ -1,9 +1,9 @@
 ///| 
 /// clear; moon run main | diff -y nestest/nestest.log -
 /// 
-pub fn nestest() -> Unit {
-  let content = match @fs.read_file_to_bytes?("tests/nestest/nestest.nes") {
-    Ok(content) => content
+pub fn nestest() -> Unit! {
+  let data = match @fs.read_file_to_bytes?("tests/nestest/nestest.nes") {
+    Ok(data) => data
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("test not found")
@@ -11,11 +11,12 @@ pub fn nestest() -> Unit {
   }
 
   //
-  let nes = NES::new(
+  let nes = NES::new!(
     pc=0xC000,
 
     //
-    data=content,
+    data~,
+    //
     address=0x8000,
     length=0x4000,
     offset=0x10, // 0x10 iNES Header
@@ -28,8 +29,9 @@ pub fn nestest() -> Unit {
   nes.set_flags(@cpu.UNUSED | @cpu.INTERRUPT)
 
   //
-  nes.load(
-    content,
+  nes.load!(
+    data,
+    //
     address=0xC000,
     length=0x4000,
     offset=0x10, // 0x10 iNES Header
@@ -37,7 +39,7 @@ pub fn nestest() -> Unit {
   |> ignore
 
   //
-  nes.load(
+  nes.load!(
     [
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

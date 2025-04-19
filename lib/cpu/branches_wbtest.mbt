@@ -352,7 +352,7 @@ struct BEQTestData {
 
 ///|
 fn testBEQ(t : BEQTestData) -> Unit!Error {
-  let cpu = CPU::new(pc=t.pc)
+  let cpu = CPU::new!(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]

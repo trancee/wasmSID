@@ -1,8 +1,7 @@
 {
   "import": [
     "trancee/wasmSID/lib/cpu",
-    "trancee/wasmSID/lib/uint8",
-    "trancee/wasmSID/lib/uint16",
+    "trancee/wasmSID/lib/core",
     "moonbitlang/x/fs"
   ]
 }

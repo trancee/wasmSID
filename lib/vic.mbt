@@ -54,7 +54,7 @@ struct VIC {
   register : VICRegister
 
   //
-  debug : Bool
+  mut debug : Bool
 }
 
 ///|
@@ -136,6 +136,11 @@ pub fn VIC::new(
 
   //
   vic
+}
+
+///|
+pub fn VIC::set_debug(self : VIC, debug : Bool) -> Unit {
+  self.debug = debug
 }
 
 ///| These registers are all intialized to 0 at power-up.
@@ -244,9 +249,9 @@ pub fn VIC::emulate(self : VIC, cycles : Int) -> Bool {
     //   println("IRQMASK::InterruptEnable")
     if self.register.rasterScanLine == self.rasterCompare &&
       self.register.interruptEnable.rasterCompare {
-      self.register.interruptFlag.rasterCompare = true
+        self.register.interruptFlag.rasterCompare = true
       println("VICIRQ::RasterScan \{self.register.interruptFlag}")
-    }
+      }
     // }
   }
   self.register.interruptFlag.interrupt = self.register.interruptFlag.rasterCompare

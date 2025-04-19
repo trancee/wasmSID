@@ -2,8 +2,7 @@
   "is-main": true,
   "import": [
     "trancee/wasmSID/lib",
-    "trancee/wasmSID/lib/uint8",
-    "trancee/wasmSID/lib/uint16",
+    "trancee/wasmSID/lib/core",
     "trancee/wasmSID/lib/cpu",
     "moonbitlang/x/fs"
   ]

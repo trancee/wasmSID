@@ -10,16 +10,18 @@ pub fn NES::new(
   pc~ : UInt16 = 0x0000,
   //
   data~ : Bytes = [],
+  //
   address~ : UInt16 = 0x0000,
   length~ : Int = data.length(),
   offset~ : Int = 0,
   //
   debug~ : Bool = false
-) -> NES {
-  let cpu = @cpu.CPU::new(
+) -> NES! {
+  let cpu = @cpu.CPU::new!(
     pc~,
     //
     address~,
+    //
     data~,
     length~,
     offset~,
@@ -41,11 +43,12 @@ pub fn NES::load(
   self : NES,
   //
   data : Bytes,
-  address~ : UInt16 = u16(0x0000),
-  length~ : UInt16 = u16(data.length()),
-  offset~ : UInt16 = u16(0)
-) -> UInt16 {
-  self.cpu.load(address, data, length~, offset~)
+  //
+  address~ : UInt16 = 0x0000,
+  length~ : Int = data.length(),
+  offset~ : Int = 0
+) -> UInt16! {
+  self.cpu.load!(address, data, length~, offset~)
 }
 
 ///|
