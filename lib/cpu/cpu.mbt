@@ -46,6 +46,9 @@ pub struct CPU {
 pub fn CPU::new(
   pc~ : UInt16 = 0x0000,
   //
+  registers~ : Registers = Registers::new(),
+  flags~ : Flags = Flags::new(),
+  //
   address? : UInt16,
   //
   data~ : Bytes = [],
@@ -56,9 +59,6 @@ pub fn CPU::new(
   //
   debug~ : Bool = false
 ) -> CPU! {
-  let registers = Registers::new()
-  let flags = Flags::new()
-
   //
   let cpu : CPU = {
     mem: FixedArray::make(CPU_MEM_SIZE + 1, 0x00),
@@ -249,8 +249,8 @@ pub fn load(
   //   )
   // }
   let address = if has_load_address {
-    (u16(data[1]) << 8) | // hi
-    u16(data[0]) // lo
+    u16(data[0]) | // lo
+    (u16(data[1]) << 8) // hi
   } else {
     address
   }
@@ -262,60 +262,101 @@ pub fn load(
 }
 
 ///|
-pub fn read(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt8 {
+fn read_instruction(self : CPU, prefetch~ : Bool = false) -> UInt8 {
+  let value = self.read(self.pc)
+  if not(prefetch) {
+    self.pc += 1
+  }
+  value
+}
+
+///|
+fn read_instruction_word(self : CPU) -> UInt16 {
+  self.read_instruction()._ | (self.read_instruction()._ << 8) |> u16
+}
+
+///|
+fn read_zeropage(self : CPU, offset : UInt8) -> UInt8 {
+  self.read_address(offset._)
+}
+
+///|
+fn read_zeropage_word(self : CPU, offset : UInt8) -> UInt16 {
+  self.read_address(offset._)._ | (self.read_address((offset + 1)._)._ << 8)
+  |> u16
+}
+
+///|
+fn read_zeropage_address_word(self : CPU, address : UInt16) -> UInt16 {
+  u16(self.read(address)) | // lo
+  (u16(self.read(((address + 1) & 0x00FF) | (address & 0xFF00))) << 8) // hi
+}
+
+///|
+fn read_address(self : CPU, address : UInt16) -> UInt8 {
+  self.read(address)
+}
+
+///|
+fn read_address_word(self : CPU, address : UInt16) -> UInt16 {
+  self.read(address)._ | (self.read(address + 1)._ << 8) |> u16
+}
+
+///|
+pub fn read(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   (match self.read {
-    Some(read) => read(addr, dummy)
-    None => self.mem[addr.to_int()]
+    Some(read) => read(address, dummy)
+    None => self.mem[address._]
   })
   |> u8
 }
 
 ///|
-pub fn read16(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
+pub fn read16(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
-  //   "$" + U16::u16(addr).to_hex() + " → " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
+  //   "$" + U16::u16(address).to_hex() + " → " + self.mem[address + 1].to_hex() + self.mem[address].to_hex(),
   // )
-  (u16(self.read(addr + 1, dummy~)) << 8) | // hi
-  u16(self.read(addr, dummy~)) // lo
+  u16(self.read(address, dummy~)) | // lo
+  (u16(self.read(address + 1, dummy~)) << 8) // hi
 }
 
 ///|
-fn read16zp(self : CPU, addr : UInt16, dummy~ : Bool = false) -> UInt16 {
+fn read16zp(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt16 {
   // println(
-  //   ("read16zp $" + addr.to_hex() + ":#$" + self.read(addr).to_hex() + " $" + (addr +
-  //   1)&(0x00FF)) | (addr&(0xFF00).to_hex() + ":#$" + self.read(
-  //     (addr + 1)&(0x00FF) | addr&(0xFF00),
+  //   ("read16zp $" + address.to_hex() + ":#$" + self.read(address).to_hex() + " $" + (address +
+  //   1)&(0x00FF)) | (address&(0xFF00).to_hex() + ":#$" + self.read(
+  //     (address + 1)&(0x00FF) | address&(0xFF00),
   //   ).to_hex()),
   // )
-  (u16(self.read(((addr + 1) & 0x00FF) | (addr & 0xFF00), dummy~)) << 8) | // hi
-  u16(self.read(addr, dummy~)) // lo
+  u16(self.read(address, dummy~)) | // lo
+  (u16(self.read(((address + 1) & 0x00FF) | (address & 0xFF00), dummy~)) << 8) // hi
 }
 
 ///|
 pub fn write(
   self : CPU,
-  addr : UInt16,
+  address : UInt16,
   value : UInt8,
   dummy~ : Bool = false
 ) -> Unit {
   match self.write {
-    Some(write) => write(addr, value, dummy)
-    None => self.mem[addr.to_int()] = value
+    Some(write) => write(address, value, dummy)
+    None => self.mem[address._] = value
   }
-  // println("$" + u16(addr).to_hex() + " ← " + self.mem[addr].to_hex())
+  // println("$" + u16(address).to_hex() + " ← " + self.mem[address].to_hex())
 }
 
 ///|
 pub fn write16(
   self : CPU,
-  addr : UInt16,
+  address : UInt16,
   value : UInt16,
   dummy~ : Bool = false
 ) -> Unit {
-  self.write(addr + 1, u8(value._ >> 8), dummy~) // hi
-  self.write(addr, u8(value._), dummy~) // lo
+  self.write(address + 1, u8(value._ >> 8), dummy~) // hi
+  self.write(address, u8(value._), dummy~) // lo
   // println(
-  //   "$" + u16(addr).to_hex() + " ← " + self.mem[addr + 1].to_hex() + self.mem[addr].to_hex(),
+  //   "$" + u16(address).to_hex() + " ← " + self.mem[address + 1].to_hex() + self.mem[address].to_hex(),
   // )
 }
 
@@ -346,7 +387,7 @@ fn pop16(self : CPU) -> UInt16 {
 ///|
 pub fn dump(
   self : CPU,
-  addr~ : UInt16 = 0x0000,
+  address~ : UInt16 = 0x0000,
   cols~ : Int = 0x10,
   rows~ : Int = 0x10
 ) -> Unit {
@@ -365,9 +406,9 @@ pub fn dump(
       if str.length() > 0 {
         println(str)
       }
-      str = (addr + i).to_hex() + "|"
+      str = (address + i).to_hex() + "|"
     }
-    str += self.mem[(addr + i).to_int()].to_hex() + " "
+    str += self.mem[(address + i)._].to_hex() + " "
     i = i + 1
   }
 }
@@ -437,7 +478,8 @@ pub fn step(self : CPU) -> Int {
     }
 
     //
-    let opcode = self.read(self.pc, dummy=true)._
+    // let opcode = self.read(self.pc, dummy=true)._
+    let opcode = self.read_instruction()._
 
     //
     let (name, op, mode, size, cycles, _, illegal) = instructions[opcode]
@@ -446,13 +488,87 @@ pub fn step(self : CPU) -> Int {
     }
 
     //
-    let addr = self.get_addr(mode)
-
-    //
-    self.pc += size
-
-    //
-    op(self, addr, mode)
+    match name {
+      "ADC"
+      | "ANC"
+      | "AND"
+      | "ARR"
+      | "ASL"
+      | "ASR"
+      | "BCC"
+      | "BCS"
+      | "BEQ"
+      | "BIT"
+      | "BMI"
+      | "BNE"
+      | "BPL"
+      | "BRK"
+      | "BVC"
+      | "BVS"
+      | "CLC"
+      | "CLD"
+      | "CLI"
+      | "CLV"
+      | "CMP"
+      | "CPX"
+      | "CPY"
+      | "DCP"
+      | "DEC"
+      | "DEX"
+      | "DEY"
+      | "EOR"
+      | "INC"
+      | "INX"
+      | "INY"
+      | "ISC"
+      | "JAM"
+      | "JMP"
+      | "JSR"
+      | "LAS"
+      | "LAX"
+      | "LDA"
+      | "LDX"
+      | "LDY"
+      | "LSR"
+      | "NOP"
+      | "ORA"
+      | "PHA"
+      | "PHP"
+      | "PLA"
+      | "PLP"
+      | "RLA"
+      | "ROL"
+      | "ROR"
+      | "RRA"
+      | "RTI"
+      | "RTS"
+      | "SAX"
+      | "SBC"
+      | "SBX"
+      | "SEC"
+      | "SED"
+      | "SEI"
+      | "SHA"
+      | "SHS"
+      | "SHX"
+      | "SHY"
+      | "SLO"
+      | "SRE"
+      | "STA"
+      | "STX"
+      | "STY"
+      | "TAX"
+      | "TAY"
+      | "TSX"
+      | "TXA"
+      | "TXS"
+      | "TYA"
+      | "XAA" => op(self, -1, mode)
+      _ => {
+        println("\{name} missing")
+        panic()
+      }
+    }
 
     //
     if skip {
@@ -469,26 +585,150 @@ pub fn step(self : CPU) -> Int {
 }
 
 ///|
-fn get_addr(self : CPU, mode : Mode, dummy~ : Bool = true) -> UInt16 {
+fn get_address(
+  self : CPU,
+  mode : Mode,
+  illegal : Bool,
+  dummy~ : Bool = true
+) -> UInt16 {
   let pc = self.pc + 1 |> u16
   match mode {
-    Implied => 0 |> u16
-    Accumulator => 0 |> u16
+    ///| Implied
+    /// In the implied addressing mode, the address containing the operand is implicitly stated in the operation code of the instruction.
+    Implied => {
+      let _ = self.read(pc, dummy=true) // FIXME: pre-fetch
+      0 |> u16
+    }
+    ///| Accumulator  A
+    /// This form of addressing is represented with a one byte instruction, implying an operation on the accumulator.
+    Accumulator => {
+      let _ = self.read(pc, dummy=true) // FIXME: pre-fetch
+      0 |> u16
+    }
     Immediate => pc |> u16
     Indirect => self.read16zp(self.read16(pc, dummy~), dummy~) |> u16
-    IndexedIndirect =>
-      self.read16zp(u16(self.read(pc, dummy~) + self.registers[X]), dummy~)
-      |> u16
-    IndirectIndexed =>
-      self.read16zp(u16(self.read(pc, dummy~)), dummy~) + u16(self.registers[Y])
-      |> u16
-    Absolute => self.read16(pc, dummy~) |> u16
-    AbsoluteX => self.read16(pc, dummy~) + u16(self.registers[X]) |> u16
-    AbsoluteY => self.read16(pc, dummy~) + u16(self.registers[Y]) |> u16
-    ZeroPage => self.read(pc, dummy~) |> u16
-    ZeroPageX => self.read(pc, dummy~) + self.registers[X] |> u16
-    ZeroPageY => self.read(pc, dummy~) + self.registers[Y] |> u16
-    Relative => pc + 1 + self.read(pc, dummy~).to_signed() |> u16
+    ///| X-Indexed Zero Page Indirect ($nn,X)
+    /// In indexed indirect addressing, the second byte of the instruction is added to the contents of the `X` index register, discarding the carry. 
+    /// The result of this addition points to a memory location on page zero whose contents is the low order eight bits of the effective address.
+    /// The next memory location in page zero contains the high order eight bits of the effective address.
+    /// Both memory locations specifying the high and low order bytes of the effective address must be in page zero.
+    IndexedIndirect => {
+      let offset = self.read(pc, dummy~)
+      let _ = self.read(u16(offset), dummy=true) // FIXME: pre-fetch
+      self.read16zp(u16(offset + self.registers[X]), dummy~) |> u16
+    }
+    ///| Zero Page Indirect Y-Indexed ($nn),Y
+    /// In indirect indexed addressing, the second byte of the instruction points to a memory location in page zero.
+    /// The contents of this memory location is added to the contents of the `Y` index register, the result being the low order eight bits of the effective address.
+    /// The carry from this addition is added to the contents of the next page zero memory location, the result being the high order eight bits of the effective address.
+    IndirectIndexed => {
+      let offset = self.read(pc, dummy~)
+      let value = self.read16zp(u16(offset), dummy~)
+      // 0x13 does not care about page boundary
+      if page_boundary(value, value + u16(self.registers[Y])) {
+        // FIXME: pre-fetch
+        let _ = self.read(
+          (value & 0xFF00) | u16(u8(value) + self.registers[Y]),
+          dummy=true,
+        )
+        if not(illegal) {
+          self.cycles += 1
+        }
+      }
+      value + u16(self.registers[Y]) |> u16
+    }
+    ///| Absolute $nnnn
+    /// In absolute addressing, the second byte of the instruction specifies the eight low order bits of the effective address while the third byte specifies the eight high order bits.
+    /// Thus, the absolute addressing mode allows access to the entire 65K bytes of addressable memory.
+    Absolute | AbsoluteSP => {
+      let value = self.read16(pc, dummy~)
+      value |> u16
+    }
+    ///| X-Indexed Absolute $nnnn,X
+    /// This form of addressing is used in conjunction with the `X` index register.
+    /// The effective address is formed by adding the contents of `X` to the address contained in the second and third bytes of the instruction.
+    /// This mode allows the index register to contain the index or count value and the instruction to contain the base address.
+    /// This type of indexing allows any location referencing and the index to modify multiple fields resulting in reduced coding and execution time.
+    AbsoluteX => {
+      let value = self.read16(pc, dummy~)
+      // println("\{value} + \{self.registers[X]} = \{value + u16(self.registers[X])} \{page_boundary(value, value + u16(self.registers[X]))}")
+      // 0x1e always needs this
+      if page_boundary(value, value + u16(self.registers[X])) {
+        // FIXME: pre-fetch
+        let _ = self.read(
+          (value & 0xFF00) | u16(u8(value) + self.registers[X]),
+          dummy=true,
+        )
+        self.cycles += 1
+      }
+      value + u16(self.registers[X]) |> u16
+    }
+    ///| Y-Indexed Absolute $nnnn,Y
+    /// This form of addressing is used in conjunction with the `Y` index register.
+    /// The effective address is formed by adding the contents of `Y` to the address contained in the second and third bytes of the instruction.
+    /// This mode allows the index register to contain the index or count value and the instruction to contain the base address.
+    /// This type of indexing allows any location referencing and the index to modify multiple fields resulting in reduced coding and execution time.
+    AbsoluteY => { // 0x99
+      let value = self.read16(pc, dummy~)
+      // 0x19 needs this
+      // 0x1b* does not need this
+      if illegal || page_boundary(value, value + u16(self.registers[Y])) {
+        // FIXME: pre-fetch
+        let _ = self.read(
+          (value & 0xFF00) | u16(u8(value) + self.registers[Y]),
+          dummy=true,
+        )
+        self.cycles += 1
+      }
+      value + u16(self.registers[Y]) |> u16
+    }
+    ///| Zero Page  $nn
+    /// The zero page instructions allow for shorter code and execution times by only fetching the second byte of the instruction and assuming a zero high address byte.
+    /// Careful use of the zero page can result in significant increase in code efficiency.
+    ZeroPage => {
+      let offset = self.read(pc, dummy~)
+      // 0x04* needs this
+      // 0x05 does not need this, uses the value in the opcode
+      // if illegal {
+      //   // FIXME: pre-fetch
+      //   let _ = self.read(u16(offset), dummy=true)
+
+      // }
+      offset |> u16
+    }
+    ///| X-Indexed Zero Page  $nn,X
+    /// This form of addressing is used in conjunction with the `X` index register.
+    /// The effective address is calculated by adding the second byte to the contents of the index register.
+    /// Since this is a form of "Zero Page" addressing, the content of the second byte references a location in page zero.
+    /// Additionally, due to the “Zero Page" addressing nature of this mode, no carry is added to the high order 8 bits of memory and crossing of page boundaries does not occur.
+    ZeroPageX => {
+      let offset = self.read(pc, dummy~)
+      let _ = self.read(u16(offset), dummy=true) // FIXME: pre-fetch
+      offset + self.registers[X] |> u16
+    }
+    ///| Y-Indexed Zero Page  $nn,Y
+    /// This form of addressing is used in conjunction with the `Y` index register.
+    /// The effective address is calculated by adding the second byte to the contents of the index register.
+    /// Since this is a form of "Zero Page" addressing, the content of the second byte references a location in page zero.
+    /// Additionally, due to the “Zero Page" addressing nature of this mode, no carry is added to the high order 8 bits of memory and crossing of page boundaries does not occur.
+    ZeroPageY => {
+      let offset = self.read(pc, dummy~)
+      let _ = self.read(u16(offset), dummy=true) // FIXME: pre-fetch
+      offset + self.registers[Y] |> u16
+    }
+    ///| Relative $nnnn
+    /// Relative addressing is used only with branch instructions and establishes a destination for the conditional branch.
+    ///
+    /// The second byte of the instruction becomes the operand which is an “Offset" added to the contents of the lower eight bits of the program counter when the counter is set at the next instruction.
+    /// The range of the offset is `-128` to `+127` bytes from the next instruction.
+    Relative => {
+      let offset = self.read(pc, dummy~).to_signed()
+      // println(offset)
+      // if offset > 0x7F {
+      //   let _ = self.read(pc + 1, dummy=true) // FIXME: pre-fetch
+      // }
+      pc + 1 + offset |> u16
+    }
   }
 }
 
@@ -509,7 +749,7 @@ fn dump_step(
     "$" + self.read(pc + 1, dummy~).to_hex() + self.read(pc, dummy~).to_hex()
   }
   let unofficial = if illegal { "*" } else { " " }
-  let addr_mode = match mode {
+  let address_mode = match mode {
     Implied =>
       // Implied Addressing
       // https://www.c64-wiki.com/wiki/Implied_addressing
@@ -584,7 +824,7 @@ fn dump_step(
         dummy~,
       )
       .to_hex()
-    Absolute =>
+    Absolute | AbsoluteSP =>
       // Absolute Addressing
       // https://www.c64-wiki.com/wiki/Absolute_addressing
       //
@@ -677,7 +917,7 @@ fn dump_step(
       (if i < size { self.read(self.pc + i, dummy~).to_hex() } else { "  " })
   }
   let mut spaces = ""
-  for i = 32 - name.length() - addr_mode.length(); i > 0; i = i - 1 {
+  for i = 32 - name.length() - address_mode.length(); i > 0; i = i - 1 {
     spaces += " "
   }
   // let mut stack = ""
@@ -699,7 +939,7 @@ fn dump_step(
       0xE3 | 0xE7 | 0xEF | 0xF3 | 0xF7 | 0xFB | 0xFF => "ISB"
       _ => name
     }) +
-    addr_mode +
+    address_mode +
     spaces +
     "A:" +
     self.registers[A].to_hex() +
@@ -725,11 +965,25 @@ fn page_boundary(a : UInt16, b : UInt16) -> Bool {
 // branch, then adds a cycle for taking a branch and adds another cycle
 // if the branch jumps to a new page
 ///|
-fn branch(self : CPU, addr : UInt16) -> Unit {
-  if page_boundary(self.pc, addr) {
-    self.cycles += 1
+fn branch(
+  self : CPU,
+  address : UInt16,
+  prefetch : (UInt16, UInt8)?,
+  wrap : Bool?
+) -> Unit {
+  self.read_instruction() |> ignore
+
+  //
+  if wrap is Some(true) {
+    let (address, _) = prefetch.unwrap()
+    self.read_address(address) |> ignore
+
+    //
+    self.cycles += 1 // page is crossed
   }
-  self.pc = addr
+
+  //
+  self.pc = address
   self.cycles += 1
 }
 
@@ -757,13 +1011,60 @@ fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
 /// The `N` flag is set if the accumulator result contains bit `7` on, otherwise the `N` flag is reset.
 /// The `Z` flag is set if the accumulator result is `0`, otherwise the `Z` flag is reset.
 ///
-/// Note on the MOS 6502:
-/// In decimal mode, the `N`, `V` and `Z` flags are not consistent with the decimal result.
-fn opADC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let a = self.registers[A]._
-  let b = self.read(addr)._
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ADC
+fn opADC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    ADC #$nn	      $69	    2	    2
+  /// Absolute	                    ADC $nnnn	      $6D	    3	    4
+  /// X-Indexed Absolute	          ADC $nnnn,X	    $7D	    3	    4+p
+  /// Y-Indexed Absolute	          ADC $nnnn,Y	    $79	    3	    4+p
+  /// Zero Page	                    ADC $nn	        $65	    2	    3
+  /// X-Indexed Zero Page	          ADC $nn,X	      $75	    2	    4
+  /// X-Indexed Zero Page Indirect	ADC ($nn,X)	    $61	    2	    6
+  /// Zero Page Indirect Y-Indexed	ADC ($nn),Y	    $71	    2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  let a = self.registers[A].to_int()
+  let b = value.to_int()
   let c = self.flags[C].to_int()
+
+  //
+  self.adc(a, b, c)
+}
+
+///|
+fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   self.registers[A] = a + b + c
+
+  //
   if self.flags.decimal() && self.decimal_mode {
     let mut lo = (a & 0x0F) + (b & 0x0F) + c
     let mut hi = (a & 0xF0) + (b & 0xF0)
@@ -801,8 +1102,49 @@ fn opADC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// This instruction affects the accumulator;
 /// sets the `Z` flag if the result in the accumulator is `0`, otherwise resets the `Z` flag;
 /// sets the `N` flag if the result in the accumulator has bit `7` on, otherwise resets the `N` flag.
-fn opAND(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.registers[A] = self.registers[A] & self.read(addr)
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#AND
+fn opAND(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    AND #$nn	      $29	    2	    2
+  /// Absolute	                    AND $nnnn	      $2D	    3	    4
+  /// X-Indexed Absolute	          AND $nnnn,X	    $3D	    3	    4+p
+  /// Y-Indexed Absolute	          AND $nnnn,Y	    $39	    3	    4+p
+  /// Zero Page	                    AND $nn	        $25	    2	    3
+  /// X-Indexed Zero Page	          AND $nn,X	      $35	    2	    4
+  /// X-Indexed Zero Page Indirect	AND ($nn,X)	    $21	    2	    6
+  /// Zero Page Indirect Y-Indexed	AND ($nn),Y	    $31	    2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  self.registers[A] = self.registers[A] & value
   self.flags.setZN(self.registers[A])
 }
 
@@ -820,100 +1162,296 @@ fn opAND(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// sets `N` equal to the result bit `7` (bit `6` in the input),
 /// sets `Z` flag if the result is equal to `0`,
 /// otherwise resets `Z` and stores the input bit `7` in the `C` flag.
-fn opASL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+fn opASL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Accumulator	                  ASL A	          $0A	    1	    2
+  /// Absolute	                    ASL $nnnn	      $0E	    3	    6
+  /// X-Indexed Absolute	          ASL $nnnn,X	    $1E	    3	    7
+  /// Zero Page	                    ASL $nn	        $06	    2	    5
+  /// X-Indexed Zero Page	          ASL $nn,X	      $16	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, _) = prefetch.unwrap()
+
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if mode is AbsoluteX {
+      value = self.read_address(address) // |> ignore
+    }
+  }
+
+  //
   if mode == Accumulator {
     self.flags.setC((self.registers[A] & NEGATIVE) != 0)
     self.registers[A] = self.registers[A] << 1 // overflow
     self.flags.setZN(self.registers[A])
   } else {
-    let mut value = self.read(addr)
+    self.write(address, value) // FIXME: pre-fetch
     self.flags.setC((value & NEGATIVE) != 0)
     value = value << 1 // overflow
-    self.write(addr, value)
+    self.write(address, value)
     self.flags.setZN(value)
   }
 }
 
-// BCC - Branch if carry clear
-///|
-fn opBCC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `ASR` - "AND" then Logical Shift Right
+/// Operation: (A ∧ M) / 2 → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// 0	-	-	-	-	-	✓	✓
+/// 
+/// The undocumented `ASR` instruction performs a bit-by-bit `AND` operation of the accumulator and memory, then shifts the accumulator `1` bit to the right, with the higher bit of the result always being set to `0`, and the low bit which is shifted out of the field being stored in the carry flag.
+/// 
+/// This instruction affects the accumulator. 
+/// It does not affect the overflow flag. 
+/// The `N` flag is always reset. 
+/// The `Z` flag is set if the result of the shift is `0` and reset otherwise. 
+/// The carry is set equal to bit `0` of the result of the "AND" operation.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ASR
+fn opASR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    ASR #$nn	      $4B*	  2	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (_, data) = prefetch.unwrap()
+    value = data
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if mode is AbsoluteX {
+      value = self.read_address(address) // |> ignore
+    }
+  }
+
+  // self.opAND(address, mode)
+  self.registers[A] = self.registers[A] & value
+  self.flags.setZN(self.registers[A])
+
+  // self.opLSR(address, Mode::Accumulator)
+  self.flags.setC(self.registers[A].bit(0))
+  self.registers[A] = self.registers[A] >> 1 // underflow
+  self.flags.setZN(self.registers[A])
+}
+
+///| `BCC` - Branch on Carry Clear
+/// Operation: Branch on C = 0
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction tests the state of the carry bit and takes a conditional branch if the carry bit is reset.
+/// 
+/// It affects no flags or registers other than the program counter and then only if the `C` flag is not on.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BCC
+fn opBCC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BCC $nnnn	      $90	    2	    2+t+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   if self.flags.not_carry() {
-    self.branch(addr)
+    self.branch(address, prefetch, wrap)
   }
 }
 
-// BCS - Branch if carry set
-///|
-fn opBCS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BCS` - Branch on Carry Set
+/// Operation: Branch on C = 1
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction takes the conditional branch if the carry flag is on.
+/// 
+/// `BCS` does not affect any of the flags or registers except for the program counter and only then if the carry flag is on.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BCS
+fn opBCS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BCS $nnnn	      $B0	    2	    2+t+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   if self.flags.carry() {
-    self.branch(addr)
+    self.branch(address, prefetch, wrap)
   }
 }
 
-// BEQ - Branch if equal
-///|
-fn opBEQ(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BEQ` - Branch on Result Zero
+/// Operation: Branch on Z = 1
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction could also be called "Branch on Equal."
+/// 
+/// It takes a conditional branch whenever the `Z` flag is on or the previous result is equal to `0`.
+/// 
+/// `BEQ` does not affect any of the flags or registers other than the program counter and only then when the `Z` flag is set.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BEQ
+fn opBEQ(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BEQ $nnnn	      $F0	    2	    2+t+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   if self.flags.zero() {
-    self.branch(addr)
+    self.branch(address, prefetch, wrap)
   }
 }
 
-// BIT - Bit test
-///|
-fn opBIT(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let value = self.read(addr)
+///| `BIT` - Test Bits in Memory with Accumulator
+/// Operation: A ∧ M, M7 → N, M6 → V
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	✓	-	-	-	-	✓	-
+/// 
+/// This instruction performs an `AND` between a memory location and the accumulator but does not store the result of the `AND` into the accumulator.
+/// 
+/// The bit instruction affects the `N` flag with `N` being set to the value of bit `7` of the memory being tested, 
+/// the `V` flag with `V` being set equal to bit `6` of the memory being tested and 
+/// `Z` being set by the result of the `AND` operation between the accumulator and the memory if the result is zero, `Z` is reset otherwise. 
+/// It does not affect the accumulator.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BIT
+fn opBIT(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    BIT $nnnn	      $2C	    3	    4
+  /// Zero Page	                    BIT $nn	        $24	    2	    3
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let value = self.read(address)
   self.flags.setV((value & OVERFLOW) != 0)
   self.flags.setZ((value & self.registers[A]) == 0)
   self.flags.setN(value.bit(7))
 }
 
-// BMI - Branch if minus
-///|
-fn opBMI(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BMI` - Branch on Result Minus
+/// Operation: Branch on N = 1
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction takes the conditional branch if the `N` bit is set.
+/// 
+/// `BMI` does not affect any of the flags or any other part of the machine other than the program counter and then only if the `N` bit is on.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BMI
+fn opBMI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BMI $nnnn	      $30	    2 	  2+t+p
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   if self.flags.negative() {
-    self.branch(addr)
+    self.branch(address, value, wrap)
   }
 }
 
-// BNE - Branch if minus
-///|
-fn opBNE(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BNE` - Branch on Result Not Zero
+/// Operation: Branch on Z = 0
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction could also be called "Branch on Not Equal." 
+/// It tests the `Z` flag and takes the conditional branch if the `Z` flag is not on, indicating that the previous result was not zero.
+/// 
+/// `BNE` does not affect any of the flags or registers other than the program counter and only then if the `Z` flag is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BNE
+fn opBNE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BNE $nnnn	      $D0	    2	    2+t+p
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   if self.flags.not_zero() {
-    self.branch(addr)
+    self.branch(address, value, wrap)
   }
 }
 
-// BPL - Branch if positive
-///|
-fn opBPL(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BPL` - Branch on Result Plus
+/// Operation: Branch on N = 0
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction is the complementary branch to branch on result minus. 
+/// It is a conditional branch which takes the branch when the `N` bit is reset (`0`). 
+/// `BPL` is used to test if the previous result bit `7` was off (`0`) and branch on result minus is used to determine if the previous result was minus or bit `7` was on (`1`).
+/// 
+/// The instruction affects no flags or other registers other than the `P` counter and only affects the `P` counter when the `N` bit is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BPL
+fn opBPL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BPL $nnnn	      $10	    2	    2+t+p
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   if self.flags.not_negative() {
-    self.branch(addr)
+    self.branch(address, value, wrap)
   }
 }
 
 ///| `BRK` - Break Command
 /// Operation: PC + 2↓, [FFFE] → PCL, [FFFF] → PCH
 ///
-/// p.297
-/// Force break. S:= PCH, SP:= SP-1, S:= PCL, SP:= SP-1, S:= PSR, SP:= SP-1, PCL: = $FE, PCH: = $FF
-///
-/// Operation: `BRK` is a forced interrupt, which saves the current program counter and
-/// status register values and jumps to a standard address. Note that the value saved for
-/// the program counter points to the `BRK` byte plus two (like a branch) and that the
-/// processor status register on the stack has flag `B` set to `1`.
-///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	1	-	-
+/// 
 /// The break command causes the microprocessor to go through an inter­rupt sequence under program control.
 /// This means that the program counter of the second byte after the `BRK` is automatically stored on the stack along with the processor status at the beginning of the break instruction.
 /// The microprocessor then transfers control to the interrupt vector.
 ///
 /// Other than changing the program counter, the break instruction changes no values in either the registers or the flags.
 ///
-/// Note on the MOS 6502:
-/// If an IRQ happens at the same time as a `BRK` instruction, the `BRK` instruction is ignored.
-///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
-fn opBRK(self : CPU, _ : UInt16, _ : Mode) -> Unit {
-  // println("*** BRK")
+fn opBRK(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      BRK	            $00	    1	    7
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   if self.irq {
     println("*** IRQ")
     return
@@ -921,114 +1459,478 @@ fn opBRK(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 
   //
   self.push16(self.pc + 1)
-  self.push(self.flags.get() | BREAK | UNUSED)
-
-  // self.pc = match self.needs_interrupt {
-  //   NMI => self.read16(NMI)
-  //   IRQ => self.read16(IRQ)
-  //   _ => self.read16(IRQ)
-  // }
+  self.push(self.flags.get().set(UNUSED | BREAK))
 
   //
-  // println("*** BRK: " + self.read16(IRQ, dummy=true).to_hex())
   self.flags.set_interrupt() // brkn
-  self.flags.set_break()
+  // self.flags.set_break() // benchmark does not like it
+
+  //
   self.pc = self.read16(IRQ)
-
-  // abort("BRK")
 }
 
-// BVC - Branch if overflow clear
-///|
-fn opBVC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BVC` - Branch on Overflow Clear
+/// Operation: Branch on V = 0
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction tests the status of the `V` flag and takes the conditional branch if the flag is not set.
+/// 
+/// `BVC` does not affect any of the flags and registers other than the program counter and only when the overflow flag is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BVC
+fn opBVC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BVC $nnnn	      $50	    2	    2+t+p
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   if self.flags.not_overflow() {
-    self.branch(addr)
+    self.branch(address, value, wrap)
   }
 }
 
-// BVS - Branch if overflow set
-///|
-fn opBVS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+///| `BVS` - Branch on Overflow Set
+/// Operation: Branch on V = 1
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction tests the `V` flag and takes the conditional branch if `V` is on.
+/// 
+/// `BVS` does not affect any flags or registers other than the program, counter and only when the overflow flag is set.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#BVS
+fn opBVS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Relative	                    BVS $nnnn	      $70	    2	    2+t+p
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   if self.flags.overflow() {
-    self.branch(addr)
+    self.branch(address, value, wrap)
   }
 }
 
-// CLC - Clear carry flag
-///|
-fn opCLC(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `CLC` - Clear Carry Flag
+/// Operation: 0 → C
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	0
+/// 
+/// This instruction initializes the carry flag to a `0`. 
+/// This operation should normally precede an `ADC` loop. 
+/// It is also useful when used with a `ROL` instruction to clear a bit in memory.
+/// 
+/// This instruction affects no registers in the microprocessor and no flags other than the carry flag which is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CLC
+fn opCLC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      CLC	            $18	    1	    2
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   self.flags.clear_carry()
 }
 
-// CLD - Clear decimal mode
-///|
-fn opCLD(self : CPU, _ : UInt16, _mode : Mode) -> Unit {
+///| `CLD` - Clear Decimal Mode
+/// Operation: 0 → D
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	0	-	-	-
+/// 
+/// This instruction sets the decimal mode flag to a `0`. 
+/// This all subsequent `ADC` and `SBC` instructions to operate as simple operations.
+/// 
+/// `CLD` affects no registers in the microprocessor and no flags other than the decimal mode flag which is set to a `0`.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CLD
+fn opCLD(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      CLD	            $D8	    1	    2
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   self.flags.clear_decimal()
 }
 
-// CLI - Clear interrupt disable
-///|
-fn opCLI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `CLI` - Clear Interrupt Disable
+/// Operation: 0 → I
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	0	-	-
+/// 
+/// This instruction initializes the interrupt disable to a `0`. 
+/// This allows the microprocessor to receive interrupts.
+/// 
+/// It affects no registers in the microprocessor and no flags other than the interrupt disable which is cleared.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CLI
+fn opCLI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      CLI	            $58	    1	    2
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   self.flags.clear_interrupt()
 }
 
-// CLV - Clear overflow flag
-///|
-fn opCLV(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `CLV` - Clear Overflow Flag
+/// Operation: 0 → V
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	0	-	-	-	-	-	-
+/// 
+/// This instruction clears the overflow flag to a `0`. 
+/// This command is used in conjunction with the set overflow pin which can change the state of the overflow flag with an external signal.
+/// 
+/// `CLV` affects no registers in the microprocessor and no flags other than the overflow flag which is set to a `0`.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CLV
+fn opCLV(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      CLV	            $B8	    1	    2
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
   self.flags.clear_overflow()
 }
 
-// CMP - Compare
-///|
-fn opCMP(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.compare(self.registers[A], self.read(addr))
+///| `CMP` - Compare Memory and Accumulator
+/// Operation: A - M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// This instruction subtracts the contents of memory from the contents of the accumulator.
+/// 
+/// The use of the `CMP` affects the following flags: 
+/// `Z` flag is set on an equal comparison, reset otherwise; 
+/// the `N` flag is set or reset by the result bit `7`, 
+/// the carry flag is set when the value in memory is less than or equal to the accumulator, reset when it is greater than the accumulator. 
+/// The accumulator is not affected.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CMP
+fn opCMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    CMP #$nn	      $C9	    2	    2
+  /// Absolute	                    CMP $nnnn	      $CD	    3	    4
+  /// X-Indexed Absolute	          CMP $nnnn,X	    $DD	    3	    4+p
+  /// Y-Indexed Absolute	          CMP $nnnn,Y	    $D9	    3	    4+p
+  /// Zero Page	                    CMP $nn	        $C5	    2	    3
+  /// X-Indexed Zero Page	          CMP $nn,X	      $D5	    2	    4
+  /// X-Indexed Zero Page Indirect	CMP ($nn,X)	    $C1	    2	    6
+  /// Zero Page Indirect Y-Indexed	CMP ($nn),Y	    $D1	    2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  self.compare(self.registers[A], value)
 }
 
-// CPX - Compare x register
-///|
-fn opCPX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.compare(self.registers[X], self.read(addr))
+///| `CPX` - Compare Index Register `X` To Memory
+/// Operation: X - M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// This instruction subtracts the value of the addressed memory location from the content of index register `X` using the adder but does not store the result; 
+/// therefore, its only use is to set the `N`, `Z` and `C` flags to allow for comparison between the index register `X` and the value in memory.
+/// 
+/// The `CPX` instruction does not affect any register in the machine; 
+/// it also does not affect the overflow flag. 
+/// It causes the carry to be set on if the absolute value of the index register `X` is equal to or greater than the data from memory. 
+/// If the value of the memory is greater than the content of the index register `X`, carry is reset. 
+/// If the results of the subtraction contain a bit `7`, then the `N` flag is set, if not, it is reset. 
+/// If the value in memory is equal to the value in index register `X`, the `Z` flag is set, otherwise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CPX
+fn opCPX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    CPX #$nn	      $E0	    2	    2
+  /// Absolute	                    CPX $nnnn	      $EC	    3	    4
+  /// Zero Page	                    CPX $nn	        $E4	    2	    3
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  self.compare(self.registers[X], value)
 }
 
-// CPY - Compare y register
-///|
-fn opCPY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.compare(self.registers[Y], self.read(addr))
+///| `CPY` - Compare Index Register `Y` To Memory
+/// Operation: Y - M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// This instruction performs a two's complement subtraction between the index register `Y` and the specified memory location. 
+/// The results of the subtraction are not stored anywhere. 
+/// The instruction is strictly used to set the flags.
+/// 
+/// `CPY` affects no registers in the microprocessor and also does not affect the overflow flag. 
+/// If the value in the index register `Y` is equal to or greater than the value in the memory, the carry flag will be set, otherwise it will be cleared. 
+/// If the results of the subtraction contain bit `7` on the `N` bit will be set, otherwise it will be cleared. 
+/// If the value in the index register `Y` and the value in the memory are equal, the zero flag will be set, otherwise it will be cleared.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#CPY
+fn opCPY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    CPY #$nn	      $C0	    2	    2
+  /// Absolute	                    CPY $nnnn	      $CC	    3	    4
+  /// Zero Page	                    CPY $nn	        $C4	    2	    3
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  self.compare(self.registers[Y], value)
 }
 
-// DEC - Decrement memory
-// https://www.c64-wiki.com/wiki/DEC
-//
-// If the byte in question is taken as an unsigned integer, DEC "counts down" from 255 thru 0/$FF thru $0.
-// If a byte already containing the value 0/$0 is DECremented, it "wraps over" to the value 255/$FF.
-//
-// If the byte is taken as a signed integer, DEC will "count down" from +127 thru −128, or +$7F thru −$80.
-// If a byte already holding the value −128/−$80 is DECremented, it "wraps over" to the value +127/$7F.
-///|
-fn opDEC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let value = self.read(addr) - 1 // underflow
-  self.write(addr, value)
+///| `DEC` - Decrement Memory By One
+/// Operation: M - 1 → M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction subtracts `1`, in two's complement, from the contents of the addressed memory location.
+/// 
+/// The decrement instruction does not affect any internal register in the microprocessor.
+/// It does not affect the carry or overflow flags. 
+/// If bit `7` is on as a result of the decrement, then the `N` flag is set, otherwise it is reset. 
+/// If the result of the decrement is `0`, the `Z` flag is set, other­wise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#DEC
+fn opDEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    DEC $nnnn	      $CE	    3	    6
+  /// X-Indexed Absolute	          DEC $nnnn,X	    $DE	    3	    7
+  /// Zero Page	                    DEC $nn	        $C6	    2	    5
+  /// X-Indexed Zero Page	          DEC $nn,X	      $D6	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+    value = self.read_address(address) // |> ignore
+  }
+
+  //
+  self.write(address, value, dummy=true) // FIXME: pre-fetch
+  value -= 1 // underflow
+  self.write(address, value)
   self.flags.setZN(value)
 }
 
-// DEX - Decrement x register
-///|
-fn opDEX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `DEX` - Decrement Index Register `X` By One
+/// Operation: X - 1 → X
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction subtracts one from the current value of the index register `X` and stores the result in the index register `X`.
+/// 
+/// `DEX` does not affect the carry or overflow flag, 
+/// it sets the `N` flag if it has bit `7` on as a result of the decrement, otherwise it resets the `N` flag; 
+/// sets the `Z` flag if `X` is a `0` as a result of the decrement, otherwise it resets the `Z` flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#DEX
+fn opDEX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      DEX	            $CA	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[X] -= 1 // underflow
   self.flags.setZN(self.registers[X])
 }
 
-// DEY - Decrement y register
-///|
-fn opDEY(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `DEY` - Decrement Index Register `Y` By One
+/// Operation: Y - 1 → Y
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction subtracts one from the current value in the index register `Y` and stores the result into the index register `Y`. 
+/// The result does not affect or consider carry so that the value in the index register `Y` is decremented to `0` and then through `$00` to `$FF`.
+/// 
+/// Decrement `Y` does not affect the carry or overflow flags; 
+/// if the `Y` register contains bit `7` on as a result of the decrement the `N` flag is set, otherwise the `N` flag is reset. 
+/// If the `Y` register is `0` as a result of the decrement, the `Z` flag is set otherwise the `Z` flag is reset. 
+/// This instruction only affects the index register `Y`.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#DEY
+fn opDEY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      DEY	            $88	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
   self.registers[Y] -= 1 // underflow
   self.flags.setZN(self.registers[Y])
 }
 
-// EOR - Exclusive or
-///|
-fn opEOR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.registers[A] = self.registers[A] ^ self.read(addr)
+///| `EOR` - "Exclusive OR" Memory with Accumulator
+/// Operation: A ⊻ M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// The `EOR` instruction transfers the memory and the accumulator to the adder which performs a binary "EXCLUSIVE OR" on a bit-by-bit basis and stores the result in the accumulator.
+/// 
+/// This instruction affects the accumulator; 
+/// sets the zero flag if the result in the accumulator is `0`, otherwise resets the zero flag 
+/// sets the negative flag if the result in the accumulator has bit `7` on, otherwise resets the negative flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#EOR
+fn opEOR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    EOR #$nn	      $49	    2	    2
+  /// Absolute	                    EOR $nnnn	      $4D	    3	    4
+  /// X-Indexed Absolute	          EOR $nnnn,X	    $5D	    3	    4+p
+  /// Y-Indexed Absolute	          EOR $nnnn,Y	    $59	    3	    4+p
+  /// Zero Page	                    EOR $nn	        $45	    2	    3
+  /// X-Indexed Zero Page	          EOR $nn,X	      $55	    2	    4
+  /// X-Indexed Zero Page Indirect	EOR ($nn,X)	    $41	    2	    6
+  /// Zero Page Indirect Y-Indexed	EOR ($nn),Y	    $51	    2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  self.registers[A] = self.registers[A] ^ value
   self.flags.setZN(self.registers[A])
 }
 
@@ -1045,108 +1947,552 @@ fn opEOR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// if the increment causes the result to become `0`, the `Z` flag is set on, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#INC
-fn opINC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let value = self.read(addr) + 1 // overflow
-  self.write(addr, value)
+fn opINC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    INC $nnnn	      $EE	    3	    6
+  /// X-Indexed Absolute	          INC $nnnn,X	    $FE	    3	    7
+  /// Zero Page	                    INC $nn	        $E6	    2	    5
+  /// X-Indexed Zero Page	          INC $nn,X	      $F6	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+    value = self.read_address(address) // |> ignore
+  }
+
+  // 
+  self.write(address, value, dummy=true) // FIXME: pre-fetch
+  value += 1 // overflow
+  self.write(address, value)
   self.flags.setZN(value)
 }
 
-// INX - Increment x register
-///|
-fn opINX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `INX` - Increment Index Register `X` By One
+/// Operation: X + 1 → X
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// Increment `X` adds `1` to the current value of the `X` register. 
+/// This is an 8-bit increment which does not affect the carry operation, 
+/// therefore, if the value of `X` before the increment was `$FF`, the resulting value is `$00`.
+/// 
+/// `INX` does not affect the carry or overflow flags; 
+/// it sets the `N` flag if the result of the increment has a one in bit `7`, otherwise resets `N`; 
+/// sets the `Z` flag if the result of the increment is `0`, otherwise it resets the `Z` flag.
+/// 
+/// `INX` does not affect any other register other than the `X` register.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#INX
+fn opINX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      INX	            $E8	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
   self.registers[X] += 1 // overflow
   self.flags.setZN(self.registers[X])
 }
 
-// INY - Increment y register
-///|
-fn opINY(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `INY` - Increment Index Register `Y` By One
+/// Operation: Y + 1 → Y
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// Increment `Y` increments or adds one to the current value in the `Y` register, storing the result in the `Y` register. 
+/// As in the case of `INX` the primary application is to step thru a set of values using the `Y` register.
+/// 
+/// The `INY` does not affect the carry or overflow flags, 
+/// sets the `N` flag if the result of the increment has a one in bit `7`, otherwise resets `N`, 
+/// sets `Z` if as a result of the increment the `Y` register is zero otherwise resets the `Z` flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#INY
+fn opINY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      INY	            $C8	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
   self.registers[Y] += 1 // overflow
   self.flags.setZN(self.registers[Y])
 }
 
-// JMP - Jump
-///|
-fn opJMP(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.pc = addr
+///| `JMP` - Jump Indirect
+/// Operation: [PC + 1] → PCL, [PC + 2] → PCH
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction establishes a new value for the program counter.
+/// 
+/// It affects only the program counter in the microprocessor and affects no flags in the status register.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#JMP
+fn opJMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    JMP $nnnn	      $4C	    3	    3
+  /// Absolute Indirect	            JMP ($nnnn)	    $6C	    3	    5
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  self.pc = address
 }
 
-// JSR - Jump to subroutine
-///|
-fn opJSR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.push16(self.pc - 1)
-  self.pc = addr
+///| `JSR` - Jump To Subroutine
+/// Operation: PC + 2↓, [PC + 1] → PCL, [PC + 2] → PCH
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction transfers control of the program counter to a subroutine location but leaves a return pointer on the stack to allow the user to return to perform the next instruction in the main program after the subroutine is complete. 
+/// To accomplish this, `JSR` instruction stores the program counter address which points to the last byte of the jump instruction onto the stack using the stack pointer. 
+/// The stack byte contains the program count high first, followed by program count low. 
+/// The `JSR` then transfers the addresses following the jump instruction to the program counter low and the program counter high, thereby directing the program to begin at that new address.
+/// 
+/// The `JSR` instruction affects no flags, causes the stack pointer to be decremented by `2` and substitutes new values into the program counter low and the program counter high.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#JSR
+fn opJSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    JSR $nnnn	      $20	    3	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  self.read(u16(self.registers[SP]) | 0x0100, dummy=true) |> ignore
+  self.push16(self.pc)
+
+  //
+  let offset = self.read_instruction()
+
+  //
+  self.pc = address | (offset._ << 8)
 }
 
-// LDA - Load accumulator
-///|
-fn opLDA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.registers[A] = self.read(addr)
-  self.flags.setZN(self.registers[A])
+///| `LDA` - Load Accumulator with Memory
+/// Operation: M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// When instruction `LDA` is executed by the microprocessor, data is transferred from memory to the accumulator and stored in the accumulator.
+/// 
+/// `LDA` affects the contents of the accumulator, does not affect the carry or overflow flags; 
+/// sets the zero flag if the accumulator is zero as a result of the `LDA`, otherwise resets the zero flag; 
+/// sets the negative flag if bit `7` of the accumulator is set, other­wise resets the negative flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#LDA
+fn opLDA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    LDA #$nn	      $A9	    2	    2
+  /// Absolute	                    LDA $nnnn	      $AD	    3	    4
+  /// X-Indexed Absolute	          LDA $nnnn,X	    $BD	    3	    4+p
+  /// Y-Indexed Absolute	          LDA $nnnn,Y	    $B9	    3	    4+p
+  /// Zero Page	                    LDA $nn	        $A5	    2	    3
+  /// X-Indexed Zero Page	          LDA $nn,X	      $B5	    2	    4
+  /// X-Indexed Zero Page Indirect	LDA ($nn,X)	    $A1	    2	    6
+  /// Zero Page Indirect Y-Indexed	LDA ($nn),Y	    $B1	    2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  if wrap is Some(true) {
+    let (address, _) = prefetch.unwrap()
+    self.read_address(address) |> ignore
+
+    //
+    self.cycles += 1
+  }
+
+  //
+  let value = if mode is Immediate {
+    let (_, value) = prefetch.unwrap()
+    value
+  } else {
+    self.read_address(address)
+  }
+
+  //
+  self.registers[A] = value
+  self.flags.setZN(value)
 }
 
-// LDX - Load x register
-///|
-fn opLDX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.registers[X] = self.read(addr)
-  self.flags.setZN(self.registers[X])
+///| `LDX` - Load Index Register `X` From Memory
+/// Operation: M → X
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// Load the index register `X` from memory.
+/// 
+/// `LDX` does not affect the `C` or `V` flags; 
+/// sets `Z` if the value loaded was zero, otherwise resets it; 
+/// sets `N` if the value loaded in bit `7` is a `1`; 
+/// otherwise `N` is reset, and affects only the `X` register.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#LDX
+fn opLDX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    LDX #$nn	      $A2	    2	    2
+  /// Absolute	                    LDX $nnnn	      $AE	    3	    4
+  /// Y-Indexed Absolute	          LDX $nnnn,Y	    $BE	    3	    4+p
+  /// Zero Page	                    LDX $nn	        $A6	    2	    3
+  /// Y-Indexed Zero Page	          LDX $nn,Y	      $B6	    2	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  if wrap is Some(true) {
+    let (address, _) = prefetch.unwrap()
+    self.read_address(address) |> ignore
+
+    //
+    self.cycles += 1
+  }
+
+  //
+  let value = if mode is Immediate {
+    let (_, value) = prefetch.unwrap()
+    value
+  } else {
+    self.read_address(address)
+  }
+
+  //
+  self.registers[X] = value
+  self.flags.setZN(value)
 }
 
-// LDY - Load y register
-///|
-fn opLDY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.registers[Y] = self.read(addr)
-  self.flags.setZN(self.registers[Y])
+///| `LDY` - Load Index Register `Y` From Memory
+/// Operation: M → Y
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// Load the index register `Y` from memory.
+/// 
+/// `LDY` does not affect the `C` or `V` flags, 
+/// sets the `N` flag if the value loaded in bit `7` is a `1`, otherwise resets `N`, 
+/// sets `Z` flag if the loaded value is zero otherwise resets `Z` 
+/// and only affects the `Y` register.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#LDY
+fn opLDY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    LDY #$nn	      $A0	    2	    2
+  /// Absolute	                    LDY $nnnn	      $AC	    3	    4
+  /// X-Indexed Absolute	          LDY $nnnn,X	    $BC	    3	    4+p
+  /// Zero Page	                    LDY $nn	        $A4	    2	    3
+  /// X-Indexed Zero Page	          LDY $nn,X	      $B4	    2	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  if wrap is Some(true) {
+    let (address, _) = prefetch.unwrap()
+    self.read_address(address) |> ignore
+
+    //
+    self.cycles += 1
+  }
+
+  //
+  let value = if mode is Immediate {
+    let (_, value) = prefetch.unwrap()
+    value
+  } else {
+    self.read_address(address)
+  }
+
+  //
+  self.registers[Y] = value
+  self.flags.setZN(value)
 }
 
-// LSR - Logical shift right
-///|
-fn opLSR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+///| `LSR` - Logical Shift Right
+/// Operation: 0 → /M7...M0/ → C
+/// 
+/// N	V	-	B	D	I	Z	C
+/// 0	-	-	-	-	-	✓	✓
+/// 
+/// This instruction shifts either the accumulator or a specified memory location `1` bit to the right, with the higher bit of the result always being set to `0`, and the low bit which is shifted out of the field being stored in the carry flag.
+/// 
+/// The shift right instruction either affects the accumulator by shifting it right `1` or is a read/modify/write instruction which changes a specified memory location but does not affect any internal registers.
+/// The shift right does not affect the overflow flag.
+/// The `N` flag is always reset. 
+/// The `Z` flag is set if the result of the shift is `0` and reset otherwise. 
+/// The carry is set equal to bit `0` of the input.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#LSR
+fn opLSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Accumulator	                  LSR A	          $4A	    1	    2
+  /// Absolute	                    LSR $nnnn	      $4E	    3	    6
+  /// X-Indexed Absolute	          LSR $nnnn,X	    $5E	    3	    7
+  /// Zero Page	                    LSR $nn	        $46	    2	    5
+  /// X-Indexed Zero Page	          LSR $nn,X	      $56	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Accumulator {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+
+    //
+    // if wrap is Some(true) &&
+    //   (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+    //   value = self.read_address(address) // |> ignore
+
+    //   //
+    //   // self.cycles += 1
+    // }
+  }
+
+  //
   if mode == Accumulator {
     self.flags.setC((self.registers[A] & CARRY) != 0)
     self.registers[A] = self.registers[A] >> 1 // underflow
     self.flags.setZN(self.registers[A])
   } else {
-    let mut value = self.read(addr)
+    self.write(address, value) // FIXME: pre-fetch
     self.flags.setC((value & CARRY) != 0)
     value = value >> 1 // underflow
-    self.write(addr, value)
+    self.write(address, value)
     self.flags.setZN(value)
   }
 }
 
-// NOP - No operation
-///|
-fn opNOP(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
-  //
+///| `NOP` - No Operation
+/// Operation: No operation
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#NOP
+fn opNOP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      NOP	            $1A*	  1     2
+  /// Implied	                      NOP	            $3A*	  1     2
+  /// Implied	                      NOP	            $5A*	  1     2
+  /// Implied	                      NOP	            $7A*	  1     2
+  /// Implied	                      NOP	            $DA*	  1     2
+  /// Implied	                      NOP	            $EA	    1     2
+  /// Implied	                      NOP	            $FA*	  1     2
+  /// Immediate	                    NOP #$nn	      $80*	  2	    2
+  /// Immediate	                    NOP #$nn	      $82*	  2	    2
+  /// Immediate	                    NOP #$nn	      $89*	  2	    2
+  /// Immediate	                    NOP #$nn	      $C2*	  2	    2
+  /// Immediate	                    NOP #$nn	      $E2*	  2	    2
+  /// Absolute	                    NOP $nnnn	      $0C*	  3	    4
+  /// X-Indexed Absolute	          NOP $nnnn,X	    $1C*	  3	    4+p
+  /// X-Indexed Absolute	          NOP $nnnn,X	    $3C*	  3	    4+p
+  /// X-Indexed Absolute	          NOP $nnnn,X	    $5C*	  3	    4+p
+  /// X-Indexed Absolute	          NOP $nnnn,X	    $7C*	  3	    4+p
+  /// X-Indexed Absolute	          NOP $nnnn,X	    $DC*	  3	    4+p
+  /// X-Indexed Absolute	          NOP $nnnn,X	    $FC*	  3	    4+p
+  /// Zero Page	                    NOP $nn	        $04*	  2	    3
+  /// Zero Page	                    NOP $nn	        $44*	  2	    3
+  /// Zero Page	                    NOP $nn	        $64*	  2	    3
+  /// X-Indexed Zero Page	          NOP $nn,X	      $14*	  2	    4
+  /// X-Indexed Zero Page	          NOP $nn,X	      $34*	  2	    4
+  /// X-Indexed Zero Page	          NOP $nn,X	      $54*	  2	    4
+  /// X-Indexed Zero Page	          NOP $nn,X	      $74*	  2	    4
+  /// X-Indexed Zero Page	          NOP $nn,X	      $D4*	  2	    4
+  /// X-Indexed Zero Page	          NOP $nn,X	      $F4*	  2	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  if prefetch is None {
+    self.read_address(address) |> ignore
+  } else if wrap is None {
+    let (offset, _) = prefetch.unwrap()
+    if mode is Implied || mode is Immediate {
+
+    } else {
+      self.read_address(offset) |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    self.read_address(offset) |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      self.read_address(address) |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
 }
 
-// ORA - Logical inclusive or
-///|
-fn opORA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.registers[A] = self.registers[A] | self.read(addr)
+///| `ORA` - "OR" Memory with Accumulator
+/// Operation: A ∨ M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// The `ORA` instruction transfers the memory and the accumulator to the adder which performs a binary "OR" on a bit-by-bit basis and stores the result in the accumulator.
+/// 
+/// This instruction affects the accumulator; 
+/// sets the zero flag if the result in the accumulator is `0`, otherwise resets the zero flag; 
+/// sets the negative flag if the result in the accumulator has bit `7` on, otherwise resets the negative flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ORA
+fn opORA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    ORA #$nn	      $09	    2	    2
+  /// Absolute	                    ORA $nnnn	      $0D	    3	    4
+  /// X-Indexed Absolute	          ORA $nnnn,X	    $1D	    3	    4+p
+  /// Y-Indexed Absolute	          ORA $nnnn,Y	    $19	    3	    4+p
+  /// Zero Page	                    ORA $nn	        $05	    2	    3
+  /// X-Indexed Zero Page	          ORA $nn,X	      $15	    2	    4
+  /// X-Indexed Zero Page Indirect	ORA ($nn,X)	    $01	    2	    6
+  /// Zero Page Indirect Y-Indexed	ORA ($nn),Y	    $11	    2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  //
+  self.registers[A] = self.registers[A] | value
   self.flags.setZN(self.registers[A])
 }
 
-// PHA - Push accumulator
-///|
-fn opPHA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `PHA` - Push Accumulator On Stack
+/// Operation: A↓
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction transfers the current value of the accumulator to the next location on the stack, automatically decrementing the stack to point to the next empty location.
+/// 
+/// The Push `A` instruction only affects the stack pointer register which is decremented by `1` as a result of the operation. 
+/// It affects no flags.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#PHA
+fn opPHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      PHA	            $48	    1	    3
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.push(self.registers[A])
 }
 
 ///| `PHP` - Push Processor Status On Stack
 /// Operation: P↓
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
 ///
 /// This instruction transfers the contents of the processor status reg­ister unchanged to the stack, as governed by the stack pointer.
 ///
 /// The `PHP` instruction affects no registers or flags in the micropro­cessor.
-fn opPHP(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+fn opPHP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      PHP	            $08	    1	    3
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.push(self.flags.get() | BREAK | UNUSED)
 }
 
-// PLA - Pull accumulator
-///|
-fn opPLA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `PLA` - Pull Accumulator From Stack
+/// Operation: A↑
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction adds `1` to the current value of the stack pointer and uses it to address the stack and loads the contents of the stack into the `A` register.
+/// 
+/// The `PLA` instruction does not affect the carry or overflow flags. 
+/// It sets `N` if the bit `7` is on in accumulator `A` as a result of instructions, otherwise it is reset. 
+/// If accumulator `A` is zero as a result of the `PLA`, then the `Z` flag is set, otherwise it is reset. 
+/// The `PLA` instruction changes content of the accumulator `A` to the contents of the memory location at stack register plus `1` and also increments the stack register.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#PLA
+fn opPLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      PLA	            $68	    1	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  self.read_address(u16(self.registers[SP]) | 0x0100) |> ignore
+
+  //
   self.registers[A] = self.pop()
   self.flags.setZN(self.registers[A])
 }
@@ -1154,44 +2500,152 @@ fn opPLA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 ///| `PLP` - Pull Processor Status From Stack
 /// Operation: P↑
 ///
+/// N	V	-	B	D	I	Z	C
+/// ✓	✓	-	-	✓	✓	✓	✓
+/// 
 /// This instruction transfers the next value on the stack to the Proces­sor Status register, thereby changing all of the flags and setting the mode switches to the values from the stack.
 ///
 /// The `PLP` instruction affects no registers in the processor other than the status register.
 /// This instruction could affect all flags in the status register.
-fn opPLP(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#PLP
+fn opPLP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      PLP	            $28	    1	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  self.read_address(u16(self.registers[SP]) | 0x0100) |> ignore
+
+  //
   self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore
 }
 
-// ROL - Rotate left
-///|
-fn opROL(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+///| `ROL` - Rotate Left
+/// Operation: C ← /M7...M0/ ← C
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// The rotate left instruction shifts either the accumulator or addressed memory left `1` bit, with the input carry being stored in bit `0` and with the input bit `7` being stored in the carry flags.
+/// 
+/// The `ROL` instruction either shifts the accumulator left `1` bit and stores the carry in accumulator bit `0` or does not affect the internal registers at all. 
+/// The `ROL` instruction sets carry equal to the input bit `7`, 
+/// sets `N` equal to the input bit `6`, 
+/// sets the `Z` flag if the result of the rotate is `0`, 
+/// otherwise it resets `Z` and does not affect the overflow flag at all.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ROL
+fn opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Accumulator	                  ROL A	          $2A	    1	    2
+  /// Absolute	                    ROL $nnnn	      $2E	    3	    6
+  /// X-Indexed Absolute	          ROL $nnnn,X	    $3E	    3	    7
+  /// Zero Page	                    ROL $nn	        $26	    2	    5
+  /// X-Indexed Zero Page	          ROL $nn,X	      $36	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Accumulator {
+
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  //
   let c = self.flags[C].to_int()
   if mode == Accumulator {
     self.flags.setC((self.registers[A] & NEGATIVE) != 0)
     self.registers[A] = (self.registers[A] << 1) | c // overflow
     self.flags.setZN(self.registers[A])
   } else {
-    let mut value = self.read(addr)
+    self.write(address, value) // FIXME: pre-fetch
     self.flags.setC((value & NEGATIVE) != 0)
     value = (value << 1) | c // overflow
-    self.write(addr, value)
+    self.write(address, value)
     self.flags.setZN(value)
   }
 }
 
-// ROR - Rotate right
-///|
-fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
+///| `ROR` - Rotate Right
+/// Operation: C → /M7...M0/ → C
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// The rotate right instruction shifts either the accumulator or addressed memory right `1` bit with bit `0` shifted into the carry and carry shifted into bit `7`.
+/// 
+/// The `ROR` instruction either shifts the accumulator right `1` bit and stores the carry in accumulator bit `7` or does not affect the internal registers at all. 
+/// The `ROR` instruction sets carry equal to input bit `0`, sets `N` equal to the input carry and sets the `Z` flag if the result of the rotate is `0`; otherwise it resets `Z` and does not affect the overflow flag at all.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ROR
+fn opROR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Accumulator	                  ROR A	          $6A	    1	    2
+  /// Absolute	                    ROR $nnnn	      $6E	    3	    6
+  /// X-Indexed Absolute	          ROR $nnnn,X	    $7E	    3	    7
+  /// Zero Page	                    ROR $nn	        $66	    2	    5
+  /// X-Indexed Zero Page	          ROR $nn,X	      $76	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, _) = prefetch.unwrap()
+    if mode is Accumulator {
+
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  //
   let c = self.flags[C].to_int()
+
+  //
   if mode == Accumulator {
-    self.flags.setC((self.registers[A] & CARRY) != 0)
+    self.flags[C] = self.registers[A].bit(0)
     self.registers[A] = (self.registers[A] >> 1) | (c << 7) // underflow
+
+    //
     self.flags.setZN(self.registers[A])
   } else {
-    let mut value = self.read(addr)
-    self.flags.setC((value & CARRY) != 0)
+    self.write(address, value) // FIXME: pre-fetch
+
+    //
+    self.flags[C] = value.bit(0)
+
+    //
     value = (value >> 1) | (c << 7) // underflow
-    self.write(addr, value)
+    self.write(address, value)
+
+    //
     self.flags.setZN(value)
   }
 }
@@ -1204,37 +2658,139 @@ fn opROR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 ///
 /// The `RTI` instruction reinitializes all flags to the position to the point they were at the time the interrupt was taken and sets the program counter back to its pre-interrupt state.
 /// It affects no other registers in the microprocessor.
-fn opRTI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
-  // println("*** RTI")
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#RTI
+fn opRTI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      RTI	            $40	    1	    6
 
-  // self.flags.set(self.pop()&(0xCF)|(UNUSED)|(BREAK)) // pull() & 0xEF | 0x20
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  self.read(u16(self.registers[SP]) | 0x0100, dummy=true) |> ignore
+
+  //
+  // self.flags.set((self.pop() & 0xCF) | UNUSED | BREAK) // pull() & 0xEF | 0x20
   // self.flags.set((self.pop() & 0xEF) | UNUSED) // nestest: pull() & 0xEF | 0x20
-  self.flags.set(self.pop() | UNUSED) |> ignore
+  // self.flags.set(self.pop() | UNUSED) |> ignore
+  self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore
+
+  //
+  self.pc = self.pop16()
+}
+
+///| `RTS` - Return From Subroutine
+/// Operation: PC↑, PC + 1 → PC
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction loads the program count low and program count high from the stack into the program counter and increments the program counter so that it points to the instruction following the `JSR`. 
+/// The stack pointer is adjusted by incrementing it twice.
+/// 
+/// The `RTS` instruction does not affect any flags and affects only `PCL` and `PCH`.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#RTS
+fn opRTS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      RTS	            $60	    1	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  self.read(u16(self.registers[SP]) | 0x0100, dummy=true) |> ignore
 
   //
   self.pc = self.pop16()
 
-  // self.opSEI(addr, mode)
+  //
+  self.read(self.pc, dummy=true) |> ignore
+
+  //
+  self.pc += 1 // overflow
 }
 
-// RTS - Return from subrouting
-///|
-fn opRTS(self : CPU, _ : UInt16, _ : Mode) -> Unit {
-  self.pc = self.pop16() + 1 // overflow
-}
+///| `SBC` - Subtract Memory from Accumulator with Borrow
+/// Operation: A - M - ~C → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	✓	-	-	-	-	✓	✓
+/// 
+/// This instruction subtracts the value of memory and borrow from the value of the accumulator, using two's complement arithmetic, and stores the result in the accumulator. 
+/// Borrow is defined as the carry flag complemented; 
+/// therefore, a resultant carry flag indicates that a borrow has not occurred.
+/// 
+/// This instruction affects the accumulator. 
+/// The carry flag is set if the result is greater than or equal to `0`. 
+/// The carry flag is reset when the result is less than `0`, indicating a borrow. 
+/// The over­flow flag is set when the result exceeds `+127` or `-127`, otherwise it is reset. 
+/// The negative flag is set if the result in the accumulator has bit `7` on, otherwise it is reset. 
+/// The `Z` flag is set if the result in the accumulator is `0`, otherwise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SBC
+fn opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    SBC #$nn	      $E9	    2	    2
+  /// Immediate	                    SBC #$nn	      $EB*    2	    2
+  /// Absolute	                    SBC $nnnn	      $ED	    3	    4
+  /// X-Indexed Absolute	          SBC $nnnn,X	    $FD	    3	    4+p
+  /// Y-Indexed Absolute	          SBC $nnnn,Y	    $F9	    3	    4+p
+  /// Zero Page	                    SBC $nn	        $E5	    2	    3
+  /// X-Indexed Zero Page	          SBC $nn,X	      $F5	    2	    4
+  /// X-Indexed Zero Page Indirect	SBC ($nn,X)	    $E1	    2	    6
+  /// Zero Page Indirect Y-Indexed	SBC ($nn),Y	    $F1	    2	    5+p
 
-// SBC - Subtract with carry
-///|
-fn opSBC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if wrap is Some(true) &&
+      (mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY) {
+      value = self.read_address(address) // |> ignore
+
+      //
+      self.cycles += 1
+    }
+  }
+
+  // 
   let a = self.registers[A]._
-  let b = self.read(addr)._
+  let b = value._
   let c = self.flags[C].to_int()
+
+  //
+  self.sbc(a, b, c)
+}
+
+///|
+fn sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   self.registers[A] = a - b - (1 - c)
+
+  //
   self.flags.setC(a - b - (1 - c) >= 0)
   self.flags.setV(
     ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A]._) & 0x80) != 0,
   )
   self.flags.setZN(self.registers[A])
+
+  //
   if self.flags.decimal() && self.decimal_mode {
     let mut lo = (a & 0x0F) - (b & 0x0F) - (1 - c)
     let mut hi = (a & 0xF0) - (b & 0xF0)
@@ -1249,15 +2805,50 @@ fn opSBC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
   }
 }
 
-// SEC - Set carry flag
-///|
-fn opSEC(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `SEC` - Set Carry Flag
+/// Operation: 1 → C
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	1
+/// 
+/// This instruction initializes the carry flag to a `1`. 
+/// This operation should normally precede a `SBC` loop. 
+/// It is also useful when used with a `ROL` instruction to initialize a bit in memory to a `1`.
+/// 
+/// This instruction affects no registers in the microprocessor and no flags other than the carry flag which is set.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SEC
+fn opSEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      SEC	            $38	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.flags.set_carry()
 }
 
-// SED - Set decimal flag
-///|
-fn opSED(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `SED` - Set Decimal Mode
+/// Operation: 1 → D
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	1	-	-	-
+/// 
+/// This instruction sets the decimal mode flag `D` to a `1`. 
+/// This makes all subsequent `ADC` and `SBC` instructions operate as a decimal arithmetic operation.
+/// 
+/// `SED` affects no registers in the microprocessor and no flags other than the decimal mode which is set to a `1`.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SED
+fn opSED(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      SED	            $F8	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.flags.set_decimal()
 }
 
@@ -1268,52 +2859,202 @@ fn opSED(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 /// It is used to mask interrupt requests during system reset operations and during interrupt commands.
 ///
 /// It affects no registers in the microprocessor and no flags other than the interrupt disable which is set.
-fn opSEI(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SEI
+fn opSEI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      SEI	            $78	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.flags.set_interrupt()
 }
 
-// STA - Store accumulator
-///|
-fn opSTA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.write(addr, self.registers[A])
+///| `STA` - Store Accumulator in Memory
+/// Operation: A → M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This instruction transfers the contents of the accumulator to memory.
+/// 
+/// This instruction affects none of the flags in the processor status register and does not affect the accumulator.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#STA
+fn opSTA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    STA $nnnn	      $8D	    3	    4
+  /// X-Indexed Absolute	          STA $nnnn,X	    $9D	    3	    5
+  /// Y-Indexed Absolute	          STA $nnnn,Y	    $99	    3	    5
+  /// Zero Page	                    STA $nn	        $85	    2	    3
+  /// X-Indexed Zero Page	          STA $nn,X	      $95	    2	    4
+  /// X-Indexed Zero Page Indirect	STA ($nn,X)	    $81	    2	    6
+  /// Zero Page Indirect Y-Indexed	STA ($nn),Y	    $91	    2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  if prefetch is None {
+
+  } else if wrap is None {
+
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    self.read_address(offset) |> ignore
+  }
+
+  //
+  self.write(address, self.registers[A])
 }
 
-// STX - Store x register
-///|
-fn opSTX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.write(addr, self.registers[X])
+///| `STX` - Store Index Register `X` In Memory
+/// Operation: X → M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// Transfers value of `X` register to addressed memory location.
+/// 
+/// No flags or registers in the microprocessor are affected by the store operation.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#STX
+fn opSTX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    STX $nnnn	      $8E	    3	    4
+  /// Zero Page	                    STX $nn	        $86	    2	    3
+  /// Y-Indexed Zero Page	          STX $nn,Y	      $96	    2	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  self.write(address, self.registers[X])
 }
 
-// STY - Store y register
-///|
-fn opSTY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  self.write(addr, self.registers[Y])
+///| `STY` - Store Index Register `Y` In Memory
+/// Operation: Y → M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// Transfer the value of the `Y` register to the addressed memory location.
+/// 
+/// `STY` does not affect any flags or registers in the microprocessor.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#STY
+fn opSTY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    STY $nnnn	      $8C	    3	    4
+  /// Zero Page	                    STY $nn	        $84	    2	    3
+  /// X-Indexed Zero Page	          STY $nn,X	      $94	    2	    4
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  self.write(address, self.registers[Y])
 }
 
-// TAX - Transfer accumulator to x
-///|
-fn opTAX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `TAX` - Transfer Accumulator To Index `X`
+/// Operation: A → X
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction takes the value from accumulator `A` and transfers or loads it into the index register `X` without disturbing the content of the accumulator `A`.
+/// 
+/// `TAX` only affects the index register `X`, does not affect the carry or overflow flags. 
+/// The `N` flag is set if the resultant value in the index register `X` has bit `7` on, otherwise `N` is reset. 
+/// The `Z` bit is set if the content of the register `X` is `0` as a result of the operation, otherwise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#TXA
+fn opTAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      TAX	            $AA	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[X] = self.registers[A]
   self.flags.setZN(self.registers[X])
 }
 
-// TAY - Transfer accumulator to y
-///|
-fn opTAY(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `TAY` - Transfer Accumulator To Index `Y`
+/// Operation: A → Y
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction moves the value of the accumulator into index register `Y` without affecting the accumulator.
+/// 
+/// `TAY` instruction only affects the `Y` register and does not affect either the carry or overflow flags. 
+/// If the index register `Y` has bit `7` on, then `N` is set, otherwise it is reset. 
+/// If the content of the index register `Y` equals `0` as a result of the operation, `Z` is set on, otherwise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#TAY
+fn opTAY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      TAY	            $A8	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[Y] = self.registers[A]
   self.flags.setZN(self.registers[Y])
 }
 
-// TSX - Transfer stack pointer to x
-///|
-fn opTSX(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `TSX` - Transfer Stack Pointer To Index `X`
+/// Operation: S → X
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction transfers the value in the stack pointer to the index register `X`.
+/// 
+/// `TSX` does not affect the carry or overflow flags. 
+/// It sets `N` if bit `7` is on in index `X` as a result of the instruction, otherwise it is reset. 
+/// If index `X` is zero as a result of the `TSX`, the `Z` flag is set, other­ wise it is reset. 
+/// `TSX` changes the value of index `X`, making it equal to the content of the stack pointer.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#TSX
+fn opTSX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      TSX	            $BA	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[X] = self.registers[SP]
   self.flags.setZN(self.registers[X])
 }
 
-// TXA - Transfer x to accumulator
-///|
-fn opTXA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+///| `TXA` - Transfer Index `X` To Accumulator
+/// Operation: X → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	-
+/// 
+/// This instruction moves the value that is in the index register `X` to the accumulator `A` without disturbing the content of the index register `X`.
+/// 
+/// `TXA` does not affect any register other than the accumulator and does not affect the carry or overflow flag. 
+/// If the result in `A` has bit `7` on, then the `N` flag is set, otherwise it is reset. 
+/// If the resultant value in the accumulator is `0`, then the `Z` flag is set, other­ wise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#TXA
+fn opTXA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      TXA	            $8A 	  1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[A] = self.registers[X]
   self.flags.setZN(self.registers[A])
 }
@@ -1328,7 +3069,16 @@ fn opTXA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 ///
 /// `TXS` changes only the stack pointer, making it equal to the content of the index register `X`.
 /// It does not affect any of the flags.
-fn opTXS(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#TXS
+fn opTXS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      TXS	            $9A	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[SP] = self.registers[X]
 }
 
@@ -1343,7 +3093,16 @@ fn opTXS(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 /// `TYA` does not affect any other register other than the accumula­tor and does not affect the `C` or `V` flag.
 /// If the result in the accumulator `A` has bit `7` on, the `N` flag is set, otherwise it is reset.
 /// If the resulting value in the accumulator `A` is `0`, then the `Z` flag is set, otherwise it is reset.
-fn opTYA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#TYA
+fn opTYA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      TYA	            $98	    1	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
   self.registers[A] = self.registers[Y]
   self.flags.setZN(self.registers[A])
 }
@@ -1376,9 +3135,9 @@ fn opTYA(self : CPU, _ : UInt16, _ : Mode) -> Unit {
 /// The carry is set equal to bit 0 of the result of the `AND` operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ASR
-fn opALR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  self.opAND(addr, mode)
-  self.opLSR(addr, Mode::Accumulator)
+fn opALR(self : CPU, address : UInt16, mode : Mode) -> Unit {
+  self.opAND(address, mode)
+  self.opLSR(address, Mode::Accumulator)
 
   // println("unimplemented: ALR")
   // abort("unimplemented: ALR")
@@ -1401,16 +3160,22 @@ fn opALR(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// otherwise resets the negative flag and the carry flag.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ANC
-fn opANC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let tmp = self.registers[A] & self.read(addr)
+fn opANC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    ANC #$nn	      $0B*	  2	    2
+  /// Immediate	                    ANC #$nn	      $2B*	  2	    2
+
+  let (address, value, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{value} \{wrap}")
+
+  //
+  let (_, value) = value.unwrap()
+  let tmp = self.registers[A] & value
 
   //
   self.registers[A] = tmp
   self.flags.setZN(tmp)
   self.flags.setC(tmp.bit(7))
-
-  // println("unimplemented: ANC")
-  // abort("unimplemented: ANC")
 }
 
 ///| `ARR` - `AND` Accumulator then Rotate Right
@@ -1420,34 +3185,48 @@ fn opANC(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// ✓	✓	-	-	-	-	✓	✓
 ///
 /// The undocumented `ARR` instruction performs a bit-by-bit `AND` operation of the accumulator and memory, 
-/// then shifts the result right 1 bit with bit 0 shifted into the carry and carry shifted into bit 7.
+/// then shifts the result right 1 bit with bit `0` shifted into the carry and carry shifted into bit `7`.
 /// It then stores the result back in the accumulator.
 ///
-/// If bit 7 of the result is on, then the `N` flag is set, otherwise it is reset.
-/// The instruction sets the `Z` flag if the result is 0;  otherwise it resets `Z`.
+/// If bit `7` of the result is on, then the `N` flag is set, otherwise it is reset.
+/// The instruction sets the `Z` flag if the result is `0`;  otherwise it resets `Z`.
 ///
 /// The `V` and `C` flags depend on the Decimal Mode Flag:
-/// In decimal mode, the `V` flag is set if bit 6 is different than the original data's bit 6, otherwise the `V` flag is reset.
-///   The `C` flag is set if (operand & 0xF0) + (operand & 0x10) is greater than 0x50, otherwise the `C` flag is reset.
-/// In binary mode, the `V` flag is set if bit 6 of the result is different than bit 5 of the result, otherwise the `V` flag is reset.
-///   The `C` flag is set if the result in the accumulator has bit 6 on, otherwise it is reset.
+/// In decimal mode, the `V` flag is set if bit `6` is different than the original data's bit `6`, otherwise the `V` flag is reset.
+///   The `C` flag is set if `(operand & 0xF0) + (operand & 0x10)` is greater than `0x50`, otherwise the `C` flag is reset.
+/// In binary mode, the `V` flag is set if bit `6` of the result is different than bit `5` of the result, otherwise the `V` flag is reset.
+///   The `C` flag is set if the result in the accumulator has bit `6` on, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ARR
-fn opARR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  // https://github.com/davidhorrocks/hoxs64/blob/master/hoxs64/C6502.cpp#L774
-  let t = self.registers[A] & self.read(addr)
+fn opARR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    ARR #$nn	      $6B*	  2	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  //
+  let t = self.registers[A] & value
   let mut a = (t >> 1) | (self.flags.carry().to_int() << 7)
-  // println(
-  //   "\t{\{self.cycles}} ARR A#$\{self.registers[A].to_hex()} & #$\{self.read(addr, dummy=true).to_hex()} = #$" +
-  //   t.to_hex() +
-  //   " / 2 = #$" +
-  //   a.to_hex() +
-  //   " C:\{self.flags.carry().to_int()}|\{a.bit(6).to_int()}" +
-  //   " N:\{self.flags.negative().to_int()}|\{a.bit(7).to_int()}" +
-  //   " V:\{self.flags.overflow().to_int()}|\{(a.bitn(6) ^ a.bitn(5)).to_int()}" +
-  //   " Z:\{self.flags.zero().to_int()}|\{(a == 0).to_int()}" +
-  //   " D:\{self.flags.decimal().to_int()}",
-  // )
 
   //
   if self.flags.decimal() && self.decimal_mode {
@@ -1466,15 +3245,13 @@ fn opARR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
       self.flags.clear_carry()
     }
   } else {
-    self.flags.setN(self.flags.carry())
-    self.flags.setZ(a == 0)
-    self.flags.setC(a.bit(6)) // 0x40
+    self.flags.setC(a.bit(6))
+    self.flags.setZN(a)
     self.flags.setV((a.bitn(6) ^ a.bitn(5)) != 0)
   }
-  self.registers[A] = a
 
-  // println("unimplemented: ARR")
-  // abort("unimplemented: ARR")
+  //
+  self.registers[A] = a
 }
 
 ///|
@@ -1500,60 +3277,204 @@ fn opARR(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// The `V` flag not affected at all.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SBX
-fn opSBX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  // println(
-  //   "SBX A#$" +
-  //   self.registers[A].to_hex() +
-  //   " X#$" +
-  //   self.registers[X].to_hex() +
-  //   " - #$" +
-  //   self.read(addr).to_hex() +
-  //   " = #$" +
-  //   (self.registers[A] & self.registers[X]).to_hex() +
-  //   " = #$" +
-  //   ((self.registers[A] & self.registers[X]) - self.read(addr)).to_hex(),
-  // )
-  let result = (self.registers[A] & self.registers[X]) - self.read(addr) // underflow
-  // let ov = UInt8::overflow()
-  // let uv = UInt8::underflow()
+fn opSBX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    SBX #$nn	      $CB*	  2	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  //
+  let result = (self.registers[A] & self.registers[X]) - value // underflow
   self.flags.setC(not(ALU::underflow()))
-  // println(
-  //   "[" +
-  //   (if ov { ">" } else { " " }) +
-  //   // "|" +
-  //   (if uv { "<" } else { " " }) +
-  //   "]" +
-  //   " A:\{self.registers[A]} & X:\{self.registers[X]} = \{(self.registers[A] & self.registers[X])} - \{self.read(addr, dummy=true)} = \{result}" +
-  //   " C:\{not(result.is_neg())}" +
-  //   "\n",
-  // )
   // self.flags.setC(not(result.is_neg()))
   self.flags.setZN(result)
   self.registers[X] = result
-
-  // println("unimplemented: SBX")
-  // abort("unimplemented: SBX")
 }
 
-///|
-fn opDCP(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Equivalent to DEC value then CMP value, except supporting more addressing modes.
-  // LDA #$FF followed by DCP can be used to check if the decrement underflows, which is useful for multi-byte decrements.
-  self.opDEC(addr, mode)
-  self.opCMP(addr, mode)
+///| `DCP` - Decrement Memory By One then Compare with Accumulator
+/// Operation: M - 1 → M, A - M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// This undocumented instruction subtracts `1`, in two's complement, from the contents of the addressed memory location. 
+/// It then subtracts the contents of memory from the contents of the accumulator.
+/// 
+/// The `DCP` instruction does not affect any internal register in the microprocessor. 
+/// It does not affect the overflow flag. 
+/// `Z` flag is set on an equal comparison, reset otherwise; 
+/// the `N` flag is set or reset by the result bit `7`, 
+/// the carry flag is set when the result in memory is less than or equal to the accumulator, 
+/// reset when it is greater than the accumulator.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#DCP
+fn opDCP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    DCP $nnnn	      $CF*	  3	    6
+  /// X-Indexed Absolute	          DCP $nnnn,X	    $DF*	  3	    7
+  /// Y-Indexed Absolute	          DCP $nnnn,Y	    $DB*	  3	    7
+  /// Zero Page	                    DCP $nn	        $C7*	  2	    5
+  /// X-Indexed Zero Page	          DCP $nn,X	      $D7*	  2	    6
+  /// X-Indexed Zero Page Indirect	DCP ($nn,X)	    $C3*	  2	    8
+  /// Zero Page Indirect Y-Indexed	DCP ($nn),Y	    $D3*	  2	    8
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  // self.opDEC(address, mode)
+  self.write(address, value, dummy=true) // FIXME: pre-fetch
+  value -= 1 // underflow
+  self.write(address, value)
+  self.flags.setZN(value)
+
+  // self.opCMP(address, mode)
+  self.compare(self.registers[A], value)
 }
 
-///|
-fn opISC(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Equivalent to INC value then SBC value, except supporting more addressing modes.
-  self.opINC(addr, mode)
-  self.opSBC(addr, mode)
+///| `ISC` - Increment Memory By One then `SBC` then Subtract Memory from Accumulator with Borrow
+/// Operation: M + 1 → M, A - M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	✓	-	-	-	-	✓	✓
+/// 
+/// This undocumented instruction adds `1` to the contents of the addressed memory location. 
+/// It then subtracts the value of the result in memory and borrow from the value of the accumulator, using two's complement arithmetic, and stores the result in the accumulator.
+/// 
+/// This instruction affects the accumulator. 
+/// The carry flag is set if the result is greater than or equal to `0`. 
+/// The carry flag is reset when the result is less than `0`, indicating a borrow. 
+/// The over­flow flag is set when the result exceeds `+127` or `-127`, otherwise it is reset. 
+/// The negative flag is set if the result in the accumulator has bit `7` on, otherwise it is reset. 
+/// The `Z` flag is set if the result in the accumulator is `0`, otherwise it is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#ISC
+fn opISC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    ISC $nnnn	      $EF*	  3	    6
+  /// X-Indexed Absolute	          ISC $nnnn,X	    $FF*	  3	    7
+  /// Y-Indexed Absolute	          ISC $nnnn,Y	    $FB*	  3	    7
+  /// Zero Page	                    ISC $nn	        $E7*	  2	    5
+  /// X-Indexed Zero Page	          ISC $nn,X	      $F7*	  2	    6
+  /// X-Indexed Zero Page Indirect	ISC ($nn,X)	    $E3*	  2	    8
+  /// Zero Page Indirect Y-Indexed	ISC ($nn),Y	    $F3*	  2	    8
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+    value = self.read_address(address) // |> ignore
+  }
+
+  // self.opINC(address, mode)
+  self.write(address, value, dummy=true) // FIXME: pre-fetch
+  value += 1 // overflow
+  self.write(address, value)
+  self.flags.setZN(value)
+
+  // self.opSBC(address, mode)
+  let a = self.registers[A]._
+  let b = value._
+  let c = self.flags[C].to_int()
+
+  //
+  self.sbc(a, b, c)
 }
 
-///|
-fn opJAM(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
-  println("unimplemented: JAM")
-  abort("unimplemented: JAM")
+///| `JAM` - Halt the CPU
+/// Operation: Stop execution
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// This undocumented instruction stops execution. 
+/// The microprocessor will not fetch further instructions, and will neither handle IRQs nor NMIs. 
+/// It will handle a RESET though.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#JAM
+fn opJAM(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Implied	                      JAM	            $02*	  1	    X
+  /// Implied	                      JAM	            $12*	  1	    X
+  /// Implied	                      JAM	            $22*	  1	    X
+  /// Implied	                      JAM	            $32*	  1	    X
+  /// Implied	                      JAM	            $42*	  1	    X
+  /// Implied	                      JAM	            $52*	  1	    X
+  /// Implied	                      JAM	            $62*	  1	    X
+  /// Implied	                      JAM	            $72*	  1	    X
+  /// Implied	                      JAM	            $92*	  1	    X
+  /// Implied	                      JAM	            $B2*	  1	    X
+  /// Implied	                      JAM	            $D2*	  1	    X
+  /// Implied	                      JAM	            $F2*	  1	    X
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  let _ = self.read(0xFFFE, dummy=true) // FIXME: pre-fetch
+  //
+  let _ = self.read(0xFFFE, dummy=true) // FIXME: pre-fetch
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  //
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  let _ = self.read(0xFFFF, dummy=true) // FIXME: pre-fetch
+  //
+  self.cycles += 9
 }
 
 ///| `LAS` - `"AND"` Memory with Stack Pointer
@@ -1570,19 +3491,30 @@ fn opJAM(_ : CPU, _ : UInt16, _ : Mode) -> Unit {
 /// If the result is zero, then the `Z` flag is set, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LAS
-fn opLAS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let tmp = self.registers[SP] & self.read(addr)
+fn opLAS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Y-Indexed Absolute	          LAS $nnnn,Y	    $BB*	  3	    4+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
 
   //
-  self.registers[X] = tmp
-  self.registers[A] = tmp
-  self.flags.setZN(tmp)
+  if wrap is Some(true) {
+    let (address, _) = prefetch.unwrap()
+    self.read_address(address) |> ignore
+
+    //
+    self.cycles += 1
+  }
 
   //
-  self.registers[SP] = tmp
+  let value = self.registers[SP] & self.read_address(address)
 
-  // println("unimplemented: LAS")
-  // abort("unimplemented: LAS")
+  //
+  self.registers[A] = value
+  self.registers[X] = value
+  self.registers[SP] = value
+  self.flags.setZN(value)
 }
 
 ///| `LAX` - Load Accumulator and Index Register `X` From Memory
@@ -1599,41 +3531,217 @@ fn opLAS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// otherwise `N` is reset, and affects only the `X` register.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LAX
-fn opLAX(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  let magic = 0xEE // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/lax/
+fn opLAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    LAX #$nn	      $AB*	  2	    2
+  /// Absolute	                    LAX $nnnn	      $AF*	  3	    4
+  /// Y-Indexed Absolute	          LAX $nnnn,Y	    $BF*	  3	    4+p
+  /// Zero Page	                    LAX $nn	        $A7*	  2	    3
+  /// Y-Indexed Zero Page	          LAX $nn,Y	      $B7*	  2	    4
+  /// X-Indexed Zero Page Indirect	LAX ($nn,X)	    $A3*	  2	    6
+  /// Zero Page Indirect Y-Indexed	LAX ($nn),Y	    $B3*	  2	    5+p
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
 
   //
-  let tmp = match mode {
-    Immediate => (self.registers[A] | magic) & self.read(addr) & self.read(addr)
-    _ => self.read(addr)
+  if wrap is Some(true) {
+    let (address, _) = prefetch.unwrap()
+    self.read_address(address) |> ignore
+
+    //
+    self.cycles += 1
   }
 
   //
-  self.registers[X] = tmp
-  self.registers[A] = tmp
-  self.flags.setZN(tmp)
+  let value = if mode is Immediate {
+    // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/lax/
+    let magic = 0xEE
+
+    //
+    let (_, value) = prefetch.unwrap()
+
+    //
+    (self.registers[A] | magic) & value
+  } else {
+    self.read_address(address)
+  }
+
+  //
+  self.registers[A] = value
+  self.registers[X] = value
+  self.flags.setZN(value)
 }
 
-///|
-fn opRLA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Equivalent to ROL value then AND value, except supporting more addressing modes.
-  // LDA #$FF followed by RLA is an efficient way to rotate a variable while also loading it in A.
-  self.opROL(addr, mode)
-  self.opAND(addr, mode)
+///| `RLA` - Rotate Left then "AND" with Accumulator
+/// Operation: C ← /M7...M0/ ← C, A ∧ M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// The undocumented `RLA` instruction shifts the addressed memory left `1` bit, with the input carry being stored in bit `0` and with the input bit `7` being stored in the carry flags. 
+/// It then performs a bit-by-bit `AND` operation of the result and the value of the accumulator and stores the result back in the accumulator.
+/// 
+/// This instruction affects the accumulator; 
+/// sets the zero flag if the result in the accumulator is `0`, otherwise resets the zero flag; 
+/// sets the negative flag if the result in the accumulator has bit `7` on, otherwise resets the negative flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#RLA
+fn opRLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    RLA $nnnn	      $2F*	  3	    6
+  /// X-Indexed Absolute	          RLA $nnnn,X	    $3F*	  3	    7
+  /// Y-Indexed Absolute	          RLA $nnnn,Y	    $3B*	  3	    7
+  /// Zero Page	                    RLA $nn	        $27*	  2	    5
+  /// X-Indexed Zero Page	          RLA $nn,X	      $37*	  2	    6
+  /// X-Indexed Zero Page Indirect	RLA ($nn,X)	    $23*	  2	    8
+  /// Zero Page Indirect Y-Indexed	RLA ($nn),Y	    $33*	  2	    8
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  // self.opROL(address, mode)
+  let c = self.flags[C].to_int()
+  if mode == Accumulator {
+    self.flags.setC((self.registers[A] & NEGATIVE) != 0)
+    self.registers[A] = (self.registers[A] << 1) | c // overflow
+    self.flags.setZN(self.registers[A])
+  } else {
+    self.write(address, value)
+    self.flags.setC((value & NEGATIVE) != 0)
+    value = (value << 1) | c // overflow
+    self.write(address, value)
+    self.flags.setZN(value)
+
+    // self.opAND(address, mode)
+    self.registers[A] = self.registers[A] & value
+    self.flags.setZN(self.registers[A])
+  }
 }
 
-///|
-fn opRRA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Equivalent to ROR value then ADC value, except supporting more addressing modes.
-  // Essentially this computes A + value / 2, where value is 9-bit and the division is rounded up.
-  self.opROR(addr, mode)
-  self.opADC(addr, mode)
+///| `RRA` - Rotate Right and Add Memory to Accumulator
+/// Operation: C → /M7...M0/ → C, A + M + C → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	✓	-	-	-	-	✓	✓
+/// 
+/// The undocumented `RRA` instruction shifts the addressed memory right `1` bit with bit `0` shifted into the carry and carry shifted into bit `7`. 
+/// It then adds the result and generated carry to the value of the accumulator and stores the result in the accumulator.
+/// 
+/// This instruction affects the accumulator; 
+/// sets the carry flag when the sum of a binary add exceeds `255` or when the sum of a decimal add exceeds `99`, otherwise carry is reset. 
+/// The overflow flag is set when the sign or bit `7` is changed due to the result exceeding `+127` or `-128`, otherwise overflow is reset. 
+/// The negative flag is set if the accumulator result contains bit `7` on, otherwise the negative flag is reset. 
+/// The zero flag is set if the accumulator result is `0`, otherwise the zero flag is reset.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#RRA
+fn opRRA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    RRA $nnnn	      $6F*	  3	    6
+  /// X-Indexed Absolute	          RRA $nnnn,X	    $7F*	  3	    7
+  /// Y-Indexed Absolute	          RRA $nnnn,Y	    $7B*	  3	    7
+  /// Zero Page	                    RRA $nn	        $67*	  2	    5
+  /// X-Indexed Zero Page	          RRA $nn,X	      $77*	  2	    6
+  /// X-Indexed Zero Page Indirect	RRA ($nn,X)	    $63*	  2	    8
+  /// Zero Page Indirect Y-Indexed	RRA ($nn),Y	    $73*	  2	    8
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  //
+  let c = self.flags[C].to_int()
+
+  // self.opROR(address, mode)
+  if mode == Accumulator {
+    self.flags[C] = self.registers[A].bit(0)
+    self.registers[A] = (self.registers[A] >> 1) | (c << 7) // underflow
+
+    //
+    self.flags.setZN(self.registers[A])
+  } else {
+    self.write(address, value) // FIXME: pre-fetch
+
+    //
+    self.flags[C] = value.bit(0)
+
+    //
+    value = (value >> 1) | (c << 7) // underflow
+    self.write(address, value)
+
+    //
+    self.flags.setZN(value)
+  }
+
+  //
+  let a = self.registers[A].to_int()
+  let b = value.to_int()
+  let c = self.flags[C].to_int()
+
+  // self.opADC(address, mode)
+  self.adc(a, b, c)
 }
 
-///|
-fn opSAX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  // Stores the bitwise AND of A and X. As with STA and STX, no flags are affected.
-  self.write(addr, self.registers[A] & self.registers[X])
+///| `SAX` - Store Accumulator "AND" Index Register `X` in Memory
+/// Operation: A ∧ X → M
+/// 
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+/// 
+/// The undocumented `SAX` instruction performs a bit-by-bit `AND` operation of the value of the accumulator and the value of the index register `X` and stores the result in memory.
+/// 
+/// No flags or registers in the microprocessor are affected by the store operation.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SAX
+fn opSAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    SAX $nnnn	      $8F*	  3	    4
+  /// Zero Page	                    SAX $nn	        $87*	  2	    3
+  /// Y-Indexed Zero Page	          SAX $nn,Y	      $97*	  2	    4
+  /// X-Indexed Zero Page Indirect	SAX ($nn,X)	    $83*	  2	    6
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  self.write(address, self.registers[A] & self.registers[X])
 }
 
 ///| `SHA` - Store Accumulator `"AND"` Index Register `X` `"AND"` Value
@@ -1654,93 +3762,30 @@ fn opSAX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHA
-fn opSHA(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/sha/
-  // println(
-  //   "SHA A#$" +
-  //   self.registers[A].to_hex() +
-  //   " X#$" +
-  //   self.registers[X].to_hex() +
-  //   " Y#$" +
-  //   self.registers[Y].to_hex() +
-  //   " $" +
-  //   addr.to_hex() +
-  //   " \{mode}",
-  // )
+fn opSHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Y-Indexed Absolute	          SHA $nnnn,Y	    $9F*	  3	    5
+  /// Zero Page Indirect Y-Indexed	SHA ($nn),Y	    $93*	  2	    6
 
-  let tmp = self.registers[A] &
-    self.registers[X] &
-    (match mode {
-      AbsoluteY => (addr >> 8).to_int() + 1 |> u8 // overflow
-      IndirectIndexed => (addr >> 8).to_int() + 1 |> u8 // overflow
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
 
-      ///
-      _ => {
-        println("unimplemented: SHA \{mode}")
-        abort("unimplemented: SHA \{mode}")
-      }
-    })
-  self.write(addr, tmp)
-}
+  //
+  let (offset, _) = prefetch.unwrap()
+  self.read_address(offset) |> ignore
 
-///| `SHX` - Store Index Register `X` `"AND"` Value
-/// Operation: X ∧ (H + 1) → M
-///
-/// N	V	-	B	D	I	Z	C
-/// -	-	-	-	-	-	-	-
-///
-/// The undocumented `SHX` instruction performs a bit-by-bit `AND` operation of the index register `X` and the upper 8 bits of the given address (ignoring the addressing mode's Y offset), plus 1.
-/// It then transfers the result to the addressed memory location.
-///
-/// No flags or registers in the microprocessor are affected by the store operation.
-///
-/// https://www.pagetable.com/c64ref/6502/?tab=2#SHX
-fn opSHX(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  // println("SHX X#$" + self.registers[X].to_hex() + " $" + addr.to_hex())
+  //
+  let mut address = address
+  let mut value = self.registers[A] & self.registers[X]
+  if wrap is Some(true) {
+    value = value & u8(address >> 8)
+    address = (u16(value) << 8) | (address & 0x00FF)
+  } else {
+    value = value & (u8(address >> 8) + 1)
+  }
 
-  let tmp = self.registers[X] & u8((addr >> 8).to_int() + 1) // overflow
-  self.write(addr, tmp)
-
-  // println("unimplemented: SHX")
-  // abort("unimplemented: SHX")
-}
-
-///| `SHY` - Store Index Register `Y` `"AND"` Value
-/// Operation: Y ∧ (H + 1) → M
-///
-/// N	V	-	B	D	I	Z	C
-/// -	-	-	-	-	-	-	-
-///
-/// The undocumented `SHY` instruction performs a bit-by-bit `AND` operation of the index register `Y` and the upper 8 bits of the given address (ignoring the addressing mode's X offset), plus 1.
-/// It then transfers the result to the addressed memory location.
-///
-/// No flags or registers in the microprocessor are affected by the store operation.
-///
-/// https://www.pagetable.com/c64ref/6502/?tab=2#SHY
-fn opSHY(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  // println("SHY X#$" + self.registers[Y].to_hex() + " $" + addr.to_hex())
-
-  let tmp = self.registers[Y] & u8((addr >> 8).to_int() + 1) // overflow
-  self.write(addr, tmp)
-
-  // println("unimplemented: SHY")
-  // abort("unimplemented: SHY")
-}
-
-///|
-fn opSLO(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Equivalent to ASL value then ORA value, except supporting more addressing modes.
-  // LDA #0 followed by SLO is an efficient way to shift a variable while also loading it in A.
-  self.opASL(addr, mode)
-  self.opORA(addr, mode)
-}
-
-///|
-fn opSRE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
-  // Equivalent to LSR value then EOR value, except supporting more addressing modes.
-  // LDA #0 followed by SRE is an efficient way to shift a variable while also loading it in A.
-  self.opLSR(addr, mode)
-  self.opEOR(addr, mode)
+  //
+  self.write(address, value)
 }
 
 ///| `SHS` - Transfer Accumulator `"AND"` Index Register `X` to Stack Pointer then Store Stack Pointer `"AND"` Hi-Byte In Memory
@@ -1756,24 +3801,226 @@ fn opSRE(self : CPU, addr : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHS
-fn opSHS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  // println(
-  //   "SHS A#$" +
-  //   self.registers[A].to_hex() +
-  //   " X#$" +
-  //   self.registers[X].to_hex() +
-  //   " $" +
-  //   addr.to_hex(),
-  // )
+fn opSHS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Y-Indexed Absolute	          SHS $nnnn,Y	    $9B*	  3	    5
 
-  let tmp = self.registers[A] & self.registers[X] & u8((addr >> 8).to_int() + 1) // overflow
-  self.write(addr, tmp)
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let (offset, _) = prefetch.unwrap()
+  self.read_address(offset) |> ignore
 
   //
   self.registers[SP] = self.registers[A] & self.registers[X]
 
-  // println("unimplemented: SHS")
-  // abort("unimplemented: SHS")
+  //
+  let mut address = address
+  let mut value = self.registers[SP]
+  if wrap is Some(true) {
+    value = value & u8(address >> 8)
+    address = (u16(value) << 8) | (address & 0x00FF)
+  } else {
+    value = value & (u8(address >> 8) + 1)
+  }
+
+  //
+  self.write(address, value)
+}
+
+///| `SHX` - Store Index Register `X` `"AND"` Value
+/// Operation: X ∧ (H + 1) → M
+///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+///
+/// The undocumented `SHX` instruction performs a bit-by-bit `AND` operation of the index register `X` and the upper 8 bits of the given address (ignoring the addressing mode's Y offset), plus 1.
+/// It then transfers the result to the addressed memory location.
+///
+/// No flags or registers in the microprocessor are affected by the store operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SHX
+fn opSHX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Y-Indexed Absolute	          SHX $nnnn,Y	    $9E*	  3	    5
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let (offset, _) = prefetch.unwrap()
+  self.read_address(offset) |> ignore
+
+  //
+  let mut address = address
+  let mut value = self.registers[X]
+  if wrap is Some(true) {
+    value = value & u8(address >> 8)
+    address = (u16(value) << 8) | (address & 0x00FF)
+  } else {
+    value = value & (u8(address >> 8) + 1)
+  }
+
+  //
+  self.write(address, value)
+}
+
+///| `SHY` - Store Index Register `Y` `"AND"` Value
+/// Operation: Y ∧ (H + 1) → M
+///
+/// N	V	-	B	D	I	Z	C
+/// -	-	-	-	-	-	-	-
+///
+/// The undocumented `SHY` instruction performs a bit-by-bit `AND` operation of the index register `Y` and the upper 8 bits of the given address (ignoring the addressing mode's X offset), plus 1.
+/// It then transfers the result to the addressed memory location.
+///
+/// No flags or registers in the microprocessor are affected by the store operation.
+///
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SHY
+fn opSHY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// X-Indexed Absolute	          SHY $nnnn,X	    $9C*	  3	    5
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let (offset, _) = prefetch.unwrap()
+  self.read_address(offset) |> ignore
+
+  //
+  let mut address = address
+  let mut value = self.registers[Y]
+  if wrap is Some(true) {
+    value = value & u8(address >> 8)
+    address = (u16(value) << 8) | (address & 0x00FF)
+  } else {
+    value = value & (u8(address >> 8) + 1)
+  }
+
+  //
+  self.write(address, value)
+}
+
+///| `SLO` - Arithmetic Shift Left then "OR" Memory with Accumulator
+/// Operation: M * 2 → M, A ∨ M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// The undocumented `SLO` instruction shifts the address memory location `1` bit to the left, with the bit `0` always being set to `0` and the bit `7` output always being contained in the carry flag. 
+/// It then performs a bit-by-bit "OR" operation on the result and the accumulator and stores the result in the accumulator.
+/// 
+/// The negative flag is set if the accumulator result contains bit `7` on, otherwise the negative flag is reset. 
+/// It sets `Z` flag if the result is equal to `0`, otherwise resets `Z` and stores the input bit `7` in the carry flag.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SLO
+fn opSLO(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    SLO $nnnn	      $0F*	  3	    6
+  /// X-Indexed Absolute	          SLO $nnnn,X	    $1F*	  3	    7
+  /// Y-Indexed Absolute	          SLO $nnnn,Y	    $1B*	  3	    7
+  /// Zero Page	                    SLO $nn	        $07*	  2	    5
+  /// X-Indexed Zero Page         	SLO $nn,X	      $17*	  2	    6
+  /// X-Indexed Zero Page Indirect	SLO ($nn,X)	    $03*	  2	    8
+  /// Zero Page Indirect Y-Indexed	SLO ($nn),Y	    $13*	  2	    8
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  //
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    if mode is IndirectIndexed || mode is AbsoluteX || mode is AbsoluteY {
+      value = self.read_address(address) // |> ignore
+    }
+  }
+
+  // self.opASL(address, mode)
+  self.write(address, value) // FIXME: pre-fetch
+  self.flags.setC((value & NEGATIVE) != 0)
+  let value = value << 1 // overflow
+  self.write(address, value)
+  self.flags.setZN(value)
+
+  // self.opORA(address, mode)
+  self.registers[A] = self.registers[A] | value
+  self.flags.setZN(self.registers[A])
+}
+
+///| `SRE` - Logical Shift Right then "Exclusive OR" Memory with Accumulator
+/// Operation: M / 2 → M, A ⊻ M → A
+/// 
+/// N	V	-	B	D	I	Z	C
+/// ✓	-	-	-	-	-	✓	✓
+/// 
+/// The undocumented `SRE` instruction shifts the specified memory location `1` bit to the right, with the higher bit of the result always being set to `0`, and the low bit which is shifted out of the field being stored in the carry flag. 
+/// It then performs a bit-by-bit "EXCLUSIVE OR" of the result and the value of the accumulator and stores the result in the accumulator.
+/// 
+/// This instruction affects the accumulator. 
+/// It does not affect the overflow flag. 
+/// The negative flag is set if the accumulator result contains bit `7` on, otherwise the negative flag is reset. 
+/// The `Z` flag is set if the result is `0` and reset otherwise. 
+/// The carry is set equal to input bit `0`.
+/// 
+/// https://www.pagetable.com/c64ref/6502/?tab=2#SRE
+fn opSRE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Absolute	                    SRE $nnnn	      $4F*	  3	    6
+  /// X-Indexed Absolute	          SRE $nnnn,X	    $5F*	  3	    7
+  /// Y-Indexed Absolute	          SRE $nnnn,Y	    $5B*	  3	    7
+  /// Zero Page	                    SRE $nn	        $47*	  2	    5
+  /// X-Indexed Zero Page	          SRE $nn,X	      $57*	  2	    6
+  /// X-Indexed Zero Page Indirect	SRE ($nn,X)	    $43*	  2	    8
+  /// Zero Page Indirect Y-Indexed	SRE ($nn),Y	    $53*	  2	    8
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+    value = self.read_address(address) // |> ignore
+  } else if wrap is None {
+    let (offset, data) = prefetch.unwrap()
+    if mode is Immediate {
+      value = data
+    } else {
+      value = self.read_address(offset) // |> ignore
+    }
+  } else {
+    let (offset, _) = prefetch.unwrap()
+    value = self.read_address(offset) // |> ignore
+
+    //
+    value = self.read_address(address) // |> ignore
+  }
+
+  // self.opLSR(address, mode)
+  if mode == Accumulator {
+    self.flags.setC((self.registers[A] & CARRY) != 0)
+    self.registers[A] = self.registers[A] >> 1 // underflow
+    self.flags.setZN(self.registers[A])
+  } else {
+    self.write(address, value) // FIXME: pre-fetch
+    self.flags.setC((value & CARRY) != 0)
+    value = value >> 1 // underflow
+    self.write(address, value)
+    self.flags.setZN(value)
+
+    // self.opEOR(address, mode)
+    self.registers[A] = self.registers[A] ^ value
+    self.flags.setZN(self.registers[A])
+  }
 }
 
 ///|
@@ -1799,11 +4046,27 @@ fn opSHS(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 /// It then transfers the result to the accumulator.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#XAA
-fn opXAA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
-  let magic = 0xEF // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/ane/
+fn opXAA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+  /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
+  /// Immediate	                    XAA #$nn	      $8B*	  2	    2
+
+  let (address, prefetch, wrap) = self.get_address_by_mode(mode)
+  // println("\{address} \{prefetch} \{wrap}")
+
+  // 
+  let mut value : UInt8 = 0x00
+  if prefetch is None {
+
+  } else if wrap is None {
+    let (_, data) = prefetch.unwrap()
+    value = data
+  }
+
+  // 
+  let magic = 0xEE // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/ane/
 
   //
-  let tmp = (self.registers[A] | magic) & self.registers[X] & self.read(addr)
+  let tmp = (self.registers[A] | magic) & self.registers[X] & value
 
   //
   self.registers[A] = tmp
@@ -1811,30 +4074,66 @@ fn opXAA(self : CPU, addr : UInt16, _ : Mode) -> Unit {
 }
 
 ///|
-priv enum Mode {
+enum Mode {
+  ///| Absolute $nnnn
+  /// In absolute addressing, the second byte of the instruction specifies the eight low order bits of the effective address while the third byte specifies the eight high order bits.
+  /// Thus, the absolute addressing mode allows access to the entire 65K bytes of addressable memory.
   Absolute // 0
+  AbsoluteSP // 0
+  ///| X-Indexed Absolute $nnnn,X
+  /// This form of addressing is used in conjunction with the `X` index register.
+  /// The effective address is formed by adding the contents of `X` to the address contained in the second and third bytes of the instruction.
+  /// This mode allows the index register to contain the index or count value and the instruction to contain the base address.
+  /// This type of indexing allows any location referencing and the index to modify multiple fields resulting in reduced coding and execution time.
   AbsoluteX // 1
+  ///| Y-Indexed Absolute $nnnn,Y
+  /// This form of addressing is used in conjunction with the `Y` index register.
+  /// The effective address is formed by adding the contents of `Y` to the address contained in the second and third bytes of the instruction.
+  /// This mode allows the index register to contain the index or count value and the instruction to contain the base address.
+  /// This type of indexing allows any location referencing and the index to modify multiple fields resulting in reduced coding and execution time.
   AbsoluteY // 2
   Accumulator // 3
   Immediate // 4
   Implied // 5
+  ///| X-Indexed Zero Page Indirect ($nn,X)
+  /// In indexed indirect addressing, the second byte of the instruction is added to the contents of the `X` index register, discarding the carry. 
+  /// The result of this addition points to a memory location on page zero whose contents is the low order eight bits of the effective address.
+  /// The next memory location in page zero contains the high order eight bits of the effective address.
+  /// Both memory locations specifying the high and low order bytes of the effective address must be in page zero.
   IndexedIndirect // 6
   Indirect // 7
+  ///| Zero Page Indirect Y-Indexed($nn),Y
+  /// In indirect indexed addressing, the second byte of the instruction points to a memory location in page zero.
+  /// The contents of this memory location is added to the contents of the `Y` index register, the result being the low order eight bits of the effective address.
+  /// The carry from this addition is added to the contents of the next page zero memory location, the result being the high order eight bits of the effective address.
   IndirectIndexed // 8
   Relative // 9
+  ///| Zero Page $nn
+  /// The zero page instructions allow for shorter code and execution times by only fetching the second byte of the instruction and assuming a zero high address byte.
+  /// Careful use of the zero page can result in significant increase in code efficiency.
   ZeroPage // 10
+  ///| X-Indexed Zero Page  $nn,X
+  /// This form of addressing is used in conjunction with the `X` index register.
+  /// The effective address is calculated by adding the second byte to the contents of the index register.
+  /// Since this is a form of "Zero Page" addressing, the content of the second byte references a location in page zero.
+  /// Additionally, due to the “Zero Page" addressing nature of this mode, no carry is added to the high order 8 bits of memory and crossing of page boundaries does not occur.
   ZeroPageX // 11
+  ///| Y-Indexed Zero Page  $nn,Y
+  /// This form of addressing is used in conjunction with the `Y` index register.
+  /// The effective address is calculated by adding the second byte to the contents of the index register.
+  /// Since this is a form of "Zero Page" addressing, the content of the second byte references a location in page zero.
+  /// Additionally, due to the “Zero Page" addressing nature of this mode, no carry is added to the high order 8 bits of memory and crossing of page boundaries does not occur.
   ZeroPageY // 12
 } derive(Eq, Show)
 
 ///|
-let instructions : FixedArray[
+pub let instructions : FixedArray[
   (String, (CPU, UInt16, Mode) -> Unit, Mode, Int, Int, Int, Bool),
 ] = [ // All 6502 instructions
   // 0x00
   ("BRK", opBRK, Implied, 1, 7, 0, false),
   ("ORA", opORA, IndexedIndirect, 2, 6, 0, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
+  ("JAM", opJAM, Implied, 1, 2, 0, true),
   ("SLO", opSLO, IndexedIndirect, 2, 8, 0, true),
   ("NOP", opNOP, ZeroPage, 2, 3, 0, true),
   ("ORA", opORA, ZeroPage, 2, 3, 0, false),
@@ -1851,7 +4150,7 @@ let instructions : FixedArray[
   // 0x10
   ("BPL", opBPL, Relative, 2, 2, 1, false),
   ("ORA", opORA, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
+  ("JAM", opJAM, Implied, 1, 2, 0, true),
   ("SLO", opSLO, IndirectIndexed, 2, 8, 0, true),
   ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
   ("ORA", opORA, ZeroPageX, 2, 4, 0, false),
@@ -1866,7 +4165,7 @@ let instructions : FixedArray[
   ("ASL", opASL, AbsoluteX, 3, 7, 0, false),
   ("SLO", opSLO, AbsoluteX, 3, 7, 0, true),
   // 0x20
-  ("JSR", opJSR, Absolute, 3, 6, 0, false),
+  ("JSR", opJSR, AbsoluteSP, 3, 6, 0, false),
   ("AND", opAND, IndexedIndirect, 2, 6, 0, false),
   ("JAM", opJAM, Implied, 0, 2, 0, true),
   ("RLA", opRLA, IndexedIndirect, 2, 8, 0, true),
@@ -1911,7 +4210,7 @@ let instructions : FixedArray[
   ("PHA", opPHA, Implied, 1, 3, 0, false),
   ("EOR", opEOR, Immediate, 2, 2, 0, false),
   ("LSR", opLSR, Accumulator, 1, 2, 0, false),
-  ("ALR", opALR, Immediate, 2, 2, 0, true),
+  ("ASR", opASR, Immediate, 2, 2, 0, true),
   ("JMP", opJMP, Absolute, 3, 3, 0, false),
   ("EOR", opEOR, Absolute, 3, 4, 0, false),
   ("LSR", opLSR, Absolute, 3, 6, 0, false),

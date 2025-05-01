@@ -21,7 +21,7 @@ pub const UINT16_MIN = 0x0000
 pub const UINT16_DEFAULT = 0x0000
 
 ///|
-pub(all) type UInt16 Int
+pub(all) type UInt16 Int derive(@json.FromJson)
 
 ///|
 pub fn UInt16::default() -> UInt16 {

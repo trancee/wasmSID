@@ -112,7 +112,7 @@ impl CPU {
   interrupts(Self) -> Bool
   irq(Self, pc? : @core.UInt16) -> Unit
   load(Self, @core.UInt16, Bytes, length~ : Int = .., offset~ : Int = .., has_load_address~ : Bool = ..) -> @core.UInt16!
-  new(pc~ : @core.UInt16 = .., address? : @core.UInt16, data~ : Bytes = .., length~ : Int = .., offset~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self!
+  new(pc~ : @core.UInt16 = .., registers~ : Registers = .., flags~ : Flags = .., address? : @core.UInt16, data~ : Bytes = .., length~ : Int = .., offset~ : Int = .., decimal_mode~ : Bool = .., debug~ : Bool = ..) -> Self!
   nmi(Self, pc? : @core.UInt16) -> Unit
   pc(Self) -> @core.UInt16
   push(Self, @core.UInt8, dummy~ : Bool = ..) -> Unit
@@ -152,6 +152,7 @@ impl Eq for Flag
 type Flags
 impl Flags {
   get(Self) -> @core.UInt8
+  new(flags? : @core.UInt8) -> Self
   set(Self, @core.UInt8) -> @core.UInt8
   set_interrupt(Self) -> Unit
 }
@@ -172,7 +173,7 @@ pub struct Registers {
   mut y : @core.UInt8
 }
 impl Registers {
-  new(sp~ : @core.UInt8 = ..) -> Self
+  new(sp~ : @core.UInt8 = .., a~ : @core.UInt8 = .., x~ : @core.UInt8 = .., y~ : @core.UInt8 = ..) -> Self
   op_get(Self, Register) -> @core.UInt8
   op_set(Self, Register, @core.UInt8) -> Unit
   reset(Self) -> Unit

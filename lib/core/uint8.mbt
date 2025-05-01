@@ -19,7 +19,7 @@ pub const UINT8_MIN = 0x00
 pub const UINT8_DEFAULT = 0x00
 
 ///|
-pub(all) type UInt8 Int
+pub(all) type UInt8 Int derive(@json.FromJson)
 
 ///|
 pub fn UInt8::default() -> UInt8 {

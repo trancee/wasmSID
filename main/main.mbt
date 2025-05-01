@@ -4,7 +4,8 @@ let debug = false
 ///|
 fn main {
   try {
-    dormann!()
+    instructions!()
+    // dormann!()
     // lorenz!()
     // nestest!()
     // sidtest!()

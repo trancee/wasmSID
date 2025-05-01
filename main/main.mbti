@@ -1,6 +1,12 @@
 package "trancee/wasmSID/main"
 
+import(
+  "moonbitlang/core/json"
+)
+
 // Values
+fn benchmark() -> Unit!
+
 fn dormann() -> Unit!
 
 fn lorenz() -> Unit!
@@ -10,6 +16,15 @@ fn nestest() -> Unit!
 fn sidtest() -> Unit!
 
 // Types and methods
+type State
+impl Eq for State
+impl Show for State
+impl @json.FromJson for State
+
+type Test
+impl Eq for Test
+impl Show for Test
+impl @json.FromJson for Test
 
 // Type aliases
 

@@ -1,5 +1,9 @@
 package "trancee/wasmSID/lib/core"
 
+import(
+  "moonbitlang/core/json"
+)
+
 // Values
 const UINT16_BITS : Int = 16
 
@@ -84,6 +88,7 @@ impl Shl for UInt16
 impl Show for UInt16
 impl Shr for UInt16
 impl Sub for UInt16
+impl @json.FromJson for UInt16
 impl U16 for UInt16
 impl U8 for UInt16
 
@@ -125,6 +130,7 @@ impl Shl for UInt8
 impl Show for UInt8
 impl Shr for UInt8
 impl Sub for UInt8
+impl @json.FromJson for UInt8
 impl U16 for UInt8
 impl U8 for UInt8
 
