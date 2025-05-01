@@ -743,7 +743,7 @@ fn dump_step(
   illegal : Bool
 ) -> Unit {
   let dummy = true
-  let pc = self.pc + 1 |> u16
+  let pc = self.pc |> u16
   let read8 = fn() { "$" + self.read(pc, dummy~).to_hex() }
   let read16 = fn() {
     "$" + self.read(pc + 1, dummy~).to_hex() + self.read(pc, dummy~).to_hex()
@@ -911,13 +911,13 @@ fn dump_step(
       // BCC, BCS, BEQ, BMI, BNE, BPL, BVC, and BVS.
       " $" + (pc + 1 + self.read(pc, dummy~).to_signed()).to_hex()
   }
-  let mut instr = ""
+  let mut instruction = ""
   for i = 0; i < 3; i = i + 1 {
-    instr += " " +
-      (if i < size { self.read(self.pc + i, dummy~).to_hex() } else { "  " })
+    instruction += " " +
+      (if i < size { self.read(pc - 1 + i, dummy~).to_hex() } else { "  " })
   }
   let mut spaces = ""
-  for i = 32 - name.length() - address_mode.length(); i > 0; i = i - 1 {
+  for i = 31 - name.length() - address_mode.length(); i > 0; i = i - 1 {
     spaces += " "
   }
   // let mut stack = ""
@@ -930,9 +930,9 @@ fn dump_step(
   //   stack += self.mem[i].to_hex()
   // }
   println(
-    self.pc.to_hex() +
+    "\{pc-1}" +
     " " +
-    instr +
+    instruction +
     " " +
     unofficial +
     (match opcode._ {
@@ -941,7 +941,7 @@ fn dump_step(
     }) +
     address_mode +
     spaces +
-    "A:" +
+    " A:" +
     self.registers[A].to_hex() +
     " X:" +
     self.registers[X].to_hex() +

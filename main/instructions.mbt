@@ -1,8 +1,10 @@
 ///| https://github.com/SingleStepTests/65x02
-const TEST_PATH = "tests/65x02/6502/v1/"
 
 ///|
-pub fn instructions() -> Unit! {
+pub fn instructions(
+  path~ : String = "tests/65x02/6502/v1/",
+  decimal_mode~ : Bool = true
+) -> Unit! {
   // BRK, JMP, JSR
   // for test_opcode in [0x00, 0x4C, 0x6C, 0x20] {
   //   instruction_test!(u8(test_opcode).to_hex().to_lower())
@@ -168,12 +170,16 @@ pub fn instructions() -> Unit! {
   // }
 
   for test_opcode in 0x00..<0x100 {
-    instruction_test!(test_opcode)
+    instruction_test!(test_opcode, path, decimal_mode~)
   }
 }
 
 ///|
-fn instruction_test(test_opcode : Int) -> Unit! {
+fn instruction_test(
+  test_opcode : Int,
+  path : String,
+  decimal_mode~ : Bool = true
+) -> Unit! {
   let opcode = @cpu.instructions[test_opcode]
   let test_opcode = u8(test_opcode)
   let testname = "#$\{test_opcode} \{opcode.0}"
@@ -181,9 +187,7 @@ fn instruction_test(test_opcode : Int) -> Unit! {
 
   //
   let tests : Array[Test] = match
-    @fs.read_file_to_string?(
-      TEST_PATH + "\{test_opcode.to_hex().to_lower()}.json",
-    ) {
+    @fs.read_file_to_string?(path + "\{test_opcode.to_hex().to_lower()}.json") {
     Ok(data) => @json.from_json!(@json.parse!(data))
     Err(error) => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
@@ -205,7 +209,7 @@ fn instruction_test(test_opcode : Int) -> Unit! {
     // println(testcase.initial)
     // println(testcase.final)
     // println(testcase.cycles)
-    run!(testcase)
+    run!(testcase, decimal_mode~)
   }
 
   //
@@ -213,7 +217,7 @@ fn instruction_test(test_opcode : Int) -> Unit! {
 }
 
 ///|
-fn run(testcase : Test) -> Unit! {
+fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
   //
   let cycles : Array[(UInt16, UInt8, String)] = []
 
@@ -229,6 +233,9 @@ fn run(testcase : Test) -> Unit! {
       y=testcase.initial.y,
     ),
     flags=@cpu.Flags::new(flags=testcase.initial.p),
+
+    //
+    decimal_mode~,
 
     //
     debug~,
@@ -296,7 +303,9 @@ fn verify[T : Eq + Show](
   loc~ : SourceLoc = _
 ) -> Unit! {
   if a != b {
-    println("\u{1B}[u" + " " + "\u{1B}[31;1m❌ \{name} → $\{a} ≠ $\{b}\u{1B}[0m")
+    println(
+      "\u{1B}[u" + " " + "\u{1B}[31;1m❌ \{name} → $\{a} ≠ $\{b}\u{1B}[0m",
+    )
     println("--")
     println(testcase.initial)
     println(testcase.final)

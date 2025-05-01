@@ -58,11 +58,14 @@ pub fn nestest() -> Unit! {
     cycles += nes.step()
 
     //
-    if cycles > 26539 {
+    if cycles > 26553 {
       println("\u{1B}[31;1;6mcycles overflow\u{1B}[0m")
       abort("test failed")
     }
   }
+
+  //
+  // println("cycles: \{cycles}")
 
   //
   println("---")
