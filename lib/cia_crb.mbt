@@ -35,18 +35,18 @@ pub enum CRBFlags {
 }
 
 ///|
-fn CRBFlags::op_get(self : CRBFlags, flag : CRBFlags) -> Int {
+fn CRBFlags::op_get(_ : CRBFlags, flag : CRBFlags) -> UInt8 {
   match flag {
     NONE => 0
     //
-    START => 1 << 0
-    PBON => 1 << 1
-    OUTMODE => 1 << 2
-    RUNMODE => 1 << 3
-    LOAD => 1 << 4
-    INMODE => 1 << 5
-    UNDERFLOW => 1 << 6
-    ALARM => 1 << 7
+    START => u8(1 << 0)
+    PBON => u8(1 << 1)
+    OUTMODE => u8(1 << 2)
+    RUNMODE => u8(1 << 3)
+    LOAD => u8(1 << 4)
+    INMODE => u8(1 << 5)
+    UNDERFLOW => u8(1 << 6)
+    ALARM => u8(1 << 7)
   }
 }
 

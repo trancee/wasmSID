@@ -4,7 +4,7 @@
 
 ///|
 pub impl Default for UInt8 with default() {
-  UINT8_DEFAULT
+  UINT8_DEFAULT |> u8
 }
 
 ///|

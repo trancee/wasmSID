@@ -48,7 +48,7 @@ struct VIC {
   mut rasterLines : Int
 
   //
-  mut rasterCompare : Int
+  mut rasterCompare : UInt16
 
   //
   register : VICRegister
@@ -249,9 +249,9 @@ pub fn VIC::emulate(self : VIC, cycles : Int) -> Bool {
     //   println("IRQMASK::InterruptEnable")
     if self.register.rasterScanLine == self.rasterCompare &&
       self.register.interruptEnable.rasterCompare {
-        self.register.interruptFlag.rasterCompare = true
+      self.register.interruptFlag.rasterCompare = true
       println("VICIRQ::RasterScan \{self.register.interruptFlag}")
-      }
+    }
     // }
   }
   self.register.interruptFlag.interrupt = self.register.interruptFlag.rasterCompare
@@ -303,8 +303,8 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
   }
 
   //
-  fn msbX(value : Int, bit : Int) -> Int {
-    ((value >> 8) & 1) << bit
+  fn msbX(value : UInt16, bit : Int) -> UInt8 {
+    ((value >> 8) & 1) << bit |> u8
   }
 
   match register {
@@ -348,17 +348,17 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
     /// Vertical Fine Scrolling and Control Register
     SCROLY =>
       /// Bits 0-2:  Fine scroll display vertically by X scan lines (0-7)
-      ((self.register.scroll.y & 0x08) << 0) |
+      (u8(self.register.scroll.y & 0x08) << 0) |
       /// Bit 3:  Select a 24-row or 25-row text display (1=25 rows, 0=24 rows)
-      (self.register.controlRegister.rowDisplay.to_int() << 3) |
+      u8(self.register.controlRegister.rowDisplay.to_int() << 3) |
       /// Bit 4:  Blank the entire screen to the same color as the background (0=blank)
-      (self.register.controlRegister.blankScreen.to_int() << 4) |
+      u8(self.register.controlRegister.blankScreen.to_int() << 4) |
       /// Bit 5:  Enable bitmap graphics mode (1=enable)
-      (self.register.controlRegister.bitmapMode.to_int() << 5) |
+      u8(self.register.controlRegister.bitmapMode.to_int() << 5) |
       /// Bit 6:  Enable extended color text mode (1=enable)
-      (self.register.controlRegister.extendedColorMode.to_int() << 6) |
+      u8(self.register.controlRegister.extendedColorMode.to_int() << 6) |
       /// Bit 7:  High bit (Bit 8) of raster compare register at 53266 ($D012)
-      ((self.register.rasterScanLine & 0x0100) >> 1)
+      (u8(self.register.rasterScanLine & 0x0100) >> 1)
 
     /// Read Current Raster Scan Line
     ///
@@ -366,226 +366,226 @@ fn VIC::op_get(self : VIC, register : VICregister) -> UInt8 {
     /// whether you are reading from it or writing to it.  When this register
     /// is read, it tells which screen line the electron beam is currently
     /// scanning.
-    RASTER => self.register.rasterScanLine
+    RASTER => u8(self.register.rasterScanLine)
 
     /// Light Pen Horizontal Position
-    LPENX => self.register.lightPen.x
+    LPENX => u8(self.register.lightPen.x)
     /// Light Pen Vertical Position
-    LPENY => self.register.lightPen.y
+    LPENY => u8(self.register.lightPen.y)
 
     /// Sprite Enable Register
     SPENA =>
       /// Bit 0:  Enable Sprite 0 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[0].to_int() << 0) |
+      u8(self.register.spriteEnable[0].to_int() << 0) |
       /// Bit 1:  Enable Sprite 1 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[1].to_int() << 1) |
+      u8(self.register.spriteEnable[1].to_int() << 1) |
       /// Bit 2:  Enable Sprite 2 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[2].to_int() << 2) |
+      u8(self.register.spriteEnable[2].to_int() << 2) |
       /// Bit 3:  Enable Sprite 3 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[3].to_int() << 3) |
+      u8(self.register.spriteEnable[3].to_int() << 3) |
       /// Bit 4:  Enable Sprite 4 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[4].to_int() << 4) |
+      u8(self.register.spriteEnable[4].to_int() << 4) |
       /// Bit 5:  Enable Sprite 5 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[5].to_int() << 5) |
+      u8(self.register.spriteEnable[5].to_int() << 5) |
       /// Bit 6:  Enable Sprite 6 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[6].to_int() << 6) |
+      u8(self.register.spriteEnable[6].to_int() << 6) |
       /// Bit 7:  Enable Sprite 7 (1=sprite is on, 0=sprite is off)
-      (self.register.spriteEnable[7].to_int() << 7)
+      u8(self.register.spriteEnable[7].to_int() << 7)
 
     /// Horizontal Fine Scrolling and Control Register
     SCROLX =>
       /// Bits 0-2:  Fine scroll display horizontally by X dot positions (0-7)
-      ((self.register.scroll.x & 0x08) << 0) |
+      (u8(self.register.scroll.x & 0x08) << 0) |
       /// Bit 3:  Select a 38-column or 40-column text display (1=40 columns, 0=38 columns)
-      (self.register.controlRegister.columnDisplay.to_int() << 3) |
+      u8(self.register.controlRegister.columnDisplay.to_int() << 3) |
       /// Bit 4:  Enable multicolor text or multicolor bitmap mode (1=multicolor on, 0=multicolor off)
-      (self.register.controlRegister.multicolorMode.to_int() << 4) |
+      u8(self.register.controlRegister.multicolorMode.to_int() << 4) |
       /// Bit 5:  Video chip reset (0=normal operations, 1=video completely off)
-      (self.register.controlRegister.videoChipReset.to_int() << 5)
+      u8(self.register.controlRegister.videoChipReset.to_int() << 5)
     /// Bits 6-7:  Unused
 
     /// Sprite Horizontal Expansion Register
     XXPAND =>
       /// Bit 0:  Expand Sprite 0 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[0].to_int() << 0) |
+      u8(self.register.spriteExpandX[0].to_int() << 0) |
       /// Bit 1:  Expand Sprite 1 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[1].to_int() << 1) |
+      u8(self.register.spriteExpandX[1].to_int() << 1) |
       /// Bit 2:  Expand Sprite 2 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[2].to_int() << 2) |
+      u8(self.register.spriteExpandX[2].to_int() << 2) |
       /// Bit 3:  Expand Sprite 3 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[3].to_int() << 3) |
+      u8(self.register.spriteExpandX[3].to_int() << 3) |
       /// Bit 4:  Expand Sprite 4 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[4].to_int() << 4) |
+      u8(self.register.spriteExpandX[4].to_int() << 4) |
       /// Bit 5:  Expand Sprite 5 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[5].to_int() << 5) |
+      u8(self.register.spriteExpandX[5].to_int() << 5) |
       /// Bit 6:  Expand Sprite 6 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[6].to_int() << 6) |
+      u8(self.register.spriteExpandX[6].to_int() << 6) |
       /// Bit 7:  Expand Sprite 7 horizontally (1=double-width sprite, 0=normal width)
-      (self.register.spriteExpandX[7].to_int() << 7)
+      u8(self.register.spriteExpandX[7].to_int() << 7)
 
     /// Sprite Vertical Expansion Register
     YXPAND =>
       /// Bit 0:  Expand Sprite 0 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[0].to_int() << 0) |
+      u8(self.register.spriteExpandY[0].to_int() << 0) |
       /// Bit 1:  Expand Sprite 1 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[1].to_int() << 1) |
+      u8(self.register.spriteExpandY[1].to_int() << 1) |
       /// Bit 2:  Expand Sprite 2 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[2].to_int() << 2) |
+      u8(self.register.spriteExpandY[2].to_int() << 2) |
       /// Bit 3:  Expand Sprite 3 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[3].to_int() << 3) |
+      u8(self.register.spriteExpandY[3].to_int() << 3) |
       /// Bit 4:  Expand Sprite 4 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[4].to_int() << 4) |
+      u8(self.register.spriteExpandY[4].to_int() << 4) |
       /// Bit 5:  Expand Sprite 5 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[5].to_int() << 5) |
+      u8(self.register.spriteExpandY[5].to_int() << 5) |
       /// Bit 6:  Expand Sprite 6 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[6].to_int() << 6) |
+      u8(self.register.spriteExpandY[6].to_int() << 6) |
       /// Bit 7:  Expand Sprite 7 vertically (1=double height, 0=normal height)
-      (self.register.spriteExpandY[7].to_int() << 7)
+      u8(self.register.spriteExpandY[7].to_int() << 7)
 
     /// VIC-II Chip Memory Control Register
     VMCSB =>
       /// Bit 0:  Unused; it is always set to 1.
-      (1 << 0) |
+      u8(1 << 0) |
       /// Bits 1-3:  Text character dot-data base address within VIC-II address space
-      ((self.register.characterDataArea & 0x08) << 1) |
+      (u8(self.register.characterDataArea & 0x08) << 1) |
       /// Bits 4-7:  Video matrix base address within VIC-II address space
-      ((self.register.videoMatrixArea & 0x08) << 4)
+      (u8(self.register.videoMatrixArea & 0x08) << 4)
 
     /// VIC Interrupt Flag Register
     VICIRQ =>
       /// Bit 0:  Flag:  Is the Raster Compare a possible source of an IRQ? (1=yes)
-      (self.register.interruptFlag.rasterCompare.to_int() << 0) |
+      u8(self.register.interruptFlag.rasterCompare.to_int() << 0) |
       /// Bit 1:  Flag:  Is a collision between a sprite and the normal graphics display a possible source of an IRQ?  (1=yes)
-      (self.register.interruptFlag.spriteCollide.to_int() << 1) |
+      u8(self.register.interruptFlag.spriteCollide.to_int() << 1) |
       /// Bit 2:  Flag:  Is a collision between two sprites a possible source of an IRQ?  (1=yes)
-      (self.register.interruptFlag.spritesCollide.to_int() << 2) |
+      u8(self.register.interruptFlag.spritesCollide.to_int() << 2) |
       /// Bit 3:  Flag:  Is the light pen trigger a possible source of an IRQ? (1=yes)
-      (self.register.interruptFlag.lightPenTrigger.to_int() << 3) |
+      u8(self.register.interruptFlag.lightPenTrigger.to_int() << 3) |
       /// Bits 4-6:  Not used
       /// Bit 7:  Flag:  Is there any VIC-II chip IRQ source which could cause an IRQ?  (1=yes)
-      (self.register.interruptFlag.interrupt.to_int() << 7)
+      u8(self.register.interruptFlag.interrupt.to_int() << 7)
 
     /// IRQ Mask Register
     IRQMASK =>
       /// Bit 0:  Enable Raster Compare IRQ (1=interrupt enabled)
-      (self.register.interruptEnable.rasterCompare.to_int() << 0) |
+      u8(self.register.interruptEnable.rasterCompare.to_int() << 0) |
       /// Bit 1:  Enable IRQ to occure when sprite collides with display of normal graphics data (1=interrupt enabled)
-      (self.register.interruptEnable.spriteCollide.to_int() << 1) |
+      u8(self.register.interruptEnable.spriteCollide.to_int() << 1) |
       /// Bit 2:  Enable IRQ to occur when two sprites collide (1=interrupt enabled)
-      (self.register.interruptEnable.spritesCollide.to_int() << 2) |
+      u8(self.register.interruptEnable.spritesCollide.to_int() << 2) |
       /// Bit 3:  Enable light pen to trigger an IRQ (1=interrupt enabled)
-      (self.register.interruptEnable.lightPenTrigger.to_int() << 3)
+      u8(self.register.interruptEnable.lightPenTrigger.to_int() << 3)
     /// Bits 4-7:  Not used
 
     /// Sprite to Foreground Display Priority Register
     SPBGPR =>
       /// Bit 0:  Select display priority of Sprite 0 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[0].to_int() << 0) |
+      u8(self.register.spritePriority[0].to_int() << 0) |
       /// Bit 1:  Select display priority of Sprite 1 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[1].to_int() << 1) |
+      u8(self.register.spritePriority[1].to_int() << 1) |
       /// Bit 2:  Select display priority of Sprite 2 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[2].to_int() << 2) |
+      u8(self.register.spritePriority[2].to_int() << 2) |
       /// Bit 3:  Select display priority of Sprite 3 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[3].to_int() << 3) |
+      u8(self.register.spritePriority[3].to_int() << 3) |
       /// Bit 4:  Select display priority of Sprite 4 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[4].to_int() << 4) |
+      u8(self.register.spritePriority[4].to_int() << 4) |
       /// Bit 5:  Select display priority of Sprite 5 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[5].to_int() << 5) |
+      u8(self.register.spritePriority[5].to_int() << 5) |
       /// Bit 6:  Select display priority of Sprite 6 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[6].to_int() << 6) |
+      u8(self.register.spritePriority[6].to_int() << 6) |
       /// Bit 7:  Select display priority of Sprite 7 to foreground (0=sprite appears in front of foreground)
-      (self.register.spritePriority[7].to_int() << 7)
+      u8(self.register.spritePriority[7].to_int() << 7)
 
     /// Sprite Multicolor Registers
     SPMC =>
       /// Bit 0:  Select multicolor mode for Sprite 0 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[0].to_int() << 0) |
+      u8(self.register.spriteMode[0].to_int() << 0) |
       /// Bit 1:  Select multicolor mode for Sprite 1 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[1].to_int() << 1) |
+      u8(self.register.spriteMode[1].to_int() << 1) |
       /// Bit 2:  Select multicolor mode for Sprite 2 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[2].to_int() << 2) |
+      u8(self.register.spriteMode[2].to_int() << 2) |
       /// Bit 3:  Select multicolor mode for Sprite 3 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[3].to_int() << 3) |
+      u8(self.register.spriteMode[3].to_int() << 3) |
       /// Bit 4:  Select multicolor mode for Sprite 4 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[4].to_int() << 4) |
+      u8(self.register.spriteMode[4].to_int() << 4) |
       /// Bit 5:  Select multicolor mode for Sprite 5 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[5].to_int() << 5) |
+      u8(self.register.spriteMode[5].to_int() << 5) |
       /// Bit 6:  Select multicolor mode for Sprite 6 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[6].to_int() << 6) |
+      u8(self.register.spriteMode[6].to_int() << 6) |
       /// Bit 7:  Select multicolor mode for Sprite 7 (1=multicolor, 0=hi-res)
-      (self.register.spriteMode[7].to_int() << 7)
+      u8(self.register.spriteMode[7].to_int() << 7)
 
     /// Sprite to Foreground Collision Register
     SPBGCL =>
       /// Bit 0:  Did Sprite 0 collide with the foreground display?  (1=yes)
-      (self.register.spriteCollide[0].to_int() << 0) |
+      u8(self.register.spriteCollide[0].to_int() << 0) |
       /// Bit 1:  Did Sprite 1 collide with the foreground display?  (1=yes)
-      (self.register.spriteCollide[1].to_int() << 1) |
+      u8(self.register.spriteCollide[1].to_int() << 1) |
       /// Bit 2:  Did Sprite 2 collide with the foreground display?  (1=yes)
-      (self.register.spritesCollide[2].to_int() << 2) |
+      u8(self.register.spritesCollide[2].to_int() << 2) |
       /// Bit 3:  Did Sprite 3 collide with the foreground display?  (1=yes)
-      (self.register.spritesCollide[3].to_int() << 3) |
+      u8(self.register.spritesCollide[3].to_int() << 3) |
       /// Bit 4:  Did Sprite 4 collide with the foreground display?  (1=yes)
-      (self.register.spritesCollide[4].to_int() << 4) |
+      u8(self.register.spritesCollide[4].to_int() << 4) |
       /// Bit 5:  Did Sprite 5 collide with the foreground display?  (1=yes)
-      (self.register.spritesCollide[5].to_int() << 5) |
+      u8(self.register.spritesCollide[5].to_int() << 5) |
       /// Bit 6:  Did Sprite 6 collide with the foreground display?  (1=yes)
-      (self.register.spritesCollide[6].to_int() << 6) |
+      u8(self.register.spritesCollide[6].to_int() << 6) |
       /// Bit 7:  Did Sprite 7 collide with the foreground display?  (1=yes)
-      (self.register.spritesCollide[7].to_int() << 7)
+      u8(self.register.spritesCollide[7].to_int() << 7)
 
     /// Sprite to Sprite Collision Register
     SPSPCL =>
       /// Bit 0:  Did Sprite 0 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[0].to_int() << 0) |
+      u8(self.register.spritesCollide[0].to_int() << 0) |
       /// Bit 1:  Did Sprite 1 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[1].to_int() << 1) |
+      u8(self.register.spritesCollide[1].to_int() << 1) |
       /// Bit 2:  Did Sprite 2 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[2].to_int() << 2) |
+      u8(self.register.spritesCollide[2].to_int() << 2) |
       /// Bit 3:  Did Sprite 3 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[3].to_int() << 3) |
+      u8(self.register.spritesCollide[3].to_int() << 3) |
       /// Bit 4:  Did Sprite 4 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[4].to_int() << 4) |
+      u8(self.register.spritesCollide[4].to_int() << 4) |
       /// Bit 5:  Did Sprite 5 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[5].to_int() << 5) |
+      u8(self.register.spritesCollide[5].to_int() << 5) |
       /// Bit 6:  Did Sprite 6 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[6].to_int() << 6) |
+      u8(self.register.spritesCollide[6].to_int() << 6) |
       /// Bit 7:  Did Sprite 7 collide with another sprite?  (1=yes)
-      (self.register.spritesCollide[7].to_int() << 7)
+      u8(self.register.spritesCollide[7].to_int() << 7)
 
     /// Border Color Register
-    EXTCOL => self.register.borderColor.to_int()
+    EXTCOL => self.register.borderColor.to_u8()
 
     /// Background Color 0
-    BGCOL0 => self.register.backgroundColor[0].to_int()
+    BGCOL0 => self.register.backgroundColor[0].to_u8()
     /// Background Color 1
-    BGCOL1 => self.register.backgroundColor[1].to_int()
+    BGCOL1 => self.register.backgroundColor[1].to_u8()
     /// Background Color 2
-    BGCOL2 => self.register.backgroundColor[2].to_int()
+    BGCOL2 => self.register.backgroundColor[2].to_u8()
     /// Background Color 3
-    BGCOL3 => self.register.backgroundColor[3].to_int()
+    BGCOL3 => self.register.backgroundColor[3].to_u8()
 
     /// Sprite Multicolor Register 0
-    SPMC0 => self.register.spriteMulticolor[0].to_int()
+    SPMC0 => self.register.spriteMulticolor[0].to_u8()
     /// Sprite Multicolor Register 1
-    SPMC1 => self.register.spriteMulticolor[1].to_int()
+    SPMC1 => self.register.spriteMulticolor[1].to_u8()
 
     /// Sprite 0 Color Register
-    SP0COL => self.register.spriteColor[0].to_int()
+    SP0COL => self.register.spriteColor[0].to_u8()
     /// Sprite 1 Color Register
-    SP1COL => self.register.spriteColor[1].to_int()
+    SP1COL => self.register.spriteColor[1].to_u8()
     /// Sprite 2 Color Register
-    SP2COL => self.register.spriteColor[2].to_int()
+    SP2COL => self.register.spriteColor[2].to_u8()
     /// Sprite 3 Color Register
-    SP3COL => self.register.spriteColor[3].to_int()
+    SP3COL => self.register.spriteColor[3].to_u8()
     /// Sprite 4 Color Register
-    SP4COL => self.register.spriteColor[4].to_int()
+    SP4COL => self.register.spriteColor[4].to_u8()
     /// Sprite 5 Color Register
-    SP5COL => self.register.spriteColor[5].to_int()
+    SP5COL => self.register.spriteColor[5].to_u8()
     /// Sprite 6 Color Register
-    SP6COL => self.register.spriteColor[6].to_int()
+    SP6COL => self.register.spriteColor[6].to_u8()
     /// Sprite 7 Color Register
-    SP7COL => self.register.spriteColor[7].to_int()
+    SP7COL => self.register.spriteColor[7].to_u8()
 
     /// The VIC-II chip has only 47 registers for 64 bytes of possible address
     /// space.  Therefore, the remaining 17 addresses do not access any
@@ -625,53 +625,53 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   }
 
   //
-  fn msbX(value : Int) -> Unit {
+  fn msbX(value : UInt8) -> Unit {
     let position = self.register.spritePosition
     /// Bit 0:  Most significant bit of Sprite 0 horizontal position
-    position[0].x = position[0].x | (((value >> 0) & 1) << 8)
+    position[0].x = position[0].x | (((value.to_int() >> 0) & 1) << 8)
     /// Bit 1:  Most significant bit of Sprite 1 horizontal position
-    position[1].x = position[1].x | (((value >> 1) & 1) << 8)
+    position[1].x = position[1].x | (((value.to_int() >> 1) & 1) << 8)
     /// Bit 2:  Most significant bit of Sprite 2 horizontal position
-    position[2].x = position[2].x | (((value >> 2) & 1) << 8)
+    position[2].x = position[2].x | (((value.to_int() >> 2) & 1) << 8)
     /// Bit 3:  Most significant bit of Sprite 3 horizontal position
-    position[3].x = position[3].x | (((value >> 3) & 1) << 8)
+    position[3].x = position[3].x | (((value.to_int() >> 3) & 1) << 8)
     /// Bit 4:  Most significant bit of Sprite 4 horizontal position
-    position[4].x = position[4].x | (((value >> 4) & 1) << 8)
+    position[4].x = position[4].x | (((value.to_int() >> 4) & 1) << 8)
     /// Bit 5:  Most significant bit of Sprite 5 horizontal position
-    position[5].x = position[5].x | (((value >> 5) & 1) << 8)
+    position[5].x = position[5].x | (((value.to_int() >> 5) & 1) << 8)
     /// Bit 6:  Most significant bit of Sprite 6 horizontal position
-    position[6].x = position[6].x | (((value >> 6) & 1) << 8)
+    position[6].x = position[6].x | (((value.to_int() >> 6) & 1) << 8)
     /// Bit 7:  Most significant bit of Sprite 7 horizontal position
-    position[7].x = position[7].x | (((value >> 7) & 1) << 8)
+    position[7].x = position[7].x | (((value.to_int() >> 7) & 1) << 8)
   }
 
   try {
     match register {
       /// Sprite Horizontal and Vertical Position Registers
-      SP0X => self.register.spritePosition[0].x = value._
-      SP0Y => self.register.spritePosition[0].y = value._
-      SP1X => self.register.spritePosition[1].x = value._
-      SP1Y => self.register.spritePosition[1].y = value._
-      SP2X => self.register.spritePosition[2].x = value._
-      SP2Y => self.register.spritePosition[2].y = value._
-      SP3X => self.register.spritePosition[3].x = value._
-      SP3Y => self.register.spritePosition[3].y = value._
-      SP4X => self.register.spritePosition[4].x = value._
-      SP4Y => self.register.spritePosition[4].y = value._
-      SP5X => self.register.spritePosition[5].x = value._
-      SP5Y => self.register.spritePosition[5].y = value._
-      SP6X => self.register.spritePosition[6].x = value._
-      SP6Y => self.register.spritePosition[6].y = value._
-      SP7X => self.register.spritePosition[7].x = value._
-      SP7Y => self.register.spritePosition[7].y = value._
+      SP0X => self.register.spritePosition[0].x = value.to_int()
+      SP0Y => self.register.spritePosition[0].y = value.to_int()
+      SP1X => self.register.spritePosition[1].x = value.to_int()
+      SP1Y => self.register.spritePosition[1].y = value.to_int()
+      SP2X => self.register.spritePosition[2].x = value.to_int()
+      SP2Y => self.register.spritePosition[2].y = value.to_int()
+      SP3X => self.register.spritePosition[3].x = value.to_int()
+      SP3Y => self.register.spritePosition[3].y = value.to_int()
+      SP4X => self.register.spritePosition[4].x = value.to_int()
+      SP4Y => self.register.spritePosition[4].y = value.to_int()
+      SP5X => self.register.spritePosition[5].x = value.to_int()
+      SP5Y => self.register.spritePosition[5].y = value.to_int()
+      SP6X => self.register.spritePosition[6].x = value.to_int()
+      SP6Y => self.register.spritePosition[6].y = value.to_int()
+      SP7X => self.register.spritePosition[7].x = value.to_int()
+      SP7Y => self.register.spritePosition[7].y = value.to_int()
 
       /// Most Significant Bits of Sprites 0-7 Horizontal Position
-      MSIGX => msbX(value._)
+      MSIGX => msbX(value)
 
       /// Vertical Fine Scrolling and Control Register
       SCROLY => {
         /// Bits 0-2:  Fine scroll display vertically by X scan lines (0-7)
-        self.register.scroll.y = value._ & 0x08
+        self.register.scroll.y = value & 0x08 |> u16
         /// Bit 3:  Select a 24-row or 25-row text display (1=25 rows, 0=24 rows)
         self.register.controlRegister.rowDisplay = value.bit(3)
         /// Bit 4:  Blank the entire screen to the same color as the background (0=blank)
@@ -691,12 +691,12 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       /// Raster Compare Interrupt.  When that interrupt is enabled, a maskable
       /// interrupt request will be issued every time the electron beam scan
       /// reaches the scan line whose number was written here.
-      RASTER => self.rasterCompare = (self.rasterCompare & 0x0100) | value._
+      RASTER => self.rasterCompare = (self.rasterCompare & 0x0100) | value.to_int()
 
       /// Light Pen Horizontal Position
-      LPENX => self.register.lightPen.x = value._
+      LPENX => self.register.lightPen.x = value.to_int()
       /// Light Pen Vertical Position
-      LPENY => self.register.lightPen.y = value._
+      LPENY => self.register.lightPen.y = value.to_int()
 
       /// Sprite Enable Register
       SPENA => {
@@ -721,7 +721,7 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       /// Horizontal Fine Scrolling and Control Register
       SCROLX => {
         /// Bits 0-2:  Fine scroll display horizontally by X dot positions (0-7)
-        self.register.scroll.x = value._ & 0x08
+        self.register.scroll.x = value & 0x08 |> u16
         /// Bit 3:  Select a 38-column or 40-column text display (1=40 columns, 0=38 columns)
         self.register.controlRegister.columnDisplay = value.bit(3)
         /// Bit 4:  Enable multicolor text or multicolor bitmap mode (1=multicolor on, 0=multicolor off)
@@ -775,9 +775,9 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       VMCSB => {
         /// Bit 0:  Unused
         /// Bits 1-3:  Text character dot-data base address within VIC-II address space
-        self.register.characterDataArea = (value._ >> 1) & 0x08
+        self.register.characterDataArea = (value >> 1) & 0x08
         /// Bits 4-7:  Video matrix base address within VIC-II address space
-        self.register.videoMatrixArea = (value._ >> 4) & 0x08
+        self.register.videoMatrixArea = (value >> 4) & 0x08
       }
 
       /// VIC Interrupt Flag Register
@@ -889,38 +889,38 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       }
 
       /// Border Color Register
-      EXTCOL => self.register.borderColor = Color::from_int!(value._)
+      EXTCOL => self.register.borderColor = Color::from_u8!(value)
 
       /// Background Color 0
-      BGCOL0 => self.register.backgroundColor[0] = Color::from_int!(value._)
+      BGCOL0 => self.register.backgroundColor[0] = Color::from_u8!(value)
       /// Background Color 1
-      BGCOL1 => self.register.backgroundColor[1] = Color::from_int!(value._)
+      BGCOL1 => self.register.backgroundColor[1] = Color::from_u8!(value)
       /// Background Color 2
-      BGCOL2 => self.register.backgroundColor[2] = Color::from_int!(value._)
+      BGCOL2 => self.register.backgroundColor[2] = Color::from_u8!(value)
       /// Background Color 3
-      BGCOL3 => self.register.backgroundColor[3] = Color::from_int!(value._)
+      BGCOL3 => self.register.backgroundColor[3] = Color::from_u8!(value)
 
       /// Sprite Multicolor Register 0
-      SPMC0 => self.register.spriteMulticolor[0] = Color::from_int!(value._)
+      SPMC0 => self.register.spriteMulticolor[0] = Color::from_u8!(value)
       /// Sprite Multicolor Register 1
-      SPMC1 => self.register.spriteMulticolor[1] = Color::from_int!(value._)
+      SPMC1 => self.register.spriteMulticolor[1] = Color::from_u8!(value)
 
       /// Sprite 0 Color Register
-      SP0COL => self.register.spriteColor[0] = Color::from_int!(value._)
+      SP0COL => self.register.spriteColor[0] = Color::from_u8!(value)
       /// Sprite 1 Color Register
-      SP1COL => self.register.spriteColor[1] = Color::from_int!(value._)
+      SP1COL => self.register.spriteColor[1] = Color::from_u8!(value)
       /// Sprite 2 Color Register
-      SP2COL => self.register.spriteColor[2] = Color::from_int!(value._)
+      SP2COL => self.register.spriteColor[2] = Color::from_u8!(value)
       /// Sprite 3 Color Register
-      SP3COL => self.register.spriteColor[3] = Color::from_int!(value._)
+      SP3COL => self.register.spriteColor[3] = Color::from_u8!(value)
       /// Sprite 4 Color Register
-      SP4COL => self.register.spriteColor[4] = Color::from_int!(value._)
+      SP4COL => self.register.spriteColor[4] = Color::from_u8!(value)
       /// Sprite 5 Color Register
-      SP5COL => self.register.spriteColor[5] = Color::from_int!(value._)
+      SP5COL => self.register.spriteColor[5] = Color::from_u8!(value)
       /// Sprite 6 Color Register
-      SP6COL => self.register.spriteColor[6] = Color::from_int!(value._)
+      SP6COL => self.register.spriteColor[6] = Color::from_u8!(value)
       /// Sprite 7 Color Register
-      SP7COL => self.register.spriteColor[7] = Color::from_int!(value._)
+      SP7COL => self.register.spriteColor[7] = Color::from_u8!(value)
 
       ///
       UNUSED => assert_true!(true)

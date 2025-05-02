@@ -74,7 +74,7 @@ test "ADCAbsCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -93,7 +93,7 @@ test "ADCAbsCanAddOneToFFAndItWillCauseACarry" {
   let t = {
     // Input
     c: false,
-    a: -1,
+    a: 0xFF, // -1,
     op: 1,
 
     // Output
@@ -114,7 +114,7 @@ test "ADCAbsWillSetTheNegativeFlagWhenTheResultIsNegative" {
     // Input
     c: false,
     a: 0,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 255, // -1,
@@ -138,8 +138,8 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionFails" {
   let t = {
     // Input
     c: false,
-    a: -128,
-    op: -1,
+    a: 0x80, // -128,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 127,
@@ -164,11 +164,11 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionPassedDueToInitalCarr
   let t = {
     // Input
     c: true,
-    a: -128,
-    op: -1,
+    a: 0x80, // -128,
+    op: 0xFF, // -1,
 
     // Output
-    expectA: 128, // -128,
+    expectA: 0x80, // -128,
 
     //
     expectC: true,
@@ -189,11 +189,11 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedPositiveAddtionFails" {
   let t = {
     // Input
     c: false,
-    a: 127,
+    a: 0x7F, // 127,
     op: 1,
 
     // Output
-    expectA: 128,
+    expectA: 0x80, // 128,
 
     //
     expectC: false,
@@ -237,7 +237,7 @@ test "ADCImmediateCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -284,7 +284,7 @@ test "ADCZeroPageCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -331,7 +331,7 @@ test "ADCZeroPageXCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -378,7 +378,7 @@ test "ADCAbsXCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -425,7 +425,7 @@ test "ADCAbsYCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -472,7 +472,7 @@ test "ADCIndXCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -519,7 +519,7 @@ test "ADCIndYCanAddAPositiveAndNegativeNumber" {
     // Input
     c: true,
     a: 20,
-    op: -17,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 4,
@@ -620,7 +620,7 @@ test "SBCAbsCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -641,7 +641,7 @@ test "SBCAbsCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -680,8 +680,8 @@ test "SBCAbsCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -782,7 +782,7 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -803,7 +803,7 @@ test "SBCZeroPageCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -842,8 +842,8 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -948,7 +948,7 @@ test "SBCImmediateCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -969,7 +969,7 @@ test "SBCImmediateCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -1008,8 +1008,8 @@ test "SBCImmediateCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -1110,7 +1110,7 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -1131,7 +1131,7 @@ test "SBCZeroPageXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -1170,8 +1170,8 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -1272,7 +1272,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -1293,7 +1293,7 @@ test "SBCAbsoluteXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -1332,8 +1332,8 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -1434,7 +1434,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -1455,7 +1455,7 @@ test "SBCAbsoluteYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -1494,8 +1494,8 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -1596,7 +1596,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -1617,7 +1617,7 @@ test "SBCIndirectXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -1656,8 +1656,8 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -1758,7 +1758,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
   let t = {
     // Input
     c: true,
-    a: -128,
+    a: 0x80, // -128,
     op: 1,
 
     // Output
@@ -1779,7 +1779,7 @@ test "SBCIndirectYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     // Input
     c: true,
     a: 127,
-    op: -1,
+    op: 0xFF, // -1,
 
     // Output
     expectA: 128,
@@ -1818,8 +1818,8 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbers" {
   let t = {
     // Input
     c: true,
-    a: -20,
-    op: -17,
+    a: 0xEC, // -20,
+    op: 0xEF, // -17,
 
     // Output
     expectA: 253, // -3,
@@ -1843,7 +1843,7 @@ struct ADCTestData {
   op : UInt8
 
   // Output
-  expectA : Int
+  expectA : UInt8
 
   //
   expectC : Bool
@@ -1874,7 +1874,7 @@ fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error 
   cpu.registers[A] = t.a
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x00)
   cpu.write(0xFF02, 0x80)
 
@@ -1925,7 +1925,7 @@ fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
   cpu.registers[A] = t.a
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, t.op)
 
   //
@@ -1972,7 +1972,7 @@ fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
   cpu.registers[A] = t.a
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x42)
 
   //
@@ -2026,11 +2026,11 @@ fn testADCZeroPageX(
   cpu.registers[X] = 0x10
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x42)
 
   //
-  cpu.write(0x0042 + cpu.registers[X]._, t.op)
+  cpu.write(0x0042 + cpu.registers[X].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -2080,12 +2080,12 @@ fn testADCAbsoluteX(
   cpu.registers[X] = 0x10
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x00)
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[X]._, t.op)
+  cpu.write(0x8000 + cpu.registers[X].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -2135,12 +2135,12 @@ fn testADCAbsoluteY(
   cpu.registers[Y] = 0x10
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x00)
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -2190,12 +2190,12 @@ fn testADCIndirectX(
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x02)
 
   //
-  cpu.write(0x0002 + cpu.registers[X]._, 0x00)
-  cpu.write(0x0003 + cpu.registers[X]._, 0x80)
+  cpu.write(0x0002 + cpu.registers[X].to_int(), 0x00)
+  cpu.write(0x0003 + cpu.registers[X].to_int(), 0x80)
 
   //
   cpu.write(0x8000, t.op)
@@ -2248,7 +2248,7 @@ fn testADCIndirectY(
   cpu.registers[Y] = 0x04
 
   //
-  cpu.write(0xFF00, ins.to_int())
+  cpu.write(0xFF00, ins.to_int() |> u8)
   cpu.write(0xFF01, 0x02)
 
   //
@@ -2256,7 +2256,7 @@ fn testADCIndirectY(
   cpu.write(0x0003, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 5)

@@ -30,17 +30,17 @@ fn get_address_by_mode(
     AbsoluteX => {
       let value = self.read_instruction_word()
       (
-        value + self.registers[X].to_u16() |> u16,
-        Some(((value & 0xFF00) | u16(u8(value) + self.registers[X]), -1)),
-        Some(page_boundary(value, value + self.registers[X]._)),
+        value + self.registers[X].to_u16(),
+        Some(((value & 0xFF00) | u16(u8(value) + self.registers[X]), 0)),
+        Some(page_boundary(value, value + self.registers[X].to_u16())),
       )
     }
     AbsoluteY => {
       let value = self.read_instruction_word()
       (
         value + self.registers[Y].to_u16() |> u16,
-        Some(((value & 0xFF00) | u16(u8(value) + self.registers[Y]), -1)),
-        Some(page_boundary(value, value + self.registers[Y]._)),
+        Some(((value & 0xFF00) | u16(u8(value) + self.registers[Y]), 0)),
+        Some(page_boundary(value, value + self.registers[Y].to_u16())),
       )
     }
 
@@ -78,7 +78,7 @@ fn get_address_by_mode(
       (
         value |> u16,
         None,
-        Some(page_boundary(offset._, u16(offset + self.registers[X]))),
+        Some(page_boundary(offset.to_u16(), u16(offset + self.registers[X]))),
       )
     }
     // Zero Page Indirect Y-Indexed
@@ -87,7 +87,7 @@ fn get_address_by_mode(
       let value = self.read_zeropage_word(offset)
       (
         value + self.registers[Y].to_int() |> u16,
-        Some(((value & 0xFF00) | u16(u8(value) + self.registers[Y]), -1)),
+        Some(((value & 0xFF00) | u16(u8(value) + self.registers[Y]), 0)),
         Some(page_boundary(value, value + self.registers[Y].to_int())),
       )
     }
@@ -100,7 +100,7 @@ fn get_address_by_mode(
       let offset = self.read_instruction().to_signed()
       (
         self.pc + offset |> u16,
-        Some(((self.pc & 0xFF00) | u16(u8(self.pc + offset)), offset)),
+        Some(((self.pc & 0xFF00) | u16(u8(self.pc + offset)), offset |> u8)),
         Some(page_boundary(self.pc, self.pc + offset)),
       )
     }

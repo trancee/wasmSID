@@ -63,7 +63,7 @@ fn dormann_functional() -> Unit! {
   // })
 
   //
-  let mut last_test : UInt8 = -1
+  let mut last_test : UInt8 = 0xFF
 
   //
   let mut cycles = 0
@@ -113,8 +113,8 @@ fn dormann_interrupt() -> Unit! {
   let start_address = 0x0400
   let end_address = 0x06F5 // 15-aug-2014
   let feedback_address = 0xBFFC
-  let irq_bit = 1 << 0
-  let nmi_bit = 1 << 1
+  let irq_bit = u8(1 << 0)
+  let nmi_bit = u8(1 << 1)
   let nmi_count_address = 0x0200
   let irq_count_address = 0x0201
   let brk_count_address = 0x0202

@@ -57,7 +57,7 @@ pub struct FilterResonanceControl {
   /// of 15 gives maximum resonance.
   ///
   /// Bits 4-7:  Select filter resonance 0-15
-  resonance : Int
+  resonance : UInt8
 } derive(Show)
 
 ///|
@@ -65,7 +65,7 @@ fn FilterResonanceControl::default() -> FilterResonanceControl {
   {
     voice: [Bool::default(), Bool::default(), Bool::default()],
     external: Bool::default(),
-    resonance: Int::default(),
+    resonance: UInt8::default(),
   }
 }
 
@@ -74,46 +74,46 @@ fn FilterResonanceControl::from_u8(value : UInt8) -> FilterResonanceControl {
   {
     voice: [
       /// Bit 0:  Filter the output of voice 1?  1=yes
-      (value & (1 << 0)) != 0,
+      (value & u8(1 << 0)) != 0,
       /// Bit 1:  Filter the output of voice 2?  1=yes
-      (value & (1 << 1)) != 0,
+      (value & u8(1 << 1)) != 0,
       /// Bit 2:  Filter the output of voice 3?  1=yes
-      (value & (1 << 2)) != 0,
+      (value & u8(1 << 2)) != 0,
     ],
     /// Bit 3:  Filter the output from the external input?  1=yes
-    external: (value & (1 << 3)) != 0,
+    external: (value & u8(1 << 3)) != 0,
     /// Bits 4-7:  Select filter resonance 0-15
-    resonance: (value & 0xF0)._ >> 4,
+    resonance: (value & 0xF0) >> 4,
   }
 }
 
 ///|
 fn to_u8(self : FilterResonanceControl) -> UInt8 {
   /// Bit 0:  Filter the output of voice 1?  1=yes
-  (self.voice[0].to_int() << 0) |
+  u8(self.voice[0].to_int() << 0) |
   /// Bit 1:  Filter the output of voice 2?  1=yes
-  (self.voice[1].to_int() << 1) |
+  u8(self.voice[1].to_int() << 1) |
   /// Bit 2:  Filter the output of voice 3?  1=yes
-  (self.voice[2].to_int() << 2) |
+  u8(self.voice[2].to_int() << 2) |
   /// Bit 3:  Filter the output from the external input?  1=yes
-  (self.external.to_int() << 3) |
+  u8(self.external.to_int() << 3) |
   /// Bits 4-7:  Select filter resonance 0-15
-  (self.resonance << 4)
+  u8(self.resonance << 4)
 }
 
 ///|
 pub struct Envelope {
   /// 54277         $D405          ATDCY1
   /// Bits 4-7:  Select attack cycle duration (0-15)
-  mut attack : Int
+  mut attack : UInt8
   /// Bits 0-3:  Select decay cycle duration (0-15)
-  mut decay : Int
+  mut decay : UInt8
 
   /// 54278         $D406          SUREL1
   /// Bits 4-7:  Select sustain volume level (0-15)
-  mut sustain : Int
+  mut sustain : UInt8
   /// Bits 0-3:  Select release cycle duration (0-15)
-  mut release : Int
+  mut release : UInt8
 } derive(Show, Default)
 
 ///|
@@ -471,35 +471,35 @@ struct VoiceControl {
 ///|
 fn VoiceControl::from_u8(value : UInt8) -> VoiceControl {
   {
-    gateBit: (value & (1 << 0)) != 0,
-    syncBit: (value & (1 << 1)) != 0,
-    ringModulation: (value & (1 << 2)) != 0,
-    testBit: (value & (1 << 3)) != 0,
-    triangleWaveform: (value & (1 << 4)) != 0,
-    sawtoothWaveform: (value & (1 << 5)) != 0,
-    pulseWaveform: (value & (1 << 6)) != 0,
-    noiseWaveform: (value & (1 << 7)) != 0,
+    gateBit: (value & u8(1 << 0)) != 0,
+    syncBit: (value & u8(1 << 1)) != 0,
+    ringModulation: (value & u8(1 << 2)) != 0,
+    testBit: (value & u8(1 << 3)) != 0,
+    triangleWaveform: (value & u8(1 << 4)) != 0,
+    sawtoothWaveform: (value & u8(1 << 5)) != 0,
+    pulseWaveform: (value & u8(1 << 6)) != 0,
+    noiseWaveform: (value & u8(1 << 7)) != 0,
   }
 }
 
 ///|
 fn VoiceControl::to_u8(self : VoiceControl) -> UInt8 {
   /// Bit 0:  Gate Bit:  1=Start attack/decay/sustain, 0=Start release
-  (self.gateBit.to_int() << 0) |
+  u8(self.gateBit.to_int() << 0) |
   /// Bit 1:  Sync Bit:  1=Synchronize Oscillator with Oscillator 3 frequency
-  (self.syncBit.to_int() << 1) |
+  u8(self.syncBit.to_int() << 1) |
   /// Bit 2:  Ring Modulation:  1=Ring modulate Oscillators 1 and 3
-  (self.ringModulation.to_int() << 2) |
+  u8(self.ringModulation.to_int() << 2) |
   /// Bit 3:  Test Bit:  1=Disable Oscillator 1
-  (self.testBit.to_int() << 3) |
+  u8(self.testBit.to_int() << 3) |
   /// Bit 4:  Select triangle waveform
-  (self.triangleWaveform.to_int() << 4) |
+  u8(self.triangleWaveform.to_int() << 4) |
   /// Bit 5:  Select sawtooth waveform
-  (self.sawtoothWaveform.to_int() << 5) |
+  u8(self.sawtoothWaveform.to_int() << 5) |
   /// Bit 6:  Select pulse waveform
-  (self.pulseWaveform.to_int() << 6) |
+  u8(self.pulseWaveform.to_int() << 6) |
   /// Bit 7:  Select random noise waveform
-  (self.noiseWaveform.to_int() << 7)
+  u8(self.noiseWaveform.to_int() << 7)
 }
 
 // fn waveform(self : VoiceControl) -> Int {

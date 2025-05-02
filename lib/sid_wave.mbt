@@ -5,7 +5,7 @@ pub struct Wave {
   mut syncSourceMSBrise : Bool
   mut ringSourceMSB : Int
   mut noiseLFSR : Int
-  mut prevWavGenOut : Int
+  mut prevWavGenOut : UInt16
   mut prevWavData : UInt8
 }
 

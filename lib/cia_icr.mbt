@@ -16,19 +16,19 @@ pub enum ICRFlags {
 }
 
 ///|
-fn ICRFlags::op_get(_ : ICRFlags, flag : ICRFlags) -> Int {
+fn ICRFlags::op_get(_ : ICRFlags, flag : ICRFlags) -> UInt8 {
   match flag {
     NONE => 0
     //
-    TA => 1 << 0
-    TB => 1 << 1
-    ALRM => 1 << 2
-    SP => 1 << 3
-    FLG => 1 << 4
-    // 1 << 5
-    // 1 << 6
-    SC => 1 << 7
-    IR => 1 << 7
+    TA => u8(1 << 0)
+    TB => u8(1 << 1)
+    ALRM => u8(1 << 2)
+    SP => u8(1 << 3)
+    FLG => u8(1 << 4)
+    // u8(1 << 5)
+    // u8(1 << 6)
+    SC => u8(1 << 7)
+    IR => u8(1 << 7)
   }
 }
 
@@ -43,7 +43,7 @@ fn ICR::lor(self : ICR, value : ICR) -> ICR {
 }
 
 ///|
-fn icr(flag : ICRFlags) -> Int {
+fn icr(flag : ICRFlags) -> UInt8 {
   flag[flag]
 }
 

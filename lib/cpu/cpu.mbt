@@ -277,12 +277,13 @@ fn read_instruction_word(self : CPU) -> UInt16 {
 
 ///|
 fn read_zeropage(self : CPU, offset : UInt8) -> UInt8 {
-  self.read_address(offset._)
+  self.read_address(offset.to_u16())
 }
 
 ///|
 fn read_zeropage_word(self : CPU, offset : UInt8) -> UInt16 {
-  self.read_address(offset._)._ | (self.read_address((offset + 1)._)._ << 8)
+  self.read_address(offset.to_u16()) |
+  (self.read_address((offset + 1).to_u16())._ << 8)
   |> u16
 }
 
@@ -482,7 +483,7 @@ pub fn step(self : CPU) -> Int {
     let opcode = self.read_instruction()._
 
     //
-    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode]
+    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode.to_int()]
     if self.debug {
       self.dump_step(opcode, name, mode, size, cycles, illegal)
     }
@@ -1062,7 +1063,7 @@ fn opADC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 
 ///|
 fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
-  self.registers[A] = a + b + c
+  self.registers[A] = a + b + c |> u8
 
   //
   if self.flags.decimal() && self.decimal_mode {
@@ -1081,11 +1082,11 @@ fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
       hi += 0x60
     }
     self.flags.setC(hi > 0xFF)
-    self.registers[A] = hi | (lo & 0x0F)
+    self.registers[A] = hi | (lo & 0x0F) |> u8
   } else {
     self.flags.setC(a + b + c > 0xFF)
     self.flags.setV(
-      ((a ^ b) & 0x80) == 0 && ((self.registers[A] ^ a) & 0x80) != 0,
+      ((a ^ b) & 0x80) == 0 && ((self.registers[A] ^ u8(a)) & 0x80) != 0,
     )
     self.flags.setZN(self.registers[A])
   }
@@ -2088,7 +2089,7 @@ fn opJSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   let offset = self.read_instruction()
 
   //
-  self.pc = address | (offset._ << 8)
+  self.pc = address | (offset.to_u16() << 8)
 }
 
 ///| `LDA` - Load Accumulator with Memory
@@ -2569,7 +2570,7 @@ fn opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   //
-  let c = self.flags[C].to_int()
+  let c = u8(self.flags[C])
   if mode == Accumulator {
     self.flags.setC((self.registers[A] & NEGATIVE) != 0)
     self.registers[A] = (self.registers[A] << 1) | c // overflow
@@ -2626,7 +2627,7 @@ fn opROR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   //
-  let c = self.flags[C].to_int()
+  let c = u8(self.flags[C])
 
   //
   if mode == Accumulator {
@@ -2771,8 +2772,8 @@ fn opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   // 
-  let a = self.registers[A]._
-  let b = value._
+  let a = self.registers[A].to_int()
+  let b = value.to_int()
   let c = self.flags[C].to_int()
 
   //
@@ -2781,12 +2782,12 @@ fn opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 
 ///|
 fn sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
-  self.registers[A] = a - b - (1 - c)
+  self.registers[A] = a - b - (1 - c) |> u8
 
   //
   self.flags.setC(a - b - (1 - c) >= 0)
   self.flags.setV(
-    ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A]._) & 0x80) != 0,
+    ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A].to_int()) & 0x80) != 0,
   )
   self.flags.setZN(self.registers[A])
 
@@ -2801,7 +2802,7 @@ fn sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
     if (hi & 0x100) != 0 {
       hi -= 0x60
     }
-    self.registers[A] = hi | (lo & 0x0F)
+    self.registers[A] = hi | (lo & 0x0F) |> u8
   }
 }
 
@@ -3226,7 +3227,7 @@ fn opARR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 
   //
   let t = self.registers[A] & value
-  let mut a = (t >> 1) | (self.flags.carry().to_int() << 7)
+  let mut a = (t >> 1) | (u8(self.flags.carry()) << 7)
 
   //
   if self.flags.decimal() && self.decimal_mode {
@@ -3424,8 +3425,8 @@ fn opISC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 
   // self.opSBC(address, mode)
-  let a = self.registers[A]._
-  let b = value._
+  let a = self.registers[A].to_int()
+  let b = value.to_int()
   let c = self.flags[C].to_int()
 
   //
@@ -3556,7 +3557,7 @@ fn opLAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   //
   let value = if mode is Immediate {
     // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/lax/
-    let magic = 0xEE
+    let magic = u8(0xEE)
 
     //
     let (_, value) = prefetch.unwrap()
@@ -3620,7 +3621,9 @@ fn opRLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   // self.opROL(address, mode)
-  let c = self.flags[C].to_int()
+  let c = u8(self.flags[C])
+
+  //
   if mode == Accumulator {
     self.flags.setC((self.registers[A] & NEGATIVE) != 0)
     self.registers[A] = (self.registers[A] << 1) | c // overflow
@@ -3687,7 +3690,7 @@ fn opRRA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   //
-  let c = self.flags[C].to_int()
+  let c = u8(self.flags[C])
 
   // self.opROR(address, mode)
   if mode == Accumulator {
@@ -4063,7 +4066,7 @@ fn opXAA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   // 
-  let magic = 0xEE // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/ane/
+  let magic = u8(0xEE) // https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/CPU/ane/
 
   //
   let tmp = (self.registers[A] | magic) & self.registers[X] & value
@@ -4609,7 +4612,7 @@ priv enum Instruction {
 
 ///|
 fn Instruction::to_int(self : Instruction) -> Int {
-  get_opcode(self)._
+  get_opcode(self).to_int()
 }
 
 ///|
@@ -4814,11 +4817,11 @@ fn get_opcode(instruction : Instruction) -> UInt8 {
 }
 
 ///|
-fn CPU::op_get(self : CPU, address : Int) -> Int {
-  self.read(address, dummy=true)._
+fn CPU::op_get(self : CPU, address : UInt16) -> UInt8 {
+  self.read(address, dummy=true)
 }
 
 ///|
-fn CPU::op_set(self : CPU, address : Int, value : Int) -> Unit {
+fn CPU::op_set(self : CPU, address : UInt16, value : UInt8) -> Unit {
   self.write(address, value, dummy=true)
 }

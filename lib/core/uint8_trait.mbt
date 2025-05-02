@@ -33,7 +33,17 @@ pub impl U8 for UInt16 with u8(self) {
 }
 
 ///|
+pub impl U8 for Char with u8(self) {
+  UInt8::new(self.to_int())
+}
+
+///|
 pub impl U8 for Byte with u8(self) {
+  UInt8::new(self.to_int())
+}
+
+///|
+pub impl U8 for Bool with u8(self) {
   UInt8::new(self.to_int())
 }
 
@@ -51,12 +61,16 @@ test "U8::u8/basic" {
 ///|
 test "u8/basic" {
   // Test basic conversion from different types
-  let int_val = 42
-  let byte_val = b'\x2A'
+  let int_val : Int = 42
+  let char_val : Char = '\x2A'
+  let byte_val : Byte = '\x2A'
+  let bool_val : Bool = true
   let uint8_val = UInt8::new(42)
   let uint16_val = UInt16::new(42)
   inspect!(u8(int_val), content="2A")
+  inspect!(u8(char_val), content="2A")
   inspect!(u8(byte_val), content="2A")
+  inspect!(u8(bool_val), content="01")
   inspect!(u8(uint8_val), content="2A")
   inspect!(u8(uint16_val), content="2A")
 }
@@ -262,7 +276,11 @@ test "U8::u8/boundary" {
 ///|
 test "U8::u8/type_conversion" {
   // Test conversion between different numeric types
-  let byte = b'\xFF'
+  inspect!(u8(true), content="01")
+  inspect!(u8(false), content="00")
+  let char : Char = '\xFF'
+  inspect!(u8(char), content="FF")
+  let byte : Byte = '\xFF'
   inspect!(u8(byte), content="FF")
   let uint16 = UInt16::new(255)
   inspect!(u8(uint16), content="FF")

@@ -21,7 +21,7 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
     let skip = false
 
     console.log([
-        `///! mpu6502`,
+        `///|! mpu6502`,
         `/// https://github.com/mnaberez/py65/blob/main/py65/tests/devices/test_mpu6502.py`,
         ``,
         `//`,
@@ -159,10 +159,10 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                 if (line.includes(`mpu.p = `))
                     line = line.replace(`mpu.p = `, `cpu.flags.set(`) + `) |> ignore`
                 line = line.replace(`mpu.p`, `cpu.flags.get()`)
-                line = line.replace(` + mpu.sp`, ` + cpu.registers[SP]._`)
-                line = line.replace(` + mpu.a`, ` + cpu.registers[A]._`)
-                line = line.replace(` + mpu.x`, ` + cpu.registers[X]._`)
-                line = line.replace(` + mpu.y`, ` + cpu.registers[Y]._`)
+                line = line.replace(` + mpu.sp`, ` + cpu.registers[SP].to_int()`)
+                line = line.replace(` + mpu.a`, ` + cpu.registers[A].to_int()`)
+                line = line.replace(` + mpu.x`, ` + cpu.registers[X].to_int()`)
+                line = line.replace(` + mpu.y`, ` + cpu.registers[Y].to_int()`)
                 line = line.replace(`mpu.sp`, `cpu.registers[SP]`)
                 line = line.replace(`mpu.a`, `cpu.registers[A]`)
                 line = line.replace(`mpu.x`, `cpu.registers[X]`)
@@ -179,7 +179,7 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                 line = line.replace(`, rel`, `, rel.to_byte()`)
 
                 if (line.includes(`assert_eq!`)) {
-                    line = line.replace(`])`, `]._)`).replace(`())`, `()._)`)
+                    line = line.replace(`])`, `].to_int())`)//.replace(`())`, `().to_int())`)
                 }
 
                 if (line.includes(`for`)) {

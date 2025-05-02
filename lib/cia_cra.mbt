@@ -35,18 +35,18 @@ pub enum CRAFlags {
 }
 
 ///|
-fn CRAFlags::op_get(_ : CRAFlags, flag : CRAFlags) -> Int {
+fn CRAFlags::op_get(_ : CRAFlags, flag : CRAFlags) -> UInt8 {
   match flag {
     NONE => 0
     //
-    START => 1 << 0
-    PBON => 1 << 1
-    OUTMODE => 1 << 2
-    RUNMODE => 1 << 3
-    LOAD => 1 << 4
-    INMODE => 1 << 5
-    SPMODE => 1 << 6
-    TODIN => 1 << 7
+    START => u8(1 << 0)
+    PBON => u8(1 << 1)
+    OUTMODE => u8(1 << 2)
+    RUNMODE => u8(1 << 3)
+    LOAD => u8(1 << 4)
+    INMODE => u8(1 << 5)
+    SPMODE => u8(1 << 6)
+    TODIN => u8(1 << 7)
   }
 }
 
@@ -61,7 +61,7 @@ fn CRA::lor(self : CRA, value : CRA) -> CRA {
 }
 
 ///|
-fn cra(flag : CRAFlags) -> Int {
+fn cra(flag : CRAFlags) -> UInt8 {
   flag[flag]
 }
 

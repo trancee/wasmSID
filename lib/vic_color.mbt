@@ -41,6 +41,11 @@ fn Color::to_int(self : Color) -> Int {
 }
 
 ///|
+fn Color::to_u8(self : Color) -> UInt8 {
+  u8(self.to_int())
+}
+
+///|
 fn Color::from_int(value : Int) -> Color! {
   match value & 0x0F {
     0 => Black
@@ -61,4 +66,9 @@ fn Color::from_int(value : Int) -> Color! {
     15 => LightGray
     _ => raise UnknownColor(value)
   }
+}
+
+///|
+fn Color::from_u8(value : UInt8) -> Color! {
+  Color::from_int!(value.to_int())
 }

@@ -2,7 +2,7 @@
 pub struct ADSR {
   state : ADSRState
   mut rateCounter : UInt16
-  mut envelopeCounter : Int
+  mut envelopeCounter : UInt8
   mut exponentCounter : UInt8
 }
 

@@ -50,8 +50,8 @@ pub struct ControlRegister {
 
 ///|
 pub struct Coordinate {
-  mut x : Int
-  mut y : Int
+  mut x : UInt16
+  mut y : UInt16
 } derive(Default)
 
 ///|
@@ -80,14 +80,14 @@ pub struct VICRegister {
   interruptEnable : InterruptEnable
 
   ///
-  mut rasterScanLine : Int
+  mut rasterScanLine : UInt16
 
   ///
   lightPen : Coordinate
 
   ///
-  mut characterDataArea : Int
-  mut videoMatrixArea : Int
+  mut characterDataArea : UInt8
+  mut videoMatrixArea : UInt8
 }
 
 ///|
@@ -119,14 +119,14 @@ fn VICRegister::default() -> VICRegister {
     interruptEnable: InterruptEnable::default(),
 
     ///
-    rasterScanLine: Int::default(),
+    rasterScanLine: UInt16::default(),
 
     ///
     lightPen: Coordinate::default(),
 
     ///
-    characterDataArea: Int::default(),
-    videoMatrixArea: Int::default(),
+    characterDataArea: UInt8::default(),
+    videoMatrixArea: UInt8::default(),
   }
 }
 

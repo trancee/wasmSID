@@ -34,7 +34,7 @@ fn read_direct(Memory, @core.UInt16) -> @core.UInt8
 
 fn reset(CIA, videoStandard~ : VideoStandard = ..) -> Unit
 
-fn setA(C64, Int) -> Unit
+fn setA(C64, @core.UInt8) -> Unit
 
 fn set_bank(C64, IOPort) -> Unit
 
@@ -56,7 +56,7 @@ fn write_direct(Memory, @core.UInt16, @core.UInt8) -> Unit
 pub struct ADSR {
   state : ADSRState
   mut rateCounter : @core.UInt16
-  mut envelopeCounter : Int
+  mut envelopeCounter : @core.UInt8
   mut exponentCounter : @core.UInt8
 }
 
@@ -90,8 +90,8 @@ pub struct C64 {
   mainVolume : Double
   mut attenuation : Int
   timerSource : Int
-  mut frameCycles : Int
-  mut frameCycleCnt : Int
+  mut frameCycles : @core.UInt16
+  mut frameCycleCnt : @core.UInt16
   mut prevRasterLine : Int
   mut sampleCycleCnt : Int
   mut overSampleCycleCnt : Int
@@ -119,7 +119,7 @@ impl C64 {
   push16(Self, @core.UInt16) -> Unit
   read(Self, @core.UInt16, dummy~ : Bool = ..) -> @core.UInt8
   reset(Self) -> Unit!
-  setA(Self, Int) -> Unit
+  setA(Self, @core.UInt8) -> Unit
   set_bank(Self, IOPort) -> Unit
   set_debug(Self, Bool) -> Unit
   set_flags(Self, @core.UInt8) -> Unit
@@ -517,16 +517,16 @@ pub struct ControlRegister {
 impl Default for ControlRegister
 
 pub struct Coordinate {
-  mut x : Int
-  mut y : Int
+  mut x : @core.UInt16
+  mut y : @core.UInt16
 }
 impl Default for Coordinate
 
 pub struct Envelope {
-  mut attack : Int
-  mut decay : Int
-  mut sustain : Int
-  mut release : Int
+  mut attack : @core.UInt8
+  mut decay : @core.UInt8
+  mut sustain : @core.UInt8
+  mut release : @core.UInt8
 }
 impl Default for Envelope
 impl Show for Envelope
@@ -540,7 +540,7 @@ impl Show for Exception
 pub struct FilterResonanceControl {
   voice : FixedArray[Bool]
   external : Bool
-  resonance : Int
+  resonance : @core.UInt8
 }
 impl Show for FilterResonanceControl
 
@@ -617,7 +617,7 @@ impl Memory {
   clear(Self) -> Unit
   dump(Self, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
   hook(Self, @core.UInt16, @core.UInt16, (@core.UInt16, Bool) -> @core.UInt8, (@core.UInt16, @core.UInt8, Bool) -> Unit) -> Unit
-  new(length~ : Int = .., value~ : Int = ..) -> Self
+  new(length~ : @core.UInt16 = .., value~ : @core.UInt8 = ..) -> Self
   read(Self, @core.UInt16, dummy~ : Bool = ..) -> @core.UInt8
   read_direct(Self, @core.UInt16) -> @core.UInt8
   write(Self, @core.UInt16, @core.UInt8, dummy~ : Bool = ..) -> Unit
@@ -654,14 +654,14 @@ impl Default for Output
 
 pub struct PSID {
   mem : Memory
-  data : FixedArray[Int]
+  data : FixedArray[@core.UInt8]
   mut version : Version
   mut realSID : Bool
   mut digiMode : Bool
-  mut loadAddress : Int
-  mut initAddress : Int
-  mut playAddress : Int
-  mut endAddress : Int
+  mut loadAddress : @core.UInt16
+  mut initAddress : @core.UInt16
+  mut playAddress : @core.UInt16
+  mut endAddress : @core.UInt16
   mut title : String
   mut author : String
   mut info : String
@@ -677,7 +677,7 @@ pub struct PSID {
   mut sid3Address : @core.UInt8
 }
 impl PSID {
-  new(Memory, FixedArray[Int]) -> Self!
+  new(Memory, FixedArray[@core.UInt8]) -> Self!
   process(Self) -> Unit!
   videoStandard(Self) -> VideoStandard
 }
@@ -844,10 +844,10 @@ pub struct VICRegister {
   controlRegister : ControlRegister
   interruptFlag : InterruptFlag
   interruptEnable : InterruptEnable
-  mut rasterScanLine : Int
+  mut rasterScanLine : @core.UInt16
   lightPen : Coordinate
-  mut characterDataArea : Int
-  mut videoMatrixArea : Int
+  mut characterDataArea : @core.UInt8
+  mut videoMatrixArea : @core.UInt8
 }
 
 pub enum VICregister {
@@ -931,7 +931,7 @@ pub struct Wave {
   mut syncSourceMSBrise : Bool
   mut ringSourceMSB : Int
   mut noiseLFSR : Int
-  mut prevWavGenOut : Int
+  mut prevWavGenOut : @core.UInt16
   mut prevWavData : @core.UInt8
 }
 

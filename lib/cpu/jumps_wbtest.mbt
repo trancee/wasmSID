@@ -10,15 +10,15 @@ test "CanJumpToASubroutineAndJumpBackAgain" {
   let p = cpu.flags
 
   //
-  cpu.write(0xFF00 + 0, JSR.to_int())
+  cpu.write(0xFF00 + 0, JSR.to_int() |> u8)
   cpu.write(0xFF00 + 1, 0x00)
   cpu.write(0xFF00 + 2, 0x80)
 
   //
-  cpu.write(0x8000, RTS.to_int())
+  cpu.write(0x8000, RTS.to_int() |> u8)
 
   //
-  cpu.write(0xFF00 + 3, LDA_IM.to_int())
+  cpu.write(0xFF00 + 3, LDA_IM.to_int() |> u8)
   cpu.write(0xFF00 + 4, 0x42)
 
   //
@@ -61,7 +61,7 @@ test "JumpAbsoluteCanJumpToAnNewLocationInTheProgram" {
   let p = cpu.flags
 
   //
-  cpu.write(0xFF00 + 0, JMP_ABS.to_int())
+  cpu.write(0xFF00 + 0, JMP_ABS.to_int() |> u8)
   cpu.write(0xFF00 + 1, 0x00)
   cpu.write(0xFF00 + 2, 0x80)
 
@@ -84,7 +84,7 @@ test "JumpIndirectCanJumpToAnNewLocationInTheProgram" {
   let p = cpu.flags
 
   //
-  cpu.write(0xFF00 + 0, JMP_IND.to_int())
+  cpu.write(0xFF00 + 0, JMP_IND.to_int() |> u8)
   cpu.write(0xFF00 + 1, 0x00)
   cpu.write(0xFF00 + 2, 0x80)
 

@@ -45,11 +45,17 @@ pub struct ALU {
   mut underflow : Bool
 }
 impl ALU {
+  c() -> String
   carry() -> Bool
+  o() -> String
   overflow() -> Bool
+  to_string() -> String
+  u() -> String
   underflow() -> Bool
+  z() -> String
   zero() -> Bool
 }
+impl Show for ALU
 
 pub(all) type UInt16 Int
 impl UInt16 {
@@ -92,12 +98,12 @@ impl @json.FromJson for UInt16
 impl U16 for UInt16
 impl U8 for UInt16
 
-pub(all) type UInt8 Int
+pub(all) type UInt8 Byte
 impl UInt8 {
   bit(Self, Int) -> Bool
-  bitn(Self, Self) -> Int
+  bitn(Self, Int) -> Int
   clr(Self, Self) -> Self
-  clrb(Self, Self) -> Self
+  clrb(Self, Int) -> Self
   default() -> Self
   has(Self, Self) -> Bool
   init(Int) -> Self
@@ -107,8 +113,9 @@ impl UInt8 {
   is_pos(Self) -> Bool
   new(Int) -> Self
   set(Self, Self) -> Self
-  setb(Self, Self) -> Self
+  setb(Self, Int) -> Self
   to_byte(Self) -> Byte
+  to_char(Self) -> Char
   to_hex(Self) -> String
   to_int(Self) -> Int
   to_signed(Self) -> Int
@@ -146,6 +153,8 @@ impl U16 for Int
 pub trait U8 {
   u8(Self) -> UInt8
 }
+impl U8 for Bool
 impl U8 for Byte
+impl U8 for Char
 impl U8 for Int
 

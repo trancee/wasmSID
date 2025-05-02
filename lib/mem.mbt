@@ -81,8 +81,8 @@ struct Memory {
 }
 
 ///|
-pub fn Memory::new(length~ : Int = 0xFFFF, value~ : Int = 0x00) -> Memory {
-  { mem: FixedArray::make(length + 1, value), hooks: [] }
+pub fn Memory::new(length~ : UInt16 = 0xFFFF, value~ : UInt8 = 0x00) -> Memory {
+  { mem: FixedArray::make(length.to_int() + 1, value), hooks: [] }
 }
 
 ///|

@@ -403,7 +403,7 @@ fn testCompareANegativeNumberToAPositive() -> CMPTestData {
   {
     // Input
     pc: 0xFF00,
-    r: -126, // 0x82
+    r: 0x82,
     op: 26,
 
     // Output
@@ -480,9 +480,9 @@ fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
 
   //
   match r {
-    A => cpu.write(t.pc + 0, CMP.to_int())
-    X => cpu.write(t.pc + 0, CPX.to_int())
-    Y => cpu.write(t.pc + 0, CPY.to_int())
+    A => cpu.write(t.pc + 0, CMP.to_int() |> u8)
+    X => cpu.write(t.pc + 0, CPX.to_int() |> u8)
+    Y => cpu.write(t.pc + 0, CPY.to_int() |> u8)
     SP => fail!("SP")
   }
   cpu.write(t.pc + 1, t.op)
@@ -540,9 +540,9 @@ fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
 
   //
   match r {
-    A => cpu.write(t.pc + 0, CMP_ZP.to_int())
-    X => cpu.write(t.pc + 0, CPX_ZP.to_int())
-    Y => cpu.write(t.pc + 0, CPY_ZP.to_int())
+    A => cpu.write(t.pc + 0, CMP_ZP.to_int() |> u8)
+    X => cpu.write(t.pc + 0, CPX_ZP.to_int() |> u8)
+    Y => cpu.write(t.pc + 0, CPY_ZP.to_int() |> u8)
     SP => fail!("SP")
   }
   cpu.write(t.pc + 1, 0x42)
@@ -598,11 +598,11 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(t.pc + 0, CMP_ZPX.to_int())
+  cpu.write(t.pc + 0, CMP_ZPX.to_int() |> u8)
   cpu.write(t.pc + 1, 0x42)
 
   //
-  cpu.write(0x0042 + cpu.registers[X]._, t.op)
+  cpu.write(0x0042 + cpu.registers[X].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -653,9 +653,9 @@ fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
 
   //
   match r {
-    A => cpu.write(t.pc + 0, CMP_ABS.to_int())
-    X => cpu.write(t.pc + 0, CPX_ABS.to_int())
-    Y => cpu.write(t.pc + 0, CPY_ABS.to_int())
+    A => cpu.write(t.pc + 0, CMP_ABS.to_int() |> u8)
+    X => cpu.write(t.pc + 0, CPX_ABS.to_int() |> u8)
+    Y => cpu.write(t.pc + 0, CPY_ABS.to_int() |> u8)
     SP => fail!("SP")
   }
   cpu.write(t.pc + 1, 0x00)
@@ -712,12 +712,12 @@ fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(t.pc + 0, CMP_ABSX.to_int())
+  cpu.write(t.pc + 0, CMP_ABSX.to_int() |> u8)
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[X]._, t.op)
+  cpu.write(0x8000 + cpu.registers[X].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -763,12 +763,12 @@ fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
   cpu.registers[Y] = 0x04
 
   //
-  cpu.write(t.pc + 0, CMP_ABSY.to_int())
+  cpu.write(t.pc + 0, CMP_ABSY.to_int() |> u8)
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 4)
@@ -814,12 +814,12 @@ fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
   cpu.registers[X] = 0x04
 
   //
-  cpu.write(t.pc + 0, CMP_INDX.to_int())
+  cpu.write(t.pc + 0, CMP_INDX.to_int() |> u8)
   cpu.write(t.pc + 1, 0x42)
 
   //
-  cpu.write(0x42 + cpu.registers[X]._ + 0, 0x00)
-  cpu.write(0x42 + cpu.registers[X]._ + 1, 0x80)
+  cpu.write(0x42 + cpu.registers[X].to_int() + 0, 0x00)
+  cpu.write(0x42 + cpu.registers[X].to_int() + 1, 0x80)
 
   //
   cpu.write(0x8000, t.op)
@@ -868,15 +868,15 @@ fn testCompareIndirectY(t : CMPTestData) -> Unit!Error {
   cpu.registers[Y] = 0x04
 
   //
-  cpu.write(t.pc + 0, CMP_INDY.to_int())
+  cpu.write(t.pc + 0, CMP_INDY.to_int() |> u8)
   cpu.write(t.pc + 1, 0x42)
 
   //
-  cpu.write(0x42 + cpu.registers[X]._ + 0, 0x00)
-  cpu.write(0x42 + cpu.registers[X]._ + 1, 0x80)
+  cpu.write(0x42 + cpu.registers[X].to_int() + 0, 0x00)
+  cpu.write(0x42 + cpu.registers[X].to_int() + 1, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].to_int(), t.op)
 
   //
   assert_eq!(cpu.step(), 5)

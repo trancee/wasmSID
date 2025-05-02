@@ -5,9 +5,9 @@ import(
 )
 
 // Values
-fn benchmark() -> Unit!
-
 fn dormann() -> Unit!
+
+fn instructions(path~ : String = .., decimal_mode~ : Bool = ..) -> Unit!
 
 fn lorenz() -> Unit!
 

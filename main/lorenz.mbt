@@ -55,8 +55,8 @@ fn setup(c64 : C64) -> Unit {
     c64[SAREG] = 0x00 // Storage for 6502 .A Register
 
     //
-    let a = cpu.a()._
-    match a {
+    let a = cpu.a()
+    match a.to_int() {
       13 => {
         println("\u{1B}[33m\{builder}\u{1B}[0m")
         builder.reset()
@@ -74,7 +74,7 @@ fn setup(c64 : C64) -> Unit {
         } else {
           a
         }
-        builder.write_char(Char::from_int(a))
+        builder.write_char(a.to_char())
       }
     }
   })

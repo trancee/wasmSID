@@ -267,11 +267,11 @@ fn emulateADSR(self : SID, cycles : Int) -> Unit {
     }
     //
     if adsr.state.attack {
-      prescalePeriod = adsrPrescalePeriods[voice.envelope.attack]
+      prescalePeriod = adsrPrescalePeriods[voice.envelope.attack.to_int()]
     } else if adsr.state.decaySustain {
-      prescalePeriod = adsrPrescalePeriods[voice.envelope.decay]
+      prescalePeriod = adsrPrescalePeriods[voice.envelope.decay.to_int()]
     } else {
-      prescalePeriod = adsrPrescalePeriods[voice.envelope.release]
+      prescalePeriod = adsrPrescalePeriods[voice.envelope.release.to_int()]
     }
     //
     adsr.rateCounter += cycles
@@ -285,7 +285,8 @@ fn emulateADSR(self : SID, cycles : Int) -> Unit {
       adsr.rateCounter -= prescalePeriod //reset rate-counter on period-match
       adsr.exponentCounter += 1
       if adsr.state.attack ||
-        adsr.exponentCounter == adsrExponentPeriods[adsr.envelopeCounter] {
+        adsr.exponentCounter ==
+        adsrExponentPeriods[adsr.envelopeCounter.to_int()] {
         adsr.exponentCounter = 0
         if adsr.state.holdZeroN {
           if adsr.state.attack {
@@ -320,7 +321,7 @@ fn emulateWaves(
   self.filterInputSample = 0
   let filterSwitchReso = self.register.filterResonanceControl
   // let volumeBand = self.register.outputVolume
-  let mut wavGenOut = 0
+  let mut wavGenOut : UInt16 = 0
   //
   //Waveform-generator //(phase accumulator and waveform-selector)
   //
@@ -330,18 +331,19 @@ fn emulateWaves(
     let wave = self.wave[channel]
     //
 
-    fn combinedWF(wfArray : Waveform, oscval : Int) -> Int {
+    fn combinedWF(wfArray : Waveform, oscval : UInt16) -> UInt16 {
       let mut oscval = oscval
       if self.model == MOS6581 && wfArray != PulseTriangle {
         oscval = oscval & 0x7FFF
       }
-      let pitch = voice.frequency
-      let filt = 0x7777 + 0x8888 / pitch._
-      wave.prevWavData = (
-          wfArray[oscval >> 4] * filt + wave.prevWavData * (0xFFFF - filt)
+      let pitch = voice.frequency.to_int()
+      let filt = 0x7777 + 0x8888 / pitch
+      wave.prevWavData = u8(
+          wfArray[oscval.to_int() >> 4].to_int() * filt +
+          wave.prevWavData.to_int() * (0xFFFF - filt),
         ) >>
         16
-      wave.prevWavData._ << 8
+      wave.prevWavData << 8 |> u16
     }
 
     //
@@ -351,7 +353,7 @@ fn emulateWaves(
 
     //
     let mut tmp = 0
-    let mut envelope = 0
+    let mut envelope : UInt8 = 0
     let mut feedback = false
     let mut steepness = 0
     let mut pulsePeak = 0
@@ -467,7 +469,8 @@ fn emulateWaves(
         }
         wavGenOut += (wavGenOut * steepness) >> 16 //1st half (rising edge) of asymmetric triangle-like saw waveform
         if wavGenOut > 0xFFFF {
-          wavGenOut = 0xFFFF - ((wavGenOut - 0x10000) << 16) / steepness //2nd half (falling edge, reciprocal steepness)
+          wavGenOut = 0xFFFF -
+            ((wavGenOut.to_int() - 0x10000) << 16) / steepness //2nd half (falling edge, reciprocal steepness)
         }
       }
     } else if voiceControl.triangleWaveform { //triangle (this waveform has no harsh edges, so it doesn't suffer from strong aliasing at high pitches)
@@ -491,12 +494,18 @@ fn emulateWaves(
     envelope = if self.model == MOS8580 {
       adsr.envelopeCounter
     } else {
-      adsrDAC_6581[adsr.envelopeCounter]._
+      adsrDAC_6581[adsr.envelopeCounter.to_int()]
     }
     if filterSwitchReso.voice[channel] {
-      self.filterInputSample += ((wavGenOut - 0x8000) * envelope) >> 8 // FIXME: (int) clamping?
+      self.filterInputSample += (
+          (wavGenOut.to_int() - 0x8000) * envelope.to_int()
+        ) >>
+        8 // FIXME: (int) clamping?
     } else if channel != 2 || not(self.register.disconnectVoice) {
-      self.nonFiltedSample += ((wavGenOut - 0x8000) * envelope) >> 8 // FIXME: (int) clamping?
+      self.nonFiltedSample += (
+          (wavGenOut.to_int() - 0x8000) * envelope.to_int()
+        ) >>
+        8 // FIXME: (int) clamping?
     }
   }
 
@@ -529,7 +538,7 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
   let filterSwitchReso = self.register.filterResonanceControl
   let filterSelect = self.register.filterSelect
   let mut cutoff = self.register.cutoffFrequency // (SID->BasePtr[0x16] << 3) + (SID->BasePtr[0x15] & 7);
-  let mut resonance = filterSwitchReso.resonance
+  let mut resonance = u16(filterSwitchReso.resonance)
   //
 
   nonFilted = self.nonFiltedSample
@@ -539,8 +548,8 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
 
   match self.model {
     MOS8580 => {
-      cutoff = cutoffMul8580_44100Hz[cutoff._]
-      resonance = resonances8580[resonance]._
+      cutoff = cutoffMul8580_44100Hz[cutoff.to_int()]
+      resonance = resonances8580[resonance.to_int()]
     }
     MOS6581 => {
       //MOSFET-VCR control-voltage calculation
@@ -550,8 +559,8 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
       } else if cutoff < 0 {
         cutoff = 0
       }
-      cutoff = cutoffMul6581_44100Hz[cutoff._] //(resistance-modulation aka 6581 filter distortion) emulation
-      resonance = resonances6581[resonance]._
+      cutoff = cutoffMul6581_44100Hz[cutoff.to_int()] //(resistance-modulation aka 6581 filter distortion) emulation
+      resonance = resonances6581[resonance.to_int()]
     }
     _ => {
       println("unknown SID model")
@@ -561,16 +570,18 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
 
   //
   filterOutput = 0
-  tmp = filterInput + ((self.prevBandPass * resonance) >> 12) + self.prevLowPass
+  tmp = filterInput +
+    ((self.prevBandPass * resonance.to_int()) >> 12) +
+    self.prevLowPass
   if filterSelect.highPass {
     filterOutput -= tmp
   }
-  tmp = self.prevBandPass - ((tmp * cutoff._) >> 12)
+  tmp = self.prevBandPass - ((tmp * cutoff.to_int()) >> 12)
   self.prevBandPass = tmp
   if filterSelect.bandPass {
     filterOutput -= tmp
   }
-  tmp = self.prevLowPass + ((tmp * cutoff._) >> 12)
+  tmp = self.prevLowPass + ((tmp * cutoff.to_int()) >> 12)
   self.prevLowPass = tmp
   if filterSelect.lowPass {
     filterOutput += tmp
@@ -588,7 +599,7 @@ fn emulateSIDoutputStage(self : SID, attenuation : Int, realSID : Bool) -> Int {
     self.prevVolume += (tmp - self.prevVolume) >> 10 //arithmetic shift amount determines digi lowpass-frequency
     mainVolume = self.prevVolume >> 12
   } else { //lowpass is main volume
-    mainVolume = self.register.volume._
+    mainVolume = self.register.volume.to_int()
   }
 
   //
@@ -608,7 +619,7 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
   //
   let wavOutput = { nonFilted: 0, filterInput: 0 }
   let filterSwitchReso = self.register.filterResonanceControl
-  let mut wavGenOut = 0
+  let mut wavGenOut : UInt16 = 0
   //
   //Waveform-generator //(phase accumulator and waveform-selector)
   //
@@ -617,19 +628,19 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
     let adsr = self.adsr[channel]
     let wave = self.wave[channel]
     //
-    fn combinedHQWF(wfArray : Waveform, oscval : Int) -> Int {
+    fn combinedHQWF(wfArray : Waveform, oscval : UInt16) -> UInt16 {
       let mut oscval = oscval
       if self.model == MOS6581 && wfArray != PulseTriangle {
         oscval = oscval & 0x7FFF
       }
-      return wfArray[oscval >> 4]._ << 8
+      return wfArray[oscval.to_int() >> 4].to_int() << 8
     }
 
     let mut utmp = 0
     let mut msb = 0
     let mut pw = 0
     let mut tmp = 0
-    let mut envelope = 0
+    let mut envelope : UInt8 = 0
     let mut feedback = false
     //
     //
@@ -725,18 +736,24 @@ fn emulateHQWaves(self : SID, cycles : Int) -> SIDwavOutput {
       envelope = if self.model == MOS8580 {
         adsr.envelopeCounter
       } else {
-        adsrDAC_6581[adsr.envelopeCounter]._
+        adsrDAC_6581[adsr.envelopeCounter.to_int()]
       }
       if filterSwitchReso.voice[channel] {
-        wavOutput.filterInput += ((wavGenOut - 0x8000) * envelope) >> 8 // FIXME: (int) clamping?
+        wavOutput.filterInput += (
+            (wavGenOut.to_int() - 0x8000) * envelope.to_int()
+          ) >>
+          8 // FIXME: (int) clamping?
       } else if channel != 2 || not(self.register.disconnectVoice) {
-        wavOutput.nonFilted += ((wavGenOut - 0x8000) * envelope) >> 8 // FIXME: (int) clamping?
+        wavOutput.nonFilted += (
+            (wavGenOut.to_int() - 0x8000) * envelope.to_int()
+          ) >>
+          8 // FIXME: (int) clamping?
       }
     }
   }
 
   //update readable SID1-registers (some SID tunes might use 3rd channel ENV3/OSC3 value as control)
-  self[RANDOM] = wavGenOut >> 8 //OSC3, ENV3 (some players rely on it, unfortunately even for timing)
+  self[RANDOM] = wavGenOut >> 8 |> u8 //OSC3, ENV3 (some players rely on it, unfortunately even for timing)
   self[ENV3] = self.adsr[2].envelopeCounter //Envelope
 
   //
@@ -845,10 +862,10 @@ fn SID::op_get(self : SID, register : SIDregister) -> UInt8 {
     /// Bit 7:  Disconnect output of voice 4, 1=voice 3 off
     SIGVOL =>
       self.register.volume |
-      (self.register.filterSelect.lowPass.to_int() << 4) |
-      (self.register.filterSelect.bandPass.to_int() << 5) |
-      (self.register.filterSelect.highPass.to_int() << 6) |
-      (self.register.disconnectVoice.to_int() << 7)
+      u8(self.register.filterSelect.lowPass.to_int() << 4) |
+      u8(self.register.filterSelect.bandPass.to_int() << 5) |
+      u8(self.register.filterSelect.highPass.to_int() << 6) |
+      u8(self.register.disconnectVoice.to_int() << 7)
 
     ///
     _ => {
@@ -961,10 +978,10 @@ fn SID::op_set(self : SID, register : SIDregister, value : UInt8) -> Unit {
     /// 54296         $D418          SIGVOL
     SIGVOL => {
       self.register.volume = value & 0x0F
-      self.register.filterSelect.lowPass = (value & (1 << 4)) != 0
-      self.register.filterSelect.bandPass = (value & (1 << 5)) != 0
-      self.register.filterSelect.highPass = (value & (1 << 6)) != 0
-      self.register.disconnectVoice = (value & (1 << 7)) != 0
+      self.register.filterSelect.lowPass = (value & u8(1 << 4)) != 0
+      self.register.filterSelect.bandPass = (value & u8(1 << 5)) != 0
+      self.register.filterSelect.highPass = (value & u8(1 << 6)) != 0
+      self.register.disconnectVoice = (value & u8(1 << 7)) != 0
     }
 
     /// Read Game Paddle 1 (or 3) Position

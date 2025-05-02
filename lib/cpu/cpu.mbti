@@ -5,9 +5,9 @@ import(
 )
 
 // Values
-const BREAK : Int = 0b00010000
+const BREAK : Byte = 0b00010000
 
-const CARRY : Int = 0b00000001
+const CARRY : Byte = 0b00000001
 
 const CPU_MEM_END : Int = 0xFFFF
 
@@ -15,21 +15,23 @@ const CPU_MEM_SIZE : Int = 0xFFFF
 
 const CPU_MEM_START : Int = 0x0000
 
-const INTERRUPT : Int = 0b00000100
+const DECIMAL : Byte = 0b00001000
+
+const INTERRUPT : Byte = 0b00000100
 
 const IRQ : Int = 0xFFFE
 
-const NEGATIVE : Int = 0b10000000
+const NEGATIVE : Byte = 0b10000000
 
 const NMI : Int = 0xFFFA
 
-const OVERFLOW : Int = 0b01000000
+const OVERFLOW : Byte = 0b01000000
 
 const RESET : Int = 0xFFFC
 
-const UNUSED : Int = 0b00100000
+const UNUSED : Byte = 0b00100000
 
-const ZERO : Int = 0b00000010
+const ZERO : Byte = 0b00000010
 
 fn a(CPU) -> @core.UInt8
 
@@ -37,13 +39,15 @@ fn clear_flags(CPU) -> Unit
 
 fn clear_registers(CPU) -> Unit
 
-fn dump(CPU, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+fn dump(CPU, address~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
 
 fn get_flags(CPU) -> Flags
 
 fn get_registers(CPU) -> Registers
 
 fn has_interrupt(CPU) -> Bool
+
+let instructions : FixedArray[(String, (CPU, @core.UInt16, Mode) -> Unit, Mode, Int, Int, Int, Bool)]
 
 fn interrupts(CPU) -> Bool
 
@@ -105,7 +109,7 @@ impl CPU {
   clear_flags(Self) -> Unit
   clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
-  dump(Self, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+  dump(Self, address~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
   get_flags(Self) -> Flags
   get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
@@ -158,6 +162,10 @@ impl Flags {
 }
 impl Eq for Flags
 impl Show for Flags
+
+type Mode
+impl Eq for Mode
+impl Show for Mode
 
 pub(all) enum Register {
   SP

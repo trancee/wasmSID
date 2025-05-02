@@ -247,7 +247,7 @@ fn CIARegister::default() -> CIARegister {
     //
     timeOfDay: TimeOfDay::default(),
     //
-    serialData: Int::default(),
+    serialData: UInt8::default(),
     //
     interruptControl: CIAInterruptControl::default(),
     interruptEnable: CIAInterruptEnable::default(),

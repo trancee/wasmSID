@@ -11,32 +11,32 @@ pub(all) enum Flag {
 } derive(Eq)
 
 ///| 0x01 Carry Flag
-pub const CARRY = 0b00000001
+pub const CARRY : Byte = 0b00000001
 
 ///| 0x02 Zero Flag
-pub const ZERO = 0b00000010
+pub const ZERO : Byte = 0b00000010
 
 ///| 0x04 Interrupt Disable Flag
-pub const INTERRUPT = 0b00000100
+pub const INTERRUPT : Byte = 0b00000100
 
 ///| 0x08 Decimal Mode Flag
-// const DECIMAL = 0b00001000
+pub const DECIMAL : Byte = 0b00001000
 
 ///| 0x10 Break Command Flag
-pub const BREAK = 0b00010000
+pub const BREAK : Byte = 0b00010000
 
 ///| 0x20 Unused Flag
-pub const UNUSED = 0b00100000
+pub const UNUSED : Byte = 0b00100000
 
 ///| 0x40 Overflow Flag
-pub const OVERFLOW = 0b01000000
+pub const OVERFLOW : Byte = 0b01000000
 
 ///| 0x80 Negative Flag
-pub const NEGATIVE = 0b10000000
+pub const NEGATIVE : Byte = 0b10000000
 
 ///|
 pub fn Flag::lor(self : Flag, flag : Flag) -> UInt8 {
-  self.bits() | flag.bits()
+  self.bits() | flag.bits() |> u8
 }
 
 ///|
@@ -65,10 +65,10 @@ struct Flags {
   mut n : Bool // 7: Negative Flag
 } derive(Show, Eq)
 
-///|
-fn Flags::from_int(flags : Int) -> Flags {
-  Flags::new(flags~)
-}
+// ///|
+// fn Flags::from_int(flags : Int) -> Flags {
+//   Flags::new(flags~)
+// }
 
 ///|
 pub fn Flags::new(flags? : UInt8) -> Flags {
@@ -172,6 +172,7 @@ pub fn Flags::get(self : Flags) -> UInt8 {
   self.getU() |
   self.getV() |
   self.getN()
+  |> u8
 }
 
 // Set status register value.

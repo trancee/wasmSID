@@ -77,8 +77,8 @@ pub struct C64 {
   //
   // PSID-playback related:
   //
-  mut frameCycles : Int
-  mut frameCycleCnt : Int //this is a substitution in PSID-mode for CIA/VIC counters
+  mut frameCycles : UInt16
+  mut frameCycleCnt : UInt16 //this is a substitution in PSID-mode for CIA/VIC counters
   mut prevRasterLine : Int
   mut sampleCycleCnt : Int
   mut overSampleCycleCnt : Int
@@ -852,7 +852,7 @@ pub fn set_interrupt_flag(self : C64) -> Unit {
 }
 
 ///|
-pub fn setA(self : C64, value : Int) -> Unit {
+pub fn setA(self : C64, value : UInt8) -> Unit {
   self.cpu.register(@cpu.A, value)
 }
 
@@ -942,7 +942,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // VIC-II DMA or Character ROM
   if address >= VIC_MEM_START && address <= VIC_MEM_END {
     match self.bank[BANK_CHARACTERS] {
-      ROM => return self.characters[address._ - VIC_MEM_START].to_int()
+      ROM => return self.characters[address._ - VIC_MEM_START]
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -950,7 +950,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // BASIC or RAM
   if address >= C64_BASIC_MEM_START && address <= C64_BASIC_MEM_END {
     match self.bank[BANK_BASIC] {
-      ROM => return self.basic[address._ - C64_BASIC_MEM_START].to_int()
+      ROM => return self.basic[address._ - C64_BASIC_MEM_START]
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -958,7 +958,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // KERNAL
   if address >= C64_KERNAL_MEM_START && address <= C64_KERNAL_MEM_END {
     match self.bank[BANK_KERNAL] {
-      ROM => return self.kernal[address._ - C64_KERNAL_MEM_START].to_int()
+      ROM => return self.kernal[address._ - C64_KERNAL_MEM_START]
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }
@@ -966,8 +966,7 @@ pub fn C64::read(self : C64, address : UInt16, dummy~ : Bool = false) -> UInt8 {
   // CHARACTERS
   if address >= C64_CHARACTERS_MEM_START && address <= C64_CHARACTERS_MEM_END {
     match self.bank[BANK_CHARACTERS] {
-      ROM =>
-        return self.characters[address._ - C64_CHARACTERS_MEM_START].to_int()
+      ROM => return self.characters[address._ - C64_CHARACTERS_MEM_START]
       RAM => return self.read_direct(address)
       IO => if self.debug {  }
     }

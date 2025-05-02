@@ -86,17 +86,17 @@ pub fn sidtest() -> Unit! {
 }
 
 ///|
-fn initSIDtune(c64 : C64, psid : PSID, subtune : Int) -> Unit {
+fn initSIDtune(c64 : C64, psid : PSID, subtune : UInt16) -> Unit {
   let mut subtune = subtune
   if subtune == 0 {
     subtune = 1
-  } else if subtune > psid.songs._ {
-    subtune = psid.songs._
+  } else if subtune > psid.songs {
+    subtune = psid.songs
   }
 
   //determine init-address:
   c64.initCPU(pc=psid.initAddress)
-  c64.setA(subtune - 1)
+  c64.setA(subtune - 1 |> u8)
   c64.push16(0xFFFF)
   let mut i = 0
   while c64.pc() != 0x0000 && i < 1000 {
@@ -195,7 +195,7 @@ fn initSIDtune(c64 : C64, psid : PSID, subtune : Int) -> Unit {
 // ]
 
 ///|
-let siddata : FixedArray[Int] = [
+let siddata : FixedArray[UInt8] = [
   // 0x0000 MagicString           "PSID"
   0x50, 0x53, 0x49, 0x44,
   // 0x0004 Version               0x0002

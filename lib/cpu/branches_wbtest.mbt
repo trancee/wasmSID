@@ -86,7 +86,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSet" {
   let t = {
     // Input
     pc: 0xFFCC,
-    op: -2,
+    op: 0xFE, // -2,
     ins: BEQ,
 
     //
@@ -370,10 +370,10 @@ fn testBEQ(t : BEQTestData) -> Unit!Error {
 
   //
   if t.expectCycles == 5 {
-    cpu.write(t.pc + 0, LDA_IM.to_int())
+    cpu.write(t.pc + 0, LDA_IM.to_int() |> u8)
     cpu.write(t.pc + 1, t.op)
-    cpu.write(t.pc + 2, t.ins.to_int())
-    cpu.write(t.pc + 3, -4)
+    cpu.write(t.pc + 2, t.ins.to_int() |> u8)
+    cpu.write(t.pc + 3, 0xFC) // -4)
 
     //
     let mut cycles = cpu.step()
@@ -382,7 +382,7 @@ fn testBEQ(t : BEQTestData) -> Unit!Error {
     //
     assert_eq!(cycles, t.expectCycles)
   } else {
-    cpu.write(t.pc + 0, t.ins.to_int())
+    cpu.write(t.pc + 0, t.ins.to_int() |> u8)
     cpu.write(t.pc + 1, t.op)
 
     //
