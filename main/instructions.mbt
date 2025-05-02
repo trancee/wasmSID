@@ -222,17 +222,30 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
   let cycles : Array[(UInt16, UInt8, String)] = []
 
   //
+  let pc : UInt16 = match testcase.initial {
+    None => 0x0000
+    Some(initial) => initial.pc
+  }
+  let registers = match testcase.initial {
+    None => @cpu.Registers::new()
+    Some(initial) =>
+      @cpu.Registers::new(
+        sp=initial.s.or_default(),
+        a=initial.a.or_default(),
+        x=initial.x.or_default(),
+        y=initial.y.or_default(),
+      )
+  }
+  let flags = match testcase.initial {
+    None => @cpu.Flags::new()
+    Some(initial) => @cpu.Flags::new(flags=initial.p.or_default())
+  }
   let cpu = CPU::new!(
-    pc=testcase.initial.pc,
+    pc~,
 
     //
-    registers=@cpu.Registers::new(
-      sp=testcase.initial.s,
-      a=testcase.initial.a,
-      x=testcase.initial.x,
-      y=testcase.initial.y,
-    ),
-    flags=@cpu.Flags::new(flags=testcase.initial.p),
+    registers~,
+    flags~,
 
     //
     decimal_mode~,
@@ -240,9 +253,18 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
     //
     debug~,
   )
-  for data in testcase.initial.ram {
-    cpu.mem[data.0._] = data.1
+
+  //
+  match testcase.initial {
+    None => ignore(testcase.initial)
+    Some(initial) =>
+      for data in initial.ram.or_default() {
+        let (address, value) = data
+        cpu.mem[address._] = value
+      }
   }
+
+  //
   cpu.set_read(fn(address : UInt16, _ : Bool) -> UInt8 {
     // println("(\{address}, \{cpu.mem[address._]}, \"read\")")
     cycles.push((address, cpu.mem[address._], "read"))
@@ -262,31 +284,47 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
   let cycle = cpu.step()
 
   //
-  verify!("cycles", testcase, testcase.cycles.length(), cycles.length(), cycles)
-  verify!("cycle", testcase, cycle, cycles.length(), cycles)
+  verify!("cycle", testcase, cycle, cycles.length(), cycles~)
+  match testcase.cycles {
+    None => ignore(testcase.cycles)
+    Some(cycle) => {
+      verify!("cycles", testcase, cycle.length(), cycles.length(), cycles~)
 
-  //
-  for i in 0..<testcase.cycles.length() {
-    // println("\{i} \{testcase.cycles.length()} \{cycles.length()}")
-    // let ok = testcase.cycles[i] == cycles[i]
-    // let result = match ok {
-    //   true => "\u{1B}[32;1m✔️\u{1B}[0m"
-    //   false => "\u{1B}[31;1;6m❌\u{1B}[0m"
-    // }
-    // println("\{testcase.cycles[i]} \t \{cycles[i]} \t \{result}")
-    verify!("cycles", testcase, testcase.cycles[i], cycles[i], cycles)
+      //
+      for i in 0..<cycle.length() {
+        // println("\{i} \{testcase.cycles.length()} \{cycles.length()}")
+        // let ok = testcase.cycles[i] == cycles[i]
+        // let result = match ok {
+        //   true => "\u{1B}[32;1m✔️\u{1B}[0m"
+        //   false => "\u{1B}[31;1;6m❌\u{1B}[0m"
+        // }
+        // println("\{testcase.cycles[i]} \t \{cycles[i]} \t \{result}")
+        verify!("cycles", testcase, cycle[i], cycles[i], cycles~)
+      }
+    }
   }
 
   //
-  verify!("PC", testcase, testcase.final.pc, cpu.pc, cycles)
-  verify!("S", testcase, testcase.final.s, cpu.registers[SP], cycles)
-  verify!("A", testcase, testcase.final.a, cpu.registers[A], cycles)
-  verify!("X", testcase, testcase.final.x, cpu.registers[X], cycles)
-  verify!("Y", testcase, testcase.final.y, cpu.registers[Y], cycles)
-  verify!("P", testcase, testcase.final.p, cpu.flags.get(), cycles)
-  for data in testcase.final.ram {
-    let (address, value) = data
-    verify!("\{address}", testcase, value, cpu.mem[address._], cycles)
+  match testcase.final {
+    None => ignore(testcase.final)
+    Some(final) => {
+      verify!("PC", testcase, final.pc, cpu.pc, cycles~)
+      verify!("S", testcase, final.s, Some(cpu.registers[SP]), cycles~)
+      verify!("A", testcase, final.a, Some(cpu.registers[A]), cycles~)
+      verify!("X", testcase, final.x, Some(cpu.registers[X]), cycles~)
+      verify!("Y", testcase, final.y, Some(cpu.registers[Y]), cycles~)
+      verify!("P", testcase, final.p, Some(cpu.flags.get()), cycles~)
+
+      //
+      match final.ram {
+        None => ignore(final.ram)
+        Some(ram) =>
+          for data in ram {
+            let (address, value) = data
+            verify!("\{address}", testcase, value, cpu.mem[address._], cycles~)
+          }
+      }
+    }
   }
 
   //
@@ -299,7 +337,7 @@ fn verify[T : Eq + Show](
   testcase : Test,
   a : T,
   b : T,
-  cycles : Array[(UInt16, UInt8, String)],
+  cycles? : Array[(UInt16, UInt8, String)],
   loc~ : SourceLoc = _
 ) -> Unit! {
   if a != b {
@@ -323,18 +361,41 @@ fn verify[T : Eq + Show](
 ///|
 struct State {
   pc : UInt16
-  s : UInt8
-  a : UInt8
-  x : UInt8
-  y : UInt8
-  p : UInt8
-  ram : Array[(UInt16, UInt8)]
-} derive(FromJson, Show, Eq)
+  s : UInt8?
+  a : UInt8?
+  x : UInt8?
+  y : UInt8?
+  p : UInt8?
+  ram : Array[(UInt16, UInt8)]?
+} derive(FromJson, Show, Eq, Default)
+
+///|
+fn State::new(
+  pc~ : UInt16,
+  s? : UInt8,
+  a? : UInt8,
+  x? : UInt8,
+  y? : UInt8,
+  p? : UInt8,
+  ram? : Array[(UInt16, UInt8)]
+) -> State {
+  { pc, s, a, x, y, p, ram }
+}
 
 ///|
 struct Test {
   name : String
-  initial : State
-  final : State
-  cycles : Array[(UInt16, UInt8, String)]
-} derive(FromJson, Show, Eq)
+  initial : State?
+  final : State?
+  cycles : Array[(UInt16, UInt8, String)]?
+} derive(FromJson, Show, Eq, Default)
+
+///|
+fn Test::new(
+  name : String,
+  initial? : State,
+  final? : State,
+  cycles? : Array[(UInt16, UInt8, String)]
+) -> Test {
+  { name, initial, final, cycles }
+}

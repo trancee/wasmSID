@@ -37,13 +37,15 @@ fn clear_flags(CPU) -> Unit
 
 fn clear_registers(CPU) -> Unit
 
-fn dump(CPU, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+fn dump(CPU, address~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
 
 fn get_flags(CPU) -> Flags
 
 fn get_registers(CPU) -> Registers
 
 fn has_interrupt(CPU) -> Bool
+
+let instructions : FixedArray[(String, (CPU, @core.UInt16, Mode) -> Unit, Mode, Int, Int, Int, Bool)]
 
 fn interrupts(CPU) -> Bool
 
@@ -105,7 +107,7 @@ impl CPU {
   clear_flags(Self) -> Unit
   clear_interrupt(Self) -> Unit
   clear_registers(Self) -> Unit
-  dump(Self, addr~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
+  dump(Self, address~ : @core.UInt16 = .., cols~ : Int = .., rows~ : Int = ..) -> Unit
   get_flags(Self) -> Flags
   get_registers(Self) -> Registers
   has_interrupt(Self) -> Bool
@@ -152,12 +154,16 @@ impl Eq for Flag
 type Flags
 impl Flags {
   get(Self) -> @core.UInt8
-  new(flags? : @core.UInt8) -> Self
+  new(flags~ : @core.UInt8 = ..) -> Self
   set(Self, @core.UInt8) -> @core.UInt8
   set_interrupt(Self) -> Unit
 }
 impl Eq for Flags
 impl Show for Flags
+
+type Mode
+impl Eq for Mode
+impl Show for Mode
 
 pub(all) enum Register {
   SP

@@ -45,11 +45,17 @@ pub struct ALU {
   mut underflow : Bool
 }
 impl ALU {
+  c() -> String
   carry() -> Bool
+  o() -> String
   overflow() -> Bool
+  to_string() -> String
+  u() -> String
   underflow() -> Bool
+  z() -> String
   zero() -> Bool
 }
+impl Show for ALU
 
 pub(all) type UInt16 Int
 impl UInt16 {

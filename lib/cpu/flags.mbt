@@ -71,8 +71,7 @@ fn Flags::from_int(flags : Int) -> Flags {
 }
 
 ///|
-pub fn Flags::new(flags? : UInt8) -> Flags {
-  let flags = flags.or(0x00)
+pub fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
   {
     c: flags.bit(0),
     z: flags.bit(1),
