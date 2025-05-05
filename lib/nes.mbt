@@ -62,7 +62,7 @@ pub fn NES::pc(self : NES) -> UInt16 {
 }
 
 ///|
-pub fn NES::set_flags(self : NES, flags : UInt8) -> Unit {
+pub fn NES::set_flags(self : NES, flags : @cpu.Flags) -> Unit {
   self.cpu.set_flags(flags)
 }
 

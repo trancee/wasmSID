@@ -26,7 +26,7 @@ pub fn nestest() -> Unit! {
   )
 
   //
-  nes.set_flags(@cpu.UNUSED | @cpu.INTERRUPT)
+  nes.set_flags(Flags::from_int(@cpu.UNUSED | @cpu.INTERRUPT))
 
   //
   nes.load!(

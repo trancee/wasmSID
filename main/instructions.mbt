@@ -237,8 +237,8 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
       )
   }
   let flags = match testcase.initial {
-    None => @cpu.Flags::new()
-    Some(initial) => @cpu.Flags::new(flags=initial.p.or_default())
+    None => @cpu.Flags::default()
+    Some(initial) => @cpu.Flags::new(initial.p)
   }
   let cpu = CPU::new!(
     pc~,
@@ -347,9 +347,13 @@ fn verify[T : Eq + Show](
     println("--")
     println(testcase.initial)
     println(testcase.final)
-    println("--")
-    println(testcase.cycles)
-    println(cycles)
+    if testcase.cycles.is_empty() && cycles.is_empty() {
+
+    } else {
+      println("--")
+      println(testcase.cycles)
+      println(cycles)
+    }
     println("--")
     raise Failure("\{loc}")
   }
@@ -388,6 +392,7 @@ struct Test {
   initial : State?
   final : State?
   cycles : Array[(UInt16, UInt8, String)]?
+  cycle : Int?
 } derive(FromJson, Show, Eq, Default)
 
 ///|
@@ -395,7 +400,8 @@ fn Test::new(
   name : String,
   initial? : State,
   final? : State,
-  cycles? : Array[(UInt16, UInt8, String)]
+  cycles? : Array[(UInt16, UInt8, String)],
+  cycle? : Int
 ) -> Test {
-  { name, initial, final, cycles }
+  { name, initial, final, cycles, cycle }
 }

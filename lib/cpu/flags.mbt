@@ -10,6 +10,12 @@ pub(all) enum Flag {
   N = 0b10000000 // 0x80 Negative Flag
 } derive(Eq)
 
+///|
+pub const NONE = 0b00000000
+
+///|
+pub const ALL = 0b11111111
+
 ///| 0x01 Carry Flag
 pub const CARRY = 0b00000001
 
@@ -20,7 +26,7 @@ pub const ZERO = 0b00000010
 pub const INTERRUPT = 0b00000100
 
 ///| 0x08 Decimal Mode Flag
-// const DECIMAL = 0b00001000
+pub const DECIMAL = 0b00001000
 
 ///| 0x10 Break Command Flag
 pub const BREAK = 0b00010000
@@ -63,15 +69,16 @@ struct Flags {
   mut u : Bool // 5: Unused Flag
   mut v : Bool // 6: Overflow Flag
   mut n : Bool // 7: Negative Flag
-} derive(Show, Eq)
+} derive(Show, Eq, Default)
 
 ///|
-fn Flags::from_int(flags : Int) -> Flags {
-  Flags::new(flags~)
+pub fn Flags::from_int(flags : Int) -> Flags {
+  Flags::new(Some(flags))
 }
 
 ///|
-pub fn Flags::new(flags~ : UInt8 = 0x00) -> Flags {
+pub fn Flags::new(flags : UInt8?) -> Flags {
+  let flags = flags.or_default()
   {
     c: flags.bit(0),
     z: flags.bit(1),

@@ -122,7 +122,7 @@ impl C64 {
   setA(Self, Int) -> Unit
   set_bank(Self, IOPort) -> Unit
   set_debug(Self, Bool) -> Unit
-  set_flags(Self, @core.UInt8) -> Unit
+  set_flags(Self, @cpu.Flags) -> Unit
   set_interrupt_flag(Self) -> Unit
   trap(Self, @core.UInt16, (@cpu.CPU) -> Unit) -> Unit
   write(Self, @core.UInt16, @core.UInt8, dummy~ : Bool = ..) -> Unit
@@ -642,7 +642,7 @@ impl NES {
   new(pc~ : @core.UInt16 = .., data~ : Bytes = .., address~ : @core.UInt16 = .., length~ : Int = .., offset~ : Int = .., debug~ : Bool = ..) -> Self!
   pc(Self) -> @core.UInt16
   push16(Self, @core.UInt16) -> Unit
-  set_flags(Self, @core.UInt8) -> Unit
+  set_flags(Self, @cpu.Flags) -> Unit
   step(Self) -> Int
 }
 

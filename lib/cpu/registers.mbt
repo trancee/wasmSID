@@ -12,7 +12,7 @@ pub struct Registers {
   mut a : UInt8 // Accumulator
   mut x : UInt8 // Index Register X
   mut y : UInt8 // Index Register Y
-}
+} derive(Show, Default)
 
 ///|
 test {

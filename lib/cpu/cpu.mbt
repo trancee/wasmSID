@@ -16,7 +16,7 @@ pub const CPU_MEM_START = 0x0000
 pub const CPU_MEM_END = 0xFFFF
 
 ///|
-pub const CPU_MEM_SIZE = 0xFFFF
+pub const CPU_MEM_SIZE = 0x10000
 
 ///|
 pub struct CPU {
@@ -29,8 +29,8 @@ pub struct CPU {
   //
   mut pc : UInt16 // Program Counter
   //
-  registers : Registers
-  flags : Flags
+  mut registers : Registers
+  mut flags : Flags
   //
   decimal_mode : Bool
   // mut needs_interrupt : Vector
@@ -46,8 +46,8 @@ pub struct CPU {
 pub fn CPU::new(
   pc~ : UInt16 = 0x0000,
   //
-  registers~ : Registers = Registers::new(),
-  flags~ : Flags = Flags::new(),
+  registers~ : Registers = Registers::default(),
+  flags~ : Flags = Flags::default(),
   //
   address? : UInt16,
   //
@@ -61,7 +61,7 @@ pub fn CPU::new(
 ) -> CPU! {
   //
   let cpu : CPU = {
-    mem: FixedArray::make(CPU_MEM_SIZE + 1, 0x00),
+    mem: FixedArray::make(CPU_MEM_SIZE, 0x00),
     //
     read: None,
     write: None,
@@ -178,6 +178,11 @@ pub fn get_registers(self : CPU) -> Registers {
 }
 
 ///|
+pub fn set_registers(self : CPU, registers : Registers) -> Unit {
+  self.registers = registers
+}
+
+///|
 pub fn clear_flags(self : CPU) -> Unit {
   self.flags.reset()
 }
@@ -188,8 +193,8 @@ pub fn get_flags(self : CPU) -> Flags {
 }
 
 ///|
-pub fn set_flags(self : CPU, flags : UInt8) -> Unit {
-  self.flags.set(flags) |> ignore
+pub fn set_flags(self : CPU, flags : Flags) -> Unit {
+  self.flags = flags
 }
 
 ///|
@@ -215,6 +220,11 @@ pub fn trap(self : CPU, address : UInt16, handler : (CPU) -> Unit) -> Unit {
 ///|
 pub fn pc(self : CPU) -> UInt16 {
   self.pc
+}
+
+///|
+pub fn set_pc(self : CPU, pc : UInt16) -> Unit {
+  self.pc = pc
 }
 
 ///|
@@ -479,96 +489,16 @@ pub fn step(self : CPU) -> Int {
 
     //
     // let opcode = self.read(self.pc, dummy=true)._
-    let opcode = self.read_instruction()._
+    let opcode = self.read_instruction()
 
     //
-    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode]
+    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode._]
     if self.debug {
       self.dump_step(opcode, name, mode, size, cycles, illegal)
     }
 
     //
-    match name {
-      "ADC"
-      | "ANC"
-      | "AND"
-      | "ARR"
-      | "ASL"
-      | "ASR"
-      | "BCC"
-      | "BCS"
-      | "BEQ"
-      | "BIT"
-      | "BMI"
-      | "BNE"
-      | "BPL"
-      | "BRK"
-      | "BVC"
-      | "BVS"
-      | "CLC"
-      | "CLD"
-      | "CLI"
-      | "CLV"
-      | "CMP"
-      | "CPX"
-      | "CPY"
-      | "DCP"
-      | "DEC"
-      | "DEX"
-      | "DEY"
-      | "EOR"
-      | "INC"
-      | "INX"
-      | "INY"
-      | "ISC"
-      | "JAM"
-      | "JMP"
-      | "JSR"
-      | "LAS"
-      | "LAX"
-      | "LDA"
-      | "LDX"
-      | "LDY"
-      | "LSR"
-      | "NOP"
-      | "ORA"
-      | "PHA"
-      | "PHP"
-      | "PLA"
-      | "PLP"
-      | "RLA"
-      | "ROL"
-      | "ROR"
-      | "RRA"
-      | "RTI"
-      | "RTS"
-      | "SAX"
-      | "SBC"
-      | "SBX"
-      | "SEC"
-      | "SED"
-      | "SEI"
-      | "SHA"
-      | "SHS"
-      | "SHX"
-      | "SHY"
-      | "SLO"
-      | "SRE"
-      | "STA"
-      | "STX"
-      | "STY"
-      | "TAX"
-      | "TAY"
-      | "TSX"
-      | "TXA"
-      | "TXS"
-      | "TYA"
-      | "XAA" => op(self, -1, mode)
-      _ => {
-        println("\{name} missing")
-        panic()
-      }
-    }
+    op(self, -1, mode)
 
     //
     if skip {
@@ -2465,7 +2395,8 @@ fn opPHP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   // println("\{address} \{prefetch} \{wrap}")
 
   //
-  self.push(self.flags.get() | BREAK | UNUSED)
+  // self.push(self.flags.get() | BREAK | UNUSED)
+  self.push(self.flags.get())
 }
 
 ///| `PLA` - Pull Accumulator From Stack
@@ -2520,7 +2451,8 @@ fn opPLP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.read_address(u16(self.registers[SP]) | 0x0100) |> ignore
 
   //
-  self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore
+  // self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore
+  self.flags.set(self.pop()) |> ignore
 }
 
 ///| `ROL` - Rotate Left
@@ -2570,15 +2502,25 @@ fn opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 
   //
   let c = self.flags[C].to_int()
+
+  //
   if mode == Accumulator {
-    self.flags.setC((self.registers[A] & NEGATIVE) != 0)
+    self.flags[C] = self.registers[A].bit(7)
     self.registers[A] = (self.registers[A] << 1) | c // overflow
+
+    //
     self.flags.setZN(self.registers[A])
   } else {
     self.write(address, value) // FIXME: pre-fetch
-    self.flags.setC((value & NEGATIVE) != 0)
+
+    //
+    self.flags[C] = value.bit(7)
+
+    //
     value = (value << 1) | c // overflow
     self.write(address, value)
+
+    //
     self.flags.setZN(value)
   }
 }

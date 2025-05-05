@@ -842,7 +842,7 @@ pub fn get_flags(self : C64) -> @cpu.Flags {
 }
 
 ///|
-pub fn C64::set_flags(self : C64, flags : UInt8) -> Unit {
+pub fn C64::set_flags(self : C64, flags : @cpu.Flags) -> Unit {
   self.cpu.set_flags(flags)
 }
 

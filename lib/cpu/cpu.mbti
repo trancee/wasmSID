@@ -5,15 +5,19 @@ import(
 )
 
 // Values
+const ALL : Int = 0b11111111
+
 const BREAK : Int = 0b00010000
 
 const CARRY : Int = 0b00000001
 
 const CPU_MEM_END : Int = 0xFFFF
 
-const CPU_MEM_SIZE : Int = 0xFFFF
+const CPU_MEM_SIZE : Int = 0x10000
 
 const CPU_MEM_START : Int = 0x0000
+
+const DECIMAL : Int = 0b00001000
 
 const INTERRUPT : Int = 0b00000100
 
@@ -22,6 +26,8 @@ const IRQ : Int = 0xFFFE
 const NEGATIVE : Int = 0b10000000
 
 const NMI : Int = 0xFFFA
+
+const NONE : Int = 0b00000000
 
 const OVERFLOW : Int = 0b01000000
 
@@ -69,13 +75,17 @@ fn register(CPU, Register, @core.UInt8) -> Unit
 
 fn set_debug(CPU, Bool) -> Unit
 
-fn set_flags(CPU, @core.UInt8) -> Unit
+fn set_flags(CPU, Flags) -> Unit
 
 fn set_irq(CPU, state~ : Bool = ..) -> Unit
 
 fn set_nmi(CPU, state~ : Bool = ..) -> Unit
 
+fn set_pc(CPU, @core.UInt16) -> Unit
+
 fn set_read(CPU, (@core.UInt16, Bool) -> @core.UInt8) -> Unit
+
+fn set_registers(CPU, Registers) -> Unit
 
 fn set_write(CPU, (@core.UInt16, @core.UInt8, Bool) -> Unit) -> Unit
 
@@ -94,8 +104,8 @@ pub struct CPU {
   mut write : ((@core.UInt16, @core.UInt8, Bool) -> Unit)?
   mut cycles : Int
   mut pc : @core.UInt16
-  registers : Registers
-  flags : Flags
+  mut registers : Registers
+  mut flags : Flags
   decimal_mode : Bool
   mut nmi : Bool
   mut irq : Bool
@@ -124,11 +134,13 @@ impl CPU {
   register(Self, Register, @core.UInt8) -> Unit
   reset(Self, pc? : @core.UInt16) -> Unit
   set_debug(Self, Bool) -> Unit
-  set_flags(Self, @core.UInt8) -> Unit
+  set_flags(Self, Flags) -> Unit
   set_interrupt(Self) -> Unit
   set_irq(Self, state~ : Bool = ..) -> Unit
   set_nmi(Self, state~ : Bool = ..) -> Unit
+  set_pc(Self, @core.UInt16) -> Unit
   set_read(Self, (@core.UInt16, Bool) -> @core.UInt8) -> Unit
+  set_registers(Self, Registers) -> Unit
   set_write(Self, (@core.UInt16, @core.UInt8, Bool) -> Unit) -> Unit
   step(Self) -> Int
   trap(Self, @core.UInt16, (Self) -> Unit) -> Unit
@@ -153,11 +165,13 @@ impl Eq for Flag
 
 type Flags
 impl Flags {
+  from_int(Int) -> Self
   get(Self) -> @core.UInt8
-  new(flags~ : @core.UInt8 = ..) -> Self
+  new(@core.UInt8?) -> Self
   set(Self, @core.UInt8) -> @core.UInt8
   set_interrupt(Self) -> Unit
 }
+impl Default for Flags
 impl Eq for Flags
 impl Show for Flags
 
@@ -184,6 +198,8 @@ impl Registers {
   op_set(Self, Register, @core.UInt8) -> Unit
   reset(Self) -> Unit
 }
+impl Default for Registers
+impl Show for Registers
 
 type Trap
 
