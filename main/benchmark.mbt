@@ -1,8 +1,1466 @@
 ///|
 let testcases : Array[Test] = [
+  /// Arithmetic
+
+  // ADC A + M + C → A, C [NVZC]
+  // ADC ($nn),Y → D
+  Test::new(
+    "ADC ($nn),Y → D",
+    initial=State::new(pc=0x1000, a=0x33, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x36), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y NV → D
+  Test::new(
+    "ADC ($nn),Y NV → D",
+    initial=State::new(pc=0x1000, a=0x79, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x80,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO) | @cpu.DECIMAL | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y NC → D
+  Test::new(
+    "ADC ($nn),Y NC → D",
+    initial=State::new(pc=0x1000, a=0xA0, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x00), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW) | @cpu.DECIMAL | @cpu.NEGATIVE | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y NVC → D
+  Test::new(
+    "ADC ($nn),Y NVC → D",
+    initial=State::new(pc=0x1000, a=0x69, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x33), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x02,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.DECIMAL | @cpu.OVERFLOW | @cpu.NEGATIVE | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y Z → D
+  Test::new(
+    "ADC ($nn),Y Z → D",
+    initial=State::new(pc=0x1000, a=0x00, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x00), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y C → D
+  Test::new(
+    "ADC ($nn),Y C → D",
+    initial=State::new(pc=0x1000, a=0x71, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x09), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x80,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y VC → D
+  Test::new(
+    "ADC ($nn),Y VC → D",
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x80), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x7F,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL | @cpu.OVERFLOW,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y ZC → D
+  Test::new(
+    "ADC ($nn),Y ZC → D",
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → D
+  Test::new(
+    "ADC ($nn),Y → D",
+    initial=State::new(pc=0x1000, a=0x33, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x36), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y N → D
+  Test::new(
+    "ADC ($nn),Y N → D",
+    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x7F), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0xFF,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW) | @cpu.DECIMAL | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y NV → D
+  Test::new(
+    "ADC ($nn),Y NV → D",
+    initial=State::new(pc=0x1000, a=0x69, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x33), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x9C,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO) | @cpu.DECIMAL | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y Z → D
+  Test::new(
+    "ADC ($nn),Y Z → D",
+    initial=State::new(pc=0x1000, a=0x00, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x00), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y C → D
+  Test::new(
+    "ADC ($nn),Y C → D",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x6A), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y VC → D
+  Test::new(
+    "ADC ($nn),Y VC → D",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x80), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x7F,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL | @cpu.OVERFLOW,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y ZC → D
+  Test::new(
+    "ADC ($nn),Y ZC → D",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO | @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y → C",
+    initial=State::new(pc=0x1000, a=0x33, y=0x01, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x36), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x6A,
+      x=0x00,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y N → C",
+    initial=State::new(pc=0x1000, a=0x80, y=0x01, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x7E), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0xFF,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y NV → C",
+    initial=State::new(pc=0x1000, a=0x69, y=0x01, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x33), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x9D,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y C → C",
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x01,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y VC → C",
+    initial=State::new(pc=0x1000, a=0x80, y=0x01, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x80), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x01,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y ZC → C",
+    initial=State::new(pc=0x1000, a=0x80, y=0x01, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x7F), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y → C",
+    initial=State::new(pc=0x1000, a=0x33, y=0xFF, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x36), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x6A,
+      x=0x00,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y N → C",
+    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x7E), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0xFF,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y NV → C",
+    initial=State::new(pc=0x1000, a=0x69, y=0xFF, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x33), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x9D,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y C → C",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x01,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y VC → C",
+    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x80), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x01,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y → C
+  Test::new(
+    "ADC ($nn),Y ZC → C",
+    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x7F), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y",
+    initial=State::new(pc=0x1000, a=0x33, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x36), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y N",
+    initial=State::new(pc=0x1000, a=0x80, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x7F), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0xFF,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y NV",
+    initial=State::new(pc=0x1000, a=0x69, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x33), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x9C,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y Z",
+    initial=State::new(pc=0x1000, a=0x00, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x00), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y C",
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x6A), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y VC",
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x80), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x7F,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y ZC",
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y",
+    initial=State::new(pc=0x1000, a=0x33, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x36), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y N",
+    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x7F), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0xFF,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y NV",
+    initial=State::new(pc=0x1000, a=0x69, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x33), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x9C,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y Z",
+    initial=State::new(pc=0x1000, a=0x00, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x00), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y C",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x6A), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x69,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y VC",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x80), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x7F,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y
+  Test::new(
+    "ADC ($nn),Y ZC",
+    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x01), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+
   /// Logic
 
   // ORA A ∨ M → A [NZ]
+  // ORA #$nn
+  Test::new(
+    "ORA #$nn",
+    initial=State::new(pc=0x1000, a=0b00110011, p=@cpu.ALL, ram=[
+      (0x1000, 0x09), // ORA #$nn
+      (0x1001, 0b01010101), // #$nn
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b01110111,
+      x=0x00,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.NEGATIVE ^ @cpu.ZERO,
+      ram=[],
+    ),
+    cycle=2,
+  ),
+  // ORA #$nn
+  Test::new(
+    "ORA #$nn N",
+    initial=State::new(pc=0x1000, a=0b10000000, p=@cpu.ALL, ram=[
+      (0x1000, 0x09), // ORA #$nn
+      (0x1001, 0b01010101), // #$nn
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b11010101,
+      x=0x00,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=2,
+  ),
+  // ORA #$nn
+  Test::new(
+    "ORA #$nn Z",
+    initial=State::new(pc=0x1000, a=0b00000000, p=@cpu.ALL, ram=[
+      (0x1000, 0x09), // ORA #$nn
+      (0x1001, 0b00000000), // #$nn
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b00000000,
+      x=0x00,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    cycle=2,
+  ),
+
+  // ORA $nnnn
+  Test::new(
+    "ORA $nnnn",
+    initial=State::new(pc=0x1000, a=0b00110011, p=@cpu.ALL, ram=[
+      (0x1000, 0x0D), // ORA $nnnn
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAD, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b01110111,
+      x=0x00,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.NEGATIVE ^ @cpu.ZERO,
+      ram=[],
+    ),
+    cycle=4,
+  ),
+  // ORA $nnnn
+  Test::new(
+    "ORA $nnnn N",
+    initial=State::new(pc=0x1000, a=0b10000000, p=@cpu.ALL, ram=[
+      (0x1000, 0x0D), // ORA $nnnn
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAD, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b11010101,
+      x=0x00,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=4,
+  ),
+  // ORA $nnnn
+  Test::new(
+    "ORA $nnnn Z",
+    initial=State::new(pc=0x1000, a=0b00000000, p=@cpu.ALL, ram=[
+      (0x1000, 0x0D), // ORA $nnnn
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAD, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b00000000,
+      x=0x00,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    cycle=4,
+  ),
+
+  // ORA $nnnn,X
+  Test::new(
+    "ORA $nnnn,X",
+    initial=State::new(pc=0x1000, a=0b00110011, x=0x01, p=@cpu.ALL, ram=[
+      (0x1000, 0x1D), // ORA $nnnn,X
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAE, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b01110111,
+      x=0x01,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.NEGATIVE ^ @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4, // 4 + p
+  ),
+  // ORA $nnnn,X
+  Test::new(
+    "ORA $nnnn,X N",
+    initial=State::new(pc=0x1000, a=0b10000000, x=0x01, p=@cpu.ALL, ram=[
+      (0x1000, 0x1D), // ORA $nnnn,X
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAE, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b11010101,
+      x=0x01,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4, // 4 + p
+  ),
+  // ORA $nnnn,X
+  Test::new(
+    "ORA $nnnn,X Z",
+    initial=State::new(pc=0x1000, a=0b00000000, x=0x01, p=@cpu.ALL, ram=[
+      (0x1000, 0x1D), // ORA $nnnn,X
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAE, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b00000000,
+      x=0x01,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4, // 4 + p
+  ),
+  // ORA $nnnn,X
+  Test::new(
+    "ORA $nnnn,X",
+    initial=State::new(pc=0x1000, a=0b00110011, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x1D), // ORA $nnnn,X
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDFAC, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b01110111,
+      x=0xFF,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.NEGATIVE ^ @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4 + 1, // 4 + p
+  ),
+  // ORA $nnnn,X
+  Test::new(
+    "ORA $nnnn,X N",
+    initial=State::new(pc=0x1000, a=0b10000000, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x1D), // ORA $nnnn,X
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDFAC, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b11010101,
+      x=0xFF,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4 + 1, // 4 + p
+  ),
+  // ORA $nnnn,X
+  Test::new(
+    "ORA $nnnn,X Z",
+    initial=State::new(pc=0x1000, a=0b00000000, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x1D), // ORA $nnnn,X
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDFAC, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b00000000,
+      x=0xFF,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4 + 1, // 4 + p
+  ),
+
+  // ORA $nnnn,Y
+  Test::new(
+    "ORA $nnnn,Y",
+    initial=State::new(pc=0x1000, a=0b00110011, y=0x01, p=@cpu.ALL, ram=[
+      (0x1000, 0x19), // ORA $nnnn,Y
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAE, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b01110111,
+      x=0x00,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.NEGATIVE ^ @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4, // 4 + p
+  ),
+  // ORA $nnnn,Y
+  Test::new(
+    "ORA $nnnn,Y N",
+    initial=State::new(pc=0x1000, a=0b10000000, y=0x01, p=@cpu.ALL, ram=[
+      (0x1000, 0x19), // ORA $nnnn,Y
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAE, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b11010101,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4, // 4 + p
+  ),
+  // ORA $nnnn,Y
+  Test::new(
+    "ORA $nnnn,Y Z",
+    initial=State::new(pc=0x1000, a=0b00000000, y=0x01, p=@cpu.ALL, ram=[
+      (0x1000, 0x19), // ORA $nnnn,Y
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDEAE, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b00000000,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4, // 4 + p
+  ),
+  // ORA $nnnn,Y
+  Test::new(
+    "ORA $nnnn,Y",
+    initial=State::new(pc=0x1000, a=0b00110011, y=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x19), // ORA $nnnn,Y
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDFAC, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b01110111,
+      x=0x00,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.NEGATIVE ^ @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4 + 1, // 4 + p
+  ),
+  // ORA $nnnn,Y
+  Test::new(
+    "ORA $nnnn,Y N",
+    initial=State::new(pc=0x1000, a=0b10000000, y=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x19), // ORA $nnnn,Y
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDFAC, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b11010101,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4 + 1, // 4 + p
+  ),
+  // ORA $nnnn,Y
+  Test::new(
+    "ORA $nnnn,Y Z",
+    initial=State::new(pc=0x1000, a=0b00000000, y=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x19), // ORA $nnnn,Y
+      (0x1001, 0xAD), // $00nn
+      (0x1002, 0xDE), // $nn00
+      (0xDFAC, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 3,
+      s=0xFF,
+      a=0b00000000,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=4 + 1, // 4 + p
+  ),
+
+  // ORA $nn
+  Test::new(
+    "ORA $nn",
+    initial=State::new(pc=0x1000, a=0b00110011, p=@cpu.ALL, ram=[
+      (0x1000, 0x05), // ORA $nn
+      (0x1001, 0x88), // $nn
+      (0x0088, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b01110111,
+      x=0x00,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=3,
+  ),
+  // ORA $nn
+  Test::new(
+    "ORA $nn N",
+    initial=State::new(pc=0x1000, a=0b10000000, p=@cpu.ALL, ram=[
+      (0x1000, 0x05), // ORA $nn
+      (0x1001, 0x88), // $nn
+      (0x0088, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b11010101,
+      x=0x00,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=3,
+  ),
+  // ORA $nn
+  Test::new(
+    "ORA $nn Z",
+    initial=State::new(pc=0x1000, a=0b00000000, p=@cpu.ALL, ram=[
+      (0x1000, 0x05), // ORA $nn
+      (0x1001, 0x88), // $nn
+      (0x0088, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b00000000,
+      x=0x00,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    cycle=3,
+  ),
+
+  // ORA $nn,X
+  Test::new(
+    "ORA $nn,X",
+    initial=State::new(pc=0x1000, a=0b00110011, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x15), // ORA $nn,X
+      (0x1001, 0x88), // $nn
+      (0x0087, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b01110111,
+      x=0xFF,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=4,
+  ),
+  // ORA $nn,X
+  Test::new(
+    "ORA $nn,X N",
+    initial=State::new(pc=0x1000, a=0b10000000, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x15), // ORA $nn,X
+      (0x1001, 0x88), // $nn
+      (0x0087, 0b01010101), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b11010101,
+      x=0xFF,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=4,
+  ),
+  // ORA $nn,X
+  Test::new(
+    "ORA $nn,X Z",
+    initial=State::new(pc=0x1000, a=0b00000000, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x15), // ORA $nn,X
+      (0x1001, 0x88), // $nn
+      (0x0087, 0b00000000), // M
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b00000000,
+      x=0xFF,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      ram=[],
+    ),
+    cycle=4,
+  ),
+
+  // ORA ($nn,X)
+  Test::new(
+    "ORA ($nn,X)",
+    initial=State::new(pc=0x1000, a=0b00110011, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x01), // ORA ($nn,X)
+      (0x1001, 0x88), // $nn
+      (0x0087, 0xAD), // ($nn,X)
+      (0x0088, 0xDE), // ($nn,X)
+      (0xDEAD, 0b01010101),
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b01110111,
+      x=0xFF,
+      y=0x00,
+      p=@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=6,
+  ),
+  // ORA ($nn,X)
+  Test::new(
+    "ORA ($nn,X) N",
+    initial=State::new(pc=0x1000, a=0b10000000, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x01), // ORA ($nn,X)
+      (0x1001, 0x88), // $nn
+      (0x0087, 0xAD), // ($nn,X)
+      (0x0088, 0xDE), // ($nn,X)
+      (0xDEAD, 0b01010101),
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b11010101,
+      x=0xFF,
+      y=0x00,
+      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=6,
+  ),
+  // ORA ($nn,X)
+  Test::new(
+    "ORA ($nn,X) Z",
+    initial=State::new(pc=0x1000, a=0b00000000, x=0xFF, p=@cpu.ALL, ram=[
+      (0x1000, 0x01), // ORA ($nn,X)
+      (0x1001, 0x88), // $nn
+      (0x0087, 0xAD), // ($nn,X)
+      (0x0088, 0xDE), // ($nn,X)
+      (0xDEAD, 0b00000000),
+    ]),
+    final=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0b00000000,
+      x=0xFF,
+      y=0x00,
+      p=(@cpu.ALL | @cpu.ZERO) ^ @cpu.NEGATIVE,
+      ram=[],
+    ),
+    cycle=6,
+  ),
+
   // ORA ($nn),Y
   Test::new(
     "ORA ($nn),Y",

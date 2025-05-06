@@ -991,32 +991,51 @@ fn opADC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
+/// a = A
+/// b = imm
+/// c = C
 fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   self.registers[A] = a + b + c
 
   //
   if self.flags.decimal() && self.decimal_mode {
+    // Calculate the lower nibble.
     let mut lo = (a & 0x0F) + (b & 0x0F) + c
     let mut hi = (a & 0xF0) + (b & 0xF0)
+
+    // BCD fixup for lower nibble.
     if lo > 0x09 {
       lo += 0x06
     }
     if lo > 0x0F {
       hi += 0x10
     }
+
+    // `Z` flag is not affected by decimal mode,
+    // it will be set if the binary operation would become zero, regardless of the BCD result.
     self.flags.setZ(self.registers[A] == 0)
-    self.flags.setN((hi & 0x80) != 0)
-    self.flags.setV(((a ^ b) & 0x80) == 0 && ((hi ^ a) & 0x80) != 0)
+
+    // The `N` and `V` flags are set after fixing the lower nibble but before fixing the upper one.
+    // They use the same logic as binary mode `ADC`.
+    // self.flags.setN((hi & 0x80) != 0)
+    self.flags[N] = u8(hi).bit(7)
+    // self.flags.setV(((a ^ b) & 0x80) == 0 && ((hi ^ a) & 0x80) != 0)
+    self.flags[V] = not(u8(a ^ b).bit(7)) && (u8(a) ^ hi).bit(7)
+
+    // BCD fixup for higher nibble.
     if hi > 0x90 {
       hi += 0x60
     }
-    self.flags.setC(hi > 0xFF)
+
+    // `C` flag works as a carry for multi-byte operations as expected.
+    self.flags[C] = hi > 0xFF
+
+    //
     self.registers[A] = hi | (lo & 0x0F)
   } else {
-    self.flags.setC(a + b + c > 0xFF)
-    self.flags.setV(
-      ((a ^ b) & 0x80) == 0 && ((self.registers[A] ^ a) & 0x80) != 0,
-    )
+    self.flags[C] = a + b + c > 0xFF
+    // self.flags[V] = ((a ^ b) & 0x80) == 0 && ((self.registers[A] ^ a) & 0x80) != 0
+    self.flags[V] = not(u8(a ^ b).bit(7)) && (u8(a) ^ self.registers[A]).bit(7)
     self.flags.setZN(self.registers[A])
   }
 }
