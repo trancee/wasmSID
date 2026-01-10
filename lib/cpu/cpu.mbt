@@ -44,21 +44,21 @@ pub struct CPU {
 
 ///|
 pub fn CPU::new(
-  pc~ : UInt16 = 0x0000,
+  pc? : UInt16 = 0x0000,
   //
-  registers~ : Registers = Registers::default(),
-  flags~ : Flags = Flags::default(),
+  registers? : Registers = Registers::default(),
+  flags? : Flags = Flags::default(),
   //
   address? : UInt16,
   //
-  data~ : Bytes = [],
-  length~ : Int = data.length(),
-  offset~ : Int = 0,
+  data? : Bytes = [],
+  length? : Int = data.length(),
+  offset? : Int = 0,
   //
-  decimal_mode~ : Bool = true,
+  decimal_mode? : Bool = true,
   //
-  debug~ : Bool = false
-) -> CPU! {
+  debug? : Bool = false,
+) -> CPU raise {
   //
   let cpu : CPU = {
     mem: FixedArray::make(CPU_MEM_SIZE, 0x00),
@@ -88,7 +88,7 @@ pub fn CPU::new(
 
   //
   if data.length() > 0 {
-    cpu.load!(address.or(pc), data, length~, offset~) |> ignore
+    cpu.load(address.unwrap_or(pc), data, length~, offset~) |> ignore
   }
 
   //
@@ -96,17 +96,20 @@ pub fn CPU::new(
 }
 
 ///|
-pub fn set_read(self : CPU, read : (UInt16, Bool) -> UInt8) -> Unit {
+pub fn CPU::set_read(self : CPU, read : (UInt16, Bool) -> UInt8) -> Unit {
   self.read = Some(read)
 }
 
 ///|
-pub fn set_write(self : CPU, write : (UInt16, UInt8, Bool) -> Unit) -> Unit {
+pub fn CPU::set_write(
+  self : CPU,
+  write : (UInt16, UInt8, Bool) -> Unit,
+) -> Unit {
   self.write = Some(write)
 }
 
 ///|
-pub fn set_debug(self : CPU, debug : Bool) -> Unit {
+pub fn CPU::set_debug(self : CPU, debug : Bool) -> Unit {
   self.debug = debug
 }
 
@@ -126,16 +129,19 @@ pub fn set_debug(self : CPU, debug : Bool) -> Unit {
 /// automatically causes a JMP through one of these vectors when external hardware
 /// sends a Signal on the 6510/6502's NMI, RESET, or IRQ lines.
 
-///| When the 6510/6502 receives an NMI (Non-Maskable
+///|
+/// When the 6510/6502 receives an NMI (Non-Maskable
 /// Interrupt) signal, it causes a jump to the address held
 /// here.
 pub const NMI = 0xFFFA
 
-///| When the 6510/6502 receives a RESET signal, it causes a
+///|
+/// When the 6510/6502 receives a RESET signal, it causes a
 /// jump to the address held here.
 pub const RESET = 0xFFFC
 
-///| When the 6510/6502 receives an IRQ (Interrupt Re-
+///|
+/// When the 6510/6502 receives an IRQ (Interrupt Re-
 /// Quest) Signal or processes a machine language BRK
 /// instruction, it causes a jump to the address held here.
 pub const IRQ = 0xFFFE
@@ -158,47 +164,47 @@ pub fn CPU::reset(self : CPU, pc? : UInt16) -> Unit {
 }
 
 ///|
-pub fn set_nmi(self : CPU, state~ : Bool = true) -> Unit {
+pub fn CPU::set_nmi(self : CPU, state? : Bool = true) -> Unit {
   self.nmi = state
 }
 
 ///|
-pub fn set_irq(self : CPU, state~ : Bool = true) -> Unit {
+pub fn CPU::set_irq(self : CPU, state? : Bool = true) -> Unit {
   self.irq = state
 }
 
 ///|
-pub fn clear_registers(self : CPU) -> Unit {
+pub fn CPU::clear_registers(self : CPU) -> Unit {
   self.registers.reset()
 }
 
 ///|
-pub fn get_registers(self : CPU) -> Registers {
+pub fn CPU::get_registers(self : CPU) -> Registers {
   self.registers
 }
 
 ///|
-pub fn set_registers(self : CPU, registers : Registers) -> Unit {
+pub fn CPU::set_registers(self : CPU, registers : Registers) -> Unit {
   self.registers = registers
 }
 
 ///|
-pub fn clear_flags(self : CPU) -> Unit {
+pub fn CPU::clear_flags(self : CPU) -> Unit {
   self.flags.reset()
 }
 
 ///|
-pub fn get_flags(self : CPU) -> Flags {
+pub fn CPU::get_flags(self : CPU) -> Flags {
   self.flags
 }
 
 ///|
-pub fn set_flags(self : CPU, flags : Flags) -> Unit {
+pub fn CPU::set_flags(self : CPU, flags : Flags) -> Unit {
   self.flags = flags
 }
 
 ///|
-pub fn has_interrupt(self : CPU) -> Bool {
+pub fn CPU::has_interrupt(self : CPU) -> Bool {
   self.flags[I]
 }
 
@@ -213,45 +219,46 @@ pub fn CPU::set_interrupt(self : CPU) -> Unit {
 }
 
 ///|
-pub fn trap(self : CPU, address : UInt16, handler : (CPU) -> Unit) -> Unit {
+pub fn CPU::trap(self : CPU, address : UInt16, handler : (CPU) -> Unit) -> Unit {
   self.traps.push(Trap::new(address, handler))
 }
 
 ///|
-pub fn pc(self : CPU) -> UInt16 {
+pub fn CPU::pc(self : CPU) -> UInt16 {
   self.pc
 }
 
 ///|
-pub fn set_pc(self : CPU, pc : UInt16) -> Unit {
+pub fn CPU::set_pc(self : CPU, pc : UInt16) -> Unit {
   self.pc = pc
 }
 
 ///|
-pub fn a(self : CPU) -> UInt8 {
+pub fn CPU::a(self : CPU) -> UInt8 {
   self.registers[A]
 }
 
 ///|
-pub fn register(self : CPU, register : Register, value : UInt8) -> Unit {
+pub fn CPU::register(self : CPU, register : Register, value : UInt8) -> Unit {
   self.registers[register] = value
 }
 
 // Load a program into memory
+
 ///|
-pub fn load(
+pub fn CPU::load(
   self : CPU,
   //
   address : UInt16,
   //
   data : Bytes,
-  length~ : Int = data.length(),
-  offset~ : Int = 0,
+  length? : Int = data.length(),
+  offset? : Int = 0,
   //
-  has_load_address~ : Bool = false
-) -> UInt16! {
+  has_load_address? : Bool = false,
+) -> UInt16 raise {
   if length > @core.UINT16_SIZE {
-    fail!("data too large")
+    fail("data too large")
   }
   // if self.debug {
   //   println(
@@ -272,7 +279,7 @@ pub fn load(
 }
 
 ///|
-fn read_instruction(self : CPU, prefetch~ : Bool = false) -> UInt8 {
+fn CPU::read_instruction(self : CPU, prefetch? : Bool = false) -> UInt8 {
   let value = self.read(self.pc)
   if not(prefetch) {
     self.pc += 1
@@ -281,48 +288,52 @@ fn read_instruction(self : CPU, prefetch~ : Bool = false) -> UInt8 {
 }
 
 ///|
-fn read_instruction_word(self : CPU) -> UInt16 {
-  self.read_instruction()._ | (self.read_instruction()._ << 8) |> u16
+fn CPU::read_instruction_word(self : CPU) -> UInt16 {
+  (self.read_instruction().0 | (self.read_instruction().0 << 8)) |> u16
 }
 
 ///|
-fn read_zeropage(self : CPU, offset : UInt8) -> UInt8 {
-  self.read_address(offset._)
+fn CPU::read_zeropage(self : CPU, offset : UInt8) -> UInt8 {
+  self.read_address(offset.0)
 }
 
 ///|
-fn read_zeropage_word(self : CPU, offset : UInt8) -> UInt16 {
-  self.read_address(offset._)._ | (self.read_address((offset + 1)._)._ << 8)
+fn CPU::read_zeropage_word(self : CPU, offset : UInt8) -> UInt16 {
+  (self.read_address(offset.0).0 | (self.read_address((offset + 1).0).0 << 8))
   |> u16
 }
 
 ///|
-fn read_zeropage_address_word(self : CPU, address : UInt16) -> UInt16 {
+fn CPU::read_zeropage_address_word(self : CPU, address : UInt16) -> UInt16 {
   u16(self.read(address)) | // lo
   (u16(self.read(((address + 1) & 0x00FF) | (address & 0xFF00))) << 8) // hi
 }
 
 ///|
-fn read_address(self : CPU, address : UInt16) -> UInt8 {
+fn CPU::read_address(self : CPU, address : UInt16) -> UInt8 {
   self.read(address)
 }
 
 ///|
-fn read_address_word(self : CPU, address : UInt16) -> UInt16 {
-  self.read(address)._ | (self.read(address + 1)._ << 8) |> u16
+fn CPU::read_address_word(self : CPU, address : UInt16) -> UInt16 {
+  (self.read(address).0 | (self.read(address + 1).0 << 8)) |> u16
 }
 
 ///|
-pub fn read(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt8 {
+pub fn CPU::read(self : CPU, address : UInt16, dummy? : Bool = false) -> UInt8 {
   (match self.read {
     Some(read) => read(address, dummy)
-    None => self.mem[address._]
+    None => self.mem[address.0]
   })
   |> u8
 }
 
 ///|
-pub fn read16(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt16 {
+pub fn CPU::read16(
+  self : CPU,
+  address : UInt16,
+  dummy? : Bool = false,
+) -> UInt16 {
   // println(
   //   "$" + U16::u16(address).to_hex() + " → " + self.mem[address + 1].to_hex() + self.mem[address].to_hex(),
   // )
@@ -331,7 +342,7 @@ pub fn read16(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt16 {
 }
 
 ///|
-fn read16zp(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt16 {
+fn CPU::read16zp(self : CPU, address : UInt16, dummy? : Bool = false) -> UInt16 {
   // println(
   //   ("read16zp $" + address.to_hex() + ":#$" + self.read(address).to_hex() + " $" + (address +
   //   1)&(0x00FF)) | (address&(0xFF00).to_hex() + ":#$" + self.read(
@@ -343,63 +354,63 @@ fn read16zp(self : CPU, address : UInt16, dummy~ : Bool = false) -> UInt16 {
 }
 
 ///|
-pub fn write(
+pub fn CPU::write(
   self : CPU,
   address : UInt16,
   value : UInt8,
-  dummy~ : Bool = false
+  dummy? : Bool = false,
 ) -> Unit {
   match self.write {
     Some(write) => write(address, value, dummy)
-    None => self.mem[address._] = value
+    None => self.mem[address.0] = value
   }
   // println("$" + u16(address).to_hex() + " ← " + self.mem[address].to_hex())
 }
 
 ///|
-pub fn write16(
+pub fn CPU::write16(
   self : CPU,
   address : UInt16,
   value : UInt16,
-  dummy~ : Bool = false
+  dummy? : Bool = false,
 ) -> Unit {
-  self.write(address + 1, u8(value._ >> 8), dummy~) // hi
-  self.write(address, u8(value._), dummy~) // lo
+  self.write(address + 1, u8(value.0 >> 8), dummy~) // hi
+  self.write(address, u8(value.0), dummy~) // lo
   // println(
   //   "$" + u16(address).to_hex() + " ← " + self.mem[address + 1].to_hex() + self.mem[address].to_hex(),
   // )
 }
 
 ///|
-pub fn push(self : CPU, value : UInt8, dummy~ : Bool = false) -> Unit {
+pub fn CPU::push(self : CPU, value : UInt8, dummy? : Bool = false) -> Unit {
   self.write(u16(self.registers[SP]) | 0x0100, value, dummy~)
   self.registers[SP] -= 1
 }
 
 ///|
-pub fn push16(self : CPU, value : UInt16) -> Unit {
-  self.push(u8(value._ >> 8)) // hi
-  self.push(u8(value._)) // lo
+pub fn CPU::push16(self : CPU, value : UInt16) -> Unit {
+  self.push(u8(value.0 >> 8)) // hi
+  self.push(u8(value.0)) // lo
 }
 
 ///|
-fn pop(self : CPU, dummy~ : Bool = false) -> UInt8 {
+fn CPU::pop(self : CPU, dummy? : Bool = false) -> UInt8 {
   self.registers[SP] += 1
   self.read(u16(self.registers[SP]) | 0x0100, dummy~)
 }
 
 ///|
-fn pop16(self : CPU) -> UInt16 {
+fn CPU::pop16(self : CPU) -> UInt16 {
   u16(self.pop()) | // lo 
   (u16(self.pop()) << 8) // hi
 }
 
 ///|
-pub fn dump(
+pub fn CPU::dump(
   self : CPU,
-  address~ : UInt16 = 0x0000,
-  cols~ : Int = 0x10,
-  rows~ : Int = 0x10
+  address? : UInt16 = 0x0000,
+  cols? : Int = 0x10,
+  rows? : Int = 0x10,
 ) -> Unit {
   let mut i = 0
   let mut str = ""
@@ -418,14 +429,15 @@ pub fn dump(
       }
       str = (address + i).to_hex() + "|"
     }
-    str += self.mem[(address + i)._].to_hex() + " "
+    str += self.mem[(address + i).0].to_hex() + " "
     i = i + 1
   }
 }
 
-///| triggers a NMI IRQ in the processor
+///|
+/// triggers a NMI IRQ in the processor
 /// this is very similar to the BRK instruction
-pub fn nmi(self : CPU, pc? : UInt16) -> Unit {
+pub fn CPU::nmi(self : CPU, pc? : UInt16) -> Unit {
   println(
     "*** NMI $" +
     u16(NMI).to_hex() +
@@ -436,13 +448,14 @@ pub fn nmi(self : CPU, pc? : UInt16) -> Unit {
   self.push16(self.pc)
   self.push(self.flags.get())
   self.flags.set_interrupt()
-  self.pc = pc.or(self.read16(NMI))
+  self.pc = pc.unwrap_or(self.read16(NMI))
   self.cycles += 7
 }
 
-///| triggers a normal IRQ
+///|
+/// triggers a normal IRQ
 /// this is very similar to the BRK instruction
-pub fn irq(self : CPU, pc? : UInt16) -> Unit {
+pub fn CPU::irq(self : CPU, pc? : UInt16) -> Unit {
   if self.has_interrupt() {
     return
   }
@@ -455,12 +468,12 @@ pub fn irq(self : CPU, pc? : UInt16) -> Unit {
   self.push16(self.pc)
   self.push(self.flags.get())
   self.flags.set_interrupt()
-  self.pc = pc.or(self.read16(IRQ))
+  self.pc = pc.unwrap_or(self.read16(IRQ))
   self.cycles += 7
 }
 
 ///|
-pub fn interrupts(self : CPU) -> Bool {
+pub fn CPU::interrupts(self : CPU) -> Bool {
   if self.nmi {
     self.nmi = false
     self.nmi()
@@ -474,7 +487,7 @@ pub fn interrupts(self : CPU) -> Bool {
 }
 
 ///|
-pub fn step(self : CPU) -> Int {
+pub fn CPU::step(self : CPU) -> Int {
   let cycles = self.cycles
 
   //
@@ -492,7 +505,7 @@ pub fn step(self : CPU) -> Int {
     let opcode = self.read_instruction()
 
     //
-    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode._]
+    let (name, op, mode, size, cycles, _, illegal) = instructions[opcode.0]
     if self.debug {
       self.dump_step(opcode, name, mode, size, cycles, illegal)
     }
@@ -515,13 +528,13 @@ pub fn step(self : CPU) -> Int {
 }
 
 ///|
-fn get_address(
+fn CPU::get_address(
   self : CPU,
   mode : Mode,
   illegal : Bool,
-  dummy~ : Bool = true
+  dummy? : Bool = true,
 ) -> UInt16 {
-  let pc = self.pc + 1 |> u16
+  let pc = (self.pc + 1) |> u16
   match mode {
     ///| Implied
     /// In the implied addressing mode, the address containing the operand is implicitly stated in the operation code of the instruction.
@@ -565,7 +578,7 @@ fn get_address(
           self.cycles += 1
         }
       }
-      value + u16(self.registers[Y]) |> u16
+      (value + u16(self.registers[Y])) |> u16
     }
     ///| Absolute $nnnn
     /// In absolute addressing, the second byte of the instruction specifies the eight low order bits of the effective address while the third byte specifies the eight high order bits.
@@ -591,7 +604,7 @@ fn get_address(
         )
         self.cycles += 1
       }
-      value + u16(self.registers[X]) |> u16
+      (value + u16(self.registers[X])) |> u16
     }
     ///| Y-Indexed Absolute $nnnn,Y
     /// This form of addressing is used in conjunction with the `Y` index register.
@@ -610,7 +623,7 @@ fn get_address(
         )
         self.cycles += 1
       }
-      value + u16(self.registers[Y]) |> u16
+      (value + u16(self.registers[Y])) |> u16
     }
     ///| Zero Page  $nn
     /// The zero page instructions allow for shorter code and execution times by only fetching the second byte of the instruction and assuming a zero high address byte.
@@ -634,7 +647,7 @@ fn get_address(
     ZeroPageX => {
       let offset = self.read(pc, dummy~)
       let _ = self.read(u16(offset), dummy=true) // FIXME: pre-fetch
-      offset + self.registers[X] |> u16
+      (offset + self.registers[X]) |> u16
     }
     ///| Y-Indexed Zero Page  $nn,Y
     /// This form of addressing is used in conjunction with the `Y` index register.
@@ -644,7 +657,7 @@ fn get_address(
     ZeroPageY => {
       let offset = self.read(pc, dummy~)
       let _ = self.read(u16(offset), dummy=true) // FIXME: pre-fetch
-      offset + self.registers[Y] |> u16
+      (offset + self.registers[Y]) |> u16
     }
     ///| Relative $nnnn
     /// Relative addressing is used only with branch instructions and establishes a destination for the conditional branch.
@@ -657,20 +670,20 @@ fn get_address(
       // if offset > 0x7F {
       //   let _ = self.read(pc + 1, dummy=true) // FIXME: pre-fetch
       // }
-      pc + 1 + offset |> u16
+      (pc + 1 + offset) |> u16
     }
   }
 }
 
 ///|
-fn dump_step(
+fn CPU::dump_step(
   self : CPU,
   opcode : UInt8,
   name : String,
   mode : Mode,
   size : Int,
   _ : Int, // cycles
-  illegal : Bool
+  illegal : Bool,
 ) -> Unit {
   let dummy = true
   let pc = self.pc |> u16
@@ -865,7 +878,7 @@ fn dump_step(
     instruction +
     " " +
     unofficial +
-    (match opcode._ {
+    (match opcode.0 {
       0xE3 | 0xE7 | 0xEF | 0xF3 | 0xF7 | 0xFB | 0xFF => "ISB"
       _ => name
     }) +
@@ -886,20 +899,20 @@ fn dump_step(
   // + " PPU:  _,  _" + " CYC:" + (self.cycles + _cycles).to_string(),
 }
 
-// page_boundary returns true if the two addresses reference different pages
 ///|
+/// page_boundary returns true if the two addresses reference different pages
 fn page_boundary(a : UInt16, b : UInt16) -> Bool {
   (a & 0xFF00) != (b & 0xFF00)
 }
 
-// branch, then adds a cycle for taking a branch and adds another cycle
-// if the branch jumps to a new page
 ///|
-fn branch(
+/// branch, then adds a cycle for taking a branch and adds another cycle
+/// if the branch jumps to a new page
+fn CPU::branch(
   self : CPU,
   address : UInt16,
   prefetch : (UInt16, UInt8)?,
-  wrap : Bool?
+  wrap : Bool?,
 ) -> Unit {
   self.read_instruction() |> ignore
 
@@ -918,7 +931,7 @@ fn branch(
 }
 
 ///|
-fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
+fn CPU::compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
   self.flags.setZN(a - b)
   self.flags.setC(a >= b)
 }
@@ -927,7 +940,8 @@ fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
 // Instructions
 //
 
-///| `ADC` - Add Memory to Accumulator with Carry
+///|
+/// `ADC` - Add Memory to Accumulator with Carry
 /// Operation: A + M + C → A, C
 ///
 /// N	V	-	B	D	I	Z	C
@@ -942,7 +956,7 @@ fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
 /// The `Z` flag is set if the accumulator result is `0`, otherwise the `Z` flag is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ADC
-fn opADC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opADC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    ADC #$nn	      $69	    2	    2
   /// Absolute	                    ADC $nnnn	      $6D	    3	    4
@@ -994,7 +1008,7 @@ fn opADC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// a = A
 /// b = imm
 /// c = C
-fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
+fn CPU::adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   self.registers[A] = a + b + c
 
   //
@@ -1017,9 +1031,7 @@ fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
 
     // The `N` and `V` flags are set after fixing the lower nibble but before fixing the upper one.
     // They use the same logic as binary mode `ADC`.
-    // self.flags.setN((hi & 0x80) != 0)
     self.flags[N] = u8(hi).bit(7)
-    // self.flags.setV(((a ^ b) & 0x80) == 0 && ((hi ^ a) & 0x80) != 0)
     self.flags[V] = not(u8(a ^ b).bit(7)) && (u8(a) ^ hi).bit(7)
 
     // BCD fixup for higher nibble.
@@ -1040,7 +1052,8 @@ fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   }
 }
 
-///| `AND` - Memory with Accumulator
+///|
+/// `AND` - Memory with Accumulator
 /// Operation: A ∧ M → A
 ///
 /// N	V	-	B	D	I	Z	C
@@ -1053,7 +1066,7 @@ fn adc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
 /// sets the `N` flag if the result in the accumulator has bit `7` on, otherwise resets the `N` flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#AND
-fn opAND(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opAND(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    AND #$nn	      $29	    2	    2
   /// Absolute	                    AND $nnnn	      $2D	    3	    4
@@ -1097,7 +1110,8 @@ fn opAND(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `ASL` - Arithmetic Shift Left
+///|
+/// `ASL` - Arithmetic Shift Left
 /// Operation: C ← /M7...M0/ ← 0
 ///
 /// N	V	-	B	D	I	Z	C
@@ -1111,7 +1125,7 @@ fn opAND(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets `N` equal to the result bit `7` (bit `6` in the input),
 /// sets `Z` flag if the result is equal to `0`,
 /// otherwise resets `Z` and stores the input bit `7` in the `C` flag.
-fn opASL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opASL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Accumulator	                  ASL A	          $0A	    1	    2
   /// Absolute	                    ASL $nnnn	      $0E	    3	    6
@@ -1153,7 +1167,8 @@ fn opASL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `ASR` - "AND" then Logical Shift Right
+///|
+/// `ASR` - "AND" then Logical Shift Right
 /// Operation: (A ∧ M) / 2 → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1168,7 +1183,7 @@ fn opASL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The carry is set equal to bit `0` of the result of the "AND" operation.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ASR
-fn opASR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opASR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    ASR #$nn	      $4B*	  2	    2
 
@@ -1202,7 +1217,8 @@ fn opASR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `BCC` - Branch on Carry Clear
+///|
+/// `BCC` - Branch on Carry Clear
 /// Operation: Branch on C = 0
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1213,7 +1229,7 @@ fn opASR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It affects no flags or registers other than the program counter and then only if the `C` flag is not on.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BCC
-fn opBCC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBCC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BCC $nnnn	      $90	    2	    2+t+p
 
@@ -1226,7 +1242,8 @@ fn opBCC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BCS` - Branch on Carry Set
+///|
+/// `BCS` - Branch on Carry Set
 /// Operation: Branch on C = 1
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1237,7 +1254,7 @@ fn opBCC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `BCS` does not affect any of the flags or registers except for the program counter and only then if the carry flag is on.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BCS
-fn opBCS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBCS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BCS $nnnn	      $B0	    2	    2+t+p
 
@@ -1250,7 +1267,8 @@ fn opBCS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BEQ` - Branch on Result Zero
+///|
+/// `BEQ` - Branch on Result Zero
 /// Operation: Branch on Z = 1
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1263,7 +1281,7 @@ fn opBCS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `BEQ` does not affect any of the flags or registers other than the program counter and only then when the `Z` flag is set.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BEQ
-fn opBEQ(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBEQ(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BEQ $nnnn	      $F0	    2	    2+t+p
 
@@ -1276,7 +1294,8 @@ fn opBEQ(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BIT` - Test Bits in Memory with Accumulator
+///|
+/// `BIT` - Test Bits in Memory with Accumulator
 /// Operation: A ∧ M, M7 → N, M6 → V
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1290,7 +1309,7 @@ fn opBEQ(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It does not affect the accumulator.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BIT
-fn opBIT(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBIT(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    BIT $nnnn	      $2C	    3	    4
   /// Zero Page	                    BIT $nn	        $24	    2	    3
@@ -1305,7 +1324,8 @@ fn opBIT(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setN(value.bit(7))
 }
 
-///| `BMI` - Branch on Result Minus
+///|
+/// `BMI` - Branch on Result Minus
 /// Operation: Branch on N = 1
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1316,7 +1336,7 @@ fn opBIT(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `BMI` does not affect any of the flags or any other part of the machine other than the program counter and then only if the `N` bit is on.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BMI
-fn opBMI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBMI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BMI $nnnn	      $30	    2 	  2+t+p
 
@@ -1329,7 +1349,8 @@ fn opBMI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BNE` - Branch on Result Not Zero
+///|
+/// `BNE` - Branch on Result Not Zero
 /// Operation: Branch on Z = 0
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1341,7 +1362,7 @@ fn opBMI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `BNE` does not affect any of the flags or registers other than the program counter and only then if the `Z` flag is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BNE
-fn opBNE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBNE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BNE $nnnn	      $D0	    2	    2+t+p
 
@@ -1354,7 +1375,8 @@ fn opBNE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BPL` - Branch on Result Plus
+///|
+/// `BPL` - Branch on Result Plus
 /// Operation: Branch on N = 0
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1367,7 +1389,7 @@ fn opBNE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The instruction affects no flags or other registers other than the `P` counter and only affects the `P` counter when the `N` bit is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BPL
-fn opBPL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBPL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BPL $nnnn	      $10	    2	    2+t+p
 
@@ -1380,7 +1402,8 @@ fn opBPL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BRK` - Break Command
+///|
+/// `BRK` - Break Command
 /// Operation: PC + 2↓, [FFFE] → PCL, [FFFF] → PCH
 ///
 /// N	V	-	B	D	I	Z	C
@@ -1393,7 +1416,7 @@ fn opBPL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// Other than changing the program counter, the break instruction changes no values in either the registers or the flags.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BRK
-fn opBRK(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBRK(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      BRK	            $00	    1	    7
 
@@ -1418,7 +1441,8 @@ fn opBRK(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.pc = self.read16(IRQ)
 }
 
-///| `BVC` - Branch on Overflow Clear
+///|
+/// `BVC` - Branch on Overflow Clear
 /// Operation: Branch on V = 0
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1429,7 +1453,7 @@ fn opBRK(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `BVC` does not affect any of the flags and registers other than the program counter and only when the overflow flag is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BVC
-fn opBVC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBVC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BVC $nnnn	      $50	    2	    2+t+p
 
@@ -1442,7 +1466,8 @@ fn opBVC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `BVS` - Branch on Overflow Set
+///|
+/// `BVS` - Branch on Overflow Set
 /// Operation: Branch on V = 1
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1453,7 +1478,7 @@ fn opBVC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `BVS` does not affect any flags or registers other than the program, counter and only when the overflow flag is set.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#BVS
-fn opBVS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opBVS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Relative	                    BVS $nnnn	      $70	    2	    2+t+p
 
@@ -1466,7 +1491,8 @@ fn opBVS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `CLC` - Clear Carry Flag
+///|
+/// `CLC` - Clear Carry Flag
 /// Operation: 0 → C
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1479,7 +1505,7 @@ fn opBVS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// This instruction affects no registers in the microprocessor and no flags other than the carry flag which is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CLC
-fn opCLC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCLC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      CLC	            $18	    1	    2
 
@@ -1490,7 +1516,8 @@ fn opCLC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.clear_carry()
 }
 
-///| `CLD` - Clear Decimal Mode
+///|
+/// `CLD` - Clear Decimal Mode
 /// Operation: 0 → D
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1502,7 +1529,7 @@ fn opCLC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `CLD` affects no registers in the microprocessor and no flags other than the decimal mode flag which is set to a `0`.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CLD
-fn opCLD(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCLD(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      CLD	            $D8	    1	    2
 
@@ -1513,7 +1540,8 @@ fn opCLD(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.clear_decimal()
 }
 
-///| `CLI` - Clear Interrupt Disable
+///|
+/// `CLI` - Clear Interrupt Disable
 /// Operation: 0 → I
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1525,7 +1553,7 @@ fn opCLD(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It affects no registers in the microprocessor and no flags other than the interrupt disable which is cleared.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CLI
-fn opCLI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCLI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      CLI	            $58	    1	    2
 
@@ -1536,7 +1564,8 @@ fn opCLI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.clear_interrupt()
 }
 
-///| `CLV` - Clear Overflow Flag
+///|
+/// `CLV` - Clear Overflow Flag
 /// Operation: 0 → V
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1548,7 +1577,7 @@ fn opCLI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `CLV` affects no registers in the microprocessor and no flags other than the overflow flag which is set to a `0`.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CLV
-fn opCLV(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCLV(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      CLV	            $B8	    1	    2
 
@@ -1559,7 +1588,8 @@ fn opCLV(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.clear_overflow()
 }
 
-///| `CMP` - Compare Memory and Accumulator
+///|
+/// `CMP` - Compare Memory and Accumulator
 /// Operation: A - M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1574,7 +1604,7 @@ fn opCLV(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The accumulator is not affected.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CMP
-fn opCMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    CMP #$nn	      $C9	    2	    2
   /// Absolute	                    CMP $nnnn	      $CD	    3	    4
@@ -1617,7 +1647,8 @@ fn opCMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.compare(self.registers[A], value)
 }
 
-///| `CPX` - Compare Index Register `X` To Memory
+///|
+/// `CPX` - Compare Index Register `X` To Memory
 /// Operation: X - M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1634,7 +1665,7 @@ fn opCMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the value in memory is equal to the value in index register `X`, the `Z` flag is set, otherwise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CPX
-fn opCPX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCPX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    CPX #$nn	      $E0	    2	    2
   /// Absolute	                    CPX $nnnn	      $EC	    3	    4
@@ -1672,7 +1703,8 @@ fn opCPX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.compare(self.registers[X], value)
 }
 
-///| `CPY` - Compare Index Register `Y` To Memory
+///|
+/// `CPY` - Compare Index Register `Y` To Memory
 /// Operation: Y - M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1688,7 +1720,7 @@ fn opCPX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the value in the index register `Y` and the value in the memory are equal, the zero flag will be set, otherwise it will be cleared.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#CPY
-fn opCPY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opCPY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    CPY #$nn	      $C0	    2	    2
   /// Absolute	                    CPY $nnnn	      $CC	    3	    4
@@ -1726,7 +1758,8 @@ fn opCPY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.compare(self.registers[Y], value)
 }
 
-///| `DEC` - Decrement Memory By One
+///|
+/// `DEC` - Decrement Memory By One
 /// Operation: M - 1 → M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1740,7 +1773,7 @@ fn opCPY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the result of the decrement is `0`, the `Z` flag is set, other­wise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#DEC
-fn opDEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opDEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    DEC $nnnn	      $CE	    3	    6
   /// X-Indexed Absolute	          DEC $nnnn,X	    $DE	    3	    7
@@ -1774,7 +1807,8 @@ fn opDEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `DEX` - Decrement Index Register `X` By One
+///|
+/// `DEX` - Decrement Index Register `X` By One
 /// Operation: X - 1 → X
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1787,7 +1821,7 @@ fn opDEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets the `Z` flag if `X` is a `0` as a result of the decrement, otherwise it resets the `Z` flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#DEX
-fn opDEX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opDEX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      DEX	            $CA	    1	    2
 
@@ -1799,7 +1833,8 @@ fn opDEX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[X])
 }
 
-///| `DEY` - Decrement Index Register `Y` By One
+///|
+/// `DEY` - Decrement Index Register `Y` By One
 /// Operation: Y - 1 → Y
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1814,7 +1849,7 @@ fn opDEX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// This instruction only affects the index register `Y`.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#DEY
-fn opDEY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opDEY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      DEY	            $88	    1	    2
 
@@ -1826,7 +1861,8 @@ fn opDEY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[Y])
 }
 
-///| `EOR` - "Exclusive OR" Memory with Accumulator
+///|
+/// `EOR` - "Exclusive OR" Memory with Accumulator
 /// Operation: A ⊻ M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1839,7 +1875,7 @@ fn opDEY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets the negative flag if the result in the accumulator has bit `7` on, otherwise resets the negative flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#EOR
-fn opEOR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opEOR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    EOR #$nn	      $49	    2	    2
   /// Absolute	                    EOR $nnnn	      $4D	    3	    4
@@ -1883,7 +1919,8 @@ fn opEOR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `INC` - Increment Memory By One
+///|
+/// `INC` - Increment Memory By One
 /// Operation: M + 1 → M
 ///
 /// N	V	-	B	D	I	Z	C
@@ -1896,7 +1933,7 @@ fn opEOR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// if the increment causes the result to become `0`, the `Z` flag is set on, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#INC
-fn opINC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opINC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    INC $nnnn	      $EE	    3	    6
   /// X-Indexed Absolute	          INC $nnnn,X	    $FE	    3	    7
@@ -1930,7 +1967,8 @@ fn opINC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `INX` - Increment Index Register `X` By One
+///|
+/// `INX` - Increment Index Register `X` By One
 /// Operation: X + 1 → X
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1947,7 +1985,7 @@ fn opINC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `INX` does not affect any other register other than the `X` register.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#INX
-fn opINX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opINX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      INX	            $E8	    1	    2
 
@@ -1959,7 +1997,8 @@ fn opINX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[X])
 }
 
-///| `INY` - Increment Index Register `Y` By One
+///|
+/// `INY` - Increment Index Register `Y` By One
 /// Operation: Y + 1 → Y
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1973,7 +2012,7 @@ fn opINX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets `Z` if as a result of the increment the `Y` register is zero otherwise resets the `Z` flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#INY
-fn opINY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opINY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      INY	            $C8	    1	    2
 
@@ -1985,7 +2024,8 @@ fn opINY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[Y])
 }
 
-///| `JMP` - Jump Indirect
+///|
+/// `JMP` - Jump Indirect
 /// Operation: [PC + 1] → PCL, [PC + 2] → PCH
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -1996,7 +2036,7 @@ fn opINY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It affects only the program counter in the microprocessor and affects no flags in the status register.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#JMP
-fn opJMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opJMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    JMP $nnnn	      $4C	    3	    3
   /// Absolute Indirect	            JMP ($nnnn)	    $6C	    3	    5
@@ -2008,7 +2048,8 @@ fn opJMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.pc = address
 }
 
-///| `JSR` - Jump To Subroutine
+///|
+/// `JSR` - Jump To Subroutine
 /// Operation: PC + 2↓, [PC + 1] → PCL, [PC + 2] → PCH
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2022,7 +2063,7 @@ fn opJMP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `JSR` instruction affects no flags, causes the stack pointer to be decremented by `2` and substitutes new values into the program counter low and the program counter high.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#JSR
-fn opJSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opJSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    JSR $nnnn	      $20	    3	    6
 
@@ -2037,10 +2078,11 @@ fn opJSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   let offset = self.read_instruction()
 
   //
-  self.pc = address | (offset._ << 8)
+  self.pc = address | (offset.0 << 8)
 }
 
-///| `LDA` - Load Accumulator with Memory
+///|
+/// `LDA` - Load Accumulator with Memory
 /// Operation: M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2053,7 +2095,7 @@ fn opJSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets the negative flag if bit `7` of the accumulator is set, other­wise resets the negative flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LDA
-fn opLDA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opLDA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    LDA #$nn	      $A9	    2	    2
   /// Absolute	                    LDA $nnnn	      $AD	    3	    4
@@ -2089,7 +2131,8 @@ fn opLDA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `LDX` - Load Index Register `X` From Memory
+///|
+/// `LDX` - Load Index Register `X` From Memory
 /// Operation: M → X
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2103,7 +2146,7 @@ fn opLDA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// otherwise `N` is reset, and affects only the `X` register.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LDX
-fn opLDX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opLDX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    LDX #$nn	      $A2	    2	    2
   /// Absolute	                    LDX $nnnn	      $AE	    3	    4
@@ -2136,7 +2179,8 @@ fn opLDX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `LDY` - Load Index Register `Y` From Memory
+///|
+/// `LDY` - Load Index Register `Y` From Memory
 /// Operation: M → Y
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2150,7 +2194,7 @@ fn opLDX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// and only affects the `Y` register.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LDY
-fn opLDY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opLDY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    LDY #$nn	      $A0	    2	    2
   /// Absolute	                    LDY $nnnn	      $AC	    3	    4
@@ -2183,7 +2227,8 @@ fn opLDY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `LSR` - Logical Shift Right
+///|
+/// `LSR` - Logical Shift Right
 /// Operation: 0 → /M7...M0/ → C
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2198,7 +2243,7 @@ fn opLDY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The carry is set equal to bit `0` of the input.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LSR
-fn opLSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opLSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Accumulator	                  LSR A	          $4A	    1	    2
   /// Absolute	                    LSR $nnnn	      $4E	    3	    6
@@ -2251,14 +2296,15 @@ fn opLSR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `NOP` - No Operation
+///|
+/// `NOP` - No Operation
 /// Operation: No operation
 /// 
 /// N	V	-	B	D	I	Z	C
 /// -	-	-	-	-	-	-	-
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#NOP
-fn opNOP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opNOP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      NOP	            $1A*	  1     2
   /// Implied	                      NOP	            $3A*	  1     2
@@ -2317,7 +2363,8 @@ fn opNOP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `ORA` - "OR" Memory with Accumulator
+///|
+/// `ORA` - "OR" Memory with Accumulator
 /// Operation: A ∨ M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2330,7 +2377,7 @@ fn opNOP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets the negative flag if the result in the accumulator has bit `7` on, otherwise resets the negative flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ORA
-fn opORA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opORA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    ORA #$nn	      $09	    2	    2
   /// Absolute	                    ORA $nnnn	      $0D	    3	    4
@@ -2374,7 +2421,8 @@ fn opORA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `PHA` - Push Accumulator On Stack
+///|
+/// `PHA` - Push Accumulator On Stack
 /// Operation: A↓
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2386,7 +2434,7 @@ fn opORA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It affects no flags.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#PHA
-fn opPHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opPHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      PHA	            $48	    1	    3
 
@@ -2397,7 +2445,8 @@ fn opPHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.push(self.registers[A])
 }
 
-///| `PHP` - Push Processor Status On Stack
+///|
+/// `PHP` - Push Processor Status On Stack
 /// Operation: P↓
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2406,7 +2455,7 @@ fn opPHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// This instruction transfers the contents of the processor status reg­ister unchanged to the stack, as governed by the stack pointer.
 ///
 /// The `PHP` instruction affects no registers or flags in the micropro­cessor.
-fn opPHP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opPHP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      PHP	            $08	    1	    3
 
@@ -2414,11 +2463,12 @@ fn opPHP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   // println("\{address} \{prefetch} \{wrap}")
 
   //
-  // self.push(self.flags.get() | BREAK | UNUSED)
-  self.push(self.flags.get())
+  self.push(self.flags.get().set(BREAK).set(UNUSED)) // Dormann
+  // self.push(self.flags.get())
 }
 
-///| `PLA` - Pull Accumulator From Stack
+///|
+/// `PLA` - Pull Accumulator From Stack
 /// Operation: A↑
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2432,7 +2482,7 @@ fn opPHP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `PLA` instruction changes content of the accumulator `A` to the contents of the memory location at stack register plus `1` and also increments the stack register.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#PLA
-fn opPLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opPLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      PLA	            $68	    1	    4
 
@@ -2447,7 +2497,8 @@ fn opPLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `PLP` - Pull Processor Status From Stack
+///|
+/// `PLP` - Pull Processor Status From Stack
 /// Operation: P↑
 ///
 /// N	V	-	B	D	I	Z	C
@@ -2459,7 +2510,7 @@ fn opPLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// This instruction could affect all flags in the status register.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#PLP
-fn opPLP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opPLP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      PLP	            $28	    1	    4
 
@@ -2470,11 +2521,12 @@ fn opPLP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.read_address(u16(self.registers[SP]) | 0x0100) |> ignore
 
   //
-  // self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore
-  self.flags.set(self.pop()) |> ignore
+  self.flags.set(self.pop().clr(BREAK).set(UNUSED)) |> ignore // Dormann
+  // self.flags.set(self.pop()) |> ignore
 }
 
-///| `ROL` - Rotate Left
+///|
+/// `ROL` - Rotate Left
 /// Operation: C ← /M7...M0/ ← C
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2489,7 +2541,7 @@ fn opPLP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// otherwise it resets `Z` and does not affect the overflow flag at all.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ROL
-fn opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Accumulator	                  ROL A	          $2A	    1	    2
   /// Absolute	                    ROL $nnnn	      $2E	    3	    6
@@ -2544,7 +2596,8 @@ fn opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `ROR` - Rotate Right
+///|
+/// `ROR` - Rotate Right
 /// Operation: C → /M7...M0/ → C
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2556,7 +2609,7 @@ fn opROL(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `ROR` instruction sets carry equal to input bit `0`, sets `N` equal to the input carry and sets the `Z` flag if the result of the rotate is `0`; otherwise it resets `Z` and does not affect the overflow flag at all.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ROR
-fn opROR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opROR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Accumulator	                  ROR A	          $6A	    1	    2
   /// Absolute	                    ROR $nnnn	      $6E	    3	    6
@@ -2611,7 +2664,8 @@ fn opROR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `RTI` - Return From Interrupt
+///|
+/// `RTI` - Return From Interrupt
 /// Operation: P↑ PC↑
 ///
 /// This instruction transfers the processor status from the stack into the microprocessor and the program counter location for the instruction which was interrupted.
@@ -2621,7 +2675,7 @@ fn opROR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It affects no other registers in the microprocessor.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#RTI
-fn opRTI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opRTI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      RTI	            $40	    1	    6
 
@@ -2641,7 +2695,8 @@ fn opRTI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.pc = self.pop16()
 }
 
-///| `RTS` - Return From Subroutine
+///|
+/// `RTS` - Return From Subroutine
 /// Operation: PC↑, PC + 1 → PC
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2653,7 +2708,7 @@ fn opRTI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `RTS` instruction does not affect any flags and affects only `PCL` and `PCH`.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#RTS
-fn opRTS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opRTS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      RTS	            $60	    1	    6
 
@@ -2673,7 +2728,8 @@ fn opRTS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.pc += 1 // overflow
 }
 
-///| `SBC` - Subtract Memory from Accumulator with Borrow
+///|
+/// `SBC` - Subtract Memory from Accumulator with Borrow
 /// Operation: A - M - ~C → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2691,7 +2747,7 @@ fn opRTS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `Z` flag is set if the result in the accumulator is `0`, otherwise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SBC
-fn opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    SBC #$nn	      $E9	    2	    2
   /// Immediate	                    SBC #$nn	      $EB*    2	    2
@@ -2732,8 +2788,8 @@ fn opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 
   // 
-  let a = self.registers[A]._
-  let b = value._
+  let a = self.registers[A].0
+  let b = value.0
   let c = self.flags[C].to_int()
 
   //
@@ -2741,13 +2797,13 @@ fn opSBC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 }
 
 ///|
-fn sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
+fn CPU::sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   self.registers[A] = a - b - (1 - c)
 
   //
   self.flags.setC(a - b - (1 - c) >= 0)
   self.flags.setV(
-    ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A]._) & 0x80) != 0,
+    ((a ^ b) & 0x80) != 0 && ((a ^ self.registers[A].0) & 0x80) != 0,
   )
   self.flags.setZN(self.registers[A])
 
@@ -2766,7 +2822,8 @@ fn sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
   }
 }
 
-///| `SEC` - Set Carry Flag
+///|
+/// `SEC` - Set Carry Flag
 /// Operation: 1 → C
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2779,7 +2836,7 @@ fn sbc(self : CPU, a : Int, b : Int, c : Int) -> Unit {
 /// This instruction affects no registers in the microprocessor and no flags other than the carry flag which is set.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SEC
-fn opSEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      SEC	            $38	    1	    2
 
@@ -2790,7 +2847,8 @@ fn opSEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.set_carry()
 }
 
-///| `SED` - Set Decimal Mode
+///|
+/// `SED` - Set Decimal Mode
 /// Operation: 1 → D
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2802,7 +2860,7 @@ fn opSEC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `SED` affects no registers in the microprocessor and no flags other than the decimal mode which is set to a `1`.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SED
-fn opSED(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSED(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      SED	            $F8	    1	    2
 
@@ -2813,7 +2871,8 @@ fn opSED(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.set_decimal()
 }
 
-///| `SEI` - Set Interrupt Disable
+///|
+/// `SEI` - Set Interrupt Disable
 /// Operation: 1 → I
 ///
 /// This instruction initializes the interrupt disable to a `1`.
@@ -2822,7 +2881,7 @@ fn opSED(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It affects no registers in the microprocessor and no flags other than the interrupt disable which is set.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SEI
-fn opSEI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSEI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      SEI	            $78	    1	    2
 
@@ -2833,7 +2892,8 @@ fn opSEI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.set_interrupt()
 }
 
-///| `STA` - Store Accumulator in Memory
+///|
+/// `STA` - Store Accumulator in Memory
 /// Operation: A → M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2844,7 +2904,7 @@ fn opSEI(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// This instruction affects none of the flags in the processor status register and does not affect the accumulator.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#STA
-fn opSTA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSTA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    STA $nnnn	      $8D	    3	    4
   /// X-Indexed Absolute	          STA $nnnn,X	    $9D	    3	    5
@@ -2871,7 +2931,8 @@ fn opSTA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, self.registers[A])
 }
 
-///| `STX` - Store Index Register `X` In Memory
+///|
+/// `STX` - Store Index Register `X` In Memory
 /// Operation: X → M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2882,7 +2943,7 @@ fn opSTA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#STX
-fn opSTX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSTX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    STX $nnnn	      $8E	    3	    4
   /// Zero Page	                    STX $nn	        $86	    2	    3
@@ -2895,7 +2956,8 @@ fn opSTX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, self.registers[X])
 }
 
-///| `STY` - Store Index Register `Y` In Memory
+///|
+/// `STY` - Store Index Register `Y` In Memory
 /// Operation: Y → M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2906,7 +2968,7 @@ fn opSTX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `STY` does not affect any flags or registers in the microprocessor.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#STY
-fn opSTY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSTY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    STY $nnnn	      $8C	    3	    4
   /// Zero Page	                    STY $nn	        $84	    2	    3
@@ -2919,7 +2981,8 @@ fn opSTY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, self.registers[Y])
 }
 
-///| `TAX` - Transfer Accumulator To Index `X`
+///|
+/// `TAX` - Transfer Accumulator To Index `X`
 /// Operation: A → X
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2932,7 +2995,7 @@ fn opSTY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `Z` bit is set if the content of the register `X` is `0` as a result of the operation, otherwise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#TXA
-fn opTAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opTAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      TAX	            $AA	    1	    2
 
@@ -2944,7 +3007,8 @@ fn opTAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[X])
 }
 
-///| `TAY` - Transfer Accumulator To Index `Y`
+///|
+/// `TAY` - Transfer Accumulator To Index `Y`
 /// Operation: A → Y
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2957,7 +3021,7 @@ fn opTAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the content of the index register `Y` equals `0` as a result of the operation, `Z` is set on, otherwise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#TAY
-fn opTAY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opTAY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      TAY	            $A8	    1	    2
 
@@ -2969,7 +3033,8 @@ fn opTAY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[Y])
 }
 
-///| `TSX` - Transfer Stack Pointer To Index `X`
+///|
+/// `TSX` - Transfer Stack Pointer To Index `X`
 /// Operation: S → X
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -2983,7 +3048,7 @@ fn opTAY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// `TSX` changes the value of index `X`, making it equal to the content of the stack pointer.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#TSX
-fn opTSX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opTSX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      TSX	            $BA	    1	    2
 
@@ -2995,7 +3060,8 @@ fn opTSX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[X])
 }
 
-///| `TXA` - Transfer Index `X` To Accumulator
+///|
+/// `TXA` - Transfer Index `X` To Accumulator
 /// Operation: X → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3008,7 +3074,7 @@ fn opTSX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the resultant value in the accumulator is `0`, then the `Z` flag is set, other­ wise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#TXA
-fn opTXA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opTXA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      TXA	            $8A 	  1	    2
 
@@ -3020,7 +3086,8 @@ fn opTXA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `TXS` - Transfer Index `X` To Stack Pointer
+///|
+/// `TXS` - Transfer Index `X` To Stack Pointer
 /// Operation: X → S
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3032,7 +3099,7 @@ fn opTXA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It does not affect any of the flags.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#TXS
-fn opTXS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opTXS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      TXS	            $9A	    1	    2
 
@@ -3043,7 +3110,8 @@ fn opTXS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.registers[SP] = self.registers[X]
 }
 
-///| `TYA` - Transfer Index `Y` To Accumulator
+///|
+/// `TYA` - Transfer Index `Y` To Accumulator
 /// Operation: Y → A
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3056,7 +3124,7 @@ fn opTXS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the resulting value in the accumulator `A` is `0`, then the `Z` flag is set, otherwise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#TYA
-fn opTYA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opTYA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      TYA	            $98	    1	    2
 
@@ -3081,7 +3149,8 @@ fn opTYA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 //   abort("unimplemented: AHX")
 // }
 
-///| `ASR` - `AND` then Logical Shift Right
+///|
+/// `ASR` - `AND` then Logical Shift Right
 /// Operation: (A ∧ M) / 2 → A
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3096,15 +3165,16 @@ fn opTYA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The carry is set equal to bit 0 of the result of the `AND` operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ASR
-fn opALR(self : CPU, address : UInt16, mode : Mode) -> Unit {
-  self.opAND(address, mode)
-  self.opLSR(address, Mode::Accumulator)
+// fn CPU::opALR(self : CPU, address : UInt16, mode : Mode) -> Unit {
+//   self.opAND(address, mode)
+//   self.opLSR(address, Mode::Accumulator)
 
-  // println("unimplemented: ALR")
-  // abort("unimplemented: ALR")
-}
+//   // println("unimplemented: ALR")
+//   // abort("unimplemented: ALR")
+// }
 
-///| `ANC` - `"AND"` Memory with Accumulator then Move Negative Flag to Carry Flag
+///|
+/// `ANC` - `"AND"` Memory with Accumulator then Move Negative Flag to Carry Flag
 /// Operation: A ∧ M → A, N → C
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3121,7 +3191,7 @@ fn opALR(self : CPU, address : UInt16, mode : Mode) -> Unit {
 /// otherwise resets the negative flag and the carry flag.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ANC
-fn opANC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opANC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    ANC #$nn	      $0B*	  2	    2
   /// Immediate	                    ANC #$nn	      $2B*	  2	    2
@@ -3139,7 +3209,8 @@ fn opANC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setC(tmp.bit(7))
 }
 
-///| `ARR` - `AND` Accumulator then Rotate Right
+///|
+/// `ARR` - `AND` Accumulator then Rotate Right
 /// Operation: (A ∧ M) / 2 → A
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3159,7 +3230,7 @@ fn opANC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 ///   The `C` flag is set if the result in the accumulator has bit `6` on, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ARR
-fn opARR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opARR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    ARR #$nn	      $6B*	  2	    2
 
@@ -3221,7 +3292,8 @@ fn opARR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 //   abort("unimplemented: AXS")
 // }
 
-///| `SBX` - Subtract Memory from Accumulator `"AND"` Index Register `X`
+///|
+/// `SBX` - Subtract Memory from Accumulator `"AND"` Index Register `X`
 /// Operation: (A ∧ X) - M → X
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3238,7 +3310,7 @@ fn opARR(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `V` flag not affected at all.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SBX
-fn opSBX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSBX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    SBX #$nn	      $CB*	  2	    2
 
@@ -3272,7 +3344,8 @@ fn opSBX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.registers[X] = result
 }
 
-///| `DCP` - Decrement Memory By One then Compare with Accumulator
+///|
+/// `DCP` - Decrement Memory By One then Compare with Accumulator
 /// Operation: M - 1 → M, A - M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3289,7 +3362,7 @@ fn opSBX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// reset when it is greater than the accumulator.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#DCP
-fn opDCP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opDCP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    DCP $nnnn	      $CF*	  3	    6
   /// X-Indexed Absolute	          DCP $nnnn,X	    $DF*	  3	    7
@@ -3331,7 +3404,8 @@ fn opDCP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.compare(self.registers[A], value)
 }
 
-///| `ISC` - Increment Memory By One then `SBC` then Subtract Memory from Accumulator with Borrow
+///|
+/// `ISC` - Increment Memory By One then `SBC` then Subtract Memory from Accumulator with Borrow
 /// Operation: M + 1 → M, A - M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3348,7 +3422,7 @@ fn opDCP(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The `Z` flag is set if the result in the accumulator is `0`, otherwise it is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#ISC
-fn opISC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opISC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    ISC $nnnn	      $EF*	  3	    6
   /// X-Indexed Absolute	          ISC $nnnn,X	    $FF*	  3	    7
@@ -3385,15 +3459,16 @@ fn opISC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 
   // self.opSBC(address, mode)
-  let a = self.registers[A]._
-  let b = value._
+  let a = self.registers[A].0
+  let b = value.0
   let c = self.flags[C].to_int()
 
   //
   self.sbc(a, b, c)
 }
 
-///| `JAM` - Halt the CPU
+///|
+/// `JAM` - Halt the CPU
 /// Operation: Stop execution
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3404,7 +3479,7 @@ fn opISC(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It will handle a RESET though.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#JAM
-fn opJAM(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opJAM(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Implied	                      JAM	            $02*	  1	    X
   /// Implied	                      JAM	            $12*	  1	    X
@@ -3438,7 +3513,8 @@ fn opJAM(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.cycles += 9
 }
 
-///| `LAS` - `"AND"` Memory with Stack Pointer
+///|
+/// `LAS` - `"AND"` Memory with Stack Pointer
 /// Operation: M ∧ S → A, X, S
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3452,7 +3528,7 @@ fn opJAM(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// If the result is zero, then the `Z` flag is set, otherwise it is reset.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LAS
-fn opLAS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opLAS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Y-Indexed Absolute	          LAS $nnnn,Y	    $BB*	  3	    4+p
 
@@ -3478,7 +3554,8 @@ fn opLAS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `LAX` - Load Accumulator and Index Register `X` From Memory
+///|
+/// `LAX` - Load Accumulator and Index Register `X` From Memory
 /// Operation: M → A, X
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3492,7 +3569,7 @@ fn opLAS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// otherwise `N` is reset, and affects only the `X` register.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#LAX
-fn opLAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opLAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    LAX #$nn	      $AB*	  2	    2
   /// Absolute	                    LAX $nnnn	      $AF*	  3	    4
@@ -3534,7 +3611,8 @@ fn opLAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(value)
 }
 
-///| `RLA` - Rotate Left then "AND" with Accumulator
+///|
+/// `RLA` - Rotate Left then "AND" with Accumulator
 /// Operation: C ← /M7...M0/ ← C, A ∧ M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3548,7 +3626,7 @@ fn opLAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// sets the negative flag if the result in the accumulator has bit `7` on, otherwise resets the negative flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#RLA
-fn opRLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opRLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    RLA $nnnn	      $2F*	  3	    6
   /// X-Indexed Absolute	          RLA $nnnn,X	    $3F*	  3	    7
@@ -3599,7 +3677,8 @@ fn opRLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   }
 }
 
-///| `RRA` - Rotate Right and Add Memory to Accumulator
+///|
+/// `RRA` - Rotate Right and Add Memory to Accumulator
 /// Operation: C → /M7...M0/ → C, A + M + C → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3615,7 +3694,7 @@ fn opRLA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The zero flag is set if the accumulator result is `0`, otherwise the zero flag is reset.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#RRA
-fn opRRA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opRRA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    RRA $nnnn	      $6F*	  3	    6
   /// X-Indexed Absolute	          RRA $nnnn,X	    $7F*	  3	    7
@@ -3680,7 +3759,8 @@ fn opRRA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.adc(a, b, c)
 }
 
-///| `SAX` - Store Accumulator "AND" Index Register `X` in Memory
+///|
+/// `SAX` - Store Accumulator "AND" Index Register `X` in Memory
 /// Operation: A ∧ X → M
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3691,7 +3771,7 @@ fn opRRA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SAX
-fn opSAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    SAX $nnnn	      $8F*	  3	    4
   /// Zero Page	                    SAX $nn	        $87*	  2	    3
@@ -3705,7 +3785,8 @@ fn opSAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, self.registers[A] & self.registers[X])
 }
 
-///| `SHA` - Store Accumulator `"AND"` Index Register `X` `"AND"` Value
+///|
+/// `SHA` - Store Accumulator `"AND"` Index Register `X` `"AND"` Value
 /// Operation: A ∧ X ∧ V → M
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3723,7 +3804,7 @@ fn opSAX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHA
-fn opSHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Y-Indexed Absolute	          SHA $nnnn,Y	    $9F*	  3	    5
   /// Zero Page Indirect Y-Indexed	SHA ($nn),Y	    $93*	  2	    6
@@ -3749,7 +3830,8 @@ fn opSHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, value)
 }
 
-///| `SHS` - Transfer Accumulator `"AND"` Index Register `X` to Stack Pointer then Store Stack Pointer `"AND"` Hi-Byte In Memory
+///|
+/// `SHS` - Transfer Accumulator `"AND"` Index Register `X` to Stack Pointer then Store Stack Pointer `"AND"` Hi-Byte In Memory
 /// Operation: A ∧ X → S, S ∧ (H + 1) → M
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3762,7 +3844,7 @@ fn opSHA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHS
-fn opSHS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSHS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Y-Indexed Absolute	          SHS $nnnn,Y	    $9B*	  3	    5
 
@@ -3790,7 +3872,8 @@ fn opSHS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, value)
 }
 
-///| `SHX` - Store Index Register `X` `"AND"` Value
+///|
+/// `SHX` - Store Index Register `X` `"AND"` Value
 /// Operation: X ∧ (H + 1) → M
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3802,7 +3885,7 @@ fn opSHS(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHX
-fn opSHX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSHX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Y-Indexed Absolute	          SHX $nnnn,Y	    $9E*	  3	    5
 
@@ -3827,7 +3910,8 @@ fn opSHX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, value)
 }
 
-///| `SHY` - Store Index Register `Y` `"AND"` Value
+///|
+/// `SHY` - Store Index Register `Y` `"AND"` Value
 /// Operation: Y ∧ (H + 1) → M
 ///
 /// N	V	-	B	D	I	Z	C
@@ -3839,7 +3923,7 @@ fn opSHX(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// No flags or registers in the microprocessor are affected by the store operation.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SHY
-fn opSHY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSHY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// X-Indexed Absolute	          SHY $nnnn,X	    $9C*	  3	    5
 
@@ -3864,7 +3948,8 @@ fn opSHY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.write(address, value)
 }
 
-///| `SLO` - Arithmetic Shift Left then "OR" Memory with Accumulator
+///|
+/// `SLO` - Arithmetic Shift Left then "OR" Memory with Accumulator
 /// Operation: M * 2 → M, A ∨ M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3877,7 +3962,7 @@ fn opSHY(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It sets `Z` flag if the result is equal to `0`, otherwise resets `Z` and stores the input bit `7` in the carry flag.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SLO
-fn opSLO(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSLO(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    SLO $nnnn	      $0F*	  3	    6
   /// X-Indexed Absolute	          SLO $nnnn,X	    $1F*	  3	    7
@@ -3918,7 +4003,8 @@ fn opSLO(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   self.flags.setZN(self.registers[A])
 }
 
-///| `SRE` - Logical Shift Right then "Exclusive OR" Memory with Accumulator
+///|
+/// `SRE` - Logical Shift Right then "Exclusive OR" Memory with Accumulator
 /// Operation: M / 2 → M, A ⊻ M → A
 /// 
 /// N	V	-	B	D	I	Z	C
@@ -3934,7 +4020,7 @@ fn opSLO(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// The carry is set equal to input bit `0`.
 /// 
 /// https://www.pagetable.com/c64ref/6502/?tab=2#SRE
-fn opSRE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opSRE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Absolute	                    SRE $nnnn	      $4F*	  3	    6
   /// X-Indexed Absolute	          SRE $nnnn,X	    $5F*	  3	    7
@@ -3990,7 +4076,8 @@ fn opSRE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 //   abort("unimplemented: TAS")
 // }
 
-///| `XAA` - Non-deterministic Operation of Accumulator, Index Register `X`, Memory and Bus Contents
+///|
+/// `XAA` - Non-deterministic Operation of Accumulator, Index Register `X`, Memory and Bus Contents
 /// Operation: (A ∨ V) ∧ X ∧ M → A
 ///
 /// N	V	-	B	D	I	Z	C
@@ -4007,7 +4094,7 @@ fn opSRE(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 /// It then transfers the result to the accumulator.
 ///
 /// https://www.pagetable.com/c64ref/6502/?tab=2#XAA
-fn opXAA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
+fn CPU::opXAA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
   /// Addressing Mode	              Assembly Form 	Opcode	Bytes	Cycles
   /// Immediate	                    XAA #$nn	      $8B*	  2	    2
 
@@ -4036,18 +4123,18 @@ fn opXAA(self : CPU, _ : UInt16, mode : Mode) -> Unit {
 
 ///|
 enum Mode {
-  ///| Absolute $nnnn
+  /// Absolute $nnnn
   /// In absolute addressing, the second byte of the instruction specifies the eight low order bits of the effective address while the third byte specifies the eight high order bits.
   /// Thus, the absolute addressing mode allows access to the entire 65K bytes of addressable memory.
   Absolute // 0
   AbsoluteSP // 0
-  ///| X-Indexed Absolute $nnnn,X
+  /// X-Indexed Absolute $nnnn,X
   /// This form of addressing is used in conjunction with the `X` index register.
   /// The effective address is formed by adding the contents of `X` to the address contained in the second and third bytes of the instruction.
   /// This mode allows the index register to contain the index or count value and the instruction to contain the base address.
   /// This type of indexing allows any location referencing and the index to modify multiple fields resulting in reduced coding and execution time.
   AbsoluteX // 1
-  ///| Y-Indexed Absolute $nnnn,Y
+  /// Y-Indexed Absolute $nnnn,Y
   /// This form of addressing is used in conjunction with the `Y` index register.
   /// The effective address is formed by adding the contents of `Y` to the address contained in the second and third bytes of the instruction.
   /// This mode allows the index register to contain the index or count value and the instruction to contain the base address.
@@ -4056,30 +4143,30 @@ enum Mode {
   Accumulator // 3
   Immediate // 4
   Implied // 5
-  ///| X-Indexed Zero Page Indirect ($nn,X)
+  /// X-Indexed Zero Page Indirect ($nn,X)
   /// In indexed indirect addressing, the second byte of the instruction is added to the contents of the `X` index register, discarding the carry. 
   /// The result of this addition points to a memory location on page zero whose contents is the low order eight bits of the effective address.
   /// The next memory location in page zero contains the high order eight bits of the effective address.
   /// Both memory locations specifying the high and low order bytes of the effective address must be in page zero.
   IndexedIndirect // 6
   Indirect // 7
-  ///| Zero Page Indirect Y-Indexed($nn),Y
+  /// Zero Page Indirect Y-Indexed($nn),Y
   /// In indirect indexed addressing, the second byte of the instruction points to a memory location in page zero.
   /// The contents of this memory location is added to the contents of the `Y` index register, the result being the low order eight bits of the effective address.
   /// The carry from this addition is added to the contents of the next page zero memory location, the result being the high order eight bits of the effective address.
   IndirectIndexed // 8
   Relative // 9
-  ///| Zero Page $nn
+  /// Zero Page $nn
   /// The zero page instructions allow for shorter code and execution times by only fetching the second byte of the instruction and assuming a zero high address byte.
   /// Careful use of the zero page can result in significant increase in code efficiency.
   ZeroPage // 10
-  ///| X-Indexed Zero Page  $nn,X
+  /// X-Indexed Zero Page  $nn,X
   /// This form of addressing is used in conjunction with the `X` index register.
   /// The effective address is calculated by adding the second byte to the contents of the index register.
   /// Since this is a form of "Zero Page" addressing, the content of the second byte references a location in page zero.
   /// Additionally, due to the “Zero Page" addressing nature of this mode, no carry is added to the high order 8 bits of memory and crossing of page boundaries does not occur.
   ZeroPageX // 11
-  ///| Y-Indexed Zero Page  $nn,Y
+  /// Y-Indexed Zero Page  $nn,Y
   /// This form of addressing is used in conjunction with the `Y` index register.
   /// The effective address is calculated by adding the second byte to the contents of the index register.
   /// Since this is a form of "Zero Page" addressing, the content of the second byte references a location in page zero.
@@ -4092,277 +4179,277 @@ pub let instructions : FixedArray[
   (String, (CPU, UInt16, Mode) -> Unit, Mode, Int, Int, Int, Bool),
 ] = [ // All 6502 instructions
   // 0x00
-  ("BRK", opBRK, Implied, 1, 7, 0, false),
-  ("ORA", opORA, IndexedIndirect, 2, 6, 0, false),
-  ("JAM", opJAM, Implied, 1, 2, 0, true),
-  ("SLO", opSLO, IndexedIndirect, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPage, 2, 3, 0, true),
-  ("ORA", opORA, ZeroPage, 2, 3, 0, false),
-  ("ASL", opASL, ZeroPage, 2, 5, 0, false),
-  ("SLO", opSLO, ZeroPage, 2, 5, 0, true),
-  ("PHP", opPHP, Implied, 1, 3, 0, false),
-  ("ORA", opORA, Immediate, 2, 2, 0, false),
-  ("ASL", opASL, Accumulator, 1, 2, 0, false),
-  ("ANC", opANC, Immediate, 2, 2, 0, true),
-  ("NOP", opNOP, Absolute, 3, 4, 0, true),
-  ("ORA", opORA, Absolute, 3, 4, 0, false),
-  ("ASL", opASL, Absolute, 3, 6, 0, false),
-  ("SLO", opSLO, Absolute, 3, 6, 0, true),
+  ("BRK", CPU::opBRK, Implied, 1, 7, 0, false),
+  ("ORA", CPU::opORA, IndexedIndirect, 2, 6, 0, false),
+  ("JAM", CPU::opJAM, Implied, 1, 2, 0, true),
+  ("SLO", CPU::opSLO, IndexedIndirect, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPage, 2, 3, 0, true),
+  ("ORA", CPU::opORA, ZeroPage, 2, 3, 0, false),
+  ("ASL", CPU::opASL, ZeroPage, 2, 5, 0, false),
+  ("SLO", CPU::opSLO, ZeroPage, 2, 5, 0, true),
+  ("PHP", CPU::opPHP, Implied, 1, 3, 0, false),
+  ("ORA", CPU::opORA, Immediate, 2, 2, 0, false),
+  ("ASL", CPU::opASL, Accumulator, 1, 2, 0, false),
+  ("ANC", CPU::opANC, Immediate, 2, 2, 0, true),
+  ("NOP", CPU::opNOP, Absolute, 3, 4, 0, true),
+  ("ORA", CPU::opORA, Absolute, 3, 4, 0, false),
+  ("ASL", CPU::opASL, Absolute, 3, 6, 0, false),
+  ("SLO", CPU::opSLO, Absolute, 3, 6, 0, true),
   // 0x10
-  ("BPL", opBPL, Relative, 2, 2, 1, false),
-  ("ORA", opORA, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 1, 2, 0, true),
-  ("SLO", opSLO, IndirectIndexed, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
-  ("ORA", opORA, ZeroPageX, 2, 4, 0, false),
-  ("ASL", opASL, ZeroPageX, 2, 6, 0, false),
-  ("SLO", opSLO, ZeroPageX, 2, 6, 0, true),
-  ("CLC", opCLC, Implied, 1, 2, 0, false),
-  ("ORA", opORA, AbsoluteY, 3, 4, 1, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, true),
-  ("SLO", opSLO, AbsoluteY, 3, 7, 0, true),
-  ("NOP", opNOP, AbsoluteX, 3, 4, 1, true),
-  ("ORA", opORA, AbsoluteX, 3, 4, 1, false),
-  ("ASL", opASL, AbsoluteX, 3, 7, 0, false),
-  ("SLO", opSLO, AbsoluteX, 3, 7, 0, true),
+  ("BPL", CPU::opBPL, Relative, 2, 2, 1, false),
+  ("ORA", CPU::opORA, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 1, 2, 0, true),
+  ("SLO", CPU::opSLO, IndirectIndexed, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPageX, 2, 4, 0, true),
+  ("ORA", CPU::opORA, ZeroPageX, 2, 4, 0, false),
+  ("ASL", CPU::opASL, ZeroPageX, 2, 6, 0, false),
+  ("SLO", CPU::opSLO, ZeroPageX, 2, 6, 0, true),
+  ("CLC", CPU::opCLC, Implied, 1, 2, 0, false),
+  ("ORA", CPU::opORA, AbsoluteY, 3, 4, 1, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, true),
+  ("SLO", CPU::opSLO, AbsoluteY, 3, 7, 0, true),
+  ("NOP", CPU::opNOP, AbsoluteX, 3, 4, 1, true),
+  ("ORA", CPU::opORA, AbsoluteX, 3, 4, 1, false),
+  ("ASL", CPU::opASL, AbsoluteX, 3, 7, 0, false),
+  ("SLO", CPU::opSLO, AbsoluteX, 3, 7, 0, true),
   // 0x20
-  ("JSR", opJSR, AbsoluteSP, 3, 6, 0, false),
-  ("AND", opAND, IndexedIndirect, 2, 6, 0, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("RLA", opRLA, IndexedIndirect, 2, 8, 0, true),
-  ("BIT", opBIT, ZeroPage, 2, 3, 0, false),
-  ("AND", opAND, ZeroPage, 2, 3, 0, false),
-  ("ROL", opROL, ZeroPage, 2, 5, 0, false),
-  ("RLA", opRLA, ZeroPage, 2, 5, 0, true),
-  ("PLP", opPLP, Implied, 1, 4, 0, false),
-  ("AND", opAND, Immediate, 2, 2, 0, false),
-  ("ROL", opROL, Accumulator, 1, 2, 0, false),
-  ("ANC", opANC, Immediate, 2, 2, 0, true),
-  ("BIT", opBIT, Absolute, 3, 4, 0, false),
-  ("AND", opAND, Absolute, 3, 4, 0, false),
-  ("ROL", opROL, Absolute, 3, 6, 0, false),
-  ("RLA", opRLA, Absolute, 3, 6, 0, true),
+  ("JSR", CPU::opJSR, AbsoluteSP, 3, 6, 0, false),
+  ("AND", CPU::opAND, IndexedIndirect, 2, 6, 0, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("RLA", CPU::opRLA, IndexedIndirect, 2, 8, 0, true),
+  ("BIT", CPU::opBIT, ZeroPage, 2, 3, 0, false),
+  ("AND", CPU::opAND, ZeroPage, 2, 3, 0, false),
+  ("ROL", CPU::opROL, ZeroPage, 2, 5, 0, false),
+  ("RLA", CPU::opRLA, ZeroPage, 2, 5, 0, true),
+  ("PLP", CPU::opPLP, Implied, 1, 4, 0, false),
+  ("AND", CPU::opAND, Immediate, 2, 2, 0, false),
+  ("ROL", CPU::opROL, Accumulator, 1, 2, 0, false),
+  ("ANC", CPU::opANC, Immediate, 2, 2, 0, true),
+  ("BIT", CPU::opBIT, Absolute, 3, 4, 0, false),
+  ("AND", CPU::opAND, Absolute, 3, 4, 0, false),
+  ("ROL", CPU::opROL, Absolute, 3, 6, 0, false),
+  ("RLA", CPU::opRLA, Absolute, 3, 6, 0, true),
   // 0x30
-  ("BMI", opBMI, Relative, 2, 2, 1, false),
-  ("AND", opAND, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("RLA", opRLA, IndirectIndexed, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
-  ("AND", opAND, ZeroPageX, 2, 4, 0, false),
-  ("ROL", opROL, ZeroPageX, 2, 6, 0, false),
-  ("RLA", opRLA, ZeroPageX, 2, 6, 0, true),
-  ("SEC", opSEC, Implied, 1, 2, 0, false),
-  ("AND", opAND, AbsoluteY, 3, 4, 1, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, true),
-  ("RLA", opRLA, AbsoluteY, 3, 7, 0, true),
-  ("NOP", opNOP, AbsoluteX, 3, 4, 1, true),
-  ("AND", opAND, AbsoluteX, 3, 4, 1, false),
-  ("ROL", opROL, AbsoluteX, 3, 7, 0, false),
-  ("RLA", opRLA, AbsoluteX, 3, 7, 0, true),
+  ("BMI", CPU::opBMI, Relative, 2, 2, 1, false),
+  ("AND", CPU::opAND, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("RLA", CPU::opRLA, IndirectIndexed, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPageX, 2, 4, 0, true),
+  ("AND", CPU::opAND, ZeroPageX, 2, 4, 0, false),
+  ("ROL", CPU::opROL, ZeroPageX, 2, 6, 0, false),
+  ("RLA", CPU::opRLA, ZeroPageX, 2, 6, 0, true),
+  ("SEC", CPU::opSEC, Implied, 1, 2, 0, false),
+  ("AND", CPU::opAND, AbsoluteY, 3, 4, 1, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, true),
+  ("RLA", CPU::opRLA, AbsoluteY, 3, 7, 0, true),
+  ("NOP", CPU::opNOP, AbsoluteX, 3, 4, 1, true),
+  ("AND", CPU::opAND, AbsoluteX, 3, 4, 1, false),
+  ("ROL", CPU::opROL, AbsoluteX, 3, 7, 0, false),
+  ("RLA", CPU::opRLA, AbsoluteX, 3, 7, 0, true),
   // 0x40
-  ("RTI", opRTI, Implied, 1, 6, 0, false),
-  ("EOR", opEOR, IndexedIndirect, 2, 6, 0, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("SRE", opSRE, IndexedIndirect, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPage, 2, 3, 0, true),
-  ("EOR", opEOR, ZeroPage, 2, 3, 0, false),
-  ("LSR", opLSR, ZeroPage, 2, 5, 0, false),
-  ("SRE", opSRE, ZeroPage, 2, 5, 0, true),
-  ("PHA", opPHA, Implied, 1, 3, 0, false),
-  ("EOR", opEOR, Immediate, 2, 2, 0, false),
-  ("LSR", opLSR, Accumulator, 1, 2, 0, false),
-  ("ASR", opASR, Immediate, 2, 2, 0, true),
-  ("JMP", opJMP, Absolute, 3, 3, 0, false),
-  ("EOR", opEOR, Absolute, 3, 4, 0, false),
-  ("LSR", opLSR, Absolute, 3, 6, 0, false),
-  ("SRE", opSRE, Absolute, 3, 6, 0, true),
+  ("RTI", CPU::opRTI, Implied, 1, 6, 0, false),
+  ("EOR", CPU::opEOR, IndexedIndirect, 2, 6, 0, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("SRE", CPU::opSRE, IndexedIndirect, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPage, 2, 3, 0, true),
+  ("EOR", CPU::opEOR, ZeroPage, 2, 3, 0, false),
+  ("LSR", CPU::opLSR, ZeroPage, 2, 5, 0, false),
+  ("SRE", CPU::opSRE, ZeroPage, 2, 5, 0, true),
+  ("PHA", CPU::opPHA, Implied, 1, 3, 0, false),
+  ("EOR", CPU::opEOR, Immediate, 2, 2, 0, false),
+  ("LSR", CPU::opLSR, Accumulator, 1, 2, 0, false),
+  ("ASR", CPU::opASR, Immediate, 2, 2, 0, true),
+  ("JMP", CPU::opJMP, Absolute, 3, 3, 0, false),
+  ("EOR", CPU::opEOR, Absolute, 3, 4, 0, false),
+  ("LSR", CPU::opLSR, Absolute, 3, 6, 0, false),
+  ("SRE", CPU::opSRE, Absolute, 3, 6, 0, true),
   // 0x50
-  ("BVC", opBVC, Relative, 2, 2, 1, false),
-  ("EOR", opEOR, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("SRE", opSRE, IndirectIndexed, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
-  ("EOR", opEOR, ZeroPageX, 2, 4, 0, false),
-  ("LSR", opLSR, ZeroPageX, 2, 6, 0, false),
-  ("SRE", opSRE, ZeroPageX, 2, 6, 0, true),
-  ("CLI", opCLI, Implied, 1, 2, 0, false),
-  ("EOR", opEOR, AbsoluteY, 3, 4, 1, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, true),
-  ("SRE", opSRE, AbsoluteY, 3, 7, 0, true),
-  ("NOP", opNOP, AbsoluteX, 3, 4, 1, true),
-  ("EOR", opEOR, AbsoluteX, 3, 4, 1, false),
-  ("LSR", opLSR, AbsoluteX, 3, 7, 0, false),
-  ("SRE", opSRE, AbsoluteX, 3, 7, 0, true),
+  ("BVC", CPU::opBVC, Relative, 2, 2, 1, false),
+  ("EOR", CPU::opEOR, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("SRE", CPU::opSRE, IndirectIndexed, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPageX, 2, 4, 0, true),
+  ("EOR", CPU::opEOR, ZeroPageX, 2, 4, 0, false),
+  ("LSR", CPU::opLSR, ZeroPageX, 2, 6, 0, false),
+  ("SRE", CPU::opSRE, ZeroPageX, 2, 6, 0, true),
+  ("CLI", CPU::opCLI, Implied, 1, 2, 0, false),
+  ("EOR", CPU::opEOR, AbsoluteY, 3, 4, 1, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, true),
+  ("SRE", CPU::opSRE, AbsoluteY, 3, 7, 0, true),
+  ("NOP", CPU::opNOP, AbsoluteX, 3, 4, 1, true),
+  ("EOR", CPU::opEOR, AbsoluteX, 3, 4, 1, false),
+  ("LSR", CPU::opLSR, AbsoluteX, 3, 7, 0, false),
+  ("SRE", CPU::opSRE, AbsoluteX, 3, 7, 0, true),
   // 0x60
-  ("RTS", opRTS, Implied, 1, 6, 0, false),
-  ("ADC", opADC, IndexedIndirect, 2, 6, 0, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("RRA", opRRA, IndexedIndirect, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPage, 2, 3, 0, true),
-  ("ADC", opADC, ZeroPage, 2, 3, 0, false),
-  ("ROR", opROR, ZeroPage, 2, 5, 0, false),
-  ("RRA", opRRA, ZeroPage, 2, 5, 0, true),
-  ("PLA", opPLA, Implied, 1, 4, 0, false),
-  ("ADC", opADC, Immediate, 2, 2, 0, false),
-  ("ROR", opROR, Accumulator, 1, 2, 0, false),
-  ("ARR", opARR, Immediate, 2, 2, 0, true),
-  ("JMP", opJMP, Indirect, 3, 5, 0, false),
-  ("ADC", opADC, Absolute, 3, 4, 0, false),
-  ("ROR", opROR, Absolute, 3, 6, 0, false),
-  ("RRA", opRRA, Absolute, 3, 6, 0, true),
+  ("RTS", CPU::opRTS, Implied, 1, 6, 0, false),
+  ("ADC", CPU::opADC, IndexedIndirect, 2, 6, 0, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("RRA", CPU::opRRA, IndexedIndirect, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPage, 2, 3, 0, true),
+  ("ADC", CPU::opADC, ZeroPage, 2, 3, 0, false),
+  ("ROR", CPU::opROR, ZeroPage, 2, 5, 0, false),
+  ("RRA", CPU::opRRA, ZeroPage, 2, 5, 0, true),
+  ("PLA", CPU::opPLA, Implied, 1, 4, 0, false),
+  ("ADC", CPU::opADC, Immediate, 2, 2, 0, false),
+  ("ROR", CPU::opROR, Accumulator, 1, 2, 0, false),
+  ("ARR", CPU::opARR, Immediate, 2, 2, 0, true),
+  ("JMP", CPU::opJMP, Indirect, 3, 5, 0, false),
+  ("ADC", CPU::opADC, Absolute, 3, 4, 0, false),
+  ("ROR", CPU::opROR, Absolute, 3, 6, 0, false),
+  ("RRA", CPU::opRRA, Absolute, 3, 6, 0, true),
   // 0x70
-  ("BVS", opBVS, Relative, 2, 2, 1, false),
-  ("ADC", opADC, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("RRA", opRRA, IndirectIndexed, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
-  ("ADC", opADC, ZeroPageX, 2, 4, 0, false),
-  ("ROR", opROR, ZeroPageX, 2, 6, 0, false),
-  ("RRA", opRRA, ZeroPageX, 2, 6, 0, true),
-  ("SEI", opSEI, Implied, 1, 2, 0, false),
-  ("ADC", opADC, AbsoluteY, 3, 4, 1, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, true),
-  ("RRA", opRRA, AbsoluteY, 3, 7, 0, true),
-  ("NOP", opNOP, AbsoluteX, 3, 4, 1, true),
-  ("ADC", opADC, AbsoluteX, 3, 4, 1, false),
-  ("ROR", opROR, AbsoluteX, 3, 7, 0, false),
-  ("RRA", opRRA, AbsoluteX, 3, 7, 0, true),
+  ("BVS", CPU::opBVS, Relative, 2, 2, 1, false),
+  ("ADC", CPU::opADC, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("RRA", CPU::opRRA, IndirectIndexed, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPageX, 2, 4, 0, true),
+  ("ADC", CPU::opADC, ZeroPageX, 2, 4, 0, false),
+  ("ROR", CPU::opROR, ZeroPageX, 2, 6, 0, false),
+  ("RRA", CPU::opRRA, ZeroPageX, 2, 6, 0, true),
+  ("SEI", CPU::opSEI, Implied, 1, 2, 0, false),
+  ("ADC", CPU::opADC, AbsoluteY, 3, 4, 1, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, true),
+  ("RRA", CPU::opRRA, AbsoluteY, 3, 7, 0, true),
+  ("NOP", CPU::opNOP, AbsoluteX, 3, 4, 1, true),
+  ("ADC", CPU::opADC, AbsoluteX, 3, 4, 1, false),
+  ("ROR", CPU::opROR, AbsoluteX, 3, 7, 0, false),
+  ("RRA", CPU::opRRA, AbsoluteX, 3, 7, 0, true),
   // 0x80
-  ("NOP", opNOP, Immediate, 2, 2, 0, true),
-  ("STA", opSTA, IndexedIndirect, 2, 6, 0, false),
-  ("NOP", opNOP, Immediate, 2, 2, 0, true),
-  ("SAX", opSAX, IndexedIndirect, 2, 6, 0, true),
-  ("STY", opSTY, ZeroPage, 2, 3, 0, false),
-  ("STA", opSTA, ZeroPage, 2, 3, 0, false),
-  ("STX", opSTX, ZeroPage, 2, 3, 0, false),
-  ("SAX", opSAX, ZeroPage, 2, 3, 0, true),
-  ("DEY", opDEY, Implied, 1, 2, 0, false),
-  ("NOP", opNOP, Immediate, 2, 2, 0, true),
-  ("TXA", opTXA, Implied, 1, 2, 0, false),
-  ("XAA", opXAA, Immediate, 2, 2, 0, true), // FIXME: ANE
-  ("STY", opSTY, Absolute, 3, 4, 0, false),
-  ("STA", opSTA, Absolute, 3, 4, 0, false),
-  ("STX", opSTX, Absolute, 3, 4, 0, false),
-  ("SAX", opSAX, Absolute, 3, 4, 0, true),
+  ("NOP", CPU::opNOP, Immediate, 2, 2, 0, true),
+  ("STA", CPU::opSTA, IndexedIndirect, 2, 6, 0, false),
+  ("NOP", CPU::opNOP, Immediate, 2, 2, 0, true),
+  ("SAX", CPU::opSAX, IndexedIndirect, 2, 6, 0, true),
+  ("STY", CPU::opSTY, ZeroPage, 2, 3, 0, false),
+  ("STA", CPU::opSTA, ZeroPage, 2, 3, 0, false),
+  ("STX", CPU::opSTX, ZeroPage, 2, 3, 0, false),
+  ("SAX", CPU::opSAX, ZeroPage, 2, 3, 0, true),
+  ("DEY", CPU::opDEY, Implied, 1, 2, 0, false),
+  ("NOP", CPU::opNOP, Immediate, 2, 2, 0, true),
+  ("TXA", CPU::opTXA, Implied, 1, 2, 0, false),
+  ("XAA", CPU::opXAA, Immediate, 2, 2, 0, true), // FIXME: ANE
+  ("STY", CPU::opSTY, Absolute, 3, 4, 0, false),
+  ("STA", CPU::opSTA, Absolute, 3, 4, 0, false),
+  ("STX", CPU::opSTX, Absolute, 3, 4, 0, false),
+  ("SAX", CPU::opSAX, Absolute, 3, 4, 0, true),
   // 0x90
-  ("BCC", opBCC, Relative, 2, 2, 1, false),
-  ("STA", opSTA, IndirectIndexed, 2, 6, 0, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("SHA", opSHA, IndirectIndexed, 2, 6, 0, true), // AHX
-  ("STY", opSTY, ZeroPageX, 2, 4, 0, false),
-  ("STA", opSTA, ZeroPageX, 2, 4, 0, false),
-  ("STX", opSTX, ZeroPageY, 2, 4, 0, false),
-  ("SAX", opSAX, ZeroPageY, 2, 4, 0, true),
-  ("TYA", opTYA, Implied, 1, 2, 0, false),
-  ("STA", opSTA, AbsoluteY, 3, 5, 0, false),
-  ("TXS", opTXS, Implied, 1, 2, 0, false),
-  ("SHS", opSHS, AbsoluteY, 3, 5, 0, true), // TAS
-  ("SHY", opSHY, AbsoluteX, 3, 5, 0, true),
-  ("STA", opSTA, AbsoluteX, 3, 5, 0, false),
-  ("SHX", opSHX, AbsoluteY, 3, 5, 0, true),
-  ("SHA", opSHA, AbsoluteY, 3, 5, 0, true), // AHX
+  ("BCC", CPU::opBCC, Relative, 2, 2, 1, false),
+  ("STA", CPU::opSTA, IndirectIndexed, 2, 6, 0, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("SHA", CPU::opSHA, IndirectIndexed, 2, 6, 0, true), // AHX
+  ("STY", CPU::opSTY, ZeroPageX, 2, 4, 0, false),
+  ("STA", CPU::opSTA, ZeroPageX, 2, 4, 0, false),
+  ("STX", CPU::opSTX, ZeroPageY, 2, 4, 0, false),
+  ("SAX", CPU::opSAX, ZeroPageY, 2, 4, 0, true),
+  ("TYA", CPU::opTYA, Implied, 1, 2, 0, false),
+  ("STA", CPU::opSTA, AbsoluteY, 3, 5, 0, false),
+  ("TXS", CPU::opTXS, Implied, 1, 2, 0, false),
+  ("SHS", CPU::opSHS, AbsoluteY, 3, 5, 0, true), // TAS
+  ("SHY", CPU::opSHY, AbsoluteX, 3, 5, 0, true),
+  ("STA", CPU::opSTA, AbsoluteX, 3, 5, 0, false),
+  ("SHX", CPU::opSHX, AbsoluteY, 3, 5, 0, true),
+  ("SHA", CPU::opSHA, AbsoluteY, 3, 5, 0, true), // AHX
   // 0xA0
-  ("LDY", opLDY, Immediate, 2, 2, 0, false),
-  ("LDA", opLDA, IndexedIndirect, 2, 6, 0, false),
-  ("LDX", opLDX, Immediate, 2, 2, 0, false),
-  ("LAX", opLAX, IndexedIndirect, 2, 6, 0, true),
-  ("LDY", opLDY, ZeroPage, 2, 3, 0, false),
-  ("LDA", opLDA, ZeroPage, 2, 3, 0, false),
-  ("LDX", opLDX, ZeroPage, 2, 3, 0, false),
-  ("LAX", opLAX, ZeroPage, 2, 3, 0, true),
-  ("TAY", opTAY, Implied, 1, 2, 0, false),
-  ("LDA", opLDA, Immediate, 2, 2, 0, false),
-  ("TAX", opTAX, Implied, 1, 2, 0, false),
-  ("LAX", opLAX, Immediate, 2, 2, 0, true),
-  ("LDY", opLDY, Absolute, 3, 4, 0, false),
-  ("LDA", opLDA, Absolute, 3, 4, 0, false),
-  ("LDX", opLDX, Absolute, 3, 4, 0, false),
-  ("LAX", opLAX, Absolute, 3, 4, 0, true),
+  ("LDY", CPU::opLDY, Immediate, 2, 2, 0, false),
+  ("LDA", CPU::opLDA, IndexedIndirect, 2, 6, 0, false),
+  ("LDX", CPU::opLDX, Immediate, 2, 2, 0, false),
+  ("LAX", CPU::opLAX, IndexedIndirect, 2, 6, 0, true),
+  ("LDY", CPU::opLDY, ZeroPage, 2, 3, 0, false),
+  ("LDA", CPU::opLDA, ZeroPage, 2, 3, 0, false),
+  ("LDX", CPU::opLDX, ZeroPage, 2, 3, 0, false),
+  ("LAX", CPU::opLAX, ZeroPage, 2, 3, 0, true),
+  ("TAY", CPU::opTAY, Implied, 1, 2, 0, false),
+  ("LDA", CPU::opLDA, Immediate, 2, 2, 0, false),
+  ("TAX", CPU::opTAX, Implied, 1, 2, 0, false),
+  ("LAX", CPU::opLAX, Immediate, 2, 2, 0, true),
+  ("LDY", CPU::opLDY, Absolute, 3, 4, 0, false),
+  ("LDA", CPU::opLDA, Absolute, 3, 4, 0, false),
+  ("LDX", CPU::opLDX, Absolute, 3, 4, 0, false),
+  ("LAX", CPU::opLAX, Absolute, 3, 4, 0, true),
   // 0xB0
-  ("BCS", opBCS, Relative, 2, 2, 1, false),
-  ("LDA", opLDA, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("LAX", opLAX, IndirectIndexed, 2, 5, 1, true),
-  ("LDY", opLDY, ZeroPageX, 2, 4, 0, false),
-  ("LDA", opLDA, ZeroPageX, 2, 4, 0, false),
-  ("LDX", opLDX, ZeroPageY, 2, 4, 0, false),
-  ("LAX", opLAX, ZeroPageY, 2, 4, 0, true),
-  ("CLV", opCLV, Implied, 1, 2, 0, false),
-  ("LDA", opLDA, AbsoluteY, 3, 4, 1, false),
-  ("TSX", opTSX, Implied, 1, 2, 0, false),
-  ("LAS", opLAS, AbsoluteY, 3, 4, 1, true),
-  ("LDY", opLDY, AbsoluteX, 3, 4, 1, false),
-  ("LDA", opLDA, AbsoluteX, 3, 4, 1, false),
-  ("LDX", opLDX, AbsoluteY, 3, 4, 1, false),
-  ("LAX", opLAX, AbsoluteY, 3, 4, 1, true),
+  ("BCS", CPU::opBCS, Relative, 2, 2, 1, false),
+  ("LDA", CPU::opLDA, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("LAX", CPU::opLAX, IndirectIndexed, 2, 5, 1, true),
+  ("LDY", CPU::opLDY, ZeroPageX, 2, 4, 0, false),
+  ("LDA", CPU::opLDA, ZeroPageX, 2, 4, 0, false),
+  ("LDX", CPU::opLDX, ZeroPageY, 2, 4, 0, false),
+  ("LAX", CPU::opLAX, ZeroPageY, 2, 4, 0, true),
+  ("CLV", CPU::opCLV, Implied, 1, 2, 0, false),
+  ("LDA", CPU::opLDA, AbsoluteY, 3, 4, 1, false),
+  ("TSX", CPU::opTSX, Implied, 1, 2, 0, false),
+  ("LAS", CPU::opLAS, AbsoluteY, 3, 4, 1, true),
+  ("LDY", CPU::opLDY, AbsoluteX, 3, 4, 1, false),
+  ("LDA", CPU::opLDA, AbsoluteX, 3, 4, 1, false),
+  ("LDX", CPU::opLDX, AbsoluteY, 3, 4, 1, false),
+  ("LAX", CPU::opLAX, AbsoluteY, 3, 4, 1, true),
   // 0xC0
-  ("CPY", opCPY, Immediate, 2, 2, 0, false),
-  ("CMP", opCMP, IndexedIndirect, 2, 6, 0, false),
-  ("NOP", opNOP, Immediate, 2, 2, 0, true),
-  ("DCP", opDCP, IndexedIndirect, 2, 8, 0, true),
-  ("CPY", opCPY, ZeroPage, 2, 3, 0, false),
-  ("CMP", opCMP, ZeroPage, 2, 3, 0, false),
-  ("DEC", opDEC, ZeroPage, 2, 5, 0, false),
-  ("DCP", opDCP, ZeroPage, 2, 5, 0, true),
-  ("INY", opINY, Implied, 1, 2, 0, false),
-  ("CMP", opCMP, Immediate, 2, 2, 0, false),
-  ("DEX", opDEX, Implied, 1, 2, 0, false),
-  ("SBX", opSBX, Immediate, 2, 2, 0, true), // AXS
-  ("CPY", opCPY, Absolute, 3, 4, 0, false),
-  ("CMP", opCMP, Absolute, 3, 4, 0, false),
-  ("DEC", opDEC, Absolute, 3, 6, 0, false),
-  ("DCP", opDCP, Absolute, 3, 6, 0, true),
+  ("CPY", CPU::opCPY, Immediate, 2, 2, 0, false),
+  ("CMP", CPU::opCMP, IndexedIndirect, 2, 6, 0, false),
+  ("NOP", CPU::opNOP, Immediate, 2, 2, 0, true),
+  ("DCP", CPU::opDCP, IndexedIndirect, 2, 8, 0, true),
+  ("CPY", CPU::opCPY, ZeroPage, 2, 3, 0, false),
+  ("CMP", CPU::opCMP, ZeroPage, 2, 3, 0, false),
+  ("DEC", CPU::opDEC, ZeroPage, 2, 5, 0, false),
+  ("DCP", CPU::opDCP, ZeroPage, 2, 5, 0, true),
+  ("INY", CPU::opINY, Implied, 1, 2, 0, false),
+  ("CMP", CPU::opCMP, Immediate, 2, 2, 0, false),
+  ("DEX", CPU::opDEX, Implied, 1, 2, 0, false),
+  ("SBX", CPU::opSBX, Immediate, 2, 2, 0, true), // AXS
+  ("CPY", CPU::opCPY, Absolute, 3, 4, 0, false),
+  ("CMP", CPU::opCMP, Absolute, 3, 4, 0, false),
+  ("DEC", CPU::opDEC, Absolute, 3, 6, 0, false),
+  ("DCP", CPU::opDCP, Absolute, 3, 6, 0, true),
   // 0xD0
-  ("BNE", opBNE, Relative, 2, 2, 1, false),
-  ("CMP", opCMP, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("DCP", opDCP, IndirectIndexed, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
-  ("CMP", opCMP, ZeroPageX, 2, 4, 0, false),
-  ("DEC", opDEC, ZeroPageX, 2, 6, 0, false),
-  ("DCP", opDCP, ZeroPageX, 2, 6, 0, true),
-  ("CLD", opCLD, Implied, 1, 2, 0, false),
-  ("CMP", opCMP, AbsoluteY, 3, 4, 1, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, true),
-  ("DCP", opDCP, AbsoluteY, 3, 7, 0, true),
-  ("NOP", opNOP, AbsoluteX, 3, 4, 1, true),
-  ("CMP", opCMP, AbsoluteX, 3, 4, 1, false),
-  ("DEC", opDEC, AbsoluteX, 3, 7, 0, false),
-  ("DCP", opDCP, AbsoluteX, 3, 7, 0, true),
+  ("BNE", CPU::opBNE, Relative, 2, 2, 1, false),
+  ("CMP", CPU::opCMP, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("DCP", CPU::opDCP, IndirectIndexed, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPageX, 2, 4, 0, true),
+  ("CMP", CPU::opCMP, ZeroPageX, 2, 4, 0, false),
+  ("DEC", CPU::opDEC, ZeroPageX, 2, 6, 0, false),
+  ("DCP", CPU::opDCP, ZeroPageX, 2, 6, 0, true),
+  ("CLD", CPU::opCLD, Implied, 1, 2, 0, false),
+  ("CMP", CPU::opCMP, AbsoluteY, 3, 4, 1, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, true),
+  ("DCP", CPU::opDCP, AbsoluteY, 3, 7, 0, true),
+  ("NOP", CPU::opNOP, AbsoluteX, 3, 4, 1, true),
+  ("CMP", CPU::opCMP, AbsoluteX, 3, 4, 1, false),
+  ("DEC", CPU::opDEC, AbsoluteX, 3, 7, 0, false),
+  ("DCP", CPU::opDCP, AbsoluteX, 3, 7, 0, true),
   // 0xE0
-  ("CPX", opCPX, Immediate, 2, 2, 0, false),
-  ("SBC", opSBC, IndexedIndirect, 2, 6, 0, false),
-  ("NOP", opNOP, Immediate, 2, 2, 0, true),
-  ("ISC", opISC, IndexedIndirect, 2, 8, 0, true),
-  ("CPX", opCPX, ZeroPage, 2, 3, 0, false),
-  ("SBC", opSBC, ZeroPage, 2, 3, 0, false),
-  ("INC", opINC, ZeroPage, 2, 5, 0, false),
-  ("ISC", opISC, ZeroPage, 2, 5, 0, true),
-  ("INX", opINX, Implied, 1, 2, 0, false),
-  ("SBC", opSBC, Immediate, 2, 2, 0, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, false),
-  ("SBC", opSBC, Immediate, 2, 2, 0, true),
-  ("CPX", opCPX, Absolute, 3, 4, 0, false),
-  ("SBC", opSBC, Absolute, 3, 4, 0, false),
-  ("INC", opINC, Absolute, 3, 6, 0, false),
-  ("ISC", opISC, Absolute, 3, 6, 0, true),
+  ("CPX", CPU::opCPX, Immediate, 2, 2, 0, false),
+  ("SBC", CPU::opSBC, IndexedIndirect, 2, 6, 0, false),
+  ("NOP", CPU::opNOP, Immediate, 2, 2, 0, true),
+  ("ISC", CPU::opISC, IndexedIndirect, 2, 8, 0, true),
+  ("CPX", CPU::opCPX, ZeroPage, 2, 3, 0, false),
+  ("SBC", CPU::opSBC, ZeroPage, 2, 3, 0, false),
+  ("INC", CPU::opINC, ZeroPage, 2, 5, 0, false),
+  ("ISC", CPU::opISC, ZeroPage, 2, 5, 0, true),
+  ("INX", CPU::opINX, Implied, 1, 2, 0, false),
+  ("SBC", CPU::opSBC, Immediate, 2, 2, 0, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, false),
+  ("SBC", CPU::opSBC, Immediate, 2, 2, 0, true),
+  ("CPX", CPU::opCPX, Absolute, 3, 4, 0, false),
+  ("SBC", CPU::opSBC, Absolute, 3, 4, 0, false),
+  ("INC", CPU::opINC, Absolute, 3, 6, 0, false),
+  ("ISC", CPU::opISC, Absolute, 3, 6, 0, true),
   // 0xF0
-  ("BEQ", opBEQ, Relative, 2, 2, 1, false),
-  ("SBC", opSBC, IndirectIndexed, 2, 5, 1, false),
-  ("JAM", opJAM, Implied, 0, 2, 0, true),
-  ("ISC", opISC, IndirectIndexed, 2, 8, 0, true),
-  ("NOP", opNOP, ZeroPageX, 2, 4, 0, true),
-  ("SBC", opSBC, ZeroPageX, 2, 4, 0, false),
-  ("INC", opINC, ZeroPageX, 2, 6, 0, false),
-  ("ISC", opISC, ZeroPageX, 2, 6, 0, true),
-  ("SED", opSED, Implied, 1, 2, 0, false),
-  ("SBC", opSBC, AbsoluteY, 3, 4, 1, false),
-  ("NOP", opNOP, Implied, 1, 2, 0, true),
-  ("ISC", opISC, AbsoluteY, 3, 7, 0, true),
-  ("NOP", opNOP, AbsoluteX, 3, 4, 1, true),
-  ("SBC", opSBC, AbsoluteX, 3, 4, 1, false),
-  ("INC", opINC, AbsoluteX, 3, 7, 0, false),
-  ("ISC", opISC, AbsoluteX, 3, 7, 0, true),
+  ("BEQ", CPU::opBEQ, Relative, 2, 2, 1, false),
+  ("SBC", CPU::opSBC, IndirectIndexed, 2, 5, 1, false),
+  ("JAM", CPU::opJAM, Implied, 0, 2, 0, true),
+  ("ISC", CPU::opISC, IndirectIndexed, 2, 8, 0, true),
+  ("NOP", CPU::opNOP, ZeroPageX, 2, 4, 0, true),
+  ("SBC", CPU::opSBC, ZeroPageX, 2, 4, 0, false),
+  ("INC", CPU::opINC, ZeroPageX, 2, 6, 0, false),
+  ("ISC", CPU::opISC, ZeroPageX, 2, 6, 0, true),
+  ("SED", CPU::opSED, Implied, 1, 2, 0, false),
+  ("SBC", CPU::opSBC, AbsoluteY, 3, 4, 1, false),
+  ("NOP", CPU::opNOP, Implied, 1, 2, 0, true),
+  ("ISC", CPU::opISC, AbsoluteY, 3, 7, 0, true),
+  ("NOP", CPU::opNOP, AbsoluteX, 3, 4, 1, true),
+  ("SBC", CPU::opSBC, AbsoluteX, 3, 4, 1, false),
+  ("INC", CPU::opINC, AbsoluteX, 3, 7, 0, false),
+  ("ISC", CPU::opISC, AbsoluteX, 3, 7, 0, true),
 ]
 
 ///|
@@ -4564,13 +4651,77 @@ priv enum Instruction {
   // RTI // 0x40
 }
 
+///|
+test "Instruction::to_int" {
+  inspect(LDA_IM.to_int(), content="169")
+  inspect(JMP_ABS.to_int(), content="76")
+  inspect(JMP_IND.to_int(), content="108")
+  inspect(JSR.to_int(), content="32")
+  inspect(RTS.to_int(), content="96")
+}
+
+///|
+test "Instruction::to_int/branches" {
+  inspect(BEQ.to_int(), content="240")
+  inspect(BNE.to_int(), content="208")
+  inspect(BCS.to_int(), content="176")
+  inspect(BCC.to_int(), content="144")
+  inspect(BMI.to_int(), content="48")
+  inspect(BPL.to_int(), content="16")
+  inspect(BVC.to_int(), content="80")
+  inspect(BVS.to_int(), content="112")
+}
+
+///|
+test "get_opcode" {
+  inspect(get_opcode(LDA_IM).0, content="169")
+  inspect(get_opcode(ADC).0, content="105")
+  inspect(get_opcode(ADC_ZP).0, content="101")
+  inspect(get_opcode(ADC_ZPX).0, content="117")
+  inspect(get_opcode(ADC_ABS).0, content="109")
+  inspect(get_opcode(ADC_ABSX).0, content="125")
+  inspect(get_opcode(ADC_ABSY).0, content="121")
+  inspect(get_opcode(ADC_INDX).0, content="97")
+  inspect(get_opcode(ADC_INDY).0, content="113")
+}
+
+///|
+test "get_opcode/comparisons" {
+  inspect(get_opcode(CMP).0, content="201")
+  inspect(get_opcode(CMP_ZP).0, content="197")
+  inspect(get_opcode(CMP_ZPX).0, content="213")
+  inspect(get_opcode(CMP_ABS).0, content="205")
+  inspect(get_opcode(CMP_ABSX).0, content="221")
+  inspect(get_opcode(CMP_ABSY).0, content="217")
+  inspect(get_opcode(CMP_INDX).0, content="193")
+  inspect(get_opcode(CMP_INDY).0, content="209")
+  inspect(get_opcode(CPX).0, content="224")
+  inspect(get_opcode(CPY).0, content="192")
+  inspect(get_opcode(CPX_ZP).0, content="228")
+  inspect(get_opcode(CPY_ZP).0, content="196")
+  inspect(get_opcode(CPX_ABS).0, content="236")
+  inspect(get_opcode(CPY_ABS).0, content="204")
+}
+
+///|
+test "get_opcode/sbc_instructions" {
+  inspect(get_opcode(SBC).0, content="233")
+  inspect(get_opcode(SBC_ABS).0, content="237")
+  inspect(get_opcode(SBC_ZP).0, content="229")
+  inspect(get_opcode(SBC_ZPX).0, content="245")
+  inspect(get_opcode(SBC_ABSX).0, content="253")
+  inspect(get_opcode(SBC_ABSY).0, content="249")
+  inspect(get_opcode(SBC_INDX).0, content="225")
+  inspect(get_opcode(SBC_INDY).0, content="241")
+}
+
 // fn op_get(self : Instruction, instruction : Instruction) -> UInt8 {
 //   get_opcode(instruction)
 // }
 
 ///|
 fn Instruction::to_int(self : Instruction) -> Int {
-  get_opcode(self)._
+  get_opcode(self).0
 }
 
 ///|
@@ -4776,7 +4927,7 @@ fn get_opcode(instruction : Instruction) -> UInt8 {
 
 ///|
 fn CPU::op_get(self : CPU, address : Int) -> Int {
-  self.read(address, dummy=true)._
+  self.read(address, dummy=true).0
 }
 
 ///|

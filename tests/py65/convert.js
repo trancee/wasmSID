@@ -91,30 +91,30 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                     const assert = reAssert.exec(line)
                     // console.log(assert)
                     if (assert) {
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.NEGATIVE)`, `assert_eq!(cpu.flags[N], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.OVERFLOW)`, `assert_eq!(cpu.flags[V], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.DECIMAL)`, `assert_eq!(cpu.flags[D], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.INTERRUPT)`, `assert_eq!(cpu.flags[I], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.UNUSED)`, `assert_eq!(cpu.flags[U], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.BREAK)`, `assert_eq!(cpu.flags[B], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.ZERO)`, `assert_eq!(cpu.flags[Z], false)`)
-                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.CARRY)`, `assert_eq!(cpu.flags[C], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.NEGATIVE)`, `assert_eq(cpu.flags[N], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.OVERFLOW)`, `assert_eq(cpu.flags[V], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.DECIMAL)`, `assert_eq(cpu.flags[D], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.INTERRUPT)`, `assert_eq(cpu.flags[I], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.UNUSED)`, `assert_eq(cpu.flags[U], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.BREAK)`, `assert_eq(cpu.flags[B], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.ZERO)`, `assert_eq(cpu.flags[Z], false)`)
+                        line = line.replace(`self.assertEqual(0, mpu.p & mpu.CARRY)`, `assert_eq(cpu.flags[C], false)`)
 
-                        line = line.replace(`self.assertEqual(mpu.NEGATIVE, mpu.p & mpu.NEGATIVE)`, `assert_eq!(cpu.flags[N], true)`)
-                        line = line.replace(`self.assertEqual(mpu.OVERFLOW, mpu.p & mpu.OVERFLOW)`, `assert_eq!(cpu.flags[V], true)`)
-                        line = line.replace(`self.assertEqual(mpu.DECIMAL, mpu.p & mpu.DECIMAL)`, `assert_eq!(cpu.flags[D], true)`)
-                        line = line.replace(`self.assertEqual(mpu.INTERRUPT, mpu.p & mpu.INTERRUPT)`, `assert_eq!(cpu.flags[I], true)`)
-                        line = line.replace(`self.assertEqual(mpu.UNUSED, mpu.p & mpu.UNUSED)`, `assert_eq!(cpu.flags[U], true)`)
-                        line = line.replace(`self.assertEqual(mpu.BREAK, mpu.p & mpu.BREAK)`, `assert_eq!(cpu.flags[B], true)`)
-                        line = line.replace(`self.assertEqual(mpu.ZERO, mpu.p & mpu.ZERO)`, `assert_eq!(cpu.flags[Z], true)`)
-                        line = line.replace(`self.assertEqual(mpu.CARRY, mpu.p & mpu.CARRY)`, `assert_eq!(cpu.flags[C], true)`)
+                        line = line.replace(`self.assertEqual(mpu.NEGATIVE, mpu.p & mpu.NEGATIVE)`, `assert_eq(cpu.flags[N], true)`)
+                        line = line.replace(`self.assertEqual(mpu.OVERFLOW, mpu.p & mpu.OVERFLOW)`, `assert_eq(cpu.flags[V], true)`)
+                        line = line.replace(`self.assertEqual(mpu.DECIMAL, mpu.p & mpu.DECIMAL)`, `assert_eq(cpu.flags[D], true)`)
+                        line = line.replace(`self.assertEqual(mpu.INTERRUPT, mpu.p & mpu.INTERRUPT)`, `assert_eq(cpu.flags[I], true)`)
+                        line = line.replace(`self.assertEqual(mpu.UNUSED, mpu.p & mpu.UNUSED)`, `assert_eq(cpu.flags[U], true)`)
+                        line = line.replace(`self.assertEqual(mpu.BREAK, mpu.p & mpu.BREAK)`, `assert_eq(cpu.flags[B], true)`)
+                        line = line.replace(`self.assertEqual(mpu.ZERO, mpu.p & mpu.ZERO)`, `assert_eq(cpu.flags[Z], true)`)
+                        line = line.replace(`self.assertEqual(mpu.CARRY, mpu.p & mpu.CARRY)`, `assert_eq(cpu.flags[C], true)`)
 
-                        line = line.replace(`self.assertNotEqual(mpu.CARRY, mpu.p & mpu.CARRY)`, `assert_eq!(cpu.flags[C], false)`)
+                        line = line.replace(`self.assertNotEqual(mpu.CARRY, mpu.p & mpu.CARRY)`, `assert_eq(cpu.flags[C], false)`)
 
                         if (assert[1] !== undefined) {
                             line = line.replace(`self.assertNotEqual`, `assert_ne!`)
                         } else {
-                            line = line.replace(`self.assertEqual`, `assert_eq!`)
+                            line = line.replace(`self.assertEqual`, `assert_eq`)
                         }
                         if (assert[3].startsWith("mpu.")) {
                             line = line.replace(assert[2], `___`).replace(assert[3], `###`).replace(`___`, assert[3]).replace(`###`, assert[2])
@@ -168,7 +168,7 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                 line = line.replace(`mpu.x`, `cpu.registers[X]`)
                 line = line.replace(`mpu.y`, `cpu.registers[Y]`)
                 if (line.includes(`mpu.step()`))
-                    line = line.replace(`mpu.step()`, `assert_eq!(cpu.step(), ${steps[step++]})`)
+                    line = line.replace(`mpu.step()`, `assert_eq(cpu.step(), ${steps[step++]})`)
                 line = line.replace(`mpu.`, `cpu.`)
 
                 line = line.replace(`0xFFFA`, `NMI`)
@@ -178,7 +178,7 @@ fs.readFile('test_mpu6502.py', 'utf8', (err, data) => {
                 line = line.replace(`rel = `, `let rel = `)
                 line = line.replace(`, rel`, `, rel.to_byte()`)
 
-                if (line.includes(`assert_eq!`)) {
+                if (line.includes(`assert_eq`)) {
                     line = line.replace(`])`, `]._)`).replace(`())`, `()._)`)
                 }
 

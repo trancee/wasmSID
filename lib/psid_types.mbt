@@ -27,7 +27,8 @@ pub enum SIDheader {
   SID3Address // 0x7B Byte
 } derive(Show)
 
-///| Valid values:
+///|
+/// Valid values:
 /// - 0x0001
 /// - 0x0002 (PSID V2NG, RSID)
 /// - 0x0003 (PSID V2NG, RSID)
@@ -50,9 +51,9 @@ enum Version {
 } derive(Show, Eq)
 
 ///|
-fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
+fn Version::from_int(value : UInt16, realSID : Bool) -> Version raise {
   if realSID {
-    match value._ {
+    match value.0 {
       // 0x00 => Unknown
       0x02 => RSIDv2
       0x03 => RSIDv3
@@ -60,7 +61,7 @@ fn Version::from_int(value : UInt16, realSID : Bool) -> Version! {
       _ => raise UnknownVersion
     }
   } else {
-    match value._ {
+    match value.0 {
       // 0x00 => Unknown
       0x01 => PSIDv1
       0x02 => PSIDv2
@@ -100,7 +101,7 @@ enum Mode {
 } derive(Show, Eq)
 
 ///|
-fn Mode::from_int(value : Int, realSID : Bool) -> Mode! {
+fn Mode::from_int(value : Int, realSID : Bool) -> Mode raise {
   if realSID {
     match value {
       0x00 => C64
@@ -120,6 +121,7 @@ fn Mode::from_int(value : Int, realSID : Bool) -> Mode! {
 // bit7 should be 'middle' channel-flag (overriding bit6 left/right)
 // bit6: output-channel (0(default):left, 1:right, ?:both?),
 // bit5..4:SIDmodel(00:setting,01:6581,10:8580,11:both)
+
 ///|
 struct SIDFlags {
   channel : Channel
@@ -127,15 +129,15 @@ struct SIDFlags {
 } derive(Show, Eq)
 
 ///|
-fn SIDFlags::default() -> SIDFlags! {
-  SIDFlags::from_int!(0x0000)
+fn SIDFlags::default() -> SIDFlags raise {
+  SIDFlags::from_int(0x0000)
 }
 
 ///|
-fn SIDFlags::from_int(value : UInt16) -> SIDFlags! {
+fn SIDFlags::from_int(value : UInt16) -> SIDFlags raise {
   {
-    channel: Channel::from_int!((value._ >> 6) & 0b11),
-    model: Model::from_int!((value._ >> 4) & 0b11),
+    channel: Channel::from_int((value.0 >> 6) & 0b11),
+    model: Model::from_int((value.0 >> 4) & 0b11),
   }
 }
 
@@ -148,20 +150,20 @@ pub struct Flags {
 } derive(Show, Eq)
 
 ///|
-fn Flags::default() -> Flags! {
-  Flags::from_int!(0x0000, false)
+fn Flags::default() -> Flags raise {
+  Flags::from_int(0x0000, false)
 }
 
 ///|
-fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags! {
+fn Flags::from_int(value : UInt16, realSID : Bool) -> Flags raise {
   {
-    player: (value._ >> 0) & 0b01,
-    mode: Mode::from_int!((value._ >> 1) & 0b01, realSID),
-    videoStandard: VideoStandard::from_int!((value._ >> 2) & 0b11),
+    player: (value.0 >> 0) & 0b01,
+    mode: Mode::from_int((value.0 >> 1) & 0b01, realSID),
+    videoStandard: VideoStandard::from_int((value.0 >> 2) & 0b11),
     model: [
-      Model::from_int!((value._ >> 4) & 0b11),
-      Model::from_int!((value._ >> 6) & 0b11),
-      Model::from_int!((value._ >> 8) & 0b11),
+      Model::from_int((value.0 >> 4) & 0b11),
+      Model::from_int((value.0 >> 6) & 0b11),
+      Model::from_int((value.0 >> 8) & 0b11),
     ],
   }
 }

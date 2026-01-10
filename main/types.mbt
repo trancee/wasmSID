@@ -1,11 +1,11 @@
 ///|
-typealias @core.(UInt8, UInt16)
+using @core {type UInt8, type UInt16}
 
 ///|
-fnalias @core.(u8, u16)
+using @core {u8, u16}
 
 ///|
-typealias @cpu.(CPU, Registers, Flags)
+using @cpu {type CPU, type Registers, type Flags}
 
 ///|
-typealias @lib.(C64, NES, PSID, Memory)
+using @lib {type C64, type NES, type PSID, type Memory}

@@ -20,7 +20,7 @@ test "ADCAbsCanAddZeroToZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -40,7 +40,7 @@ test "ADCAbsCanAddCarryAndZeroToZeroAndGetOne" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -60,7 +60,7 @@ test "ADCAbsCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -85,7 +85,7 @@ test "ADCAbsCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -105,7 +105,7 @@ test "ADCAbsCanAddOneToFFAndItWillCauseACarry" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -125,7 +125,7 @@ test "ADCAbsWillSetTheNegativeFlagWhenTheResultIsNegative" {
     expectV: false,
     expectN: true,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -150,7 +150,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionFails" {
     expectV: true,
     expectN: false,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -176,7 +176,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedNegativeAddtionPassedDueToInitalCarr
     expectV: false,
     expectN: true,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 ///|
@@ -201,7 +201,7 @@ test "ADCAbsWillSetTheOverflowFlagWhenSignedPositiveAddtionFails" {
     expectV: true,
     expectN: true,
   }
-  testADCAbsolute!(t)
+  testADCAbsolute(t)
 }
 
 // ADC Immediate
@@ -223,7 +223,7 @@ test "ADCImmediateCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCImmediate!(t)
+  testADCImmediate(t)
 }
 
 ///|
@@ -248,7 +248,7 @@ test "ADCImmediateCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCImmediate!(t)
+  testADCImmediate(t)
 }
 
 // ADC Zero Page
@@ -270,7 +270,7 @@ test "ADCZeroPageCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCZeroPage!(t)
+  testADCZeroPage(t)
 }
 
 ///|
@@ -295,7 +295,7 @@ test "ADCZeroPageCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCZeroPage!(t)
+  testADCZeroPage(t)
 }
 
 // ADC Zero Page, X
@@ -317,7 +317,7 @@ test "ADCZeroPageXCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCZeroPageX!(t)
+  testADCZeroPageX(t)
 }
 
 ///|
@@ -342,7 +342,7 @@ test "ADCZeroPageXCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCZeroPageX!(t)
+  testADCZeroPageX(t)
 }
 
 // ADC Absolute, X
@@ -364,7 +364,7 @@ test "ADCAbsXCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsoluteX!(t)
+  testADCAbsoluteX(t)
 }
 
 ///|
@@ -389,7 +389,7 @@ test "ADCAbsXCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsoluteX!(t)
+  testADCAbsoluteX(t)
 }
 
 // ADC Absolute, Y
@@ -411,7 +411,7 @@ test "ADCAbsYCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsoluteY!(t)
+  testADCAbsoluteY(t)
 }
 
 ///|
@@ -436,7 +436,7 @@ test "ADCAbsYCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCAbsoluteY!(t)
+  testADCAbsoluteY(t)
 }
 
 // ADC Indirect, X
@@ -458,7 +458,7 @@ test "ADCIndXCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCIndirectX!(t)
+  testADCIndirectX(t)
 }
 
 ///|
@@ -483,7 +483,7 @@ test "ADCIndXCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCIndirectX!(t)
+  testADCIndirectX(t)
 }
 
 // ADC Indirect, Y
@@ -505,7 +505,7 @@ test "ADCIndYCanAddTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testADCIndirectY!(t)
+  testADCIndirectY(t)
 }
 
 ///|
@@ -530,7 +530,7 @@ test "ADCIndYCanAddAPositiveAndNegativeNumber" {
     expectN: false,
     expectV: false,
   }
-  testADCIndirectY!(t)
+  testADCIndirectY(t)
 }
 
 // SBC Absolute
@@ -552,7 +552,7 @@ test "SBCAbsCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -572,7 +572,7 @@ test "SBCAbsCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -592,7 +592,7 @@ test "SBCAbsCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -612,7 +612,7 @@ test "SBCAbsCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -632,7 +632,7 @@ test "SBCAbsCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -652,7 +652,7 @@ test "SBCAbsCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -672,7 +672,7 @@ test "SBCAbsCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 ///|
@@ -692,7 +692,7 @@ test "SBCAbsCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsolute!(t)
+  testSBCAbsolute(t)
 }
 
 // SBC Zero Page
@@ -714,7 +714,7 @@ test "SBCZeroPageCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -734,7 +734,7 @@ test "SBCZeroPageCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -754,7 +754,7 @@ test "SBCZeroPageCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -774,7 +774,7 @@ test "SBCZeroPageCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -794,7 +794,7 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -814,7 +814,7 @@ test "SBCZeroPageCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -834,7 +834,7 @@ test "SBCZeroPageCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 ///|
@@ -858,7 +858,7 @@ test "SBCZeroPageCanSubtractTwoNegativeNumbers" {
   // Output
 
   //
-  testSBCZeroPage!(t)
+  testSBCZeroPage(t)
 }
 
 // SBC Immediate
@@ -880,7 +880,7 @@ test "SBCImmediateCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -900,7 +900,7 @@ test "SBCImmediateCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -920,7 +920,7 @@ test "SBCImmediateCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -940,7 +940,7 @@ test "SBCImmediateCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -960,7 +960,7 @@ test "SBCImmediateCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -980,7 +980,7 @@ test "SBCImmediateCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -1000,7 +1000,7 @@ test "SBCImmediateCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 ///|
@@ -1020,7 +1020,7 @@ test "SBCImmediateCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCImmediate!(t)
+  testSBCImmediate(t)
 }
 
 // SBC Zero Page, X
@@ -1042,7 +1042,7 @@ test "SBCZeroPageXCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1062,7 +1062,7 @@ test "SBCZeroPageXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1082,7 +1082,7 @@ test "SBCZeroPageXCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1102,7 +1102,7 @@ test "SBCZeroPageXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1122,7 +1122,7 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1142,7 +1142,7 @@ test "SBCZeroPageXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1162,7 +1162,7 @@ test "SBCZeroPageXCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 ///|
@@ -1182,7 +1182,7 @@ test "SBCZeroPageXCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCZeroPageX!(t)
+  testSBCZeroPageX(t)
 }
 
 // SBC Absolute, X
@@ -1204,7 +1204,7 @@ test "SBCAbsoluteXCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1224,7 +1224,7 @@ test "SBCAbsoluteXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1244,7 +1244,7 @@ test "SBCAbsoluteXCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1264,7 +1264,7 @@ test "SBCAbsoluteXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1284,7 +1284,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1304,7 +1304,7 @@ test "SBCAbsoluteXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1324,7 +1324,7 @@ test "SBCAbsoluteXCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 ///|
@@ -1344,7 +1344,7 @@ test "SBCAbsoluteXCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteX!(t)
+  testSBCAbsoluteX(t)
 }
 
 // SBC Absolute, Y
@@ -1366,7 +1366,7 @@ test "SBCAbsoluteYCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1386,7 +1386,7 @@ test "SBCAbsoluteYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1406,7 +1406,7 @@ test "SBCAbsoluteYCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1426,7 +1426,7 @@ test "SBCAbsoluteYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1446,7 +1446,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1466,7 +1466,7 @@ test "SBCAbsoluteYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1486,7 +1486,7 @@ test "SBCAbsoluteYCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 ///|
@@ -1506,7 +1506,7 @@ test "SBCAbsoluteYCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCAbsoluteY!(t)
+  testSBCAbsoluteY(t)
 }
 
 // SBC Indirect, X
@@ -1528,7 +1528,7 @@ test "SBCIndirectXCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1548,7 +1548,7 @@ test "SBCIndirectXCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1568,7 +1568,7 @@ test "SBCIndirectXCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1588,7 +1588,7 @@ test "SBCIndirectXCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1608,7 +1608,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1628,7 +1628,7 @@ test "SBCIndirectXCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1648,7 +1648,7 @@ test "SBCIndirectXCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 ///|
@@ -1668,7 +1668,7 @@ test "SBCIndirectXCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectX!(t)
+  testSBCIndirectX(t)
 }
 
 // SBC Indirect, Y
@@ -1690,7 +1690,7 @@ test "SBCIndirectYCanSubtractZeroFromZeroAndGetZero" {
     expectN: false,
     expectV: false,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1710,7 +1710,7 @@ test "SBCIndirectYCanSubtractZeroFromZeroAndCarryAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1730,7 +1730,7 @@ test "SBCIndirectYCanSubtractOneFromZeroAndGetMinusOne" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1750,7 +1750,7 @@ test "SBCIndirectYCanSubtractOneFromZeroWithCarryAndGetMinusTwo" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1770,7 +1770,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbersAndGetSignedOverflow" {
     expectN: false,
     expectV: true,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1790,7 +1790,7 @@ test "SBCIndirectYCanSubtractAPostitiveAndNegativeNumbersAndGetSignedOverflow" {
     expectN: true,
     expectV: true,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1810,7 +1810,7 @@ test "SBCIndirectYCanSubtractTwoUnsignedNumbers" {
     expectN: false,
     expectV: false,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 ///|
@@ -1830,7 +1830,7 @@ test "SBCIndirectYCanSubtractTwoNegativeNumbers" {
     expectN: true,
     expectV: false,
   }
-  testSBCIndirectY!(t)
+  testSBCIndirectY(t)
 }
 
 // Test
@@ -1853,8 +1853,11 @@ struct ADCTestData {
 }
 
 ///|
-fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+fn testADCAbsolute(
+  t : ADCTestData,
+  ins? : Instruction = ADC_ABS,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -1882,30 +1885,33 @@ fn testADCAbsolute(t : ADCTestData, ins~ : Instruction = ADC_ABS) -> Unit!Error 
   cpu.write(0x8000, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCAbsolute(t : ADCTestData) -> Unit!Error {
-  testADCAbsolute!(t, ins=SBC_ABS)
+fn testSBCAbsolute(t : ADCTestData) -> Unit raise Error {
+  testADCAbsolute(t, ins=SBC_ABS)
 }
 
 ///|
-fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+fn testADCImmediate(
+  t : ADCTestData,
+  ins? : Instruction = ADC,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -1929,30 +1935,33 @@ fn testADCImmediate(t : ADCTestData, ins~ : Instruction = ADC) -> Unit!Error {
   cpu.write(0xFF01, t.op)
 
   //
-  assert_eq!(cpu.step(), 2)
+  assert_eq(cpu.step(), 2)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCImmediate(t : ADCTestData) -> Unit!Error {
-  testADCImmediate!(t, ins=SBC)
+fn testSBCImmediate(t : ADCTestData) -> Unit raise Error {
+  testADCImmediate(t, ins=SBC)
 }
 
 ///|
-fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+fn testADCZeroPage(
+  t : ADCTestData,
+  ins? : Instruction = ADC_ZP,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -1979,33 +1988,33 @@ fn testADCZeroPage(t : ADCTestData, ins~ : Instruction = ADC_ZP) -> Unit!Error {
   cpu.write(0x0042, t.op)
 
   //
-  assert_eq!(cpu.step(), 3)
+  assert_eq(cpu.step(), 3)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCZeroPage(t : ADCTestData) -> Unit!Error {
-  testADCZeroPage!(t, ins=SBC_ZP)
+fn testSBCZeroPage(t : ADCTestData) -> Unit raise Error {
+  testADCZeroPage(t, ins=SBC_ZP)
 }
 
 ///|
 fn testADCZeroPageX(
   t : ADCTestData,
-  ins~ : Instruction = ADC_ZPX
-) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+  ins? : Instruction = ADC_ZPX,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2030,36 +2039,36 @@ fn testADCZeroPageX(
   cpu.write(0xFF01, 0x42)
 
   //
-  cpu.write(0x0042 + cpu.registers[X]._, t.op)
+  cpu.write(0x0042 + cpu.registers[X].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCZeroPageX(t : ADCTestData) -> Unit!Error {
-  testADCZeroPageX!(t, ins=SBC_ZPX)
+fn testSBCZeroPageX(t : ADCTestData) -> Unit raise Error {
+  testADCZeroPageX(t, ins=SBC_ZPX)
 }
 
 ///|
 fn testADCAbsoluteX(
   t : ADCTestData,
-  ins~ : Instruction = ADC_ABSX
-) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+  ins? : Instruction = ADC_ABSX,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2085,36 +2094,36 @@ fn testADCAbsoluteX(
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[X]._, t.op)
+  cpu.write(0x8000 + cpu.registers[X].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCAbsoluteX(t : ADCTestData) -> Unit!Error {
-  testADCAbsoluteX!(t, ins=SBC_ABSX)
+fn testSBCAbsoluteX(t : ADCTestData) -> Unit raise Error {
+  testADCAbsoluteX(t, ins=SBC_ABSX)
 }
 
 ///|
 fn testADCAbsoluteY(
   t : ADCTestData,
-  ins~ : Instruction = ADC_ABSY
-) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+  ins? : Instruction = ADC_ABSY,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2140,36 +2149,36 @@ fn testADCAbsoluteY(
   cpu.write(0xFF02, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCAbsoluteY(t : ADCTestData) -> Unit!Error {
-  testADCAbsoluteY!(t, ins=SBC_ABSY)
+fn testSBCAbsoluteY(t : ADCTestData) -> Unit raise Error {
+  testADCAbsoluteY(t, ins=SBC_ABSY)
 }
 
 ///|
 fn testADCIndirectX(
   t : ADCTestData,
-  ins~ : Instruction = ADC_INDX
-) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+  ins? : Instruction = ADC_INDX,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2194,40 +2203,40 @@ fn testADCIndirectX(
   cpu.write(0xFF01, 0x02)
 
   //
-  cpu.write(0x0002 + cpu.registers[X]._, 0x00)
-  cpu.write(0x0003 + cpu.registers[X]._, 0x80)
+  cpu.write(0x0002 + cpu.registers[X].0, 0x00)
+  cpu.write(0x0003 + cpu.registers[X].0, 0x80)
 
   //
   cpu.write(0x8000, t.op)
 
   //
-  assert_eq!(cpu.step(), 6)
+  assert_eq(cpu.step(), 6)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCIndirectX(t : ADCTestData) -> Unit!Error {
-  testADCIndirectX!(t, ins=SBC_INDX)
+fn testSBCIndirectX(t : ADCTestData) -> Unit raise Error {
+  testADCIndirectX(t, ins=SBC_INDX)
 }
 
 ///|
 fn testADCIndirectY(
   t : ADCTestData,
-  ins~ : Instruction = ADC_INDY
-) -> Unit!Error {
-  let cpu = CPU::new!(pc=0xFF00)
+  ins? : Instruction = ADC_INDY,
+) -> Unit raise Error {
+  let cpu = CPU::new(pc=0xFF00)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -2256,26 +2265,26 @@ fn testADCIndirectY(
   cpu.write(0x0003, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 5)
+  assert_eq(cpu.step(), 5)
 
   //
-  assert_eq!(cpu.registers[A], t.expectA)
+  assert_eq(cpu.registers[A], t.expectA)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testSBCIndirectY(t : ADCTestData) -> Unit!Error {
-  testADCIndirectY!(t, ins=SBC_INDY)
+fn testSBCIndirectY(t : ADCTestData) -> Unit raise Error {
+  testADCIndirectY(t, ins=SBC_INDY)
 }

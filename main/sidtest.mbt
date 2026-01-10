@@ -2,13 +2,11 @@
 let subtune = 1
 
 ///|
-pub fn sidtest() -> Unit! {
+pub fn sidtest() -> Unit raise {
   let mem = Memory::new()
 
   //
-  let psid = try {
-    PSID::new!(mem, siddata)
-  } catch {
+  let psid = PSID::new(mem, siddata) catch {
     err => {
       println(err)
       panic()
@@ -16,9 +14,7 @@ pub fn sidtest() -> Unit! {
   }
 
   //
-  try {
-    psid.process!()
-  } catch {
+  psid.process() catch {
     err => {
       println(err)
       panic()
@@ -29,7 +25,7 @@ pub fn sidtest() -> Unit! {
   println("---")
 
   //
-  let c64 = C64::new!(
+  let c64 = C64::new(
     mem~,
     model=psid.flags.model,
     videoStandard=psid.videoStandard(),
@@ -63,8 +59,8 @@ pub fn sidtest() -> Unit! {
       s += "(IRQ), "
     }
   }
-  let song = psid.defaultSong._
-  let songs = psid.songs._
+  let song = psid.defaultSong.0
+  let songs = psid.songs.0
   s += "Subtune:\{song} (of \{songs})"
   if psid.realSID {
     s += ", RealSID"
@@ -90,8 +86,8 @@ fn initSIDtune(c64 : C64, psid : PSID, subtune : Int) -> Unit {
   let mut subtune = subtune
   if subtune == 0 {
     subtune = 1
-  } else if subtune > psid.songs._ {
-    subtune = psid.songs._
+  } else if subtune > psid.songs.0 {
+    subtune = psid.songs.0
   }
 
   //determine init-address:

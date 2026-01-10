@@ -16,28 +16,36 @@ pub const NONE = 0b00000000
 ///|
 pub const ALL = 0b11111111
 
-///| 0x01 Carry Flag
+///|
+/// 0x01 Carry Flag
 pub const CARRY = 0b00000001
 
-///| 0x02 Zero Flag
+///|
+/// 0x02 Zero Flag
 pub const ZERO = 0b00000010
 
-///| 0x04 Interrupt Disable Flag
+///|
+/// 0x04 Interrupt Disable Flag
 pub const INTERRUPT = 0b00000100
 
-///| 0x08 Decimal Mode Flag
+///|
+/// 0x08 Decimal Mode Flag
 pub const DECIMAL = 0b00001000
 
-///| 0x10 Break Command Flag
+///|
+/// 0x10 Break Command Flag
 pub const BREAK = 0b00010000
 
-///| 0x20 Unused Flag
+///|
+/// 0x20 Unused Flag
 pub const UNUSED = 0b00100000
 
-///| 0x40 Overflow Flag
+///|
+/// 0x40 Overflow Flag
 pub const OVERFLOW = 0b01000000
 
-///| 0x80 Negative Flag
+///|
+/// 0x80 Negative Flag
 pub const NEGATIVE = 0b10000000
 
 ///|
@@ -78,7 +86,7 @@ pub fn Flags::from_int(flags : Int) -> Flags {
 
 ///|
 pub fn Flags::new(flags : UInt8?) -> Flags {
-  let flags = flags.or_default()
+  let flags = flags.unwrap_or_default()
   {
     c: flags.bit(0),
     z: flags.bit(1),
@@ -168,6 +176,7 @@ fn Flags::is_set(self : Flags, flag : Flag) -> Bool {
 }
 
 // Get status register value.
+
 ///|
 pub fn Flags::get(self : Flags) -> UInt8 {
   self.getC() |
@@ -181,6 +190,7 @@ pub fn Flags::get(self : Flags) -> UInt8 {
 }
 
 // Set status register value.
+
 ///|
 pub fn Flags::set(self : Flags, flags : UInt8) -> UInt8 {
   self[C] = flags.bit(0)
@@ -394,6 +404,7 @@ fn Flags::setZ(self : Flags, value : Bool) -> Unit {
 }
 
 // Set N and Z flag values.
+
 ///|
 fn Flags::setZN(self : Flags, value : UInt8) -> Unit {
   self.setZ(value == 0)

@@ -1,5 +1,5 @@
 ///|
-type! Exception {
+suberror Exception {
   InvalidAddressV2
   InvalidAddressV3
   InvalidAddressV3Even
@@ -23,7 +23,7 @@ type! Exception {
 }
 
 ///|
-pub fn to_string(self : Exception) -> String {
+pub fn Exception::to_string(self : Exception) -> String {
   match self {
     InvalidAddressV2 => "address must not be set for PSID v2NG"
     InvalidAddressV3 => "address must not be set for PSID v3"

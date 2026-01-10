@@ -1,5 +1,9 @@
 # trancee/wasmSID
 
+## Moonbit Version
+
+moon 0.1.20260110 (0e584ac 2026-01-10)
+
 ## Setup Moonbit
 
 Add the Moonbit extension in Visual Studio Code
@@ -8,6 +12,10 @@ Add the Moonbit extension in Visual Studio Code
 
 moon update
 moon install
+
+### Coverage Testing
+
+moon coverage analyze
 
 #### Finding PSID v2
 ```sh

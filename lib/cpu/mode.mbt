@@ -1,7 +1,7 @@
 ///|
-fn get_address_by_mode(
+fn CPU::get_address_by_mode(
   self : CPU,
-  mode : Mode
+  mode : Mode,
 ) -> (UInt16, (UInt16, UInt8)?, Bool?) {
   // println(mode)
   match mode {
@@ -30,17 +30,17 @@ fn get_address_by_mode(
     AbsoluteX => {
       let value = self.read_instruction_word()
       (
-        value + self.registers[X].to_u16() |> u16,
+        (value + self.registers[X].to_u16()) |> u16,
         Some(((value & 0xFF00) | u16(u8(value) + self.registers[X]), -1)),
-        Some(page_boundary(value, value + self.registers[X]._)),
+        Some(page_boundary(value, value + self.registers[X].0)),
       )
     }
     AbsoluteY => {
       let value = self.read_instruction_word()
       (
-        value + self.registers[Y].to_u16() |> u16,
+        (value + self.registers[Y].to_u16()) |> u16,
         Some(((value & 0xFF00) | u16(u8(value) + self.registers[Y]), -1)),
-        Some(page_boundary(value, value + self.registers[Y]._)),
+        Some(page_boundary(value, value + self.registers[Y].0)),
       )
     }
 
@@ -53,18 +53,18 @@ fn get_address_by_mode(
     }
     ZeroPageX => {
       let offset = self.read_instruction()
-      let value = self.read_zeropage(offset)
+      let _ = self.read_zeropage(offset)
       (
-        offset + self.registers[X] |> u16,
+        (offset + self.registers[X]) |> u16,
         None, // Some((self.pc, self.read_zeropage(offset))),
         None,
       )
     }
     ZeroPageY => {
       let offset = self.read_instruction()
-      let value = self.read_zeropage(offset)
+      let _ = self.read_zeropage(offset)
       (
-        offset + self.registers[Y] |> u16,
+        (offset + self.registers[Y]) |> u16,
         None, // Some((self.pc, self.read_zeropage(offset))),
         None,
       )
@@ -73,12 +73,12 @@ fn get_address_by_mode(
     // X-Indexed Zero Page Indirect
     IndexedIndirect => {
       let offset = self.read_instruction()
-      let byte = self.read_zeropage(offset) // |> ignore // FIXME: pre-fetch
+      let _ = self.read_zeropage(offset) // |> ignore // FIXME: pre-fetch
       let value = self.read_zeropage_word(offset + self.registers[X])
       (
         value |> u16,
         None,
-        Some(page_boundary(offset._, u16(offset + self.registers[X]))),
+        Some(page_boundary(offset.0, u16(offset + self.registers[X]))),
       )
     }
     // Zero Page Indirect Y-Indexed
@@ -86,7 +86,7 @@ fn get_address_by_mode(
       let offset = self.read_instruction()
       let value = self.read_zeropage_word(offset)
       (
-        value + self.registers[Y].to_int() |> u16,
+        (value + self.registers[Y].to_int()) |> u16,
         Some(((value & 0xFF00) | u16(u8(value) + self.registers[Y]), -1)),
         Some(page_boundary(value, value + self.registers[Y].to_int())),
       )
@@ -99,11 +99,10 @@ fn get_address_by_mode(
     Relative => {
       let offset = self.read_instruction().to_signed()
       (
-        self.pc + offset |> u16,
+        (self.pc + offset) |> u16,
         Some(((self.pc & 0xFF00) | u16(u8(self.pc + offset)), offset)),
         Some(page_boundary(self.pc, self.pc + offset)),
       )
     }
-    _ => panic()
   }
 }

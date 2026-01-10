@@ -1,7 +1,8 @@
 ///|
-pub type CRB UInt8 derive(Eq, Compare)
+pub struct CRB(UInt8) derive(Eq, Compare)
 
-///| There are two control registers in the 6526, CRA and CRB.
+///|
+/// There are two control registers in the 6526, CRA and CRB.
 /// CRA is associated with TIMER A and CRB is associated with TIMER B.
 /// The register format is as follows:
 pub enum CRBFlags {
@@ -35,7 +36,47 @@ pub enum CRBFlags {
 }
 
 ///|
-fn CRBFlags::op_get(self : CRBFlags, flag : CRBFlags) -> Int {
+test "CRBFlags::op_get/basic_flags" {
+  let dummy = CRBFlags::NONE
+  inspect(dummy.op_get(NONE), content="0")
+  inspect(dummy.op_get(START), content="1")
+  inspect(dummy.op_get(PBON), content="2")
+  inspect(dummy.op_get(OUTMODE), content="4")
+  inspect(dummy.op_get(RUNMODE), content="8")
+  inspect(dummy.op_get(LOAD), content="16")
+  inspect(dummy.op_get(INMODE), content="32")
+  inspect(dummy.op_get(UNDERFLOW), content="64")
+  inspect(dummy.op_get(ALARM), content="128")
+}
+
+///|
+test "CRBFlags::op_get/bit_positions" {
+  let dummy = CRBFlags::NONE
+  // Test that each flag corresponds to exactly one bit position
+  inspect(dummy.op_get(START), content="1") // 1 << 0
+  inspect(dummy.op_get(PBON), content="2") // 1 << 1  
+  inspect(dummy.op_get(OUTMODE), content="4") // 1 << 2
+  inspect(dummy.op_get(RUNMODE), content="8") // 1 << 3
+  inspect(dummy.op_get(LOAD), content="16") // 1 << 4
+  inspect(dummy.op_get(INMODE), content="32") // 1 << 5
+  inspect(dummy.op_get(UNDERFLOW), content="64") // 1 << 6
+  inspect(dummy.op_get(ALARM), content="128") // 1 << 7
+}
+
+///|
+test "CRBFlags::op_get/none_flag" {
+  let dummy = CRBFlags::NONE
+  // NONE should return 0 (no bits set)
+  inspect(dummy.op_get(NONE), content="0")
+
+  // Test that dummy parameter doesn't affect result
+  let start_dummy = CRBFlags::START
+  inspect(start_dummy.op_get(NONE), content="0")
+  inspect(start_dummy.op_get(START), content="1")
+}
+
+///|
+fn CRBFlags::op_get(_ : CRBFlags, flag : CRBFlags) -> Int {
   match flag {
     NONE => 0
     //
@@ -51,14 +92,14 @@ fn CRBFlags::op_get(self : CRBFlags, flag : CRBFlags) -> Int {
 }
 
 ///|
-fn CRB::land(self : CRB, value : CRBFlags) -> CRB {
-  self._ & value[value]
-}
+// fn CRB::land(self : CRB, value : CRBFlags) -> CRB {
+//   self.0 & value[value]
+// }
 
 ///|
-fn CRB::lor(self : CRB, value : CRB) -> CRB {
-  self._ | value._
-}
+// fn CRB::lor(self : CRB, value : CRB) -> CRB {
+//   self.0 | value.0
+// }
 
 ///|
 // fn crb(flag : CRBFlags) -> Int {
@@ -66,11 +107,11 @@ fn CRB::lor(self : CRB, value : CRB) -> CRB {
 // }
 
 ///|
-fn CRB::has(self : CRB, mask : CRBFlags) -> Bool {
-  (self._ & mask[mask]) != 0
-}
+// fn CRB::has(self : CRB, mask : CRBFlags) -> Bool {
+//   (self.0 & mask[mask]) != 0
+// }
 
 ///|
-fn CRB::clear(self : CRB, mask : CRBFlags) -> CRB {
-  self._ & (-mask[mask] - 1)
-}
+// fn CRB::clear(self : CRB, mask : CRBFlags) -> CRB {
+//   self.0 & (-mask[mask] - 1)
+// }

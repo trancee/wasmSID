@@ -41,7 +41,7 @@ fn Color::to_int(self : Color) -> Int {
 }
 
 ///|
-fn Color::from_int(value : Int) -> Color! {
+fn Color::from_int(value : Int) -> Color raise {
   match value & 0x0F {
     0 => Black
     1 => White

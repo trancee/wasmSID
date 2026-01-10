@@ -5,25 +5,25 @@
 ///|
 test "CMPImmediateCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareImmediate!(t)
+  testCompareImmediate(t)
 }
 
 ///|
 test "CMPImmediateCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareImmediate!(t)
+  testCompareImmediate(t)
 }
 
 ///|
 test "CMPImmediateCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareImmediate!(t)
+  testCompareImmediate(t)
 }
 
 ///|
 test "CMPImmediateCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareImmediate!(t)
+  testCompareImmediate(t)
 }
 
 // Zero Page
@@ -31,25 +31,25 @@ test "CMPImmediateCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPZeroPageCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareZeroPage!(t)
+  testCompareZeroPage(t)
 }
 
 ///|
 test "CMPZeroPageCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareZeroPage!(t)
+  testCompareZeroPage(t)
 }
 
 ///|
 test "CMPZeroPageCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareZeroPage!(t)
+  testCompareZeroPage(t)
 }
 
 ///|
 test "CMPZeroPageCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareZeroPage!(t)
+  testCompareZeroPage(t)
 }
 
 // Zero Page X
@@ -57,25 +57,25 @@ test "CMPZeroPageCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPZeroPageXCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareZeroPageX!(t)
+  testCompareZeroPageX(t)
 }
 
 ///|
 test "CMPZeroPageXCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareZeroPageX!(t)
+  testCompareZeroPageX(t)
 }
 
 ///|
 test "CMPZeroPageXCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareZeroPageX!(t)
+  testCompareZeroPageX(t)
 }
 
 ///|
 test "CMPZeroPageXCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareZeroPageX!(t)
+  testCompareZeroPageX(t)
 }
 
 // Absolute
@@ -83,25 +83,25 @@ test "CMPZeroPageXCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPAbsoluteCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareAbsolute!(t)
+  testCompareAbsolute(t)
 }
 
 ///|
 test "CMPAbsoluteCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareAbsolute!(t)
+  testCompareAbsolute(t)
 }
 
 ///|
 test "CMPAbsoluteCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareAbsolute!(t)
+  testCompareAbsolute(t)
 }
 
 ///|
 test "CMPAbsoluteCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareAbsolute!(t)
+  testCompareAbsolute(t)
 }
 
 // Absolute X
@@ -109,25 +109,25 @@ test "CMPAbsoluteCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPAbsoluteXCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareAbsoluteX!(t)
+  testCompareAbsoluteX(t)
 }
 
 ///|
 test "CMPAbsoluteXCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareAbsoluteX!(t)
+  testCompareAbsoluteX(t)
 }
 
 ///|
 test "CMPAbsoluteXCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareAbsoluteX!(t)
+  testCompareAbsoluteX(t)
 }
 
 ///|
 test "CMPAbsoluteXCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareAbsoluteX!(t)
+  testCompareAbsoluteX(t)
 }
 
 // Absolute Y
@@ -135,25 +135,25 @@ test "CMPAbsoluteXCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPAbsoluteYCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareAbsoluteY!(t)
+  testCompareAbsoluteY(t)
 }
 
 ///|
 test "CMPAbsoluteYCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareAbsoluteY!(t)
+  testCompareAbsoluteY(t)
 }
 
 ///|
 test "CMPAbsoluteYCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareAbsoluteY!(t)
+  testCompareAbsoluteY(t)
 }
 
 ///|
 test "CMPAbsoluteYCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareAbsoluteY!(t)
+  testCompareAbsoluteY(t)
 }
 
 // Indirect X
@@ -161,25 +161,25 @@ test "CMPAbsoluteYCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPIndirectXCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareIndirectX!(t)
+  testCompareIndirectX(t)
 }
 
 ///|
 test "CMPIndirectXCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareIndirectX!(t)
+  testCompareIndirectX(t)
 }
 
 ///|
 test "CMPIndirectXCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareIndirectX!(t)
+  testCompareIndirectX(t)
 }
 
 ///|
 test "CMPIndirectXCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareIndirectX!(t)
+  testCompareIndirectX(t)
 }
 
 // Indirect Y
@@ -187,25 +187,25 @@ test "CMPIndirectXCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CMPIndirectYCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareIndirectY!(t)
+  testCompareIndirectY(t)
 }
 
 ///|
 test "CMPIndirectYCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareIndirectY!(t)
+  testCompareIndirectY(t)
 }
 
 ///|
 test "CMPIndirectYCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareIndirectY!(t)
+  testCompareIndirectY(t)
 }
 
 ///|
 test "CMPIndirectYCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareIndirectY!(t)
+  testCompareIndirectY(t)
 }
 
 // CPX Immediate
@@ -213,25 +213,25 @@ test "CMPIndirectYCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CPXImmediateCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareImmediate!(t, r=X)
+  testCompareImmediate(t, r=X)
 }
 
 ///|
 test "CPXImmediateCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareImmediate!(t, r=X)
+  testCompareImmediate(t, r=X)
 }
 
 ///|
 test "CPXImmediateCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareImmediate!(t, r=X)
+  testCompareImmediate(t, r=X)
 }
 
 ///|
 test "CPXImmediateCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareImmediate!(t, r=X)
+  testCompareImmediate(t, r=X)
 }
 
 // CPY Immediate
@@ -239,25 +239,25 @@ test "CPXImmediateCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CPYImmediateCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareImmediate!(t, r=Y)
+  testCompareImmediate(t, r=Y)
 }
 
 ///|
 test "CPYImmediateCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareImmediate!(t, r=Y)
+  testCompareImmediate(t, r=Y)
 }
 
 ///|
 test "CPYImmediateCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareImmediate!(t, r=Y)
+  testCompareImmediate(t, r=Y)
 }
 
 ///|
 test "CPYImmediateCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareImmediate!(t, r=Y)
+  testCompareImmediate(t, r=Y)
 }
 
 // CPX Zero Page
@@ -265,25 +265,25 @@ test "CPYImmediateCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CPXZeroPageCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareZeroPage!(t, r=X)
+  testCompareZeroPage(t, r=X)
 }
 
 ///|
 test "CPXZeroPageCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareZeroPage!(t, r=X)
+  testCompareZeroPage(t, r=X)
 }
 
 ///|
 test "CPXZeroPageCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareZeroPage!(t, r=X)
+  testCompareZeroPage(t, r=X)
 }
 
 ///|
 test "CPXZeroPageCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareZeroPage!(t, r=X)
+  testCompareZeroPage(t, r=X)
 }
 
 // CPY Zero Page
@@ -291,25 +291,25 @@ test "CPXZeroPageCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CPYZeroPageCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareZeroPage!(t, r=Y)
+  testCompareZeroPage(t, r=Y)
 }
 
 ///|
 test "CPYZeroPageCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareZeroPage!(t, r=Y)
+  testCompareZeroPage(t, r=Y)
 }
 
 ///|
 test "CPYZeroPageCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareZeroPage!(t, r=Y)
+  testCompareZeroPage(t, r=Y)
 }
 
 ///|
 test "CPYZeroPageCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareZeroPage!(t, r=Y)
+  testCompareZeroPage(t, r=Y)
 }
 
 // CPX Absolute
@@ -317,25 +317,25 @@ test "CPYZeroPageCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CPXAbsoluteCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareAbsolute!(t, r=X)
+  testCompareAbsolute(t, r=X)
 }
 
 ///|
 test "CPXAbsoluteCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareAbsolute!(t, r=X)
+  testCompareAbsolute(t, r=X)
 }
 
 ///|
 test "CPXAbsoluteCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareAbsolute!(t, r=X)
+  testCompareAbsolute(t, r=X)
 }
 
 ///|
 test "CPXAbsoluteCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareAbsolute!(t, r=X)
+  testCompareAbsolute(t, r=X)
 }
 
 // CPY Absolute
@@ -343,25 +343,25 @@ test "CPXAbsoluteCanCompareTwoValuesThatResultInANegativeFlagSet" {
 ///|
 test "CPYAbsoluteCanCompareTwoIdenticalValues" {
   let t = testCompareTwoIdenticalValues()
-  testCompareAbsolute!(t, r=Y)
+  testCompareAbsolute(t, r=Y)
 }
 
 ///|
 test "CPYAbsoluteCanCompareALargePositiveToASmallPositive" {
   let t = testCompareALargePositiveToASmallPositive()
-  testCompareAbsolute!(t, r=Y)
+  testCompareAbsolute(t, r=Y)
 }
 
 ///|
 test "CPYAbsoluteCanCompareANegativeNumberToAPositive" {
   let t = testCompareANegativeNumberToAPositive()
-  testCompareAbsolute!(t, r=Y)
+  testCompareAbsolute(t, r=Y)
 }
 
 ///|
 test "CPYAbsoluteCanCompareTwoValuesThatResultInANegativeFlagSet" {
   let t = testCompareTwoValuesThatResultInANegativeFlagSet()
-  testCompareAbsolute!(t, r=Y)
+  testCompareAbsolute(t, r=Y)
 }
 
 // Test Cases
@@ -453,8 +453,8 @@ struct CMPTestData {
 }
 
 ///|
-fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareImmediate(t : CMPTestData, r? : Register = A) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -483,38 +483,38 @@ fn testCompareImmediate(t : CMPTestData, r~ : Register = A) -> Unit!Error {
     A => cpu.write(t.pc + 0, CMP.to_int())
     X => cpu.write(t.pc + 0, CPX.to_int())
     Y => cpu.write(t.pc + 0, CPY.to_int())
-    SP => fail!("SP")
+    SP => fail("SP")
   }
   cpu.write(t.pc + 1, t.op)
 
   //
-  assert_eq!(cpu.step(), 2)
+  assert_eq(cpu.step(), 2)
 
   //
-  assert_eq!(cpu.pc, t.pc + 2)
+  assert_eq(cpu.pc, t.pc + 2)
 
   //
-  assert_eq!(cpu.registers[r], t.expectR._)
+  assert_eq(cpu.registers[r], t.expectR.0)
   // match r {
-  //   A => assert_eq!(cpu.a, t.expectR)?
-  //   X => assert_eq!(cpu.x, t.expectR)?
-  //   Y => assert_eq!(cpu.y, t.expectR)?
+  //   A => assert_eq(cpu.a, t.expectR)?
+  //   X => assert_eq(cpu.x, t.expectR)?
+  //   Y => assert_eq(cpu.y, t.expectR)?
   // }
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareZeroPage(t : CMPTestData, r? : Register = A) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -543,7 +543,7 @@ fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
     A => cpu.write(t.pc + 0, CMP_ZP.to_int())
     X => cpu.write(t.pc + 0, CPX_ZP.to_int())
     Y => cpu.write(t.pc + 0, CPY_ZP.to_int())
-    SP => fail!("SP")
+    SP => fail("SP")
   }
   cpu.write(t.pc + 1, 0x42)
 
@@ -551,33 +551,33 @@ fn testCompareZeroPage(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   cpu.write(0x0042, t.op)
 
   //
-  assert_eq!(cpu.step(), 3)
+  assert_eq(cpu.step(), 3)
 
   //
-  assert_eq!(cpu.pc, t.pc + 2)
+  assert_eq(cpu.pc, t.pc + 2)
 
   //
-  assert_eq!(cpu.registers[r], t.expectR._)
+  assert_eq(cpu.registers[r], t.expectR.0)
   // match r {
-  //   A => assert_eq!(cpu.a, t.expectR)?
-  //   X => assert_eq!(cpu.x, t.expectR)?
-  //   Y => assert_eq!(cpu.y, t.expectR)?
+  //   A => assert_eq(cpu.a, t.expectR)?
+  //   X => assert_eq(cpu.x, t.expectR)?
+  //   Y => assert_eq(cpu.y, t.expectR)?
   // }
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareZeroPageX(t : CMPTestData) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -602,32 +602,32 @@ fn testCompareZeroPageX(t : CMPTestData) -> Unit!Error {
   cpu.write(t.pc + 1, 0x42)
 
   //
-  cpu.write(0x0042 + cpu.registers[X]._, t.op)
+  cpu.write(0x0042 + cpu.registers[X].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.pc, t.pc + 2)
+  assert_eq(cpu.pc, t.pc + 2)
 
   //
-  assert_eq!(cpu.registers[A], t.expectR._)
-  assert_eq!(cpu.registers[X], 0x04)
+  assert_eq(cpu.registers[A], t.expectR.0)
+  assert_eq(cpu.registers[X], 0x04)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareAbsolute(t : CMPTestData, r? : Register = A) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -656,7 +656,7 @@ fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
     A => cpu.write(t.pc + 0, CMP_ABS.to_int())
     X => cpu.write(t.pc + 0, CPX_ABS.to_int())
     Y => cpu.write(t.pc + 0, CPY_ABS.to_int())
-    SP => fail!("SP")
+    SP => fail("SP")
   }
   cpu.write(t.pc + 1, 0x00)
   cpu.write(t.pc + 2, 0x80)
@@ -665,33 +665,33 @@ fn testCompareAbsolute(t : CMPTestData, r~ : Register = A) -> Unit!Error {
   cpu.write(0x8000, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.pc, t.pc + 3)
+  assert_eq(cpu.pc, t.pc + 3)
 
   //
-  assert_eq!(cpu.registers[r], t.expectR._)
+  assert_eq(cpu.registers[r], t.expectR.0)
   // match r {
-  //   A => assert_eq!(cpu.a, t.expectR)?
-  //   X => assert_eq!(cpu.x, t.expectR)?
-  //   Y => assert_eq!(cpu.y, t.expectR)?
+  //   A => assert_eq(cpu.a, t.expectR)?
+  //   X => assert_eq(cpu.x, t.expectR)?
+  //   Y => assert_eq(cpu.y, t.expectR)?
   // }
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareAbsoluteX(t : CMPTestData) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -717,32 +717,32 @@ fn testCompareAbsoluteX(t : CMPTestData) -> Unit!Error {
   cpu.write(t.pc + 2, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[X]._, t.op)
+  cpu.write(0x8000 + cpu.registers[X].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.pc, t.pc + 3)
+  assert_eq(cpu.pc, t.pc + 3)
 
   //
-  assert_eq!(cpu.registers[A], t.expectR._)
-  assert_eq!(cpu.registers[X], 0x04)
+  assert_eq(cpu.registers[A], t.expectR.0)
+  assert_eq(cpu.registers[X], 0x04)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareAbsoluteY(t : CMPTestData) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -768,32 +768,32 @@ fn testCompareAbsoluteY(t : CMPTestData) -> Unit!Error {
   cpu.write(t.pc + 2, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 4)
+  assert_eq(cpu.step(), 4)
 
   //
-  assert_eq!(cpu.pc, t.pc + 3)
+  assert_eq(cpu.pc, t.pc + 3)
 
   //
-  assert_eq!(cpu.registers[A], t.expectR._)
-  assert_eq!(cpu.registers[Y], 0x04)
+  assert_eq(cpu.registers[A], t.expectR.0)
+  assert_eq(cpu.registers[Y], 0x04)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareIndirectX(t : CMPTestData) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -818,36 +818,36 @@ fn testCompareIndirectX(t : CMPTestData) -> Unit!Error {
   cpu.write(t.pc + 1, 0x42)
 
   //
-  cpu.write(0x42 + cpu.registers[X]._ + 0, 0x00)
-  cpu.write(0x42 + cpu.registers[X]._ + 1, 0x80)
+  cpu.write(0x42 + cpu.registers[X].0 + 0, 0x00)
+  cpu.write(0x42 + cpu.registers[X].0 + 1, 0x80)
 
   //
   cpu.write(0x8000, t.op)
 
   //
-  assert_eq!(cpu.step(), 6)
+  assert_eq(cpu.step(), 6)
 
   //
-  assert_eq!(cpu.pc, t.pc + 2)
+  assert_eq(cpu.pc, t.pc + 2)
 
   //
-  assert_eq!(cpu.registers[A], t.expectR._)
-  assert_eq!(cpu.registers[X], 0x04)
+  assert_eq(cpu.registers[A], t.expectR.0)
+  assert_eq(cpu.registers[X], 0x04)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }
 
 ///|
-fn testCompareIndirectY(t : CMPTestData) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testCompareIndirectY(t : CMPTestData) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -872,29 +872,29 @@ fn testCompareIndirectY(t : CMPTestData) -> Unit!Error {
   cpu.write(t.pc + 1, 0x42)
 
   //
-  cpu.write(0x42 + cpu.registers[X]._ + 0, 0x00)
-  cpu.write(0x42 + cpu.registers[X]._ + 1, 0x80)
+  cpu.write(0x42 + cpu.registers[X].0 + 0, 0x00)
+  cpu.write(0x42 + cpu.registers[X].0 + 1, 0x80)
 
   //
-  cpu.write(0x8000 + cpu.registers[Y]._, t.op)
+  cpu.write(0x8000 + cpu.registers[Y].0, t.op)
 
   //
-  assert_eq!(cpu.step(), 5)
+  assert_eq(cpu.step(), 5)
 
   //
-  assert_eq!(cpu.pc, t.pc + 2)
+  assert_eq(cpu.pc, t.pc + 2)
 
   //
-  assert_eq!(cpu.registers[A], t.expectR._)
-  assert_eq!(cpu.registers[Y], 0x04)
+  assert_eq(cpu.registers[A], t.expectR.0)
+  assert_eq(cpu.registers[Y], 0x04)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], v)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], v)
+  assert_eq(cpu.flags[N], t.expectN)
 }

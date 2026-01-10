@@ -1,4 +1,5 @@
-///| 6526 FUNCTIONAL DESCRIPTION
+///|
+/// 6526 FUNCTIONAL DESCRIPTION
 ///
 /// REGISTER MAP
 ///
@@ -23,7 +24,6 @@ pub struct TimeOfDay {
   mut seconds : UInt8
   mut minutes : UInt8
   mut hours : UInt8
-
   /// AM/PM Flag (1=PM, 0=AM)
   mut pm : Bool
 } derive(Show, Default)
@@ -176,7 +176,6 @@ pub struct CIARegister {
   /// 56320         $DC00          CIAPRA
   /// Data Port Register A
   portA : FixedArray[Bool]
-
   /// 56321         $DC01          CIAPRB
   /// Data Port Register B
   portB : FixedArray[Bool]
@@ -187,7 +186,6 @@ pub struct CIARegister {
   /// 56322         $DC02          CIDDRA
   /// Data Direction Register A
   directionA : FixedArray[Bool]
-
   /// 56323         $DC03          CIDDRB
   /// Data Direction Register B
   directionB : FixedArray[Bool]
@@ -215,20 +213,16 @@ pub struct CIARegister {
   /// 56328         $DC08          TODTEN
   /// Time of Day Clock Tenths of Seconds
   timeOfDay : TimeOfDay
-
   /// 56332         $DC0C          CIASDR
   /// Serial Data Port
   mut serialData : UInt8
-
   /// 56333         $DC0D          CIAICR
   /// Interrupt Control Register
   mut interruptControl : CIAInterruptControl
   interruptEnable : CIAInterruptEnable
-
   /// 56334         $DC0E          CIACRA
   /// Control Register A
   controlA : ControlA
-
   /// 56335         $DC0F          CIACRB
   /// Control Register B
   controlB : ControlB
@@ -300,7 +294,7 @@ fn cia(register : CIAregister) -> Int {
 }
 
 ///|
-fn CIAregister::from_int(value : Int) -> CIAregister! {
+fn CIAregister::from_int(value : Int) -> CIAregister raise {
   match value {
     0x00 => PRA
     0x01 => PRB

@@ -5,15 +5,15 @@ const PATH = "tests/lorenz/"
 const TESTCASE = "start"
 
 ///|
-pub fn lorenz() -> Unit! {
+pub fn lorenz() -> Unit raise {
   //
-  let c64 = C64::new!(realSID=true, debug~)
+  let c64 = C64::new(realSID=true, debug~)
 
   //
   setup(c64)
 
   //
-  load_testcase!(c64, TESTCASE)
+  load_testcase(c64, TESTCASE)
 
   //
   let mut cycles = 0
@@ -29,15 +29,14 @@ pub fn lorenz() -> Unit! {
 }
 
 ///|
-fn load_testcase(c64 : C64, testcase : String, pc? : UInt16) -> Unit! {
-  let data = @fs.read_file_to_bytes?(PATH + testcase)
-  match data {
-    Ok(data) => reset!(c64, data, pc?)
-    Err(error) => {
+fn load_testcase(c64 : C64, testcase : String, pc? : UInt16) -> Unit raise {
+  let data = @fs.read_file_to_bytes(PATH + testcase) catch {
+    error => {
       println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
       abort("test not found")
     }
   }
+  reset(c64, data, pc?)
 }
 
 ///|
@@ -55,7 +54,7 @@ fn setup(c64 : C64) -> Unit {
     c64[SAREG] = 0x00 // Storage for 6502 .A Register
 
     //
-    let a = cpu.a()._
+    let a = cpu.a().0
     match a {
       13 => {
         println("\u{1B}[33m\{builder}\u{1B}[0m")
@@ -74,7 +73,7 @@ fn setup(c64 : C64) -> Unit {
         } else {
           a
         }
-        builder.write_char(Char::from_int(a))
+        builder.write_char(Int::unsafe_to_char(a))
       }
     }
   })
@@ -90,9 +89,7 @@ fn setup(c64 : C64) -> Unit {
     // Re-start the CPU
 
     let testcase = builder.to_string()
-    try {
-      load_testcase!(c64, testcase, pc=0x0816)
-    } catch {
+    load_testcase(c64, testcase, pc=0x0816) catch {
       error => {
         println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
         abort("test failed")
@@ -124,8 +121,8 @@ fn setup(c64 : C64) -> Unit {
 }
 
 ///|
-fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit! {
-  let addr = c64.load!(data, has_load_address=true)
+fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit raise {
+  let addr = c64.load(data, has_load_address=true)
 
   //
   let irq : Bytes = [
@@ -141,7 +138,7 @@ fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit! {
      0x6C, 0x16, 0x03, // JMP ($0316)
      0x6C, 0x14, 0x03, // JMP ($0314)
   ]
-  c64.load!(irq, offset=0xFF48) |> ignore
+  c64.load(irq, offset=0xFF48) |> ignore
 
   //
   c64[R6510] = 0x04 // VIC
@@ -166,7 +163,7 @@ fn reset(c64 : C64, data : Bytes, pc? : UInt16) -> Unit! {
   c64.write_array(GETIN, [0xA9, 0x03, 0x60]) // 0xFFE4
 
   //
-  c64.initCPU(pc=pc.or(addr))
+  c64.initCPU(pc=pc.unwrap_or(addr))
 
   //
   c64.clear_flags()

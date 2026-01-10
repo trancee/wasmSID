@@ -7,17 +7,17 @@ pub struct NES {
 
 ///|
 pub fn NES::new(
-  pc~ : UInt16 = 0x0000,
+  pc? : UInt16 = 0x0000,
   //
-  data~ : Bytes = [],
+  data? : Bytes = [],
   //
-  address~ : UInt16 = 0x0000,
-  length~ : Int = data.length(),
-  offset~ : Int = 0,
+  address? : UInt16 = 0x0000,
+  length? : Int = data.length(),
+  offset? : Int = 0,
   //
-  debug~ : Bool = false
-) -> NES! {
-  let cpu = @cpu.CPU::new!(
+  debug? : Bool = false,
+) -> NES raise {
+  let cpu = @cpu.CPU::new(
     pc~,
     //
     address~,
@@ -44,11 +44,11 @@ pub fn NES::load(
   //
   data : Bytes,
   //
-  address~ : UInt16 = 0x0000,
-  length~ : Int = data.length(),
-  offset~ : Int = 0
-) -> UInt16! {
-  self.cpu.load!(address, data, length~, offset~)
+  address? : UInt16 = 0x0000,
+  length? : Int = data.length(),
+  offset? : Int = 0,
+) -> UInt16 raise {
+  self.cpu.load(address, data, length~, offset~)
 }
 
 ///|

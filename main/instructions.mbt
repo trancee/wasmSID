@@ -2,9 +2,9 @@
 
 ///|
 pub fn instructions(
-  path~ : String = "tests/65x02/6502/v1/",
-  decimal_mode~ : Bool = true
-) -> Unit! {
+  path? : String = "tests/65x02/6502/v1/",
+  decimal_mode? : Bool = true,
+) -> Unit raise {
   // BRK, JMP, JSR
   // for test_opcode in [0x00, 0x4C, 0x6C, 0x20] {
   //   instruction_test!(u8(test_opcode).to_hex().to_lower())
@@ -170,7 +170,7 @@ pub fn instructions(
   // }
 
   for test_opcode in 0x00..<0x100 {
-    instruction_test!(test_opcode, path, decimal_mode~)
+    instruction_test(test_opcode, path, decimal_mode~)
   }
 }
 
@@ -178,22 +178,24 @@ pub fn instructions(
 fn instruction_test(
   test_opcode : Int,
   path : String,
-  decimal_mode~ : Bool = true
-) -> Unit! {
+  decimal_mode? : Bool = true,
+) -> Unit raise {
   let opcode = @cpu.instructions[test_opcode]
   let test_opcode = u8(test_opcode)
   let testname = "#$\{test_opcode} \{opcode.0}"
   println(testname + "\u{1B}[1A")
 
   //
-  let tests : Array[Test] = match
-    @fs.read_file_to_string?(path + "\{test_opcode.to_hex().to_lower()}.json") {
-    Ok(data) => @json.from_json!(@json.parse!(data))
-    Err(error) => {
-      println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
-      abort("file not found")
-    }
-  }
+  let tests : Array[Test] = @json.from_json(
+    @json.parse(
+      @fs.read_file_to_string(path + "\{test_opcode.to_hex().to_lower()}.json") catch {
+        error => {
+          println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
+          abort("file not found")
+        }
+      },
+    ),
+  )
 
   //
   for i, testcase in tests {
@@ -207,9 +209,9 @@ fn instruction_test(
     )
 
     // println(testcase.initial)
-    // println(testcase.final)
+    // println(testcase.end)
     // println(testcase.cycles)
-    run!(testcase, decimal_mode~)
+    run(testcase, decimal_mode~)
   }
 
   //
@@ -217,7 +219,7 @@ fn instruction_test(
 }
 
 ///|
-fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
+fn run(testcase : Test, decimal_mode? : Bool = true) -> Unit raise {
   //
   let cycles : Array[(UInt16, UInt8, String)] = []
 
@@ -230,17 +232,17 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
     None => @cpu.Registers::new()
     Some(initial) =>
       @cpu.Registers::new(
-        sp=initial.s.or_default(),
-        a=initial.a.or_default(),
-        x=initial.x.or_default(),
-        y=initial.y.or_default(),
+        sp=initial.s.unwrap_or_default(),
+        a=initial.a.unwrap_or_default(),
+        x=initial.x.unwrap_or_default(),
+        y=initial.y.unwrap_or_default(),
       )
   }
   let flags = match testcase.initial {
     None => @cpu.Flags::default()
     Some(initial) => @cpu.Flags::new(initial.p)
   }
-  let cpu = CPU::new!(
+  let cpu = CPU::new(
     pc~,
 
     //
@@ -258,37 +260,37 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
   match testcase.initial {
     None => ignore(testcase.initial)
     Some(initial) =>
-      for data in initial.ram.or_default() {
+      for data in initial.ram.unwrap_or_default() {
         let (address, value) = data
-        cpu.mem[address._] = value
+        cpu.mem[address.0] = value
       }
   }
 
   //
   cpu.set_read(fn(address : UInt16, _ : Bool) -> UInt8 {
     // println("(\{address}, \{cpu.mem[address._]}, \"read\")")
-    cycles.push((address, cpu.mem[address._], "read"))
+    cycles.push((address, cpu.mem[address.0], "read"))
 
     //
-    cpu.mem[address._]
+    cpu.mem[address.0]
   })
   cpu.set_write(fn(address : UInt16, value : UInt8, _ : Bool) -> Unit {
     // println("(\{address}, \{value}, \"write\")")
     cycles.push((address, value, "write"))
 
     //
-    cpu.mem[address._] = value
+    cpu.mem[address.0] = value
   })
 
   //
   let cycle = cpu.step()
 
   //
-  verify!("cycle", testcase, cycle, cycles.length(), cycles~)
+  verify("cycle", testcase, cycle, cycles.length(), cycles~)
   match testcase.cycles {
     None => ignore(testcase.cycles)
     Some(cycle) => {
-      verify!("cycles", testcase, cycle.length(), cycles.length(), cycles~)
+      verify("cycles", testcase, cycle.length(), cycles.length(), cycles~)
 
       //
       for i in 0..<cycle.length() {
@@ -299,29 +301,29 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
         //   false => "\u{1B}[31;1;6m❌\u{1B}[0m"
         // }
         // println("\{testcase.cycles[i]} \t \{cycles[i]} \t \{result}")
-        verify!("cycles", testcase, cycle[i], cycles[i], cycles~)
+        verify("cycles", testcase, cycle[i], cycles[i], cycles~)
       }
     }
   }
 
   //
-  match testcase.final {
-    None => ignore(testcase.final)
-    Some(final) => {
-      verify!("PC", testcase, final.pc, cpu.pc, cycles~)
-      verify!("S", testcase, final.s, Some(cpu.registers[SP]), cycles~)
-      verify!("A", testcase, final.a, Some(cpu.registers[A]), cycles~)
-      verify!("X", testcase, final.x, Some(cpu.registers[X]), cycles~)
-      verify!("Y", testcase, final.y, Some(cpu.registers[Y]), cycles~)
-      verify!("P", testcase, final.p, Some(cpu.flags.get()), cycles~)
+  match testcase.end {
+    None => ignore(testcase.end)
+    Some(end) => {
+      verify("PC", testcase, end.pc, cpu.pc, cycles~)
+      verify("S", testcase, end.s, Some(cpu.registers[SP]), cycles~)
+      verify("A", testcase, end.a, Some(cpu.registers[A]), cycles~)
+      verify("X", testcase, end.x, Some(cpu.registers[X]), cycles~)
+      verify("Y", testcase, end.y, Some(cpu.registers[Y]), cycles~)
+      verify("P", testcase, end.p, Some(cpu.flags.get()), cycles~)
 
       //
-      match final.ram {
-        None => ignore(final.ram)
+      match end.ram {
+        None => ignore(end.ram)
         Some(ram) =>
           for data in ram {
             let (address, value) = data
-            verify!("\{address}", testcase, value, cpu.mem[address._], cycles~)
+            verify("\{address}", testcase, value, cpu.mem[address.0], cycles~)
           }
       }
     }
@@ -332,22 +334,23 @@ fn run(testcase : Test, decimal_mode~ : Bool = true) -> Unit! {
 }
 
 ///|
-fn verify[T : Eq + Show](
+#callsite(autofill(loc))
+fn[T : Eq + Show] verify(
   name : String,
   testcase : Test,
   a : T,
   b : T,
   cycles? : Array[(UInt16, UInt8, String)],
-  loc~ : SourceLoc = _
-) -> Unit! {
+  loc~ : SourceLoc,
+) -> Unit raise {
   if a != b {
     println(
       "\u{1B}[u" + " " + "\u{1B}[31;1m❌ \{name} → $\{a} ≠ $\{b}\u{1B}[0m",
     )
     println("--")
     println(testcase.initial)
-    println(testcase.final)
-    if testcase.cycles.is_empty() && cycles.is_empty() {
+    println(testcase.end)
+    if testcase.cycles is None && cycles is None {
 
     } else {
       println("--")
@@ -355,11 +358,11 @@ fn verify[T : Eq + Show](
       println(cycles)
     }
     println("--")
-    raise Failure("\{loc}")
+    raise Failure::Failure("\{loc}")
   }
 
   //
-  assert_eq!(a, b, loc~)
+  assert_eq(a, b, loc~)
 }
 
 ///|
@@ -381,7 +384,7 @@ fn State::new(
   x? : UInt8,
   y? : UInt8,
   p? : UInt8,
-  ram? : Array[(UInt16, UInt8)]
+  ram? : Array[(UInt16, UInt8)],
 ) -> State {
   { pc, s, a, x, y, p, ram }
 }
@@ -390,18 +393,18 @@ fn State::new(
 struct Test {
   name : String
   initial : State?
-  final : State?
+  end : State?
   cycles : Array[(UInt16, UInt8, String)]?
   cycle : Int?
-} derive(FromJson, Show, Eq, Default)
+} derive(FromJson(fields(end(rename="final"))), Show, Eq, Default)
 
 ///|
 fn Test::new(
   name : String,
   initial? : State,
-  final? : State,
+  end? : State,
   cycles? : Array[(UInt16, UInt8, String)],
-  cycle? : Int
+  cycle? : Int,
 ) -> Test {
-  { name, initial, final, cycles, cycle }
+  { name, initial, end, cycles, cycle }
 }

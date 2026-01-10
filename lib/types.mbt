@@ -1,5 +1,5 @@
 ///|
-typealias @core.(UInt8, UInt16)
+using @core {type UInt8, type UInt16}
 
 ///|
-fnalias @core.(u8, u16)
+using @core {u8, u16}

@@ -1,4 +1,5 @@
-///| Memory Map
+///|
+/// Memory Map
 /// https://sta.c64.org/cbm64mem.html
 ///
 /// $0000-$00FF         Zero Page
@@ -63,7 +64,7 @@ fn Hook::new(
   end : UInt16,
   //
   read : (UInt16, Bool) -> UInt8,
-  write : (UInt16, UInt8, Bool) -> Unit
+  write : (UInt16, UInt8, Bool) -> Unit,
 ) -> Hook {
   { start, end, read, write }
 }
@@ -81,25 +82,25 @@ struct Memory {
 }
 
 ///|
-pub fn Memory::new(length~ : Int = 0xFFFF, value~ : Int = 0x00) -> Memory {
+pub fn Memory::new(length? : Int = 0xFFFF, value? : Int = 0x00) -> Memory {
   { mem: FixedArray::make(length + 1, value), hooks: [] }
 }
 
 ///|
-pub fn hook(
+pub fn Memory::hook(
   self : Memory,
   //
   start : UInt16,
   end : UInt16,
   //
   read : (UInt16, Bool) -> UInt8,
-  write : (UInt16, UInt8, Bool) -> Unit
+  write : (UInt16, UInt8, Bool) -> Unit,
 ) -> Unit {
   self.hooks.push(Hook::new(start, end, read, write))
 }
 
 ///|
-pub fn clear(self : Memory) -> Unit {
+pub fn Memory::clear(self : Memory) -> Unit {
   self.mem = FixedArray::make(self.mem.length(), 0x00)
 }
 
@@ -161,11 +162,11 @@ pub fn clear(self : Memory) -> Unit {
 // }
 
 ///|
-pub fn dump(
+pub fn Memory::dump(
   self : Memory,
-  addr~ : UInt16 = 0x0000,
-  cols~ : Int = 0x10,
-  rows~ : Int = 0x10
+  addr? : UInt16 = 0x0000,
+  cols? : Int = 0x10,
+  rows? : Int = 0x10,
 ) -> Unit {
   let mut i = 0
   let mut str = ""
@@ -184,13 +185,17 @@ pub fn dump(
       }
       str = (addr + i).to_hex() + "|"
     }
-    str += self.mem[(addr + i)._].to_hex() + " "
+    str += self.mem[(addr + i).0].to_hex() + " "
     i = i + 1
   }
 }
 
 ///|
-pub fn read(self : Memory, address : UInt16, dummy~ : Bool = false) -> UInt8 {
+pub fn Memory::read(
+  self : Memory,
+  address : UInt16,
+  dummy? : Bool = false,
+) -> UInt8 {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println("Memory::read $\{u16(addr).to_hex()} \{_dummy}")
 
@@ -213,7 +218,7 @@ pub fn read(self : Memory, address : UInt16, dummy~ : Bool = false) -> UInt8 {
 }
 
 ///|
-pub fn read_direct(self : Memory, address : UInt16) -> UInt8 {
+pub fn Memory::read_direct(self : Memory, address : UInt16) -> UInt8 {
   // println("Memory::read_direct $" + UInt16(addr).to_hex())
   //
 
@@ -222,7 +227,7 @@ pub fn read_direct(self : Memory, address : UInt16) -> UInt8 {
   //   None => self.mem[addr._]
   // }
 
-  self.mem[address._]
+  self.mem[address.0]
 }
 
 // fn op_get(self : Memory, addr : UInt16) -> UInt8 {
@@ -233,13 +238,13 @@ pub fn read_direct(self : Memory, address : UInt16) -> UInt8 {
 // }
 
 ///|
-pub fn write(
+pub fn Memory::write(
   self : Memory,
   //
   address : UInt16,
   value : UInt8,
   //
-  dummy~ : Bool = false
+  dummy? : Bool = false,
 ) -> Unit {
   // let _dummy = if dummy { "🔍" } else { "" }
   // println(
@@ -265,13 +270,17 @@ pub fn write(
 }
 
 ///|
-pub fn write_direct(self : Memory, address : UInt16, value : UInt8) -> Unit {
+pub fn Memory::write_direct(
+  self : Memory,
+  address : UInt16,
+  value : UInt8,
+) -> Unit {
   // match self.write {
   //   Some(_) => self.write(addr, value)
   //   None => self.mem[addr._] = value._ |> u8
   // }
 
-  self.mem[address._] = value
+  self.mem[address.0] = value
 }
 
 // fn op_set(self : Memory, addr : UInt16, value : UInt8) -> Unit {

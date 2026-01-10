@@ -22,7 +22,8 @@
 /// memory.  When read, they will always give a value of 255 ($FF).  This
 /// value will not change after writing to them.
 
-///| ($D040-$D3FF)
+///|
+/// ($D040-$D3FF)
 /// VIC-II Register Images
 ///
 /// Since the VIC-II requires only enough addressing lines to handle 64
@@ -62,9 +63,9 @@ pub fn VIC::new(
   mem? : Memory,
   baseaddress : UInt16,
   //
-  videoStandard~ : VideoStandard = Unknown,
+  videoStandard? : VideoStandard = Unknown,
   //
-  debug~ : Bool = false
+  debug? : Bool = false,
 ) -> VIC {
   println("VIC::new")
   //
@@ -96,9 +97,7 @@ pub fn VIC::new(
         baseaddress + VIC_MEM_SIZE,
         //
         fn(address : UInt16, _ : Bool) -> UInt8 {
-          let register = try {
-            VICregister::from_int!((address - baseaddress)._)
-          } catch {
+          let register = VICregister::from_int((address - baseaddress).0) catch {
             err => {
               println(err)
               panic()
@@ -107,9 +106,7 @@ pub fn VIC::new(
           vic[register]
         },
         fn(address : UInt16, value : UInt8, _ : Bool) {
-          let register = try {
-            VICregister::from_int!((address - baseaddress)._)
-          } catch {
+          let register = VICregister::from_int((address - baseaddress).0) catch {
             err => {
               println(err)
               panic()
@@ -125,9 +122,7 @@ pub fn VIC::new(
   }
 
   //
-  try {
-    vic.reset!(videoStandard~)
-  } catch {
+  vic.reset(videoStandard~) catch {
     err => {
       println(err)
       panic()
@@ -143,11 +138,12 @@ pub fn VIC::set_debug(self : VIC, debug : Bool) -> Unit {
   self.debug = debug
 }
 
-///| These registers are all intialized to 0 at power-up.
+///|
+/// These registers are all intialized to 0 at power-up.
 pub fn VIC::reset(
   self : VIC,
-  videoStandard~ : VideoStandard = Unknown
-) -> Unit! {
+  videoStandard? : VideoStandard = Unknown,
+) -> Unit raise {
   // self.mem.reset(offset=self.baseaddress, length=vic_mem_length)
   for i = 0; i < self.mem.length(); i = i + 1 {
     self.mem[i] = 0x00
@@ -203,13 +199,13 @@ pub fn VIC::reset(
   /// space.  Therefore, the remaining 17 addresses do not access any
   /// memory.  When read, they will always give a value of 255 ($FF).  This
   /// value will not change after writing to them.
-  for i = 0xD02F - self.baseaddress._; i <= 0xD03F - 0xD02F; i = i + 1 {
+  for i = 0xD02F - self.baseaddress.0; i <= 0xD03F - 0xD02F; i = i + 1 {
     self.mem[i] = 0xFF
   }
 
   //
-  self.rasterLines = ScanLines(videoStandard).to_int!() // HINT: should be inferred
-  self.rasterRowCycles = ScanLineCycles(videoStandard).to_int!() // HINT: should be inferred
+  self.rasterLines = ScanLines(videoStandard).to_int() // HINT: should be inferred
+  self.rasterRowCycles = ScanLineCycles(videoStandard).to_int() // HINT: should be inferred
 }
 
 ///|
@@ -249,9 +245,9 @@ pub fn VIC::emulate(self : VIC, cycles : Int) -> Bool {
     //   println("IRQMASK::InterruptEnable")
     if self.register.rasterScanLine == self.rasterCompare &&
       self.register.interruptEnable.rasterCompare {
-        self.register.interruptFlag.rasterCompare = true
+      self.register.interruptFlag.rasterCompare = true
       println("VICIRQ::RasterScan \{self.register.interruptFlag}")
-      }
+    }
     // }
   }
   self.register.interruptFlag.interrupt = self.register.interruptFlag.rasterCompare
@@ -648,30 +644,30 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
   try {
     match register {
       /// Sprite Horizontal and Vertical Position Registers
-      SP0X => self.register.spritePosition[0].x = value._
-      SP0Y => self.register.spritePosition[0].y = value._
-      SP1X => self.register.spritePosition[1].x = value._
-      SP1Y => self.register.spritePosition[1].y = value._
-      SP2X => self.register.spritePosition[2].x = value._
-      SP2Y => self.register.spritePosition[2].y = value._
-      SP3X => self.register.spritePosition[3].x = value._
-      SP3Y => self.register.spritePosition[3].y = value._
-      SP4X => self.register.spritePosition[4].x = value._
-      SP4Y => self.register.spritePosition[4].y = value._
-      SP5X => self.register.spritePosition[5].x = value._
-      SP5Y => self.register.spritePosition[5].y = value._
-      SP6X => self.register.spritePosition[6].x = value._
-      SP6Y => self.register.spritePosition[6].y = value._
-      SP7X => self.register.spritePosition[7].x = value._
-      SP7Y => self.register.spritePosition[7].y = value._
+      SP0X => self.register.spritePosition[0].x = value.0
+      SP0Y => self.register.spritePosition[0].y = value.0
+      SP1X => self.register.spritePosition[1].x = value.0
+      SP1Y => self.register.spritePosition[1].y = value.0
+      SP2X => self.register.spritePosition[2].x = value.0
+      SP2Y => self.register.spritePosition[2].y = value.0
+      SP3X => self.register.spritePosition[3].x = value.0
+      SP3Y => self.register.spritePosition[3].y = value.0
+      SP4X => self.register.spritePosition[4].x = value.0
+      SP4Y => self.register.spritePosition[4].y = value.0
+      SP5X => self.register.spritePosition[5].x = value.0
+      SP5Y => self.register.spritePosition[5].y = value.0
+      SP6X => self.register.spritePosition[6].x = value.0
+      SP6Y => self.register.spritePosition[6].y = value.0
+      SP7X => self.register.spritePosition[7].x = value.0
+      SP7Y => self.register.spritePosition[7].y = value.0
 
       /// Most Significant Bits of Sprites 0-7 Horizontal Position
-      MSIGX => msbX(value._)
+      MSIGX => msbX(value.0)
 
       /// Vertical Fine Scrolling and Control Register
       SCROLY => {
         /// Bits 0-2:  Fine scroll display vertically by X scan lines (0-7)
-        self.register.scroll.y = value._ & 0x08
+        self.register.scroll.y = value.0 & 0x08
         /// Bit 3:  Select a 24-row or 25-row text display (1=25 rows, 0=24 rows)
         self.register.controlRegister.rowDisplay = value.bit(3)
         /// Bit 4:  Blank the entire screen to the same color as the background (0=blank)
@@ -691,12 +687,12 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       /// Raster Compare Interrupt.  When that interrupt is enabled, a maskable
       /// interrupt request will be issued every time the electron beam scan
       /// reaches the scan line whose number was written here.
-      RASTER => self.rasterCompare = (self.rasterCompare & 0x0100) | value._
+      RASTER => self.rasterCompare = (self.rasterCompare & 0x0100) | value.0
 
       /// Light Pen Horizontal Position
-      LPENX => self.register.lightPen.x = value._
+      LPENX => self.register.lightPen.x = value.0
       /// Light Pen Vertical Position
-      LPENY => self.register.lightPen.y = value._
+      LPENY => self.register.lightPen.y = value.0
 
       /// Sprite Enable Register
       SPENA => {
@@ -721,7 +717,7 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       /// Horizontal Fine Scrolling and Control Register
       SCROLX => {
         /// Bits 0-2:  Fine scroll display horizontally by X dot positions (0-7)
-        self.register.scroll.x = value._ & 0x08
+        self.register.scroll.x = value.0 & 0x08
         /// Bit 3:  Select a 38-column or 40-column text display (1=40 columns, 0=38 columns)
         self.register.controlRegister.columnDisplay = value.bit(3)
         /// Bit 4:  Enable multicolor text or multicolor bitmap mode (1=multicolor on, 0=multicolor off)
@@ -775,9 +771,9 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       VMCSB => {
         /// Bit 0:  Unused
         /// Bits 1-3:  Text character dot-data base address within VIC-II address space
-        self.register.characterDataArea = (value._ >> 1) & 0x08
+        self.register.characterDataArea = (value.0 >> 1) & 0x08
         /// Bits 4-7:  Video matrix base address within VIC-II address space
-        self.register.videoMatrixArea = (value._ >> 4) & 0x08
+        self.register.videoMatrixArea = (value.0 >> 4) & 0x08
       }
 
       /// VIC Interrupt Flag Register
@@ -889,41 +885,41 @@ fn VIC::op_set(self : VIC, register : VICregister, value : UInt8) -> Unit {
       }
 
       /// Border Color Register
-      EXTCOL => self.register.borderColor = Color::from_int!(value._)
+      EXTCOL => self.register.borderColor = Color::from_int(value.0)
 
       /// Background Color 0
-      BGCOL0 => self.register.backgroundColor[0] = Color::from_int!(value._)
+      BGCOL0 => self.register.backgroundColor[0] = Color::from_int(value.0)
       /// Background Color 1
-      BGCOL1 => self.register.backgroundColor[1] = Color::from_int!(value._)
+      BGCOL1 => self.register.backgroundColor[1] = Color::from_int(value.0)
       /// Background Color 2
-      BGCOL2 => self.register.backgroundColor[2] = Color::from_int!(value._)
+      BGCOL2 => self.register.backgroundColor[2] = Color::from_int(value.0)
       /// Background Color 3
-      BGCOL3 => self.register.backgroundColor[3] = Color::from_int!(value._)
+      BGCOL3 => self.register.backgroundColor[3] = Color::from_int(value.0)
 
       /// Sprite Multicolor Register 0
-      SPMC0 => self.register.spriteMulticolor[0] = Color::from_int!(value._)
+      SPMC0 => self.register.spriteMulticolor[0] = Color::from_int(value.0)
       /// Sprite Multicolor Register 1
-      SPMC1 => self.register.spriteMulticolor[1] = Color::from_int!(value._)
+      SPMC1 => self.register.spriteMulticolor[1] = Color::from_int(value.0)
 
       /// Sprite 0 Color Register
-      SP0COL => self.register.spriteColor[0] = Color::from_int!(value._)
+      SP0COL => self.register.spriteColor[0] = Color::from_int(value.0)
       /// Sprite 1 Color Register
-      SP1COL => self.register.spriteColor[1] = Color::from_int!(value._)
+      SP1COL => self.register.spriteColor[1] = Color::from_int(value.0)
       /// Sprite 2 Color Register
-      SP2COL => self.register.spriteColor[2] = Color::from_int!(value._)
+      SP2COL => self.register.spriteColor[2] = Color::from_int(value.0)
       /// Sprite 3 Color Register
-      SP3COL => self.register.spriteColor[3] = Color::from_int!(value._)
+      SP3COL => self.register.spriteColor[3] = Color::from_int(value.0)
       /// Sprite 4 Color Register
-      SP4COL => self.register.spriteColor[4] = Color::from_int!(value._)
+      SP4COL => self.register.spriteColor[4] = Color::from_int(value.0)
       /// Sprite 5 Color Register
-      SP5COL => self.register.spriteColor[5] = Color::from_int!(value._)
+      SP5COL => self.register.spriteColor[5] = Color::from_int(value.0)
       /// Sprite 6 Color Register
-      SP6COL => self.register.spriteColor[6] = Color::from_int!(value._)
+      SP6COL => self.register.spriteColor[6] = Color::from_int(value.0)
       /// Sprite 7 Color Register
-      SP7COL => self.register.spriteColor[7] = Color::from_int!(value._)
+      SP7COL => self.register.spriteColor[7] = Color::from_int(value.0)
 
       ///
-      UNUSED => assert_true!(true)
+      UNUSED => assert_true(true)
     }
   } catch {
     err => {

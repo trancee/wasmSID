@@ -24,7 +24,7 @@ test "BEQCanBranchForwardsWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -51,7 +51,7 @@ test "BEQDoesNotBranchForwardsWhenZeroIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -78,7 +78,7 @@ test "BEQCanBranchForwardsIntoANewPageWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -105,7 +105,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -132,7 +132,7 @@ test "BEQCanBranchBackwardsWhenZeroIsSetFromAssembleCode" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -159,7 +159,7 @@ test "BNECanBranchForwardsWhenZeroIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -186,7 +186,7 @@ test "BCSCanBranchForwardsWhenCarryFlagIsSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -213,7 +213,7 @@ test "BCCCanBranchForwardsWhenCarryFlagIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -240,7 +240,7 @@ test "BMICanBranchForwardsWhenNegativeFlagIsSet" {
     expectV: false,
     expectN: true,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -267,7 +267,7 @@ test "BPLCanBranchForwardsWhenCarryNegativeIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -294,7 +294,7 @@ test "BVSCanBranchForwardsWhenOverflowFlagIsSet" {
     expectV: true,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 ///|
@@ -321,7 +321,7 @@ test "BVCCanBranchForwardsWhenOverflowNegativeIsNotSet" {
     expectV: false,
     expectN: false,
   }
-  testBEQ!(t)
+  testBEQ(t)
 }
 
 // Test
@@ -351,8 +351,8 @@ struct BEQTestData {
 }
 
 ///|
-fn testBEQ(t : BEQTestData) -> Unit!Error {
-  let cpu = CPU::new!(pc=t.pc)
+fn testBEQ(t : BEQTestData) -> Unit raise Error {
+  let cpu = CPU::new(pc=t.pc)
 
   // let c = cpu.flags[C]
   // let z = cpu.flags[Z]
@@ -380,25 +380,25 @@ fn testBEQ(t : BEQTestData) -> Unit!Error {
     cycles += cpu.step()
 
     //
-    assert_eq!(cycles, t.expectCycles)
+    assert_eq(cycles, t.expectCycles)
   } else {
     cpu.write(t.pc + 0, t.ins.to_int())
     cpu.write(t.pc + 1, t.op)
 
     //
-    assert_eq!(cpu.step(), t.expectCycles)
+    assert_eq(cpu.step(), t.expectCycles)
   }
 
   //
-  assert_eq!(cpu.pc, t.expectPC)
+  assert_eq(cpu.pc, t.expectPC)
 
   //
-  assert_eq!(cpu.flags[C], t.expectC)
-  assert_eq!(cpu.flags[Z], t.expectZ)
-  assert_eq!(cpu.flags[I], i)
-  assert_eq!(cpu.flags[D], d)
-  assert_eq!(cpu.flags[B], b)
-  assert_eq!(cpu.flags[U], u)
-  assert_eq!(cpu.flags[V], t.expectV)
-  assert_eq!(cpu.flags[N], t.expectN)
+  assert_eq(cpu.flags[C], t.expectC)
+  assert_eq(cpu.flags[Z], t.expectZ)
+  assert_eq(cpu.flags[I], i)
+  assert_eq(cpu.flags[D], d)
+  assert_eq(cpu.flags[B], b)
+  assert_eq(cpu.flags[U], u)
+  assert_eq(cpu.flags[V], t.expectV)
+  assert_eq(cpu.flags[N], t.expectN)
 }

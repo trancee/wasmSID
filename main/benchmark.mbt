@@ -13,13 +13,38 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x36), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.DECIMAL,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5, // 5 + p
+  ),
+  // ADC ($nn),Y N → D
+  Test::new(
+    "ADC ($nn),Y N → D",
+    initial=State::new(pc=0x1000, a=0x89, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDEAE, 0x01), // M
+    ]),
+    end=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x90,
+      x=0x00,
+      y=0x01,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.ZERO) |
+        @cpu.DECIMAL |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -35,13 +60,16 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO) | @cpu.DECIMAL | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO) |
+        @cpu.DECIMAL |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -57,13 +85,16 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW) | @cpu.DECIMAL | @cpu.NEGATIVE | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW) |
+        @cpu.DECIMAL |
+        @cpu.NEGATIVE |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -79,13 +110,17 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x33), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x02,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO) | @cpu.DECIMAL | @cpu.OVERFLOW | @cpu.NEGATIVE | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.ZERO) |
+        @cpu.DECIMAL |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -101,13 +136,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.ZERO |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -116,20 +153,22 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y C → D
   Test::new(
     "ADC ($nn),Y C → D",
-    initial=State::new(pc=0x1000, a=0x71, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
       (0x1000, 0x71), // ADC ($nn),Y
       (0x1001, 0x88), // $nn
       (0x0088, 0xAD), // ($nn,Y)
       (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x09), // M
+      (0xDEAE, 0x02), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x80,
+      a=0x67,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -138,20 +177,23 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y VC → D
   Test::new(
     "ADC ($nn),Y VC → D",
-    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+    initial=State::new(pc=0x1000, a=0x9F, y=0x01, p=@cpu.ALL ^ @cpu.CARRY, ram=[
       (0x1000, 0x71), // ADC ($nn),Y
       (0x1001, 0x88), // $nn
       (0x0088, 0xAD), // ($nn,Y)
       (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x80), // M
+      (0xDEAE, 0xA2), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x7F,
+      a=0xA7,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL | @cpu.OVERFLOW,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.DECIMAL |
+        @cpu.OVERFLOW,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -167,13 +209,16 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x00,
+      a=0x66,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.ZERO |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -189,13 +234,14 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x36), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -204,20 +250,22 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y N → D
   Test::new(
     "ADC ($nn),Y N → D",
-    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+    initial=State::new(pc=0x1000, a=0x89, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
       (0x1000, 0x71), // ADC ($nn),Y
       (0x1001, 0x88), // $nn
       (0x0088, 0xAD), // ($nn,Y)
       (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x7F), // M
+      (0xDFAC, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0xFF,
+      a=0x90,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW) | @cpu.DECIMAL | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.OVERFLOW) |
+        @cpu.DECIMAL |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -226,6 +274,56 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y NV → D
   Test::new(
     "ADC ($nn),Y NV → D",
+    initial=State::new(pc=0x1000, a=0x79, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x01), // M
+    ]),
+    end=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x80,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO) |
+        @cpu.DECIMAL |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y NC → D
+  Test::new(
+    "ADC ($nn),Y NC → D",
+    initial=State::new(pc=0x1000, a=0xA0, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+      (0x1000, 0x71), // ADC ($nn),Y
+      (0x1001, 0x88), // $nn
+      (0x0088, 0xAD), // ($nn,Y)
+      (0x0089, 0xDE), // ($nn,Y)
+      (0xDFAC, 0x00), // M
+    ]),
+    end=State::new(
+      pc=0x1000 + 2,
+      s=0xFF,
+      a=0x00,
+      x=0x00,
+      y=0xFF,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW) |
+        @cpu.DECIMAL |
+        @cpu.NEGATIVE |
+        @cpu.CARRY,
+      ram=[],
+    ),
+    // p: =1 if page is crossed.
+    cycle=5 + 1, // 5 + p
+  ),
+  // ADC ($nn),Y NVC → D
+  Test::new(
+    "ADC ($nn),Y NVC → D",
     initial=State::new(pc=0x1000, a=0x69, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
       (0x1000, 0x71), // ADC ($nn),Y
       (0x1001, 0x88), // $nn
@@ -233,13 +331,17 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x33), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x9C,
+      a=0x02,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO) | @cpu.DECIMAL | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.ZERO) |
+        @cpu.DECIMAL |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -255,13 +357,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.ZERO |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -275,15 +379,17 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xAD), // ($nn,Y)
       (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x6A), // M
+      (0xDFAC, 0x02), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x69,
+      a=0x67,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -292,20 +398,23 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y VC → D
   Test::new(
     "ADC ($nn),Y VC → D",
-    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
+    initial=State::new(pc=0x1000, a=0x9F, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY, ram=[
       (0x1000, 0x71), // ADC ($nn),Y
       (0x1001, 0x88), // $nn
       (0x0088, 0xAD), // ($nn,Y)
       (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x80), // M
+      (0xDFAC, 0xA2), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x7F,
+      a=0xA7,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.DECIMAL | @cpu.OVERFLOW,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.DECIMAL |
+        @cpu.OVERFLOW,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -321,13 +430,16 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
-      a=0x00,
+      a=0x66,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO | @cpu.DECIMAL,
+      p=(@cpu.ALL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.ZERO |
+        @cpu.DECIMAL,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -344,13 +456,18 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x36), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x6A,
       x=0x00,
       y=0x01,
-      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      p=@cpu.ALL ^
+        @cpu.CARRY ^
+        @cpu.ZERO ^
+        @cpu.DECIMAL ^
+        @cpu.OVERFLOW ^
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -366,13 +483,14 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x7E), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xFF,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -388,13 +506,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x33), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x9D,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -410,13 +530,14 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x01,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -432,13 +553,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x80), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x01,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.OVERFLOW,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -454,13 +577,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x7F), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.ZERO,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -476,13 +601,18 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x36), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x6A,
       x=0x00,
       y=0xFF,
-      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      p=@cpu.ALL ^
+        @cpu.CARRY ^
+        @cpu.ZERO ^
+        @cpu.DECIMAL ^
+        @cpu.OVERFLOW ^
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -498,13 +628,14 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x7E), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xFF,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -520,13 +651,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x33), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x9D,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -542,13 +675,14 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x01,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -564,13 +698,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x80), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x01,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.OVERFLOW,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -586,13 +722,15 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x7F), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.ZERO,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.ZERO,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -602,20 +740,31 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y",
-    initial=State::new(pc=0x1000, a=0x33, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x36), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x33,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x36), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
       x=0x00,
       y=0x01,
-      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      p=@cpu.ALL ^
+        @cpu.CARRY ^
+        @cpu.ZERO ^
+        @cpu.DECIMAL ^
+        @cpu.OVERFLOW ^
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -624,20 +773,27 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y N",
-    initial=State::new(pc=0x1000, a=0x80, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x7F), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x80,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x7F), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xFF,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -646,20 +802,28 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y NV",
-    initial=State::new(pc=0x1000, a=0x69, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x33), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x69,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x33), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x9C,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -668,20 +832,27 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y Z",
-    initial=State::new(pc=0x1000, a=0x00, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x00), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x00,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x00), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.ZERO,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -690,20 +861,27 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y C",
-    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x6A), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0xFF,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x6A), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -712,20 +890,28 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y VC",
-    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x80), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0xFF,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x80), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x7F,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.OVERFLOW,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -734,20 +920,28 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y ZC",
-    initial=State::new(pc=0x1000, a=0xFF, y=0x01, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDEAE, 0x01), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0xFF,
+      y=0x01,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDEAE, 0x01), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0x01,
-      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.ZERO |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -756,20 +950,31 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y",
-    initial=State::new(pc=0x1000, a=0x33, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x36), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x33,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x36), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
       x=0x00,
       y=0xFF,
-      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE,
+      p=@cpu.ALL ^
+        @cpu.CARRY ^
+        @cpu.ZERO ^
+        @cpu.DECIMAL ^
+        @cpu.OVERFLOW ^
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -778,20 +983,27 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y N",
-    initial=State::new(pc=0x1000, a=0x80, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x7F), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x80,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x7F), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xFF,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW) |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -800,20 +1012,28 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y NV",
-    initial=State::new(pc=0x1000, a=0x69, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x33), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x69,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x33), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x9C,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) | @cpu.OVERFLOW | @cpu.NEGATIVE,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.ZERO ^ @cpu.DECIMAL) |
+        @cpu.OVERFLOW |
+        @cpu.NEGATIVE,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -822,20 +1042,27 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y Z",
-    initial=State::new(pc=0x1000, a=0x00, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x00), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0x00,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x00), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO,
+      p=(@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.ZERO,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -844,20 +1071,27 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y C",
-    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x6A), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0xFF,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x6A), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -866,20 +1100,28 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y VC",
-    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x80), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0xFF,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x80), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x7F,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) | @cpu.CARRY | @cpu.OVERFLOW,
+      p=(@cpu.ALL ^ @cpu.ZERO ^ @cpu.DECIMAL ^ @cpu.NEGATIVE) |
+        @cpu.CARRY |
+        @cpu.OVERFLOW,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -888,20 +1130,28 @@ let testcases : Array[Test] = [
   // ADC ($nn),Y
   Test::new(
     "ADC ($nn),Y ZC",
-    initial=State::new(pc=0x1000, a=0xFF, y=0xFF, p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL, ram=[
-      (0x1000, 0x71), // ADC ($nn),Y
-      (0x1001, 0x88), // $nn
-      (0x0088, 0xAD), // ($nn,Y)
-      (0x0089, 0xDE), // ($nn,Y)
-      (0xDFAC, 0x01), // M
-    ]),
-    final=State::new(
+    initial=State::new(
+      pc=0x1000,
+      a=0xFF,
+      y=0xFF,
+      p=@cpu.ALL ^ @cpu.CARRY ^ @cpu.DECIMAL,
+      ram=[
+        (0x1000, 0x71), // ADC ($nn),Y
+        (0x1001, 0x88), // $nn
+        (0x0088, 0xAD), // ($nn,Y)
+        (0x0089, 0xDE), // ($nn,Y)
+        (0xDFAC, 0x01), // M
+      ],
+    ),
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
       x=0x00,
       y=0xFF,
-      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) | @cpu.ZERO | @cpu.CARRY,
+      p=(@cpu.ALL ^ @cpu.DECIMAL ^ @cpu.OVERFLOW ^ @cpu.NEGATIVE) |
+        @cpu.ZERO |
+        @cpu.CARRY,
       ram=[],
     ),
     // p: =1 if page is crossed.
@@ -918,7 +1168,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x09), // ORA #$nn
       (0x1001, 0b01010101), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01110111,
@@ -936,7 +1186,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x09), // ORA #$nn
       (0x1001, 0b01010101), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -954,7 +1204,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x09), // ORA #$nn
       (0x1001, 0b00000000), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -975,7 +1225,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01110111,
@@ -995,7 +1245,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1015,7 +1265,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1036,7 +1286,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01110111,
@@ -1057,7 +1307,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1078,7 +1328,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1099,7 +1349,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01110111,
@@ -1120,7 +1370,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1141,7 +1391,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1163,7 +1413,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01110111,
@@ -1184,7 +1434,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1205,7 +1455,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1226,7 +1476,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01110111,
@@ -1247,7 +1497,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1268,7 +1518,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1289,7 +1539,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01110111,
@@ -1308,7 +1558,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -1327,7 +1577,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -1347,7 +1597,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01110111,
@@ -1366,7 +1616,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -1385,7 +1635,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -1407,7 +1657,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0b01010101),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01110111,
@@ -1428,7 +1678,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0b01010101),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -1449,7 +1699,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -1471,7 +1721,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01110111,
@@ -1493,7 +1743,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -1515,7 +1765,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -1537,7 +1787,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01110111,
@@ -1559,7 +1809,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -1581,7 +1831,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0b00000000), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -1602,7 +1852,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x49), // EOR #$nn
       (0x1001, 0b01010101), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01100110,
@@ -1620,7 +1870,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x49), // EOR #$nn
       (0x1001, 0b01010101), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -1638,7 +1888,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x49), // EOR #$nn
       (0x1001, 0b01010101), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -1659,7 +1909,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01100110,
@@ -1679,7 +1929,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1699,7 +1949,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1720,7 +1970,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01100110,
@@ -1741,7 +1991,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1762,7 +2012,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1783,7 +2033,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01100110,
@@ -1804,7 +2054,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1825,7 +2075,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1847,7 +2097,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01100110,
@@ -1868,7 +2118,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1889,7 +2139,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1910,7 +2160,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b01100110,
@@ -1931,7 +2181,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11010101,
@@ -1952,7 +2202,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -1973,7 +2223,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01100110,
@@ -1992,7 +2242,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -2011,7 +2261,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2031,7 +2281,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01100110,
@@ -2050,7 +2300,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -2069,7 +2319,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2091,7 +2341,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0b01010101),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01100110,
@@ -2112,7 +2362,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0b01010101),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -2133,7 +2383,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0b01010101),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2155,7 +2405,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01100110,
@@ -2177,7 +2427,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -2199,7 +2449,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2221,7 +2471,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b01100110,
@@ -2243,7 +2493,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11010101,
@@ -2265,7 +2515,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0b01010101), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2287,7 +2537,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00110011,
@@ -2306,7 +2556,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00110011,
@@ -2325,7 +2575,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00110011,
@@ -2344,7 +2594,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b11000000,
@@ -2363,7 +2613,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b11111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00110011,
@@ -2382,7 +2632,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2401,7 +2651,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2420,7 +2670,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b11111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0b00000000,
@@ -2441,7 +2691,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00110011,
@@ -2461,7 +2711,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00110011,
@@ -2481,7 +2731,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00110011,
@@ -2501,7 +2751,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b11000000,
@@ -2521,7 +2771,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b11111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00110011,
@@ -2541,7 +2791,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -2561,7 +2811,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -2581,7 +2831,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b11111111), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0b00000000,
@@ -2604,7 +2854,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x68,
@@ -2626,7 +2876,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0xFF), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
@@ -2648,7 +2898,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -2670,7 +2920,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x68,
@@ -2692,7 +2942,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
@@ -2714,7 +2964,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -2737,7 +2987,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0xEE),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x68,
@@ -2758,7 +3008,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0xEE),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
@@ -2779,7 +3029,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0xEE),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -2799,7 +3049,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x68,
@@ -2818,7 +3068,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
@@ -2837,7 +3087,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -2857,7 +3107,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x68,
@@ -2876,7 +3126,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
@@ -2895,7 +3145,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -2916,7 +3166,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x68,
@@ -2937,7 +3187,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x80,
@@ -2958,7 +3208,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -2979,7 +3229,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x68,
@@ -3000,7 +3250,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x80,
@@ -3021,7 +3271,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3043,7 +3293,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x68,
@@ -3064,7 +3314,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x80,
@@ -3085,7 +3335,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3106,7 +3356,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x68,
@@ -3127,7 +3377,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x80,
@@ -3148,7 +3398,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3170,7 +3420,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x68,
@@ -3190,7 +3440,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x80,
@@ -3210,7 +3460,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3229,7 +3479,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x29), // AND #$nn
       (0x1001, 0xEE), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x68,
@@ -3247,7 +3497,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x29), // AND #$nn
       (0x1001, 0xEE), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x80,
@@ -3265,7 +3515,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x29), // AND #$nn
       (0x1001, 0xEE), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3288,7 +3538,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3308,7 +3558,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3328,7 +3578,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3348,7 +3598,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3369,7 +3619,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3389,7 +3639,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3409,7 +3659,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3429,7 +3679,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3451,7 +3701,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3472,7 +3722,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3493,7 +3743,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3514,7 +3764,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3536,7 +3786,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3557,7 +3807,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3578,7 +3828,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3599,7 +3849,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3621,7 +3871,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b10110011,
@@ -3642,7 +3892,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b11000000,
@@ -3663,7 +3913,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b10000001,
@@ -3684,7 +3934,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b11000000,
@@ -3705,7 +3955,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3724,7 +3974,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3744,7 +3994,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3763,7 +4013,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3782,7 +4032,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3802,7 +4052,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3822,7 +4072,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3841,7 +4091,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3861,7 +4111,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3880,7 +4130,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3899,7 +4149,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3919,7 +4169,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -3940,7 +4190,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3960,7 +4210,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -3981,7 +4231,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4001,7 +4251,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4021,7 +4271,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4042,7 +4292,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4063,7 +4313,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4083,7 +4333,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4104,7 +4354,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4124,7 +4374,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4144,7 +4394,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4165,7 +4415,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4186,7 +4436,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00110011,
@@ -4206,7 +4456,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b01000000,
@@ -4227,7 +4477,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000000,
@@ -4247,7 +4497,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000001,
@@ -4267,7 +4517,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b01000000,
@@ -4288,7 +4538,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x6A)], // ROR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000000,
@@ -4309,7 +4559,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4328,7 +4578,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4347,7 +4597,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4366,7 +4616,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4386,7 +4636,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4405,7 +4655,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4424,7 +4674,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4443,7 +4693,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4464,7 +4714,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4484,7 +4734,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4504,7 +4754,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4524,7 +4774,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4545,7 +4795,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4565,7 +4815,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4585,7 +4835,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4605,7 +4855,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4626,7 +4876,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b01100111,
@@ -4646,7 +4896,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b10000001,
@@ -4666,7 +4916,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000011,
@@ -4686,7 +4936,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b10000001,
@@ -4706,7 +4956,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4725,7 +4975,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4744,7 +4994,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4763,7 +5013,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4782,7 +5032,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4801,7 +5051,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4821,7 +5071,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4840,7 +5090,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4859,7 +5109,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4878,7 +5128,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4897,7 +5147,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4916,7 +5166,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -4937,7 +5187,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4957,7 +5207,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4977,7 +5227,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -4997,7 +5247,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5017,7 +5267,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5037,7 +5287,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5058,7 +5308,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00110011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5078,7 +5328,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5098,7 +5348,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5118,7 +5368,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5138,7 +5388,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b11000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5158,7 +5408,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5179,7 +5429,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b01100110,
@@ -5199,7 +5449,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b10000000,
@@ -5219,7 +5469,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000000,
@@ -5239,7 +5489,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000010,
@@ -5259,7 +5509,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b10000000,
@@ -5279,7 +5529,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL ^ @cpu.CARRY,
       ram=[(0x1000, 0x2A)], // ROL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000000,
@@ -5300,7 +5550,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5319,7 +5569,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5339,7 +5589,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5358,7 +5608,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5377,7 +5627,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5397,7 +5647,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5417,7 +5667,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5436,7 +5686,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5456,7 +5706,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5475,7 +5725,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5494,7 +5744,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5514,7 +5764,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5535,7 +5785,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5555,7 +5805,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5576,7 +5826,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5596,7 +5846,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5616,7 +5866,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5637,7 +5887,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5658,7 +5908,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b01100110),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5678,7 +5928,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5699,7 +5949,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000000),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5719,7 +5969,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000011),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5739,7 +5989,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b10000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5760,7 +6010,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0b00000001),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -5781,7 +6031,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x4A)], // LSR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00110011,
@@ -5801,7 +6051,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x4A)], // LSR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b01000000,
@@ -5822,7 +6072,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x4A)], // LSR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000000,
@@ -5842,7 +6092,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x4A)], // LSR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000001,
@@ -5862,7 +6112,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x4A)], // LSR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b01000000,
@@ -5883,7 +6133,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x4A)], // LSR A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0b00000000,
@@ -5904,7 +6154,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x33),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5923,7 +6173,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x69),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5942,7 +6192,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x00),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5961,7 +6211,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x81),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5980,7 +6230,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xC0),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -5999,7 +6249,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x80),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6019,7 +6269,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x33),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6038,7 +6288,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x69),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6057,7 +6307,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x00),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6076,7 +6326,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x81),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6095,7 +6345,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xC0),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6114,7 +6364,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x80),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -6135,7 +6385,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x33),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6155,7 +6405,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x69),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6175,7 +6425,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6195,7 +6445,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x81),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6215,7 +6465,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xC0),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6235,7 +6485,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x80),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6256,7 +6506,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x33),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6276,7 +6526,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x69),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6296,7 +6546,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x00),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6316,7 +6566,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x81),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6336,7 +6586,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xC0),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6356,7 +6606,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x80),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -6377,7 +6627,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x0A)], // ASL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x66,
@@ -6397,7 +6647,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x0A)], // ASL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0xD2,
@@ -6417,7 +6667,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x0A)], // ASL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -6437,7 +6687,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x0A)], // ASL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x02,
@@ -6457,7 +6707,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x0A)], // ASL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x80,
@@ -6477,7 +6727,7 @@ let testcases : Array[Test] = [
       p=@cpu.ALL,
       ram=[(0x1000, 0x0A)], // ASL A
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -6500,18 +6750,10 @@ let testcases : Array[Test] = [
       a=0x69,
       ram=[(0x1000, 0x48)], // PHA
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFE,
-      a=0x69,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[
-        // Stack
-        (0x01FF, 0x69),
-      ],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFE, a=0x69, x=0x00, y=0x00, p=@cpu.NONE, ram=[
+      // Stack
+      (0x01FF, 0x69),
+    ]),
     cycle=3,
   ),
 
@@ -6523,18 +6765,10 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0x08)], // PHP
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFE,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[
-        // Stack
-        (0x01FF, @cpu.NONE),
-      ],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFE, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[
+      // Stack
+      (0x01FF, @cpu.NONE),
+    ]),
     cycle=3,
   ),
   // PHP
@@ -6545,18 +6779,10 @@ let testcases : Array[Test] = [
       p=@cpu.ZERO,
       ram=[(0x1000, 0x08)], // PHP
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFE,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.ZERO,
-      ram=[
-        // Stack
-        (0x01FF, @cpu.ZERO),
-      ],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFE, a=0x00, x=0x00, y=0x00, p=@cpu.ZERO, ram=[
+      // Stack
+      (0x01FF, @cpu.ZERO),
+    ]),
     cycle=3,
   ),
 
@@ -6568,15 +6794,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x68), // PLA
       (0x01FF, 0x69),
     ]),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x69,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x69, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=4,
   ),
   // PLA
@@ -6586,7 +6804,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x68), // PLA
       (0x01FF, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=-1,
@@ -6604,7 +6822,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x68), // PLA
       (0x01FF, 0),
     ]),
-    final=State::new(pc=0x1000 + 1, s=0xFF, a=0, x=0x00, y=0x00, p=@cpu.ZERO, ram=[]),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0, x=0x00, y=0x00, p=@cpu.ZERO, ram=[]),
     cycle=4,
   ),
 
@@ -6616,15 +6834,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x28), // PLP
       (0x01FF, @cpu.NONE),
     ]),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=4,
   ),
   // PLP
@@ -6634,15 +6844,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x28), // PLP
       (0x01FF, @cpu.ALL),
     ]),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.ALL,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.ALL, ram=[]),
     cycle=4,
   ),
 
@@ -6658,15 +6860,7 @@ let testcases : Array[Test] = [
       x=0x69,
       ram=[(0x1000, 0x9A)], // TXS $nn
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0x69,
-      a=0x00,
-      x=0x69,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0x69, a=0x00, x=0x69, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
 
@@ -6677,7 +6871,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, s=0x69, x=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xBA), // TSX $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0x69,
       a=0x00,
@@ -6694,7 +6888,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, s=0x00, x=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xBA), // TSX $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0x00,
       a=0x00,
@@ -6711,7 +6905,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, s=0xEE, x=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xBA), // TSX $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xEE,
       a=0x00,
@@ -6730,7 +6924,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xFF, y=0x69, p=@cpu.ALL, ram=[
       (0x1000, 0x98), // TYA $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x69,
@@ -6747,7 +6941,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xFF, y=0x00, p=@cpu.ALL, ram=[
       (0x1000, 0x98), // TYA $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -6764,7 +6958,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xFF, y=0xEE, p=@cpu.ALL, ram=[
       (0x1000, 0x98), // TYA $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0xEE,
@@ -6783,7 +6977,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xFF, x=0x69, p=@cpu.ALL, ram=[
       (0x1000, 0x8A), // TXA $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x69,
@@ -6800,7 +6994,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xFF, x=0x00, p=@cpu.ALL, ram=[
       (0x1000, 0x8A), // TXA $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -6817,7 +7011,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xFF, x=0xEE, p=@cpu.ALL, ram=[
       (0x1000, 0x8A), // TXA $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0xEE,
@@ -6836,7 +7030,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0x69, y=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xA8), // TAY $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x69,
@@ -6853,7 +7047,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0x00, y=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xA8), // TAY $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -6870,7 +7064,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xEE, y=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xA8), // TAY $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0xEE,
@@ -6889,7 +7083,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0x69, x=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xAA), // TAX $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x69,
@@ -6906,7 +7100,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0x00, x=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xAA), // TAX $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -6923,7 +7117,7 @@ let testcases : Array[Test] = [
     initial=State::new(pc=0x1000, a=0xEE, x=0xFF, p=@cpu.ALL, ram=[
       (0x1000, 0xAA), // TAX $nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0xEE,
@@ -6945,7 +7139,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0x69, // S
       a=0x69,
@@ -6965,7 +7159,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0x49AC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0x69,
       a=0x69,
@@ -6989,7 +7183,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7009,7 +7203,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // #$nn
       (0x0088, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7029,7 +7223,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7051,7 +7245,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7071,7 +7265,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // #$nn
       (0x0088, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7091,7 +7285,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7113,7 +7307,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7134,7 +7328,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7154,7 +7348,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7175,7 +7369,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7195,7 +7389,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7215,7 +7409,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // #$nn
       (0x0088, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7235,7 +7429,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7257,7 +7451,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7279,7 +7473,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7300,7 +7494,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7322,7 +7516,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7342,7 +7536,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7364,7 +7558,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7384,7 +7578,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7406,7 +7600,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7426,7 +7620,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0x49AC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69,
@@ -7448,7 +7642,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7469,7 +7663,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0x49AC, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7491,7 +7685,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xFF,
@@ -7511,7 +7705,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // #$nn
       (0x0088, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xFF,
@@ -7531,7 +7725,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xFF,
@@ -7553,7 +7747,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, -1),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69,
@@ -7575,7 +7769,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA0), // LDY #$nn
       (0x1001, 0x69), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7593,7 +7787,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA0), // LDY #$nn
       (0x1001, 0x00), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7611,7 +7805,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA0), // LDY #$nn
       (0x1001, 0xEE), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7632,7 +7826,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7652,7 +7846,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7672,7 +7866,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7693,7 +7887,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7714,7 +7908,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7735,7 +7929,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7756,7 +7950,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7777,7 +7971,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7798,7 +7992,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -7819,7 +8013,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7838,7 +8032,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7857,7 +8051,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7877,7 +8071,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7896,7 +8090,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7915,7 +8109,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7935,7 +8129,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA2), // LDX #$nn
       (0x1001, 0x69), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7953,7 +8147,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA2), // LDX #$nn
       (0x1001, 0x00), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7971,7 +8165,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA2), // LDX #$nn
       (0x1001, 0xEE), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -7992,7 +8186,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8012,7 +8206,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8032,7 +8226,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8053,7 +8247,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8074,7 +8268,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8095,7 +8289,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8116,7 +8310,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8137,7 +8331,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8158,7 +8352,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00,
@@ -8179,7 +8373,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -8198,7 +8392,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -8217,7 +8411,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -8237,7 +8431,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -8256,7 +8450,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -8275,7 +8469,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00,
@@ -8295,7 +8489,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA9), // LDA #$nn
       (0x1001, 0x69), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -8313,7 +8507,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA9), // LDA #$nn
       (0x1001, 0x00), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -8331,7 +8525,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xA9), // LDA #$nn
       (0x1001, 0xEE), // #$nn
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -8352,7 +8546,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -8372,7 +8566,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -8392,7 +8586,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -8413,7 +8607,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -8434,7 +8628,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -8455,7 +8649,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -8476,7 +8670,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -8497,7 +8691,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -8518,7 +8712,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -8540,7 +8734,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -8561,7 +8755,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -8582,7 +8776,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -8603,7 +8797,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -8624,7 +8818,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -8645,7 +8839,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -8666,7 +8860,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -8685,7 +8879,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -8704,7 +8898,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -8724,7 +8918,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -8743,7 +8937,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -8762,7 +8956,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -8784,7 +8978,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0x69),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -8805,7 +8999,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0x00),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -8826,7 +9020,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0xEE),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -8848,7 +9042,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -8870,7 +9064,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -8892,7 +9086,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -8914,7 +9108,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -8936,7 +9130,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -8958,7 +9152,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -8980,7 +9174,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0x01, // M ∧ S 
       a=0x01, // M ∧ S 
@@ -9001,7 +9195,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x01), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0x01, // M ∧ S 
       a=0x01, // M ∧ S 
@@ -9022,7 +9216,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0x00, // M ∧ S 
       a=0x00, // M ∧ S 
@@ -9043,7 +9237,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xF0), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0x80, // M ∧ S 
       a=0x80, // M ∧ S 
@@ -9064,7 +9258,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xAB), // LAX #$nn
       (0x1001, 0x69), // #$nn | MAGIC
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -9082,7 +9276,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xAB), // LAX #$nn
       (0x1001, 0x00), // #$nn | MAGIC
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -9100,7 +9294,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xAB), // LAX #$nn
       (0x1001, 0xEE), // #$nn | MAGIC
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -9121,7 +9315,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -9141,7 +9335,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -9161,7 +9355,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAD, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -9182,7 +9376,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -9203,7 +9397,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -9224,7 +9418,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -9245,7 +9439,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x69, // M 
@@ -9266,7 +9460,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0x00, // M 
@@ -9287,7 +9481,7 @@ let testcases : Array[Test] = [
       (0x1002, 0xDE), // $nn00
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 3,
       s=0xFF,
       a=0xEE, // M 
@@ -9308,7 +9502,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -9327,7 +9521,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -9346,7 +9540,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0088, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -9366,7 +9560,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -9385,7 +9579,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -9404,7 +9598,7 @@ let testcases : Array[Test] = [
       (0x1001, 0x88), // $nn
       (0x0087, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -9426,7 +9620,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0x69),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -9447,7 +9641,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0x00),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -9468,7 +9662,7 @@ let testcases : Array[Test] = [
       (0x0088, 0xDE), // ($nn,X)
       (0xDEAD, 0xEE),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -9490,7 +9684,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -9512,7 +9706,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -9534,7 +9728,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDEAE, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -9556,7 +9750,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x69), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x69, // M 
@@ -9578,7 +9772,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0x00), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0x00, // M 
@@ -9600,7 +9794,7 @@ let testcases : Array[Test] = [
       (0x0089, 0xDE), // ($nn,Y)
       (0xDFAC, 0xEE), // M
     ]),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 2,
       s=0xFF,
       a=0xEE, // M 
@@ -9621,15 +9815,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0x18)], // CLC
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
   // CLC
@@ -9640,15 +9826,7 @@ let testcases : Array[Test] = [
       p=@cpu.CARRY,
       ram=[(0x1000, 0x18)], // CLC
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
 
@@ -9659,15 +9837,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0xD8)], // CLD
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
   // CLD
@@ -9678,15 +9848,7 @@ let testcases : Array[Test] = [
       p=@cpu.DECIMAL,
       ram=[(0x1000, 0xD8)], // CLD
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
 
@@ -9697,15 +9859,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0x58)], // CLI
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
   // CLI
@@ -9716,15 +9870,7 @@ let testcases : Array[Test] = [
       p=@cpu.INTERRUPT,
       ram=[(0x1000, 0x58)], // CLI
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
 
@@ -9735,15 +9881,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0xB8)], // CLV
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
   // CLV
@@ -9754,15 +9892,7 @@ let testcases : Array[Test] = [
       p=@cpu.OVERFLOW,
       ram=[(0x1000, 0xB8)], // CLV
     ),
-    final=State::new(
-      pc=0x1000 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1000 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=2,
   ),
 
@@ -9773,7 +9903,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0x38)], // SEC
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -9792,7 +9922,7 @@ let testcases : Array[Test] = [
       p=@cpu.CARRY,
       ram=[(0x1000, 0x38)], // SEC
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -9811,7 +9941,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0xF8)], // SED
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -9830,7 +9960,7 @@ let testcases : Array[Test] = [
       p=@cpu.DECIMAL,
       ram=[(0x1000, 0xF8)], // SED
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -9849,7 +9979,7 @@ let testcases : Array[Test] = [
       pc=0x1000,
       ram=[(0x1000, 0x78)], // SEI
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -9868,7 +9998,7 @@ let testcases : Array[Test] = [
       p=@cpu.INTERRUPT,
       ram=[(0x1000, 0x78)], // SEI
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1000 + 1,
       s=0xFF,
       a=0x00,
@@ -9891,15 +10021,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1, // 2 + t
@@ -9914,15 +10036,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 - 3,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 - 3, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1 + 1, // 2 + t + p
@@ -9934,7 +10048,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x90), // BCC $nnnn
       (0x1001, 0x01), // $00nn
     ]),
-    final=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.CARRY, ram=[]),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.CARRY, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2
@@ -9950,7 +10064,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2 
@@ -9966,7 +10080,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1002 + 1,
       s=0xFF,
       a=0x00,
@@ -9990,7 +10104,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1002 - 3,
       s=0xFF,
       a=0x00,
@@ -10014,7 +10128,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2 
@@ -10030,15 +10144,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.ZERO,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.ZERO, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1, // 2 + t
@@ -10054,15 +10160,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 - 3,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.ZERO,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 - 3, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.ZERO, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1 + 1, // 2 + t + p
@@ -10078,7 +10176,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2 
@@ -10094,7 +10192,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1002 + 1,
       s=0xFF,
       a=0x00,
@@ -10118,7 +10216,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1002 - 3,
       s=0xFF,
       a=0x00,
@@ -10142,15 +10240,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1, // 2 + t
@@ -10165,15 +10255,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 - 3,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 - 3, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1 + 1, // 2 + t + p
@@ -10185,7 +10267,7 @@ let testcases : Array[Test] = [
       (0x1000, 0xD0), // BNE $nnnn
       (0x1001, 0x01), // $00nn
     ]),
-    final=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.ZERO, ram=[]),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.ZERO, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2
@@ -10201,15 +10283,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1, // 2 + t
@@ -10224,15 +10298,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 - 3,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 - 3, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1 + 1, // 2 + t + p
@@ -10244,15 +10310,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x10), // BPL $nnnn
       (0x1001, 0x01), // $00nn
     ]),
-    final=State::new(
-      pc=0x1002,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NEGATIVE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NEGATIVE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2
@@ -10268,15 +10326,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1, // 2 + t
@@ -10291,15 +10341,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
-      pc=0x1002 - 3,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002 - 3, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2 + 1 + 1, // 2 + t + p
@@ -10311,15 +10353,7 @@ let testcases : Array[Test] = [
       (0x1000, 0x50), // BVC $nnnn
       (0x1001, 0x01), // $00nn
     ]),
-    final=State::new(
-      pc=0x1002,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.OVERFLOW,
-      ram=[],
-    ),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.OVERFLOW, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2
@@ -10335,7 +10369,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
+    end=State::new(pc=0x1002, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     // p: =1 if page is crossed.
     // t: =1 if branch is taken.
     cycle=2, // 2 
@@ -10351,7 +10385,7 @@ let testcases : Array[Test] = [
         (0x1001, 0x01),
       ], // $00nn
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1002 + 1,
       s=0xFF,
       a=0x00,
@@ -10375,7 +10409,7 @@ let testcases : Array[Test] = [
         (0x1001, 0xFD),
       ], // $00nn
     ),
-    final=State::new(
+    end=State::new(
       pc=0x1002 - 3,
       s=0xFF,
       a=0x00,
@@ -10398,7 +10432,7 @@ let testcases : Array[Test] = [
       (@cpu.IRQ + 1, 0xDE),
       (@cpu.IRQ + 0, 0xAD),
     ]),
-    final=State::new(
+    end=State::new(
       pc=0xDEAD,
       s=0xFC,
       a=0x00,
@@ -10423,7 +10457,7 @@ let testcases : Array[Test] = [
       (0x1001, 0xAD), // $00nn
       (0x1002, 0xDE), // $nn00
     ]),
-    final=State::new(pc=0xDEAD, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
+    end=State::new(pc=0xDEAD, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=3,
   ),
   // JMP ($nnnn)
@@ -10436,7 +10470,7 @@ let testcases : Array[Test] = [
       (0x1234, 0xAD),
       (0x1235, 0xDE),
     ]),
-    final=State::new(pc=0xDEAD, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
+    end=State::new(pc=0xDEAD, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=5,
   ),
 
@@ -10448,7 +10482,7 @@ let testcases : Array[Test] = [
       (0x1001, 0xAD), // $00nn
       (0x1002, 0xDE), // $nn00
     ]),
-    final=State::new(pc=0xDEAD, s=0xFD, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[
+    end=State::new(pc=0xDEAD, s=0xFD, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[
       // Stack
       (0x01FE, 0x02),
       (0x01FF, 0x10),
@@ -10466,7 +10500,7 @@ let testcases : Array[Test] = [
       (0x01FE, 0xAD),
       (0x01FF, 0xDE),
     ]),
-    final=State::new(pc=0xDEAD, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.UNUSED, ram=[]),
+    end=State::new(pc=0xDEAD, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.UNUSED, ram=[]),
     cycle=6,
   ),
 
@@ -10479,21 +10513,13 @@ let testcases : Array[Test] = [
       (0x01FE, 0xAD),
       (0x01FF, 0xDE),
     ]),
-    final=State::new(
-      pc=0xDEAD + 1,
-      s=0xFF,
-      a=0x00,
-      x=0x00,
-      y=0x00,
-      p=@cpu.NONE,
-      ram=[],
-    ),
+    end=State::new(pc=0xDEAD + 1, s=0xFF, a=0x00, x=0x00, y=0x00, p=@cpu.NONE, ram=[]),
     cycle=6,
   ),
 ]
 
 ///|
-fn benchmark() -> Unit! {
+fn benchmark() -> Unit raise {
   // let path = "tests/65x02/6502/v1/"
   // let testcases : Array[Test] = match
   //   @fs.read_file_to_string?(path + "00.json") {
@@ -10506,45 +10532,45 @@ fn benchmark() -> Unit! {
   for i, testcase in testcases {
     println("\{testcase.name}" + "\u{1B}[s\u{1B}[1A")
     // println("[\{testcase.name}]" + " " + "#\{i}" + "\u{1B}[s\u{1B}[1A")
-    let cpu = CPU::new!(debug~)
+    let cpu = CPU::new(debug~)
     let mut cycles = 0
     let summary = @bench.single_bench(name=testcase.name, fn() {
       benchmark_setup(cpu, testcase)
       cycles = cpu.step()
       // cpu.reset()
     }).to_json()
-    match testcase.final {
-      None => ignore(testcase.final)
-      Some(final) => {
-        verify!("PC", testcase, final.pc, cpu.pc)
-        match final.s {
-          None => ignore(final.s)
-          Some(s) => verify!("SP", testcase, s, cpu.registers[SP])
+    match testcase.end {
+      None => ignore(testcase.end)
+      Some(end) => {
+        verify("PC", testcase, end.pc, cpu.pc)
+        match end.s {
+          None => ignore(end.s)
+          Some(s) => verify("SP", testcase, s, cpu.registers[SP])
         }
-        match final.a {
-          None => ignore(final.a)
-          Some(a) => verify!("A", testcase, a, cpu.registers[A])
+        match end.a {
+          None => ignore(end.a)
+          Some(a) => verify("A", testcase, a, cpu.registers[A])
         }
-        match final.x {
-          None => ignore(final.x)
-          Some(x) => verify!("X", testcase, x, cpu.registers[X])
+        match end.x {
+          None => ignore(end.x)
+          Some(x) => verify("X", testcase, x, cpu.registers[X])
         }
-        match final.y {
-          None => ignore(final.y)
-          Some(y) => verify!("Y", testcase, y, cpu.registers[Y])
+        match end.y {
+          None => ignore(end.y)
+          Some(y) => verify("Y", testcase, y, cpu.registers[Y])
         }
-        match final.p {
-          None => ignore(final.p)
-          Some(p) => verify!("P", testcase, p, cpu.flags.get())
+        match end.p {
+          None => ignore(end.p)
+          Some(p) => verify("P", testcase, p, cpu.flags.get())
         }
 
         //
-        match final.ram {
-          None => ignore(final.ram)
+        match end.ram {
+          None => ignore(end.ram)
           Some(ram) =>
             for data in ram {
               let (address, value) = data
-              verify!("\{address}", testcase, value, cpu.mem[address._])
+              verify("\{address}", testcase, value, cpu.mem[address.0])
             }
         }
       }
@@ -10553,7 +10579,7 @@ fn benchmark() -> Unit! {
     //
     match testcase.cycle {
       None => ignore(testcase.cycle)
-      Some(cycle) => verify!("CYC", testcase, cycle, cycles)
+      Some(cycle) => verify("CYC", testcase, cycle, cycles)
     }
 
     //
@@ -10596,7 +10622,7 @@ fn benchmark_setup(cpu : CPU, testcase : Test) -> Unit {
         Some(ram) =>
           for data in ram {
             let (address, value) = data
-            cpu.mem[address._] = value
+            cpu.mem[address.0] = value
           }
       }
     }
@@ -10604,25 +10630,22 @@ fn benchmark_setup(cpu : CPU, testcase : Test) -> Unit {
 }
 
 ///|
-fn benchmark_summary(summary : Json) -> Unit {
-  let fixed = fn(a : Double) -> String {
+fn benchmark_summary(summary : Json) -> Unit raise {
+  let fixed = fn(a : Double) -> String raise {
     let a = a.to_string()
     match a.find(".") {
       None => a
-      Some(i) =>
-        a.substring(start=0, end=i).pad_start(1, ' ') +
-        a.substring(start=i, end=i + 5).pad_end(5, '0') +
-        "µs"
+      Some(i) => a[:i].pad_start(1, ' ') + a[i:i + 5].pad_end(5, '0') + "µs"
     }
   }
   let obj = summary.as_object().unwrap()
-  let name = obj["name"].unwrap().as_string().unwrap()
-  let runs = obj["runs"].unwrap().as_number().unwrap()
-  let batches = obj["batch_size"].unwrap().as_number().unwrap()
-  let mean = obj["mean"].unwrap().as_number().unwrap()
-  let std_dev = obj["std_dev"].unwrap().as_number().unwrap()
-  let median = obj["median"].unwrap().as_number().unwrap()
-  let median_abs_dev = obj["median_abs_dev"].unwrap().as_number().unwrap()
+  let name = obj["name"].as_string().unwrap()
+  let runs = obj["runs"].as_number().unwrap()
+  let batches = obj["batch_size"].as_number().unwrap()
+  let mean = obj["mean"].as_number().unwrap()
+  let std_dev = obj["std_dev"].as_number().unwrap()
+  let median = obj["median"].as_number().unwrap()
+  let median_abs_dev = obj["median_abs_dev"].as_number().unwrap()
   println("\{name}" + " " + "\u{1B}[32;1m✔️\u{1B}[0m")
   println("\{runs} × \{batches}")
   println("\{fixed(mean)} ±\{fixed(std_dev)}")

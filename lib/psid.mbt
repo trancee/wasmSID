@@ -34,7 +34,7 @@ pub struct PSID {
 }
 
 ///|
-pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
+pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID raise {
   let psid : PSID = {
     mem,
     data,
@@ -56,14 +56,14 @@ pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
     songs: 0,
     defaultSong: 0,
     //
-    flags: Flags::default!(),
+    flags: Flags::default(),
     //
     startPage: UInt8::default(),
     pageLength: UInt8::default(),
     //
-    sid2Flags: SIDFlags::default!(),
-    sid3Flags: SIDFlags::default!(),
-    sid4Flags: SIDFlags::default!(),
+    sid2Flags: SIDFlags::default(),
+    sid3Flags: SIDFlags::default(),
+    sid4Flags: SIDFlags::default(),
     //
     sid2Address: 0x00,
     sid3Address: 0x00,
@@ -73,7 +73,7 @@ pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID! {
 }
 
 ///|
-pub fn process(self : PSID) -> Unit! {
+pub fn PSID::process(self : PSID) -> Unit raise {
   println(">> PSID::process")
 
   /// Valid values:
@@ -85,7 +85,7 @@ pub fn process(self : PSID) -> Unit! {
   /// requires a true Commodore-64 environment to run properly. 'PSID' files will
   /// generally run trouble-free on older PlaySID and libsidplay1 based emulators,
   /// too.
-  let magic = self.readString!(Magic)
+  let magic = self.readString(Magic)
   if magic != "PSID" && magic != "RSID" {
     raise UnknownFile
   }
@@ -100,7 +100,7 @@ pub fn process(self : PSID) -> Unit! {
   /// Available version number can be 0001, 0002, 0003 or 0004. Headers of version 2,
   /// 3 and 4 provide additional fields. RSID and PSID v2NG files must have 0002,
   /// 0003 or 0004 here.
-  self.version = Version::from_int!(self.readWord!(Version), self.realSID)
+  self.version = Version::from_int(self.readWord(Version), self.realSID)
 
   /// Valid values:
   /// - 0x0076 (Version 1)
@@ -111,7 +111,7 @@ pub fn process(self : PSID) -> Unit! {
   /// and 0x007C for version 2, 3 and 4.
   ///
   /// WebSID: for a 1-SID file the offset would be 0x7C, for a 2-SID file the offset would be 0x7E, etc.
-  let mut offset = self.readWord!(DataOffset)
+  let mut offset = self.readWord(DataOffset)
 
   //
   let _ = match self.version {
@@ -130,7 +130,7 @@ pub fn process(self : PSID) -> Unit! {
   /// the little-endian load address (low byte, high byte). This must always be true
   /// for RSID files. Furthermore, the actual load address must NOT be less than
   /// $07E8 in RSID files.
-  self.loadAddress = self.readWord!(LoadAddress)
+  self.loadAddress = self.readWord(LoadAddress)
 
   //
   if self.loadAddress == 0 {
@@ -145,7 +145,7 @@ pub fn process(self : PSID) -> Unit! {
   /// The start address of the machine code subroutine that initializes a song,
   /// accepting the contents of the 8-bit 6510 Accumulator as the song number
   /// parameter. 0 means the address is equal to the effective load address.
-  self.initAddress = self.readWord!(InitAddress)
+  self.initAddress = self.readWord(InitAddress)
 
   /// Valid values:
   /// - $0000 - $FFFF
@@ -155,14 +155,14 @@ pub fn process(self : PSID) -> Unit! {
   /// to produce a continuous sound. 0 means the initialization subroutine is
   /// expected to install an interrupt handler, which then calls the music player at
   /// some place. This must always be true for RSID files.
-  self.playAddress = self.readWord!(PlayAddress)
+  self.playAddress = self.readWord(PlayAddress)
 
   /// Valid values:
   /// - 0x0001 - 0x0100
   ///
   /// The number of songs (or sound effects) that can be initialized by calling the
   /// init address. The minimum is 1. The maximum is 256.
-  self.songs = self.readWord!(Songs)
+  self.songs = self.readWord(Songs)
 
   /// Valid values:
   /// - 1 - songs
@@ -170,7 +170,7 @@ pub fn process(self : PSID) -> Unit! {
   /// The song number to be played by default. This value is optional. It often
   /// specifies the first song you would hear upon starting the program is has been
   /// taken from. It has a default of 1.
-  self.defaultSong = self.readWord!(DefaultSong)
+  self.defaultSong = self.readWord(DefaultSong)
 
   /// Valid values:
   /// - 0x00000000 - 0xFFFFFFFF
@@ -184,9 +184,9 @@ pub fn process(self : PSID) -> Unit! {
   /// 32 bytes which is not zero terminated. For less than 32 characters the string
   /// should be zero terminated. The maximum number of available free characters is
   /// 32.
-  self.title = self.readString!(Title)
-  self.author = self.readString!(Author)
-  self.info = self.readString!(ReleaseInfo)
+  self.title = self.readString(Title)
+  self.author = self.readString(Author)
+  self.info = self.readString(ReleaseInfo)
 
   /// Version 1 of the SID header is complete at this point. The binary C64 data
   /// starts here.
@@ -194,14 +194,14 @@ pub fn process(self : PSID) -> Unit! {
     // PSIDv1 =>
     PSIDv2 | RSIDv2 => {
       /// This is a v3 specific field.
-      self.sid2Address = self.readByte!(SID2Address)
+      self.sid2Address = self.readByte(SID2Address)
       /// For v2NG, it should be set to 0.
       if self.sid2Address != 0x00 {
         raise InvalidAddressV2
       }
 
       /// This is a v4 specific field.
-      self.sid3Address = self.readByte!(SID3Address)
+      self.sid3Address = self.readByte(SID3Address)
       /// For v2NG and v3, it should be set to 0.
       if self.sid3Address != 0x00 {
         raise InvalidAddressV2
@@ -209,7 +209,7 @@ pub fn process(self : PSID) -> Unit! {
     }
     PSIDv3 | RSIDv3 => {
       /// This is a v3 specific field.
-      self.sid2Address = self.readByte!(SID2Address)
+      self.sid2Address = self.readByte(SID2Address)
       if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) &&
         (self.sid2Address < 0xE0 || self.sid2Address > 0xFE) &&
         (self.sid2Address & 1) == 1 {
@@ -217,7 +217,7 @@ pub fn process(self : PSID) -> Unit! {
       }
 
       /// This is a v4 specific field.
-      self.sid3Address = self.readByte!(SID3Address)
+      self.sid3Address = self.readByte(SID3Address)
       /// For v2NG and v3, it should be set to 0.
       if self.sid3Address != 0x00 {
         raise InvalidAddressV3
@@ -225,7 +225,7 @@ pub fn process(self : PSID) -> Unit! {
     }
     PSIDv4 | RSIDv4 => {
       /// This is a v3 specific field.
-      self.sid2Address = self.readByte!(SID2Address)
+      self.sid2Address = self.readByte(SID2Address)
       if (self.sid2Address < 0x42 || self.sid2Address > 0x7F) &&
         (self.sid2Address < 0xE0 || self.sid2Address > 0xFE) &&
         (self.sid2Address & 1) == 1 {
@@ -233,7 +233,7 @@ pub fn process(self : PSID) -> Unit! {
       }
 
       /// This is a v4 specific field.
-      self.sid3Address = self.readByte!(SID3Address)
+      self.sid3Address = self.readByte(SID3Address)
       if (self.sid3Address < 0x42 || self.sid3Address > 0x7F) &&
         (self.sid3Address < 0xE0 || self.sid3Address > 0xFE) &&
         (self.sid3Address & 1) == 1 {
@@ -247,7 +247,7 @@ pub fn process(self : PSID) -> Unit! {
   /// - 0x0000 - 0x03FF
   ///
   /// This is a 16 bit big endian number containing the following bitfields:
-  self.flags = Flags::from_int!(self.readWord!(Flags), self.realSID)
+  self.flags = Flags::from_int(self.readWord(Flags), self.realSID)
 
   //
   self.digiMode = self.flags.mode == Digi
@@ -267,8 +267,8 @@ pub fn process(self : PSID) -> Unit! {
   }
 
   //
-  self.startPage = self.readByte!(StartPage)
-  self.pageLength = self.readByte!(PageLength)
+  self.startPage = self.readByte(StartPage)
+  self.pageLength = self.readByte(PageLength)
 
   //
   let mut j = 0
@@ -283,7 +283,7 @@ pub fn process(self : PSID) -> Unit! {
 }
 
 ///|
-fn readByte(self : PSID, header : SIDheader) -> Int! {
+fn PSID::readByte(self : PSID, header : SIDheader) -> Int raise {
   match header {
     StartPage => self[0x78]
     PageLength => self[0x79]
@@ -296,7 +296,7 @@ fn readByte(self : PSID, header : SIDheader) -> Int! {
 }
 
 ///|
-fn readWord(self : PSID, header : SIDheader) -> Int! {
+fn PSID::readWord(self : PSID, header : SIDheader) -> Int raise {
   match header {
     Version => self.makeWord(0x04)
     DataOffset => self.makeWord(0x06)
@@ -313,12 +313,12 @@ fn readWord(self : PSID, header : SIDheader) -> Int! {
 }
 
 ///|
-fn makeWord(self : PSID, offset : Int) -> Int {
+fn PSID::makeWord(self : PSID, offset : Int) -> Int {
   (self[offset] << 8) | self[offset + 1]
 }
 
 ///|
-fn readString(self : PSID, header : SIDheader) -> String! {
+fn PSID::readString(self : PSID, header : SIDheader) -> String raise {
   match header {
     Magic => self.makeString(0x00, 4)
     //
@@ -331,19 +331,19 @@ fn readString(self : PSID, header : SIDheader) -> String! {
 }
 
 ///|
-fn makeString(self : PSID, offset : Int, length : Int) -> String {
+fn PSID::makeString(self : PSID, offset : Int, length : Int) -> String {
   let builder = StringBuilder::new()
 
   //let bytes : Bytes = Bytes::new(length << 1)
   for i = 0; i < length; i = i + 1 {
     //bytes[i << 1] = self[offset + i].to_byte()
-    builder.write_char(Char::from_int(self[offset + i]))
+    builder.write_char(Int::unsafe_to_char(self[offset + i]))
   }
   builder.to_string()
 }
 
 ///|
-pub fn videoStandard(self : PSID) -> VideoStandard {
+pub fn PSID::videoStandard(self : PSID) -> VideoStandard {
   self.flags.videoStandard
 }
 

@@ -1,4 +1,5 @@
-///| 1             $1             R6510
+///|
+/// 1             $1             R6510
 /// 6510 On-Chip I/O Port Register
 ///
 /// Bit 0: LORAM signal.  Selects ROM or RAM at 40960 ($A000).  1=BASIC, 0=RAM
@@ -13,13 +14,11 @@ struct IOPort {
   /// switches the BASIC ROM out, and replaces it with RAM at addresses
   /// 40960-49151 ($A000-$BFFF).  The default value of this bit is 1.
   loram : Bool
-
   /// Bit 1.  Bit 1 controls the HIRAM signal.  A 0 in this bit position
   /// switches the Kernal ROM out, and replaces it with RAM at 57344-65535
   /// ($E000-$FFFF).  As the BASIC interpreter uses the Kernal, it is also
   /// switched out and replaced by RAM.  The default value of this bit is 1.
   hiram : Bool
-
   /// Bit 2.  This bit controls the CHAREN signal.  A 0 in this position
   /// switches the character generator ROM in, so that it can be read by the
   /// 6510 at addresses 53248-57343 ($D000-$DFFF).  Normally, this bit is
@@ -29,7 +28,6 @@ struct IOPort {
   /// the same location as the I/O devices (SID chip, VIC-II chip, and 6526
   /// CIA's), o I/O can occur when this ROM is switched in.
   charen : Bool
-
   /// Bits 3-5 of this register have functions connected with the Datasette
   /// recorder.  These are as follows:
   ///
@@ -37,7 +35,6 @@ struct IOPort {
   /// to the Cassette Data Write line on the cassette port, and is used to
   /// send the data which is written to tape.
   cassette_data_output : Bool
-
   /// Bit 4.  This bit is the Cassette Switch Sense line.  This bit enables
   /// a program to tell whether or not one of the buttons that moves the
   /// recorder is pressed down.  If the switch on the recorder is down, this
@@ -45,7 +42,6 @@ struct IOPort {
   /// register at location 0 must contain a 0 for this bit to properly
   /// reflect the status of the switch.
   cassette_switch_sense : Bool
-
   /// Bit 5.  Bit 5 is the Cassette Motor Control.  Setting this bit to zero
   /// allows the motor to turn when you press one of the buttons on the
   /// recorder, while setting it to one disables it from turning.
@@ -79,17 +75,14 @@ pub(all) enum C64register {
   D6510
   /// 6510 On-Chip I/O Port Register
   R6510
-
   /// Unused. Free for user programs.
   UNUSED
-
   /// Vector: Routine to Convert a Number from Floating Point to Signed Integer
   /// ($B1AA).
   ADRAY1
   /// Vector: Routine to Convert a Number from Integer to Floating Point
   /// ($B391).
   ADRAY2
-
   /// Search Character for Scanning BASIC Text Input
   CHARAC
   /// Search Character for Statement Termination or Quote
@@ -162,12 +155,10 @@ pub(all) enum C64register {
   VARPNT
   /// Temporary Pointer to the Index Variable Used by FOR
   FORPNT
-
   /// Math Operator Table Displacement
   OPPTR // VARTXT
   /// Mask for Comparison Operation
   OPMASK
-
   /// Pointer to the Current FN Descriptor
   DEFPNT
   /// Temporary Pointer to the Current String Descriptor
@@ -193,7 +184,6 @@ pub(all) enum C64register {
   SGNFLG
   /// Floating Point Accumulator #1: Overflow Digit
   BITS
-
   /// Floating Point Accumulator #2
   AFAC
   /// Floating Point Accumulator #2: Exponent
@@ -206,19 +196,14 @@ pub(all) enum C64register {
   ARISGN
   /// Low Order Mantissa Byte of Floating Point Accumulator #1 (For Rounding)
   FACOV
-
   /// Series Evaluation Pointer
-
   FBUFPT
-
   ///
   /// Subroutine: Get Next BASIC Text Character
   ///
-
   CHRGET
   CHRGOT
   TXTPTR
-
   /// RND Function Seed Value
   RNDX
 
@@ -255,22 +240,17 @@ pub(all) enum C64register {
   /// Flag: Kernal Message Control
   MSGFLG
   FNMIDX // FIXME
-
   /// Tape Pass 1 Error Log Index
   PTR1
   /// Tape Pass 2 Error Log Correction Index
   PTR2
-
   /// Software Jiffy Clock
   TIME
-
   ///
   /// Temporary Data Storage Area
   ///
-
   TSFCNT // FIXME
   TBTCNT // FIXME
-
   /// Cassette Synchronization Character Countdown
   CNTDN
   /// Count of Characters in Tape I/O Buffer
@@ -285,12 +265,10 @@ pub(all) enum C64register {
   RIDATA
   /// RS-232 Input Parity/Cassete Leader Counter
   RIPRTY
-
   /// Pointer to the Starting Address of a Load/Screen Scrolling
   SAL
   /// Pointer to Ending Address of Load (End of Program)
   EAL
-
   /// Tape Timing
   CMPO
   /// Pointer: Start of Tape Buffer
@@ -303,7 +281,6 @@ pub(all) enum C64register {
   RODATA
   /// Length of Current Filename
   FNLEN
-
   /// Current Logical File Number
   LA
   /// Current Secondary Address
@@ -323,9 +300,7 @@ pub(all) enum C64register {
   /// I/O Start Address
   STAL
   ///
-
   MEMUSS // FIXME
-
   /// Matrix Coordinate of Last Key Pressed, 64=None Pressed
   LSTX
   /// Number of Characters in Keyboard Buffer (Queue)
@@ -386,9 +361,7 @@ pub(all) enum C64register {
   /// $100-$10A
   /// Work Area for Floating Point to String Conversions
   ///
-
   ASCWRK // FIXME
-
   /// Tape Input Error Log
   BAD
   STACK
@@ -397,7 +370,6 @@ pub(all) enum C64register {
   PC
   PCL
   PCH
-
   ///
   /// $200-$258      BUF
   /// BASIC Line Editor Input Buffer
@@ -415,15 +387,12 @@ pub(all) enum C64register {
   FAT
   /// Kernal Table of Secondary Addresses for Each Logical File
   SAT
-
   /// Keyboard Buffer (Queue)
   KEYD
-
   /// Pointer: O.S. Start of Memory
   MEMSTR
   /// Pointer: O.S. End of Memory
   MEMEND
-
   /// Flag: Kernal Variable for IEEE Time-Out
   TIMOUT
   /// Current Foreground Color for Text
@@ -450,7 +419,6 @@ pub(all) enum C64register {
   MODE
   /// Flag: Screen Scrolling Enabled
   AUTODN
-
   /// RS-232: Mock 6551 Control Register
   M51CTR
   /// RS-232: Mock 6551 Command Register
@@ -471,7 +439,6 @@ pub(all) enum C64register {
   RODBS
   /// RS-232: Index to End of Transmit Buffer
   RODBE
-
   /// Save Area for IRQ Vector During Cassette I/O
   IRQTMP
   /// RS-232 Interrupts Enabled
@@ -495,9 +462,7 @@ pub(all) enum C64register {
   /// ($300-$30B)
   /// BASIC Indirect Vector Table
   ///
-
   SPR11 // FIXME
-
   /// Vector to the Print BASIC Error Message Routine
   IERROR
   IMAIN
@@ -537,27 +502,22 @@ pub(all) enum C64register {
   VICSCN
   // TEMP
   SPNTRS
-
   /// Autostart ROM Cartridge
   CARTROM
   ///
   BASICROM
   ///
   KERNALROM
-
   /// Cold Start Vector
   COLD
   /// Warm Start Vector
   WARM
-
   /// Print READY
   READY
-
   /// (via 806 ($326) to 61898, $F1CA) output a character
   CHROUT
   /// (via 810 ($32A) to 61758, $F13E) get a character
   GETIN
-
   ///
   NMI
   RESET
@@ -835,7 +795,7 @@ fn c64(register : C64register) -> UInt16 {
 }
 
 ///|
-fn C64register::from_int(value : Int) -> C64register! {
+fn C64register::from_int(value : Int) -> C64register raise {
   match value {
     /// Page 0
 

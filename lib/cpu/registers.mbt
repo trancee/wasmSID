@@ -15,35 +15,40 @@ pub struct Registers {
 } derive(Show, Default)
 
 ///|
+fn Registers::default() -> Registers {
+  Registers::new()
+}
+
+///|
 test {
   let r = Registers::new()
-  assert_eq!(r.sp, 0xFF)
+  assert_eq(r.sp, 0xFF)
 }
 
 ///|
 test {
   let r = Registers::new(sp=0xFFFF)
-  assert_eq!(r.sp, 0xFF)
+  assert_eq(r.sp, 0xFF)
 }
 
 ///|
 test {
   let r = Registers::new(sp=-1)
-  assert_eq!(r.sp, 0xFF)
+  assert_eq(r.sp, 0xFF)
 }
 
 ///|
 test {
   let r = Registers::new(sp=0)
-  assert_eq!(r.sp, 0x00)
+  assert_eq(r.sp, 0x00)
 }
 
 ///|
 pub fn Registers::new(
-  sp~ : UInt8 = 0xFF,
-  a~ : UInt8 = 0x00,
-  x~ : UInt8 = 0x00,
-  y~ : UInt8 = 0x00
+  sp? : UInt8 = 0xFF,
+  a? : UInt8 = 0x00,
+  x? : UInt8 = 0x00,
+  y? : UInt8 = 0x00,
 ) -> Registers {
   { sp, a, x, y }
 }
@@ -70,7 +75,7 @@ pub fn Registers::op_get(self : Registers, register : Register) -> UInt8 {
 pub fn Registers::op_set(
   self : Registers,
   register : Register,
-  value : UInt8
+  value : UInt8,
 ) -> Unit {
   match register {
     SP => self.sp = value & 0xFF
@@ -85,50 +90,50 @@ pub fn Registers::op_set(
 ///|
 test "new_registers" {
   let r = Registers::new()
-  assert_eq!(r[SP], 0xFF)
-  assert_eq!(r[A], 0x00)
-  assert_eq!(r[X], 0x00)
-  assert_eq!(r[Y], 0x00)
+  assert_eq(r[SP], 0xFF)
+  assert_eq(r[A], 0x00)
+  assert_eq(r[X], 0x00)
+  assert_eq(r[Y], 0x00)
 }
 
 ///|
 test "new_registers_with_sp" {
   let r = Registers::new(sp=0x1234)
-  assert_eq!(r[SP], 0x34)
-  assert_eq!(r[A], 0x00)
-  assert_eq!(r[X], 0x00)
-  assert_eq!(r[Y], 0x00)
+  assert_eq(r[SP], 0x34)
+  assert_eq(r[A], 0x00)
+  assert_eq(r[X], 0x00)
+  assert_eq(r[Y], 0x00)
 }
 
 ///|
 test "new_registers_with_setting_sp_afterwards" {
   let r = Registers::new()
-  assert_eq!(r[SP], 0xFF)
-  assert_eq!(r[A], 0x00)
-  assert_eq!(r[X], 0x00)
-  assert_eq!(r[Y], 0x00)
+  assert_eq(r[SP], 0xFF)
+  assert_eq(r[A], 0x00)
+  assert_eq(r[X], 0x00)
+  assert_eq(r[Y], 0x00)
   r[SP] = 0x1234
-  assert_eq!(r[SP], 0x34)
+  assert_eq(r[SP], 0x34)
 }
 
 ///|
 test "new_registers_with_sp_overflow" {
   let r = Registers::new(sp=0xFF)
-  assert_eq!(r[SP], 0xFF)
-  assert_eq!(r[A], 0x00)
-  assert_eq!(r[X], 0x00)
-  assert_eq!(r[Y], 0x00)
+  assert_eq(r[SP], 0xFF)
+  assert_eq(r[A], 0x00)
+  assert_eq(r[X], 0x00)
+  assert_eq(r[Y], 0x00)
   r[SP] += 1
-  assert_eq!(r[SP], 0x00)
+  assert_eq(r[SP], 0x00)
 }
 
 ///|
 test "new_registers_with_sp_underflow" {
   let r = Registers::new(sp=0x00)
-  assert_eq!(r[SP], 0x00)
-  assert_eq!(r[A], 0x00)
-  assert_eq!(r[X], 0x00)
-  assert_eq!(r[Y], 0x00)
+  assert_eq(r[SP], 0x00)
+  assert_eq(r[A], 0x00)
+  assert_eq(r[X], 0x00)
+  assert_eq(r[Y], 0x00)
   r[SP] -= 1
-  assert_eq!(r[SP], 0xFF)
+  assert_eq(r[SP], 0xFF)
 }
