@@ -16,6 +16,7 @@ pub fn NES::new(
   offset? : Int = 0,
   //
   debug? : Bool = false,
+  log? : Array[String]? = None,
 ) -> NES raise {
   let cpu = @cpu.CPU::new(
     pc~,
@@ -29,6 +30,7 @@ pub fn NES::new(
     decimal_mode=false,
     //
     debug~,
+    log~,
   )
 
   //

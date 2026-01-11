@@ -10638,6 +10638,8 @@ fn benchmark_summary(summary : Json) -> Unit raise {
       Some(i) => a[:i].pad_start(1, ' ') + a[i:i + 5].pad_end(5, '0') + "µs"
     }
   }
+
+  //
   let obj = summary.as_object().unwrap()
   let name = obj["name"].as_string().unwrap()
   let runs = obj["runs"].as_number().unwrap()
@@ -10646,6 +10648,8 @@ fn benchmark_summary(summary : Json) -> Unit raise {
   let std_dev = obj["std_dev"].as_number().unwrap()
   let median = obj["median"].as_number().unwrap()
   let median_abs_dev = obj["median_abs_dev"].as_number().unwrap()
+
+  //
   println("\{name}" + " " + "\u{1B}[32;1m✔️\u{1B}[0m")
   println("\{runs} × \{batches}")
   println("\{fixed(mean)} ±\{fixed(std_dev)}")

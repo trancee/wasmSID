@@ -1,17 +1,17 @@
 ///|
 pub struct PSID {
   mem : Memory
-  data : FixedArray[Int]
+  data : Bytes
   //
   mut version : Version
   //
   mut realSID : Bool
   mut digiMode : Bool
   //
-  mut loadAddress : Int
-  mut initAddress : Int
-  mut playAddress : Int
-  mut endAddress : Int
+  mut loadAddress : UInt16
+  mut initAddress : UInt16
+  mut playAddress : UInt16
+  mut endAddress : UInt16
   //
   mut title : String
   mut author : String
@@ -19,6 +19,8 @@ pub struct PSID {
   //
   mut songs : UInt16
   mut defaultSong : UInt16
+  //
+  speed : FixedArray[Bool]
   //
   mut flags : Flags
   //
@@ -34,7 +36,7 @@ pub struct PSID {
 }
 
 ///|
-pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID raise {
+pub fn PSID::new(mem : Memory, data : Bytes) -> PSID raise {
   let psid : PSID = {
     mem,
     data,
@@ -55,6 +57,8 @@ pub fn PSID::new(mem : Memory, data : FixedArray[Int]) -> PSID raise {
     //
     songs: 0,
     defaultSong: 0,
+    //
+    speed: FixedArray::make(32, false),
     //
     flags: Flags::default(),
     //
@@ -134,7 +138,7 @@ pub fn PSID::process(self : PSID) -> Unit raise {
 
   //
   if self.loadAddress == 0 {
-    self.loadAddress = (self[offset + 1] << 8) | self[offset]
+    self.loadAddress = (u16(self[offset + 1]) << 8) | u16(self[offset])
     offset += 2
   }
 
@@ -177,7 +181,10 @@ pub fn PSID::process(self : PSID) -> Unit raise {
   /// - 0x00000000 (RSID)
   ///
   /// This is a 32 bit big endian number.
-  // self.speed = []
+  let speed = self.readLong(Speed)
+  for i = 0; i < 32; i = i + 1 {
+    self.speed[i] = (speed & (1 << i)) != 0
+  }
 
   /// These are 32 byte long Extended ASCII encoded (Windows-1252 code page) character
   /// strings. Upon evaluating the header, these fields may hold a character string of
@@ -283,26 +290,29 @@ pub fn PSID::process(self : PSID) -> Unit raise {
 }
 
 ///|
-fn PSID::readByte(self : PSID, header : SIDheader) -> Int raise {
+fn PSID::readByte(self : PSID, header : SIDheader) -> UInt8 raise {
   match header {
-    StartPage => self[0x78]
-    PageLength => self[0x79]
+    StartPage => u8(self[0x78])
+    PageLength => u8(self[0x79])
     //
-    SID2Address => self[0x7A]
-    SID3Address => self[0x7B]
+    SID2Address => u8(self[0x7A])
+    SID3Address => u8(self[0x7B])
     //
     _ => raise UnknownHeader(header.to_string())
   }
 }
 
 ///|
-fn PSID::readWord(self : PSID, header : SIDheader) -> Int raise {
+fn PSID::readWord(self : PSID, header : SIDheader) -> UInt16 raise {
   match header {
     Version => self.makeWord(0x04)
+    //
     DataOffset => self.makeWord(0x06)
+    //
     LoadAddress => self.makeWord(0x08)
     InitAddress => self.makeWord(0x0A)
     PlayAddress => self.makeWord(0x0C)
+    //
     Songs => self.makeWord(0x0E)
     DefaultSong => self.makeWord(0x10)
     //
@@ -313,8 +323,25 @@ fn PSID::readWord(self : PSID, header : SIDheader) -> Int raise {
 }
 
 ///|
-fn PSID::makeWord(self : PSID, offset : Int) -> Int {
-  (self[offset] << 8) | self[offset + 1]
+fn PSID::makeWord(self : PSID, offset : Int) -> UInt16 {
+  (u16(self[offset]) << 8) | u16(self[offset + 1])
+}
+
+///|
+fn PSID::readLong(self : PSID, header : SIDheader) -> UInt raise {
+  match header {
+    Speed => self.makeLong(0x12)
+    //
+    _ => raise UnknownHeader(header.to_string())
+  }
+}
+
+///|
+fn PSID::makeLong(self : PSID, offset : Int) -> UInt {
+  (self[offset].to_uint() << 24) |
+  (self[offset + 1].to_uint() << 16) |
+  (self[offset + 2].to_uint() << 8) |
+  self[offset + 3].to_uint()
 }
 
 ///|
@@ -337,7 +364,7 @@ fn PSID::makeString(self : PSID, offset : Int, length : Int) -> String {
   //let bytes : Bytes = Bytes::new(length << 1)
   for i = 0; i < length; i = i + 1 {
     //bytes[i << 1] = self[offset + i].to_byte()
-    builder.write_char(Int::unsafe_to_char(self[offset + i]))
+    builder.write_char(self[offset + i].to_char())
   }
   builder.to_string()
 }
@@ -348,7 +375,7 @@ pub fn PSID::videoStandard(self : PSID) -> VideoStandard {
 }
 
 ///|
-fn PSID::op_get(self : PSID, address : Int) -> Int {
+fn PSID::op_get(self : PSID, address : UInt16) -> Byte {
   if address < 0x0000 || address > self.data.length() {
     // self.dump()
     println("PSID::get out of bounds")
@@ -358,11 +385,11 @@ fn PSID::op_get(self : PSID, address : Int) -> Int {
   // println(
   //   "PSID $" + address.to_hex() + " → #$" + (self.data[address.0] |> u8).to_hex(),
   // )
-  self.data[address]
+  self.data[address.0]
 }
 
 ///|
-fn PSID::op_set(self : PSID, address : Int, value : Int) -> Unit {
+fn PSID::op_set(self : PSID, address : UInt16, value : Byte) -> Unit {
   if address < 0x0000 || address > 0xFFFF {
     // self.dump()
     println("PSID::set out of bounds")
@@ -370,5 +397,5 @@ fn PSID::op_set(self : PSID, address : Int, value : Int) -> Unit {
   }
 
   // println("PSID $" + address.to_hex() + " ← #$" + value.to_hex())
-  self.mem.write(address, value)
+  self.mem.write(address, u8(value))
 }

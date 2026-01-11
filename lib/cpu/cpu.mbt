@@ -40,6 +40,7 @@ pub struct CPU {
   traps : Array[Trap]
   //
   mut debug : Bool
+  log : Array[String]?
 }
 
 ///|
@@ -58,6 +59,7 @@ pub fn CPU::new(
   decimal_mode? : Bool = true,
   //
   debug? : Bool = false,
+  log? : Array[String]? = None,
 ) -> CPU raise {
   //
   let cpu : CPU = {
@@ -81,6 +83,7 @@ pub fn CPU::new(
     traps: [],
     //
     debug,
+    log,
   }
 
   //
@@ -872,8 +875,7 @@ fn CPU::dump_step(
   //   }
   //   stack += self.mem[i].to_hex()
   // }
-  println(
-    "\{pc-1}" +
+  let line = "\{pc-1}" +
     " " +
     instruction +
     " " +
@@ -893,10 +895,14 @@ fn CPU::dump_step(
     " P:" +
     self.flags.get().to_hex() +
     " SP:" +
-    self.registers[SP].to_hex(),
-  )
+    self.registers[SP].to_hex()
   // + " P:" + self.flags.get().to_hex() + " " + self.flags.to_string(),
   // + " PPU:  _,  _" + " CYC:" + (self.cycles + _cycles).to_string(),
+
+  match self.log {
+    Some(log) => log.push(line)
+    None => println(line)
+  }
 }
 
 ///|

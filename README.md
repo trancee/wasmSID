@@ -12,6 +12,7 @@ Add the Moonbit extension in Visual Studio Code
 
 moon update
 moon install
+moon upgrade
 
 ### Coverage Testing
 

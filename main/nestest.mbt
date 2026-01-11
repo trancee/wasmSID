@@ -8,6 +8,17 @@ pub fn nestest() -> Unit raise {
       abort("test not found")
     }
   }
+  let verify = @fs.read_file_to_string("tests/nestest/nestest.log").split(
+    "\r\n",
+  ) catch {
+    error => {
+      println("\u{1B}[31;1;6m\{error}\u{1B}[0m")
+      abort("log not found")
+    }
+  }
+
+  //
+  let log : Array[String]? = Some([])
 
   //
   let nes = NES::new(
@@ -22,6 +33,7 @@ pub fn nestest() -> Unit raise {
 
     //
     debug=true,
+    log~,
   )
 
   //
@@ -65,6 +77,20 @@ pub fn nestest() -> Unit raise {
 
   //
   // println("cycles: \{cycles}")
+
+  verify.eachi(fn(i, value) {
+    let line = match log {
+      Some(log) => log[i]
+      None => panic()
+    }
+    println(line)
+    if value != line {
+      println(
+        "\u{1B}[31;1;6mline \{i} mismatch:\nexpected: \{value}\nfound:    \{line}\u{1B}[0m",
+      )
+      abort("test failed")
+    }
+  })
 
   //
   println("---")
